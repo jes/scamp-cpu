@@ -28,7 +28,11 @@ module ALU(X, Y, C, out);
     assign f = C[1];
     assign no = C[0];
 
-    wire inx, iny, argx, argy, val;
+    wire [15:0] inx;
+    wire [15:0] iny;
+    wire [15:0] argx;
+    wire [15:0] argy;
+    wire [15:0] val;
 
     assign inx = zx ? 0 : X;
     assign argx = nx ? ~inx : inx;
@@ -38,9 +42,4 @@ module ALU(X, Y, C, out);
     assign val = f ? (argx+argy) : (argx&argy);
 
     assign out = no ? ~val : val;
-
-    // The testbench currently doesn't work, because it seems like the assignments don't cascade in iverilog?
-    // If you uncomment the following line it passes, but it should be logically equivalent:
-    // assign out = no?~(f?((nx?~(zx?0:X):(zx?0:X))+(ny?~(zy?0:Y):(zy?0:Y))):((nx?~(zx?0:X):(zx?0:X))&(ny?~(zy?0:Y):(zy?0:Y)))):(f?((nx?~(zx?0:X):(zx?0:X))+(ny?~(zy?0:Y):(zy?0:Y))):((nx?~(zx?0:X):(zx?0:X))&(ny?~(zy?0:Y):(zy?0:Y))));
-
 endmodule
