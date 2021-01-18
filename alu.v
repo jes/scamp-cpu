@@ -21,7 +21,7 @@ module ALU(X, Y, C, out);
     assign iny = zy ? 0 : Y;
     assign argy = ny ? ~iny : iny;
 
-    assign val = f ? (X+Y) : (X&Y);
+    assign val = f ? (argx+argy) : (argx&argy);
 
     assign out = no ? ~val : val;
 endmodule
