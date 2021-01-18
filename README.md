@@ -13,6 +13,10 @@ and software.
 3. Convert the 74xx-Verilog into KiCad schematics.
 4. Build the CPU
 
+It is likely that steps 1 to 3 will go through several iterations while I figure out how
+the CPU is actually going to work, but hopefully step 4 will only happen once. It is likely
+that if step 4 needs to happen substantially more than once that it will never get completed.
+
 ## Resources
 
 I thoroughly recommend the Nand2Tetris course. https://nand2tetris.org/
