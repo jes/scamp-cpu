@@ -1,4 +1,18 @@
-/* Nand2Tetris ALU */
+/* Nand2Tetris ALU
+
+   This ALU is purely combinational.
+
+   X,Y are 16-bit inputs
+
+   C is 6 control bits:
+    5   4   3   2   1   0
+    zx  nx  zy  ny  f   no
+
+    zx,zy: replace the respective operand with 0
+    nx,ny: invert the bits of the operand (applied after zx,zy)
+    f: function select: 0 for '&', 1 for '+'
+    no: invert the bits of the output
+   */
 module ALU(X, Y, C, out);
     input [15:0] X;
     input [15:0] Y;
