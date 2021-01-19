@@ -1,12 +1,11 @@
 #!/bin/sh
 
-TESTS=alu_tb.v
+TESTS=alu
 
 for t in $TESTS; do
-    iverilog $t
-    ./a.out | grep -i bad | while read line; do
-        echo "$t: $line"
-    done
+    echo $t...
+    iverilog ${t}_tb.v
+    ./a.out | grep -i bad
 done
 
 rm a.out
