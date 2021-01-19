@@ -2,7 +2,7 @@
 
    This ALU is purely combinational.
 
-   X,Y are 16-bit inputs
+   X,Y are 4-bit inputs
 
    C is 6 control bits:
     5   4   3   2   1   0
