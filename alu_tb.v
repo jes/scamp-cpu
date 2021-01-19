@@ -10,7 +10,7 @@ module test;
 
     ALU alu (X, Y, C, out);
 
-    parameter zx=32, nx=16, zy=8, ny=4, f=2, no=1;
+    parameter ex=32, nx=16, ey=8, ny=4, f=2, no=1;
 
     integer x, y;
 
@@ -20,75 +20,75 @@ module test;
                 X = x; Y = y;
 
                 // X+Y
-                C = f;
+                C = ex+ey+f;
                 #1 if (out != X+Y) $display("Bad: X+Y: got ",x,"+",y,"=",out);
 
                 // X-Y
-                C = nx+f+no;
+                C = ex+ey+nx+f+no;
                 #1 if (out != X-Y) $display("Bad: X-Y: got ",x,"-",y,"=",out);
 
                 // Y-X
-                C = ny+f+no;
+                C = ex+ey+ny+f+no;
                 #1 if (out != Y-X) $display("Bad: Y-X: got ",y,"-",x,"=",out);
 
                 // X&Y
-                C = 0;
+                C = ex+ey;
                 #1 if (out != (X&Y)) $display("Bad: X&Y: got ",x,"&",y,"=",out);
 
                 // X|Y
-                C = nx+ny+no;
+                C = ex+ey+nx+ny+no;
                 #1 if (out != (X|Y)) $display("Bad: X|Y: got ",x,"|",y,"=",out);
 
                 // 0
-                C = zx+zy+f;
+                C = f;
                 #1 if (out != 0) $display("Bad: 0: got 0=",out);
 
                 // 1
-                C = zx+nx+zy+ny+f+no;
+                C = nx+ny+f+no;
                 #1 if (out != 1) $display("Bad: 1: got 1=",out);
 
                 // -1
-                C = zx+nx+zy+ny;
+                C = nx+ny;
                 #1 if (out != 16'hffff) $display("Bad: -1: got -1=",out);
 
                 // X
-                C = zy+f;
+                C = ex+f;
                 #1 if (out != X) $display("Bad: X: got ",x,"=",out);
 
                 // Y
-                C = zx+f;
+                C = ey+f;
                 #1 if (out != Y) $display("Bad: Y: got ",y,"=",out);
 
                 // !X
-                C = nx+zy+f;
+                C = nx+ex+f;
                 #1 if (out != ~X) $display("Bad: !X: got !",x,"=",out);
 
                 // !Y
-                C = zx+ny+f;
+                C = ey+ny+f;
                 #1 if (out != ~Y) $display("Bad: !Y: got !",y,"=",out);
 
                 // -X
-                C = zy+ny+f+no;
+                C = ex+ny+f+no;
                 #1 if (out != -X) $display("Bad: -X: got -",x,"=",out);
 
                 // -Y
-                C = zx+nx+f+no;
+                C = ey+nx+f+no;
                 #1 if (out != -Y) $display("Bad: -Y: got -",y,"=",out);
 
                 // X+1
-                C = nx+zy+ny+f+no;
+                C = nx+ex+ny+f+no;
                 #1 if (out != X+1) $display("Bad: X+1: got ",x,"+1=",out);
 
                 // Y+1
-                C = ny+zx+nx+f+no;
+                C = ny+ey+nx+f+no;
                 #1 if (out != Y+1) $display("Bad: Y+1: got ",y,"+1=",out);
 
                 // X-1
-                C = zy+ny+f;
+                C = ex+ny+f;
                 #1 if (out != (65536+X-1)%65536) $display("Bad: X-1: got ",x,"-1=",out);
 
                 // Y-1
-                C = zx+nx+f;
+                C = ey+nx+f;
                 #1 if (out != (65536+Y-1)%65536) $display("Bad: Y-1: got ",y,"-1=",out);
             end
         end
