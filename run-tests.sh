@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TESTS=alu
+TESTS="alu ttl-alu"
 
 for t in $TESTS; do
     echo $t...
