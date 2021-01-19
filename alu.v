@@ -1,4 +1,4 @@
-/* Nand2Tetris ALU
+/* Nand2Tetris ALU, but with zx/zy inverted
 
    This ALU is purely combinational.
 
@@ -6,10 +6,10 @@
 
    C is 6 control bits:
     5   4   3   2   1   0
-    zx  nx  zy  ny  f   no
+    ex  nx  ey  ny  f   no
 
-    zx,zy: replace the respective operand with 0
-    nx,ny: invert the bits of the operand (applied after zx,zy)
+    ex,ey: enable the respective operand (instead of using 0)
+    nx,ny: invert the bits of the operand (applied after ex,ey)
     f: function select: 0 for '&', 1 for '+'
     no: invert the bits of the output
    */
@@ -19,11 +19,11 @@ module ALU(X, Y, C, out);
     input [5:0] C;
     output [15:0] out;
 
-    wire zx,nx,zy,ny,f,no;
+    wire ex,nx,ey,ny,f,no;
 
-    assign zx = C[5];
+    assign ex = C[5];
     assign nx = C[4];
-    assign zy = C[3];
+    assign ey = C[3];
     assign ny = C[2];
     assign f = C[1];
     assign no = C[0];
@@ -34,9 +34,9 @@ module ALU(X, Y, C, out);
     wire [15:0] argy;
     wire [15:0] val;
 
-    assign inx = zx ? 0 : X;
+    assign inx = ex ? X : 0;
     assign argx = nx ? ~inx : inx;
-    assign iny = zy ? 0 : Y;
+    assign iny = ey ? Y : 0;
     assign argy = ny ? ~iny : iny;
 
     assign val = f ? (argx+argy) : (argx&argy);
