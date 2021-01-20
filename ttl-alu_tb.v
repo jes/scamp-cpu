@@ -15,7 +15,7 @@ module test;
     integer x, y;
 
     initial begin
-        for (x = 0; x < 65536; x = x + 100) begin
+        for (x = 0; x < 65536; x = x + 255) begin
             for (y = 0; y < 65536; y = y + 567) begin
                 X = x; Y = y;
 
@@ -77,11 +77,11 @@ module test;
 
                 // X+1
                 C = nx+ex+ny+f+no;
-                #1 if (out != X+1) $display("Bad: X+1: got ",x,"+1=",out);
+                #1 if (out != (X+1)%65536) $display("Bad: X+1: got ",x,"+1=",out);
 
                 // Y+1
                 C = ny+ey+nx+f+no;
-                #1 if (out != Y+1) $display("Bad: Y+1: got ",y,"+1=",out);
+                #1 if (out != (Y+1)%65536) $display("Bad: Y+1: got ",y,"+1=",out);
 
                 // X-1
                 C = ex+ny+f;
