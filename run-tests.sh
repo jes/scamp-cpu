@@ -1,13 +1,19 @@
 #!/bin/sh
 
-TESTS="alu ttl-alu"
+TESTS="alu"
 
-# TODO: come up with a way to use the alu_tb.v on ttl-alu
-# to save copy-pasting all the test benches
+if [ "$1" ]; then
+    TESTS=$1
+fi
 
 for t in $TESTS; do
     echo $t...
     iverilog ${t}_tb.v
+    ./a.out | grep -i bad
+
+    echo ttl-$t...
+    cat ${t}_tb.v | sed "s/include \"${t}.v\"/include \"ttl-${t}.v\"/" > ttl-${t}_tb.v
+    iverilog ttl-${t}_tb.v
     ./a.out | grep -i bad
 done
 
