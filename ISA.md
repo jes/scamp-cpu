@@ -111,13 +111,16 @@ to cut down on the possibilities here, or commit to using 9 or 10 bits for the a
 
 ld, st
 
+Maybe don't need these if we are sufficiently CISC: loads and stores can simply be side
+effects of more interesting instructions.
+
 ### Jump
 
 jz, jnz, jgt, jlt, jge, jle, jc, jmp
 
 ### Arithmetic
 
-inc, dec, add, sub, adc, sbc
+inc, dec, add, sub, adc (add w/ carry), sbc (sub w/ carry), clc (clear carry)
 
 ### Logic
 
