@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TESTS="register alu cpu"
+TESTS="register pc alu cpu"
 
 if [ "$1" ]; then
     TESTS=$1
