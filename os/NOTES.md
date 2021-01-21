@@ -28,26 +28,26 @@ append ".x" to anything that I want to be executable.
 
 Example:
 
-/bin
-    asm.x
-    cat.x
-    cc.x
-    cp.x
-    init.x
-    ls.x
-    mkdir.x
-    rm.x
-    sh.x
-    vi.x
-/etc
-    motd
-    [other configuration?]
-/home
-    [user files]
-/src
-    [source code of kernel and all programs]
-/swap
-    [contents of swapped-out processes]
+    /bin
+        asm.x
+        cat.x
+        cc.x
+        cp.x
+        init.x
+        ls.x
+        mkdir.x
+        rm.x
+        sh.x
+        vi.x
+    /etc
+        motd
+        [other configuration?]
+    /home
+        [user files]
+    /src
+        [source code of kernel and all programs]
+    /swap
+        [contents of swapped-out processes]
 
 ## Programs
 
