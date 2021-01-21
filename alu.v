@@ -12,12 +12,16 @@
     nx,ny: invert the bits of the operand (applied after ex,ey)
     f: function select: 0 for '&', 1 for '+'
     no: invert the bits of the output
+
+   Output to bus is enabled when en is high. Output to val always.
    */
-module ALU(X, Y, C, out);
+module ALU(X, Y, C, en, bus, val);
     input [15:0] X;
     input [15:0] Y;
     input [5:0] C;
-    output [15:0] out;
+    input en;
+    output [15:0] bus;
+    output [15:0] val;
 
     wire ex,nx,ey,ny,f,no;
 
@@ -32,14 +36,15 @@ module ALU(X, Y, C, out);
     wire [15:0] iny;
     wire [15:0] argx;
     wire [15:0] argy;
-    wire [15:0] val;
+    wire [15:0] fxy;
 
     assign inx = ex ? X : 0;
     assign argx = nx ? ~inx : inx;
     assign iny = ey ? Y : 0;
     assign argy = ny ? ~iny : iny;
 
-    assign val = f ? (argx+argy) : (argx&argy);
+    assign fxy = f ? (argx+argy) : (argx&argy);
 
-    assign out = no ? ~val : val;
+    assign val = no ? ~fxy : fxy;
+    assign bus = en ? val : 16'hZZZZ;
 endmodule
