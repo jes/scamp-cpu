@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TESTS="alu"
+TESTS="register alu"
 
 if [ "$1" ]; then
     TESTS=$1
@@ -15,6 +15,7 @@ for t in $TESTS; do
     cat ${t}_tb.v | sed "s/include \"${t}.v\"/include \"ttl-${t}.v\"/" > ttl-${t}_tb.v
     iverilog ttl-${t}_tb.v
     ./a.out | grep -i bad
+    rm ttl-${t}_tb.v
 done
 
 rm a.out

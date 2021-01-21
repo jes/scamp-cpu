@@ -14,4 +14,4 @@ burn:
 	iceFUNprof ttlcpu.bin
 
 clean:
-	rm *.asc *.bin *blif a.out
+	rm -f *.asc *.bin *blif a.out ttl-*_tb.v
