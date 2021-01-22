@@ -12,7 +12,11 @@ module test;
 
     assign bus = (enl | enh) ? 16'hZZZZ : busreg;
 
-    IR ir (clk, bus, load, enl, enh, value);
+    assign load_bar = !load;
+    assign enl_bar = !enl;
+    assign enh_bar = !enh;
+
+    IR ir (clk, bus, load_bar, enl_bar, enh_bar, value);
 
     initial begin
         clk = 0;

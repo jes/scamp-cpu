@@ -6,21 +6,18 @@
    Always gives current value to 'value'
 */
 
-`include "ttl/7404.v"
 `include "ttl/74244.v"
 `include "ttl/74377.v"
 
-module IR(clk, bus, load, enl, enh, value);
+module IR(clk, bus, load_bar, enl_bar, enh_bar, value);
     input clk;
     inout [15:0] bus;
-    input load;
-    input enl, enh;
+    input load_bar;
+    input enl_bar, enh_bar;
     output [15:0] value;
 
     wire load_bar;
     wire nc;
-
-    ttl_7404 inverter ({3'b0, enl, enh, load}, {nc,nc,nc, enl_bar, enh_bar, load_bar});
 
     ttl_74244 outbuflow1 ({enl_bar,enl_bar}, value[7:0], bus[7:0]);
     ttl_74244 outbufhigh1 ({enl_bar,enl_bar}, 8'h00, bus[15:8]);
