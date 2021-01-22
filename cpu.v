@@ -26,7 +26,7 @@ module CPU(clk);
     wire [2:0] T;
     wire reset_bar;
     wire JMP;
-    wire [15:0] uinstr; // XXX: delete
+    wire [15:0] uinstr;
 
     // control bits
     wire EO_bar, PO_bar, IOH_bar, IOL_bar, RO, XO_bar, YO_bar, DO; // outputs to bus
