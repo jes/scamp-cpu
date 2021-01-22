@@ -118,6 +118,8 @@ ALU, in case that is ever useful.
 
 We also have 1 bit spare that we can toggle when !EO.
 
+We might consider adding a bit to disable carry input to the ALU.
+
 ## Extensibility
 
 In addition to the 2 unused bits, and the spare but when !EO,
