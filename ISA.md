@@ -67,8 +67,9 @@ Every instruction implicitly starts with microcode of:
     PO MI     load address from program counter
     RO II P+  load RAM into instruction register, increment PC
 
-So I don't think we need to include that in the microcode. We just do that for 2 cycles,
-and then start the "real" T-state counter.
+So I don't think we need to include that in the microcode. We could just do that for 2 cycles,
+and then start the "real" T-state counter. Maybe it's easier to waste decode ROM space on it
+than to make hardware logic to decide?
 
 In general each step of microcode assumes the form:
     - choose a module to write to the bus (xO)
@@ -116,6 +117,14 @@ We could use an unused bit to drive P+ directly so that it can be used concurren
 ALU, in case that is ever useful.
 
 We also have 1 bit spare that we can toggle when !EO.
+
+## Extensibility
+
+In addition to the 2 unused bits, and the spare but when !EO,
+bus_out/bus_in have one decoding each which is currently unused. In principle, as long as these unused signals are routed
+alongside everything else on the backplane, it would be possible to extend the CPU with an extra register (e.g. a
+dedicated stack pointer) or other modules, at a later date, by just plugging the new module into the backplane
+and writing microcode to make use of it.
 
 ## Addressing modes
 
