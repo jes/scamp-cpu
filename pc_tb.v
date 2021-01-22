@@ -14,7 +14,11 @@ module test;
 
     assign bus = en ? 16'hZZZZ : busreg;
 
-    PC pc (clk, bus, load, en, value, inc, reset_bar);
+    wire en_bar, load_bar;
+    assign en_bar = !en;
+    assign load_bar = !load;
+
+    PC pc (clk, bus, load_bar, en_bar, value, inc, reset_bar);
 
     initial begin
         clk = 0;

@@ -1,19 +1,16 @@
 /* Program Counter */
 
-`include "ttl/7404.v"
 `include "ttl/74161.v"
 `include "ttl/74244.v"
 
-module PC(clk, bus, load, en, value, inc, reset_bar);
+module PC(clk, bus, load_bar, en_bar, value, inc, reset_bar);
     input clk;
     inout [15:0] bus;
-    input load;
-    input en;
+    input load_bar;
+    input en_bar;
     output [15:0] value;
     input inc;
     input reset_bar;
-
-    ttl_7404 inverter ({4'b0, en, load}, {nc,nc,nc,nc, en_bar, load_bar});
 
     ttl_74244 outbuflow ({en_bar,en_bar}, value[7:0], bus[7:0]);
     ttl_74244 outbufhigh ({en_bar,en_bar}, value[15:8], bus[15:8]);

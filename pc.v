@@ -1,13 +1,16 @@
 /* Program Counter */
 
-module PC(clk, bus, load, en, value, inc, reset_bar);
+module PC(clk, bus, load_bar, en_bar, value, inc, reset_bar);
     input clk;
     inout [15:0] bus;
-    input load;
-    input en;
+    input load_bar;
+    input en_bar;
     output [15:0] value;
     input inc;
     input reset_bar;
+
+    assign load = !load_bar;
+    assign en = !en_bar;
 
     reg [15:0] val;
 
