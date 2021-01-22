@@ -26,10 +26,10 @@
 `include "ttl/74138.v"
 
 module Control(uinstr,
-        EO_bar, PO_bar, IOH_bar, IOL_bar, RO, XO_bar, YO_bar, DO, RT, PP, MI, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
+        EO_bar, PO_bar, IOH_bar, IOL_bar, RO, XO_bar, YO_bar, DO, RT, PP, MI_bar, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
 
     input [15:0] uinstr;
-    output EO_bar, PO_bar, IOH_bar, IOL_bar, RO, XO_bar, YO_bar, DO, RT, PP, MI, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT;
+    output EO_bar, PO_bar, IOH_bar, IOL_bar, RO, XO_bar, YO_bar, DO, RT, PP, MI_bar, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT;
     output [5:0] ALU_flags;
 
     wire [2:0] bus_out;
@@ -53,6 +53,8 @@ module Control(uinstr,
     assign JLT = uinstr[2];
 
     // XXX: we only need to invert some of each of bus_out/bus_in; could lose 1 inverter
+    // XXX: refactor this so we assign to XX_bar from bus_out_dec and then invert only the
+    // required signals, instead of the entire bus_out_dec
     ttl_7404 inverter1 ({2'bZ, bus_out_dec[7:6], bus_in_dec[7:6]}, {nc, nc, inv_bus_out_dec[7:6], inv_bus_in_dec[7:6]});
     ttl_7404 inverter2 (bus_out_dec[5:0], inv_bus_out_dec[5:0]);
     ttl_7404 inverter3 (bus_in_dec[5:0], inv_bus_in_dec[5:0]);
@@ -75,7 +77,7 @@ module Control(uinstr,
 
     // inv_bus_in decoding:
     // inv_bus_in == 0 means nobody inputs from bus
-    assign MI = inv_bus_in_dec[1]; // MAR in
+    assign MI_Bar = bus_in_dec[1]; // MAR in
     assign II_bar = bus_in_dec[2]; // IR in
     assign RI = inv_bus_in_dec[3]; // RAM in
     assign XI_bar = bus_in_dec[4]; // X in

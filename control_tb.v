@@ -41,13 +41,14 @@ module test;
     assign EO = !EO_bar;
     assign XO = !XO_bar;
     assign YO = !YO_bar;
+    assign MI = !MI_bar;
     assign II = !II_bar;
     assign XI = !XI_bar;
     assign YI = !YI_bar;
 
     wire [15:0] real_uinstr = {!uinstr[15], uinstr[14:0]};
 
-    Control control (real_uinstr, EO_bar, PO_bar, IOH_bar, IOL_bar, RO, XO_bar, YO_bar, DO, RT, PP, MI, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
+    Control control (real_uinstr, EO_bar, PO_bar, IOH_bar, IOL_bar, RO, XO_bar, YO_bar, DO, RT, PP, MI_bar, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
 
     initial begin
         uinstr = vIOH | vJC;
