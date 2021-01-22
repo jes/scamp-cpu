@@ -22,6 +22,7 @@
  */
 
 `include "ttl/7404.v"
+`include "ttl/7408.v"
 `include "ttl/74138.v"
 
 module Control(uinstr,
@@ -70,8 +71,7 @@ module Control(uinstr,
     // spare: assign .. = inv_bus_out_dec[7];
 
     // decode RT/P+
-    assign RT = EO_bar && uinstr[11];
-    assign PP = EO_bar && uinstr[10];
+    ttl_7408 ander ({2'bZ, EO_bar, EO_bar}, {2'bZ, uinstr[11], uinstr[10]}, {nc,nc, RT, PP});
 
     // inv_bus_in decoding:
     // inv_bus_in == 0 means nobody inputs from bus
