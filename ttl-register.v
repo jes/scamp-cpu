@@ -1,7 +1,7 @@
 /* General-purpose 16-bit register for TTL CPU
 
    Likely to be used for:
-    X register, Y register, instruction register
+    X register, Y register
 
    When "en" is 1, gives current value to the bus
    When "load" is 1 and clock edge rises, takes in new value from the bus

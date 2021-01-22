@@ -1,6 +1,9 @@
 /* CPU */
 
 `include "alu.v"
+`include "control.v"
+`include "decode.v"
+`include "ir.v"
 `include "pc.v"
 `include "register.v"
 
@@ -33,13 +36,7 @@ module CPU(clk);
     Register x (clk, bus, XI, XO, X_val);
     Register y (clk, bus, YI, YO, Y_val);
 
-    // TODO: "ir" needs special logic on its output to
-    // put either:
-    //   IR_val & 0xff (if IOL)
-    // or:
-    //   0xff00 | (IR_val & 0xff) (if IOH)
-    // on the bus, instead of just IR_VAL
-    Register ir (clk, bus, II, IO, IR_val);
+    IR ir (clk, bus, II, IOL, IOH, IR_val);
 
     PC pc (clk, bus, !JMP, !PO, PC_val, PP, !reset);
 
