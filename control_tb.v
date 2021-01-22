@@ -22,7 +22,7 @@ module test;
     parameter vRO = vNX|vEY;
     parameter vXO = vEX;
     parameter vYO = vEX|vEY;
-    parameter vDO = vEX|vEY;
+    parameter vDO = vEX|vNX;
     parameter vRT = vNY;
     parameter vPP = vF;
 
@@ -80,10 +80,55 @@ module test;
         uinstr = vEO;
         #1 if (RT || PP || JC || JZ || JGT || JLT) $display("Bad: other flags set wrong");
 
-        uinstr = vPP;
-        #1 if (!PP) $display("P+ doesn't work");
+        uinstr = 0;
+        #1 if (EO || IOH || IOL || RO || XO || YO || DO || RT || PP || MI || II || RI || XI || YI || DI || JC || JZ || JGT || JLT) $display("Bad, some flags set but none asked for");
+        #1 if (!PO) $display("Bad: PO doesn't work");
+
+        uinstr = vEO;
+        #1 if (!EO) $display("Bad: EO doesn't work");
+
+        uinstr = vIOH;
+        #1 if (!IOH) $display("Bad: IOH doesn't work");
+
+        uinstr = vIOL;
+        #1 if (!IOL) $display("Bad: IOL doesn't work");
+
+        uinstr = vRO;
+        #1 if (!RO) $display("RO doesn't work");
+
+        uinstr = vXO;
+        #1 if (!XO) $display("XO doesn't work");
+
+        uinstr = vYO;
+        #1 if (!YO) $display("YO doesn't work");
+
+        uinstr = vDO;
+        #1 if (!DO) $display("DO doesn't work");
 
         uinstr = vRT;
         #1 if (!RT) $display("RT doesn't work");
+
+        uinstr = vPP;
+        #1 if (!PP) $display("P+ doesn't work");
+
+        uinstr = vMI;
+        #1 if (!MI) $display("MI doesn't work");
+
+        uinstr = vII;
+        #1 if (!II) $display("II doesn't work");
+
+        uinstr = vRI;
+        #1 if (!RI) $display("RI doesn't work");
+
+        uinstr = vXI;
+        #1 if (!XI) $display("XI doesn't work");
+
+        uinstr = vYI;
+        #1 if (!YI) $display("YI doesn't work");
+
+        uinstr = vDI;
+        #1 if (!DI) $display("DI doesn't work");
+
+
     end
 endmodule
