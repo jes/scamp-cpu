@@ -8,6 +8,7 @@ using the IOL and IOH control bits respectively.
 I was thinking we could dedicate the top 256 (or whatever) bytes of RAM to
 act as "registers", which could be conveniently accessed with a single opcode by
 loading the memory into Y, e.g.:
+
     1. IOH MI (put FFxx into MAR)
     2. RO  YI (put RAM contents into Y register)
 
@@ -86,40 +87,29 @@ In general each step of microcode assumes the form:
     - choose jump flags
     - choose whether to reset the T-state counter (RT)
 
-We only ever want one module driving the bus at a time, so all of the xO microcodes can
-be encoded into fewer bits (see control.v). Similarly, I *think* we only want one module
-reading from the bus at a time, so it's probably worth encoding the xI microcodes the
-same way.
+Provisionally, the microcode instruction word encodes the control bits as follows:
 
-Jump flags are not quite worth encoding, we'd want 4 bits either way, for JC, JZ, JGT, JLT.
+|   Bit | Meaning |
+| :---- | :------ |
+|    15 | EO |
+|    14 | EO ? EX : bus_out[2] |
+|    13 | EO ? NX : bus_out[1] |
+|    12 | EO ? EY : bus_out[0] |
+|    11 | EO ? NY : RT |
+|    10 | EO ? F  : P+ |
+|     9 | EO ? NO : (unused) |
+|     8 | bus_in[2] |
+|     7 | bus_in[1] |
+|     6 | bus_in[0] |
+|     5 | JC |
+|     4 | JZ |
+|     3 | JGT |
+|     2 | JLT |
+|     1 | (unused) |
+|     0 | (unused) |
 
-Other bits we want to encode:
- * RT         - reset T-state (basically, finish this instruction)
- * P+         - increment PC (called PP in Verilog where P+ isn't allowed)
- * ALU flags  - naturally 6; we might want to add a 7th to gain more functions, but in any case we should be encode these into fewer bits
-
-So currently I think the microcode will require:
-
-      3 (bus_out)
-    + 3 (bus_in)
-    + 3 (RT, P+, IO enable)
-    + 6 (ALU flags)
-    + 4 (jump flags)
-    = 19 bits
-
-Too large to fit on 2x 8-bit ROM chips.
-
-We only ever want ALU flags when bus_out == EO, so we can move EO out of bus_out,
-and overlap bus_out with ALU flags. ALU flags are longer than necessary, so we'll
-also use these bits to encode RT and P+.
-
-      1 (EO)
-    + 6 (ALU flags and bus_out/RT/P+)
-    + 3 (bus_in)
-    + 4 (jump flags)
-    = 14 bits
-
-Leaving 1 bit spare to add an extra ALU flag (e.g. 2 more functions), and 1 more bit unused.
+This uses 14 bits, leaving 1 bit spare to add an extra ALU flag (e.g. 2 more functions),
+and 1 more bit unused.
 We could use an unused bit to drive P+ directly so that it can be used concurrently with the
 ALU, in case that is ever useful.
 
@@ -134,5 +124,3 @@ bus_out/bus_in have one decoding each which is currently unused. In principle, a
 alongside everything else on the backplane, it would be possible to extend the CPU with an extra register (e.g. a
 dedicated stack pointer) or other modules, at a later date, by just plugging the new module into the backplane
 and writing microcode to make use of it.
-
-
