@@ -1,19 +1,19 @@
 /* T-state counter
 
-   Counts up through the output bits on the *negative* edge of the clock
+   Counts up on the *negative* edge of the clock
  */
 
-module TState (clk, reset, out);
+module TState (clk, reset_bar, T);
     input clk;
-    input reset;
-    output [7:0] out;
+    input reset_bar;
+    output [2:0] T;
 
-    reg [2:0] val;
+    reg [2:0] Treg;
 
-    assign out = (1 << val);
+    assign T = Treg;
 
-    always @ (negedge clk or posedge reset) begin
-        if (reset) val <= 0;
-        else val <= val + 1;
+    always @ (negedge clk or negedge reset_bar) begin
+        if (!reset_bar) Treg <= 0;
+        else Treg <= Treg + 1;
     end
 endmodule

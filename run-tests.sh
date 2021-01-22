@@ -13,11 +13,11 @@ for t in $TESTS; do
     echo $t...
     iverilog ${t}_tb.v
     ./a.out
-    rm a.out
+    rm -f a.out
 
     echo ttl-$t...
     cat ${t}_tb.v | sed "s/include \"${t}.v\"/include \"ttl-${t}.v\"/" > ttl-${t}_tb.v
     iverilog ttl-${t}_tb.v
     ./a.out
-    rm ttl-${t}_tb.v a.out
+    rm -f ttl-${t}_tb.v a.out
 done
