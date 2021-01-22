@@ -49,8 +49,8 @@ module CPU(clk);
 
     TState tstate (clk, RT, T);
 
-    Control control (uinstr, EO_bar, PO_bar, IOH, IOL, RO, XO_bar, YO_bar, DO, RT, PP, MI, II, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
-
     Decode decode (IR_val, T, uinstr);
+
+    Control control (uinstr, EO_bar, PO_bar, IOH, IOL, RO, XO_bar, YO_bar, DO, RT, PP, MI, II, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
 
 endmodule
