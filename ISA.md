@@ -171,6 +171,10 @@ and, or, not
 XXX: We could add an extra control bit to the ALU to allow it to
 select from XOR and 1 other function as well as ADD and AND.
 
+We probably really want some efficient way to shift right by either 1 or 4 bits, to
+dramatically improve right shift operations. Shift-right 6 becomes "shr4, shr4, add, add"
+instead of long division, or 16 individual bit comparisons, or something else.
+
 ### I/O
 
 in, out
