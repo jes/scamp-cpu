@@ -15,26 +15,21 @@
    */
 
 `include "ttl/7408.v"
+`include "ttl/7432.v"
 `include "ttl/7486.v"
 `include "ttl/74157.v"
 `include "ttl/74283.v"
 
-module ALU4(X, Y, C, carry_in, carry_out, out);
+module ALU4(X, Y, C, carry_in, carry_out, out, NZ_flag);
     input [3:0] X;
     input [3:0] Y;
     input [5:0] C;
     input carry_in;
     output carry_out;
     output [3:0] out;
+    output NZ_flag;
 
-    wire ex,nx,ey,ny,f,no;
-
-    assign ex = C[5];
-    assign nx = C[4];
-    assign ey = C[3];
-    assign ny = C[2];
-    assign f = C[1];
-    assign no = C[0];
+    assign {ex,nx,ey,ny,f,no} = C;
 
     wire [3:0] inx;
     wire [3:0] iny;
@@ -55,4 +50,6 @@ module ALU4(X, Y, C, carry_in, carry_out, out);
 
     ttl_74157 mux (1'b0, f, and_result, add_result, val);
     ttl_7486 outputxor ({no,no,no,no}, val, out);
+
+    ttl_7432 orer ({val[0],val[1],nor1,1'bZ},{val[2],val[3],nor2,1'bZ},{nor1,nor2,NZ_flag,nc});
 endmodule
