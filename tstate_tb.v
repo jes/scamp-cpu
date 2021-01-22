@@ -3,18 +3,18 @@
 
 module test;
     reg clk;
-    reg reset_bar;
+    reg reset;
 
     wire [2:0] T;
 
-    TState tstate (clk, reset_bar, T);
+    TState tstate (clk, reset, T);
 
     initial begin
         clk = 1;
-        reset_bar = 0;
-        #1 if (T !== 0) $display("Bad: reset_bar didn't initialise to T0,",T);
+        reset = 1;
+        #1 if (T !== 0) $display("Bad: reset didn't initialise to T0,",T);
 
-        reset_bar = 1;
+        reset = 0;
         #1
         clk = 0;
         #1 if (T !== 1) $display("Bad: didn't reach T1 on falling edge");
@@ -52,7 +52,7 @@ module test;
         clk = 1;
         #1
         clk = 0;
-        #1 if (T !== 0) $display("Bad: didn't reset_bar to T0 on falling edge");
+        #1 if (T !== 0) $display("Bad: didn't reset to T0 on falling edge");
 
         clk = 1;
         #1
@@ -63,7 +63,7 @@ module test;
         clk = 0;
         #1 if (T !== 2) $display("Bad: didn't reach T2 after 2 falling edges");
 
-        reset_bar = 0;
-        #1 if (T !== 0) $display("Bad: didn't reset_bar back to T0");
+        reset = 1;
+        #1 if (T !== 0) $display("Bad: didn't reset back to T0");
     end
 endmodule
