@@ -22,10 +22,10 @@
  */
 
 module Control(uinstr,
-        EO, PO, IOH, IOL, RO, XO, YO, DO, RT, PA, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT, ALU_flags);
+        EO, PO, IOH, IOL, RO, XO, YO, DO, RT, PP, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT, ALU_flags);
 
     input [15:0] uinstr;
-    output EO, PO, IOH, IOL, RO, XO, YO, DO, RT, PA, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT;
+    output EO, PO, IOH, IOL, RO, XO, YO, DO, RT, PP, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT;
     output [5:0] ALU_flags;
 
     wire [2:0] bus_out;
@@ -51,7 +51,7 @@ module Control(uinstr,
 
     // decode RT/P+
     assign RT = !EO && uinstr[11];
-    assign PA = !EO && uinstr[10];
+    assign PP = !EO && uinstr[10];
 
     // bus_in decoding:
     // bus_in == 0 means nobody inputs from bus

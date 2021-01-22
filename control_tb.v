@@ -24,7 +24,7 @@ module test;
     parameter vYO = vEX|vEY;
     parameter vDO = vEX|vEY;
     parameter vRT = vNY;
-    parameter vPA = vF;
+    parameter vPP = vF;
 
     parameter vMI = 16'h0040;
     parameter vII = 16'h0080;
@@ -35,7 +35,7 @@ module test;
 
     wire [5:0] ALU_flags;
 
-    Control control (uinstr, EO, PO, IOH, IOL, RO, XO, YO, DO, RT, PA, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT, ALU_flags);
+    Control control (uinstr, EO, PO, IOH, IOL, RO, XO, YO, DO, RT, PP, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT, ALU_flags);
 
     initial begin
         uinstr = vIOH | vJC;
@@ -47,8 +47,8 @@ module test;
         uinstr = vRO | vMI;
         #1 if (!RO || !MI) $display("Bad: !RO || !MI");
 
-        uinstr = vRO | vYI | vPA;
-        #1 if (!RO || !YI || !PA) $display("Bad: !RO || !YI || !PA");
+        uinstr = vRO | vYI | vPP;
+        #1 if (!RO || !YI || !PP) $display("Bad: !RO || !YI || !PP");
 
         uinstr = vYO | vMI;
         #1 if (!YO || !MI) $display("Bad: !YO || !MI");
@@ -66,10 +66,10 @@ module test;
         #1 if (!DI || MI || II || RI || XI || YI) $display("Bad: input flags set wrong");
 
         uinstr = vEO;
-        #1 if (RT || PA || JC || JZ || JGT || JLT) $display("Bad: other flags set wrong");
+        #1 if (RT || PP || JC || JZ || JGT || JLT) $display("Bad: other flags set wrong");
 
-        uinstr = vPA;
-        #1 if (!PA) $display("P+ doesn't work");
+        uinstr = vPP;
+        #1 if (!PP) $display("P+ doesn't work");
 
         uinstr = vRT;
         #1 if (!RT) $display("RT doesn't work");

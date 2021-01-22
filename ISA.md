@@ -88,7 +88,7 @@ Jump flags are not quite worth encoding, we'd want 4 bits either way, for JC, JZ
 
 Other bits we want to encode:
  * RT         - reset T-state (basically, finish this instruction)
- * P+         - increment PC (called PA in Verilog where P+ isn't allowed)
+ * P+         - increment PC (called PP in Verilog where P+ isn't allowed)
  * ALU flags  - naturally 6; we might want to add a 7th to gain more functions, but in any case we should be encode these into fewer bits
 
 So currently I think the microcode will require:
