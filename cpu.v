@@ -3,6 +3,7 @@
 `include "alu.v"
 `include "control.v"
 `include "decode.v"
+`include "fr.v"
 `include "ir.v"
 `include "pc.v"
 `include "tstate.v"
@@ -34,10 +35,10 @@ module CPU(clk);
     wire JC, JZ, JGT, JLT; // jump flags
     wire [5:0] ALU_flags;
 
-    assign JMP = (JC&C) | (JZ&Z) | (JNZ&!Z) | (JLT&LT) | (JGT&!Z&!LT);
+    assign JMP = (JC&C) | (JZ&Z) | (JLT&LT) | (JGT&!Z&!LT);
 
-    ALU alu (X_val, Y_val, ALU_flags, EO, bus, E_val, C_in, C_flag, Z_flag, LT_flag);
-    FR fr (clk, {C_flag, Z_flag, LT_flag}, EO, {C, Z, LT});
+    ALU alu (X_val, Y_val, ALU_flags, !EO, bus, E_val, C_in, C_flag, Z_flag, LT_flag);
+    FR fr (clk, {C_flag, Z_flag, LT_flag}, !EO, {C, Z, LT});
 
     Register x (clk, bus, !XI, !XO, X_val);
     Register y (clk, bus, !YI, !YO, Y_val);

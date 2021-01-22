@@ -13,13 +13,13 @@
     f: function select: 0 for '&', 1 for '+'
     no: invert the bits of the output
 
-   Output to bus is enabled when en is high. Output to val always.
+   Output to bus is enabled when en_bar is low. Output to val always.
    */
-module ALU(X, Y, C, en, bus, val, C_in, C_flag, Z_flag, LT_flag);
+module ALU(X, Y, C, en_bar, bus, val, C_in, C_flag, Z_flag, LT_flag);
     input [15:0] X;
     input [15:0] Y;
     input [5:0] C;
-    input en;
+    input en_bar;
     output [15:0] bus;
     output [15:0] val;
     input C_in;
@@ -41,7 +41,7 @@ module ALU(X, Y, C, en, bus, val, C_in, C_flag, Z_flag, LT_flag);
     assign {C_flag, fxy} = f ? (C_in+argx+argy) : (argx&argy);
 
     assign val = no ? ~fxy : fxy;
-    assign bus = en ? val : 16'hZZZZ;
+    assign bus = !en_bar ? val : 16'hZZZZ;
 
     assign Z_flag = (val == 0);
     assign LT_flag = val[15];

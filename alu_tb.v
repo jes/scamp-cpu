@@ -15,7 +15,8 @@ module test;
 
     reg C_in = 0;
 
-    ALU alu (X, Y, C, en, bus, out, C_in, C_flag, Z_flag, LT_flag);
+    assign en_bar = !en;
+    ALU alu (X, Y, C, en_bar, bus, out, C_in, C_flag, Z_flag, LT_flag);
 
     parameter ex=32, nx=16, ey=8, ny=4, f=2, no=1;
 
