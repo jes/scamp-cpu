@@ -28,8 +28,8 @@ module Control(uinstr,
     output EO, PO, IOH, IOL, RO, XO, YO, DO, RT, PA, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT;
     output [5:0] ALU_flags;
 
-    wire [3:0] bus_out;
-    wire [3:0] bus_in;
+    wire [2:0] bus_out;
+    wire [2:0] bus_in;
 
     assign EO = uinstr[15];
 
