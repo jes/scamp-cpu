@@ -12,7 +12,10 @@ module test;
 
     assign bus = en ? 16'hZZZZ : busreg;
 
-    Register register (clk, bus, load, en, value);
+    assign en_bar = !en;
+    assign load_bar = !load;
+
+    Register register (clk, bus, load_bar, en_bar, value);
 
     initial begin
         clk = 0;
