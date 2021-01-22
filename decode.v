@@ -1,12 +1,13 @@
-/* Decode: Turn an instruction into a microinstruction */
+/* Decode: Turn an instruction into a microinstruction
 
-module Decode(instr, T_state);
+    T0:  PO MI
+    T1:  RO II P+
+    T2+: look in DecodeROM at {T-2, instr[15:8]}
+*/
+
+module Decode(instr, T, uinstr);
     input [15:0] instr;
-
-    output [2:0] bus_out; // output to bus selection
-    output [2:0] bus_in;  // input from bus selection
-    output PA;            // increment PC
-
-    
+    input T;
+    output [15:0] uinstr;
 
 endmodule
