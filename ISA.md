@@ -26,6 +26,40 @@ the instruction set so that I can be confident of things like:
 It might be interesting if some of the opcode space were dedicated to a "decode RAM" instead
 of a "decode ROM", so that extra microcoded instructions can be created at runtime.
 
+## Control bits
+
+| Name | Meaning |
+| :--- | :------ |
+| PO   | Program counter output to bus |
+| IOH  | Immediate small value from instruction register output to bus with high bits set to 1 |
+| IOL  | Immediate small value from instrugtion register output to bus with high bits set to 0 |
+| RO   | RAM output to bus |
+| XO   | X register output to bus |
+| YO   | Y register output to bus |
+| DO   | I/O device output to bus |
+| EO   | ALU output to bus |
+| :--- | :------ |
+| MI   | Memory address register input from bus |
+| RI   | RAM input from bus |
+| II   | Instruction register input from bus |
+| XI   | X register input from bus |
+| YI   | Y register input from bus |
+| DI   | I/O device input from bus |
+| :--- | :------ |
+| P+   | increment program counter |
+| RT   | reset T-state counter |
+| JC   | jump if carry |
+| JZ   | jump if zero |
+| JGT  | jump if greater than zero |
+| JLT  | jump if less than zero |
+| :--- | :------ |
+| EX   | ALU flag: enable X (don't set X to 0) |
+| NX   | ALU flag: invert bits of X |
+| EY   | ALU flag: enable Y (don't set Y to 0) |
+| NY   | ALU flag: invert bits of Y |
+| F    | ALU flag: function select (0 for '&', 1 for '+') |
+| NO   | ALU Flag: invert bits of output |
+
 ## Decoding
 
 Every instruction implicitly starts with microcode of:
@@ -35,6 +69,14 @@ Every instruction implicitly starts with microcode of:
 
 So I don't think we need to include that in the microcode. We just do that for 2 cycles,
 and then start the "real" T-state counter.
+
+In general each step of microcode assumes the form:
+    - choose a module to write to the bus (xO)
+    - choose a module to read from the bus (xI)
+    - choose ALU flags
+    - choose whether to increment the PC (P+)
+    - choose jump flags
+    - choose whether to reset the T-state counter (RT)
 
 We only ever want one module driving the bus at a time, so all of the xO microcodes can
 be encoded into fewer bits (see control.v). Similarly, I *think* we only want one module
@@ -47,7 +89,6 @@ Other bits we want to encode:
  * RT         - reset T-state (basically, finish this instruction)
  * P+         - increment PC (called PA in Verilog where P+ isn't allowed)
  * ALU flags  - naturally 6; we might want to add a 7th to gain more functions, but in any case we should be encode these into fewer bits
- * IO enable  - speak to IO instead of RAM - only applicable with RI or RO?
 
 So currently I think the microcode will require:
 
@@ -58,31 +99,23 @@ So currently I think the microcode will require:
     + 4 (jump flags)
     = 19 bits
 
-It would be good to save 3 more bits, to fit in 16 bits and therefore 2 ROM chips instead of 3.
+Too large to fit on 2x 8-bit ROM chips.
 
-RT only ever occurs on its own, because it immediately triggers the start of the next instruction,
-without waiting for a clock tick. We could use one of the spare decodings of bus_out or bus_in
-to generate RT, bringing it down to 18 bits.
+We only ever want ALU flags when bus_out == EO, so we can move EO out of bus_out,
+and overlap bus_out with ALU flags. ALU flags are longer than necessary, so we'll
+also use these bits to encode RT and P+.
 
-We can definitely encode the ALU flags in 5 bits instead of 6. 17 bits.
-If we throw away 2 of the functions from this table: https://img.jes.xxx/3151 then we only
-need 4 bits to set ALU flags, and that brings us down to 16 already.
+      1 (EO)
+    + 6 (ALU flags and bus_out/RT/P+)
+    + 3 (bus_in)
+    + 4 (jump flags)
+    = 14 bits
 
-We might also observe that some combinations of xI and xO don't make any sense. For example,
-the identity assignment doesn't seem useful (i.e. we never want `XO XI`). We are also unlikely
-to be writing to the instruction register from anywhere other than RAM, for what it's worth.
+Leaving 1 bit spare to add an extra ALU flag (e.g. 2 more functions), and 1 more bit unused.
+We could use an unused bit to drive P+ directly so that it can be used concurrently with the
+ALU, in case that is ever useful.
 
-We currently have 7 possibilities for bus_out and 5 for bus_in, 7*5 = 35, if we throw away
-the identity assignments then we save 4, leaving us with 31 possibilities, and still 1
-left over to generate RT, so we could save another bit there compared to using 3 bits for each
-of bus_out and bus_in. And we haven't even got rid of stupid loads to the IR like `XO II`.
-
-In general each step of microcode assumes the form:
-    - choose a module to write to the bus
-    - choose a module to read from the bus
-    - choose ALU flags
-    - choose whether to increment the PC
-    - choose jump flags
+We also have 1 bit spare that we can toggle when !EO.
 
 ## Addressing modes
 
@@ -150,8 +183,8 @@ djnz of X: (Decrement and jump if not zero)
     [opcode] [jump target]
 
     1. ALU=X-1 EO XI    load X-1 into X
-    2. PO MI 
-    3. JGT JLZ
+    2. PO MI            load address from PC (jump target)
+    3. RO JGT JLZ P+    jump to address from RAM if X-1 != 0, else inc PC
 
 Add 2 consecutive numbers together from an immediate address operand and store it in a 2nd
 immediate address operand:
