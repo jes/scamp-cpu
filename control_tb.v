@@ -129,6 +129,16 @@ module test;
         uinstr = vDI;
         #1 if (!DI) $display("DI doesn't work");
 
+        uinstr = vJC;
+        #1 if (!JC) $display("JC doesn't work");
 
+        uinstr = vJZ;
+        #1 if (!JZ) $display("JZ doesn't work");
+
+        uinstr = vJGT;
+        #1 if (!JGT) $display("JGT doesn't work");
+
+        uinstr = vJLT;
+        #1 if (!JLT) $display("JLT doesn't work");
     end
 endmodule
