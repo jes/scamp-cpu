@@ -22,44 +22,44 @@
  */
 
 module Control(uinstr,
-        EO, PO, IOH, IOL, RO, XO, YO, DO, RT, PP, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT, ALU_flags);
+        EO_bar, PO_bar, IOH, IOL, RO, XO_bar, YO_bar, DO, RT, PP, MI, II, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
 
     input [15:0] uinstr;
-    output EO, PO, IOH, IOL, RO, XO, YO, DO, RT, PP, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT;
+    output EO_bar, PO_bar, IOH, IOL, RO, XO_bar, YO_bar, DO, RT, PP, MI, II, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT;
     output [5:0] ALU_flags;
 
     wire [2:0] bus_out;
     wire [2:0] bus_in;
 
-    assign EO = uinstr[15];
+    assign EO_bar = uinstr[15];
 
-    // ALU has no side effects if !EO, so we can safely tie
+    // ALU has no side effects if EO_bar, so we can safely tie
     // the bus_out signals to ALU_flags without checking EO
     assign ALU_flags = uinstr[14:9];
     assign bus_out = uinstr[14:12];
     assign bus_in = uinstr[8:6];
 
     // bus_out decoding:
-    assign PO = (!EO && bus_out == 0);  // PC out
-    assign IOH = (!EO && bus_out == 1); // IR out (high end)
-    assign IOL = (!EO && bus_out == 2); // IR out (low end)
-    assign RO = (!EO && bus_out == 3);  // RAM out
-    assign XO = (!EO && bus_out == 4);  // X out
-    assign YO = (!EO && bus_out == 5);  // Y out
-    assign DO = (!EO && bus_out == 6);  // device out
-    // spare: assign .. = (!EO && bus_out == 7)
+    assign PO_bar = !(EO_bar && bus_out == 0);  // PC out
+    assign IOH = (EO_bar && bus_out == 1); // IR out (high end)
+    assign IOL = (EO_bar && bus_out == 2); // IR out (low end)
+    assign RO = (EO_bar && bus_out == 3);  // RAM out
+    assign XO_bar = !(EO_bar && bus_out == 4);  // X out
+    assign YO_bar = !(EO_bar && bus_out == 5);  // Y out
+    assign DO = (EO_bar && bus_out == 6);  // device out
+    // spare: assign .. = (EO_bar && bus_out == 7)
 
     // decode RT/P+
-    assign RT = !EO && uinstr[11];
-    assign PP = !EO && uinstr[10];
+    assign RT = EO_bar && uinstr[11];
+    assign PP = EO_bar && uinstr[10];
 
     // bus_in decoding:
     // bus_in == 0 means nobody inputs from bus
     assign MI = (bus_in == 1); // MAR in
     assign II = (bus_in == 2); // IR in
     assign RI = (bus_in == 3); // RAM in
-    assign XI = (bus_in == 4); // X in
-    assign YI = (bus_in == 5); // Y in
+    assign XI_bar = !(bus_in == 4); // X in
+    assign YI_bar = !(bus_in == 5); // Y in
     assign DI = (bus_in == 6); // device in
     // spare: assign .. = (bus_in == 7)
 

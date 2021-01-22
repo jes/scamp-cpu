@@ -24,32 +24,32 @@ module CPU(clk);
 
     // state
     wire [2:0] T;
-    wire reset;
+    wire reset_bar;
     wire JMP;
     wire [15:0] uinstr; // XXX: delete
 
     // control bits
-    wire EO, PO, IOH, IOL, RO, XO, YO, DO; // outputs to bus
-    wire MI, II, RI, XI, YI, DI; // inputs from bus
+    wire EO_bar, PO_bar, IOH, IOL, RO, XO_bar, YO_bar, DO; // outputs to bus
+    wire MI, II, RI, XI_bar, YI_bar, DI; // inputs from bus
     wire RT, PP; // reset T-state, increment PC
     wire JC, JZ, JGT, JLT; // jump flags
     wire [5:0] ALU_flags;
 
-    assign JMP = (JC&C) | (JZ&Z) | (JLT&LT) | (JGT&!Z&!LT);
+    assign JMP_bar = !((JC&C) | (JZ&Z) | (JLT&LT) | (JGT&!Z&!LT));
 
-    ALU alu (X_val, Y_val, ALU_flags, !EO, bus, E_val, C_in, C_flag, Z_flag, LT_flag);
-    FR fr (clk, {C_flag, Z_flag, LT_flag}, !EO, {C, Z, LT});
+    ALU alu (X_val, Y_val, ALU_flags, EO_bar, bus, E_val, C_in, C_flag, Z_flag, LT_flag);
+    FR fr (clk, {C_flag, Z_flag, LT_flag}, EO_bar, {C, Z, LT});
 
-    Register x (clk, bus, !XI, !XO, X_val);
-    Register y (clk, bus, !YI, !YO, Y_val);
+    Register x (clk, bus, XI_bar, XO_bar, X_val);
+    Register y (clk, bus, YI_bar, YO_bar, Y_val);
 
     IR ir (clk, bus, II, IOL, IOH, IR_val);
 
-    PC pc (clk, bus, !JMP, !PO, PC_val, PP, !reset);
+    PC pc (clk, bus, JMP_bar, PO_bar, PC_val, PP, reset_bar);
 
     TState tstate (!clk, RT, T);
 
-    Control control (uinstr, EO, PO, IOH, IOL, RO, XO, YO, DO, RT, PP, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT, ALU_flags);
+    Control control (uinstr, EO_bar, PO_bar, IOH, IOL, RO, XO_bar, YO_bar, DO, RT, PP, MI, II, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
 
     Decode decode (IR_val, T, uinstr);
 

@@ -25,10 +25,10 @@
 `include "ttl/74138.v"
 
 module Control(uinstr,
-        EO, PO, IOH, IOL, RO, XO, YO, DO, RT, PP, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT, ALU_flags);
+        EO_bar, PO_bar, IOH, IOL, RO, XO_bar, YO_bar, DO, RT, PP, MI, II, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
 
     input [15:0] uinstr;
-    output EO, PO, IOH, IOL, RO, XO, YO, DO, RT, PP, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT;
+    output EO_bar, PO_bar, IOH, IOL, RO, XO_bar, YO_bar, DO, RT, PP, MI, II, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT;
     output [5:0] ALU_flags;
 
     wire [2:0] bus_out;
@@ -38,9 +38,9 @@ module Control(uinstr,
     wire [7:0] bus_in_dec;
     wire [7:0] inv_bus_in_dec;
 
-    assign EO = uinstr[15];
+    assign EO_bar = uinstr[15];
 
-    // ALU has no side effects if not_EO, so we can safely tie
+    // ALU has no side effects if EO_bar, so we can safely tie
     // the bus_out signals to ALU_flags without checking EO
     assign ALU_flags = uinstr[14:9];
     assign bus_out = uinstr[14:12];
@@ -51,34 +51,35 @@ module Control(uinstr,
     assign JGT = uinstr[3];
     assign JLT = uinstr[2];
 
-    ttl_7404 inverter1 ({1'bZ, bus_out_dec[7:6], bus_in_dec[7:6], EO}, {nc, inv_bus_out_dec[7:6], inv_bus_in_dec[7:6], not_EO});
+    // XXX: we only need to invert 4 each of bus_out/bus_in; could lose 1 inverter
+    ttl_7404 inverter1 ({2'bZ, bus_out_dec[7:6], bus_in_dec[7:6]}, {nc, nc, inv_bus_out_dec[7:6], inv_bus_in_dec[7:6]});
     ttl_7404 inverter2 (bus_out_dec[5:0], inv_bus_out_dec[5:0]);
     ttl_7404 inverter3 (bus_in_dec[5:0], inv_bus_in_dec[5:0]);
 
-    ttl_74138 out_decoder (1'b0, 1'b0, not_EO, bus_out, bus_out_dec);
+    ttl_74138 out_decoder (1'b0, 1'b0, EO_bar, bus_out, bus_out_dec);
     ttl_74138 in_decoder (1'b0, 1'b0, 1'b1, bus_in, bus_in_dec);
 
     // inv_bus_out decoding:
-    assign PO = inv_bus_out_dec[0];  // PC out
+    assign PO = bus_out_dec[0];  // PC out
     assign IOH = inv_bus_out_dec[1]; // IR out (high end)
     assign IOL = inv_bus_out_dec[2]; // IR out (low end)
     assign RO = inv_bus_out_dec[3];  // RAM out
-    assign XO = inv_bus_out_dec[4];  // X out
-    assign YO = inv_bus_out_dec[5];  // Y out
+    assign XO = bus_out_dec[4];      // X out
+    assign YO = bus_out_dec[5];      // Y out
     assign DO = inv_bus_out_dec[6];  // device out
     // spare: assign .. = inv_bus_out_dec[7];
 
     // decode RT/P+
-    assign RT = not_EO && uinstr[11];
-    assign PP = not_EO && uinstr[10];
+    assign RT = EO_bar && uinstr[11];
+    assign PP = EO_bar && uinstr[10];
 
     // inv_bus_in decoding:
     // inv_bus_in == 0 means nobody inputs from bus
     assign MI = inv_bus_in_dec[1]; // MAR in
     assign II = inv_bus_in_dec[2]; // IR in
     assign RI = inv_bus_in_dec[3]; // RAM in
-    assign XI = inv_bus_in_dec[4]; // X in
-    assign YI = inv_bus_in_dec[5]; // Y in
+    assign XI = bus_in_dec[4];     // X in
+    assign YI = bus_in_dec[5];     // Y in
     assign DI = inv_bus_in_dec[6]; // device in
     // spare: assign .. = inv_bus_in_dec[7]
 
