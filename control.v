@@ -22,10 +22,10 @@
  */
 
 module Control(uinstr,
-        PO, IOH, IOL, RO, XO, YO, DO, RT, PA, MI, RI, II, XI, YI, DI, JC, JZ, JGT, JLT, ALU_flags);
+        PO, IOH, IOL, RO, XO, YO, DO, RT, PA, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT, ALU_flags);
 
     input [15:0] uinstr,
-    output PO, IOH, IOL, RO, XO, YO, DO, RT, PA, MI, RI, II, XI, YI, DI, JC, JZ, JGT, JLT;
+    output PO, IOH, IOL, RO, XO, YO, DO, RT, PA, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT;
     output [5:0] ALU_flags;
 
     wire [3:0] bus_out;
@@ -56,8 +56,8 @@ module Control(uinstr,
     // bus_in decoding:
     // bus_in == 0 means nobody inputs from bus
     assign MI = (bus_in == 1); // MAR in
-    assign RI = (bus_in == 2); // RAM in
-    assign II = (bus_in == 3); // IR in
+    assign II = (bus_in == 2); // IR in
+    assign RI = (bus_in == 3); // RAM in
     assign XI = (bus_in == 4); // X in
     assign YI = (bus_in == 5); // Y in
     assign DI = (bus_in == 6); // device in
