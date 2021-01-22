@@ -10,24 +10,25 @@ module CPU(clk);
     // bus
     wire [15:0] bus;
 
-    // connected to register values
+    // register values
     wire [15:0] X_val;
     wire [15:0] Y_val;
-    wire [15:0] A_val;
+    wire [15:0] E_val;
     wire [15:0] IR_val;
     wire [15:0] PC_val;
 
     // control bits
-    // TODO: split these into outputs from microcode (reg, for now), and
-    // computed values (wire)
-    reg [5:0] A_c;
-    reg reset_bar;
-    reg EO, XI, XO, YI, YO, JZ, JNZ, JGT, JLT, JC, PO, PA, II, IO;
+    wire EO, PO, IOH, IOL, RO, XO, YO, DO; // outputs to bus
+    wire MI, II, RI, XI, YI, DI; // inputs from bus
+    wire RT, PP; // reset T-state, increment PC
+    wire JC, JZ, JGT, JLT; // jump flags
+    wire reset;
     wire JMP;
+    wire [5:0] ALU_flags;
 
     // TODO: assign JMP = (JC&C) | (JZ&Z) | (JNZ&!Z) | (JGT&GT) | (JLT&!Z&!GT);
 
-    ALU alu (X_val, Y_val, A_c, EO, bus, A_val);
+    ALU alu (X_val, Y_val, ALU_flags, EO, bus, E_val);
 
     Register x (clk, bus, XI, XO, X_val);
     Register y (clk, bus, YI, YO, Y_val);
@@ -40,6 +41,12 @@ module CPU(clk);
     // on the bus, instead of just IR_VAL
     Register ir (clk, bus, II, IO, IR_val);
 
-    PC pc (clk, bus, JMP, PO, PC_val, PA, reset_bar);
+    PC pc (clk, bus, !JMP, !PO, PC_val, PP, !reset);
+
+    TState tstate (!clk, RT, T);
+
+    Control control (uinstr, EO, PO, IOH, IOL, RO, XO, YO, DO, RT, PP, MI, II, RI, XI, YI, DI, JC, JZ, JGT, JLT, ALU_flags);
+
+    Decode decode (IR_val, T, uinstr);
 
 endmodule
