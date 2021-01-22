@@ -51,12 +51,12 @@ module Control(uinstr,
     assign JGT = uinstr[3];
     assign JLT = uinstr[2];
 
-    ttl_7404 inverter1 ({1'bZ, bus_out_dec[7:6], bus_in_dec[7:6], E0}, {nc, inv_bus_out_dec[7:6], inv_bus_in_dec[7:6], not_EO});
+    ttl_7404 inverter1 ({1'bZ, bus_out_dec[7:6], bus_in_dec[7:6], EO}, {nc, inv_bus_out_dec[7:6], inv_bus_in_dec[7:6], not_EO});
     ttl_7404 inverter2 (bus_out_dec[5:0], inv_bus_out_dec[5:0]);
     ttl_7404 inverter3 (bus_in_dec[5:0], inv_bus_in_dec[5:0]);
 
-    ttl_74138 out_decoder (not_EO, 1'b0, 1'b0, bus_out, bus_out_dec);
-    ttl_74138 in_decoder (1'b1, 1'b0, 1'b0, bus_in, bus_in_dec);
+    ttl_74138 out_decoder (1'b0, 1'b0, not_EO, bus_out, bus_out_dec);
+    ttl_74138 in_decoder (1'b0, 1'b0, 1'b1, bus_in, bus_in_dec);
 
     // inv_bus_out decoding:
     assign PO = inv_bus_out_dec[0];  // PC out
