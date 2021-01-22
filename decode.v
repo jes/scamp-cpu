@@ -7,7 +7,7 @@
 
 module Decode(instr, T, uinstr);
     input [15:0] instr;
-    input T;
+    input [2:0] T;
     output [15:0] uinstr;
 
 endmodule

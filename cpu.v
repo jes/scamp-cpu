@@ -5,6 +5,7 @@
 `include "decode.v"
 `include "ir.v"
 `include "pc.v"
+`include "tstate.v"
 `include "register.v"
 
 module CPU(clk);
@@ -20,18 +21,22 @@ module CPU(clk);
     wire [15:0] IR_val;
     wire [15:0] PC_val;
 
+    // state
+    wire [2:0] T;
+    wire reset;
+    wire JMP;
+    wire [15:0] uinstr; // XXX: delete
+
     // control bits
     wire EO, PO, IOH, IOL, RO, XO, YO, DO; // outputs to bus
     wire MI, II, RI, XI, YI, DI; // inputs from bus
     wire RT, PP; // reset T-state, increment PC
     wire JC, JZ, JGT, JLT; // jump flags
-    wire reset;
-    wire JMP;
     wire [5:0] ALU_flags;
 
     // TODO: assign JMP = (JC&C) | (JZ&Z) | (JNZ&!Z) | (JGT&GT) | (JLT&!Z&!GT);
 
-    ALU alu (X_val, Y_val, ALU_flags, EO, bus, E_val);
+    ALU alu (X_val, Y_val, ALU_flags, EO, bus, E_val, C_in, C_flag, Z_flag, LT_flag);
 
     Register x (clk, bus, XI, XO, X_val);
     Register y (clk, bus, YI, YO, Y_val);
