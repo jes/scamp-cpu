@@ -24,6 +24,6 @@ module test;
         #1 if (uinstr !== 16'h0040) $display("Bad: (100, T0) uinstr=",uinstr);
 
         instr = 3<<8; T = 2;
-        #1 if (uinstr !== 16'h4180) $display("Bad: (3, T2) uinstr=",uinstr);
+        #1 if (uinstr !== 16'hc580) $display("Bad: (3, T2) uinstr=",uinstr);
     end
 endmodule
