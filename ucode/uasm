@@ -9,7 +9,7 @@ my $MAX_OPCODE = 255;
 my $T_STATES = 8;
 
 my %is_alu = map { $_ => 1 } qw(EX NX EY NY F NO);
-my %is_busout = map { $_ => 1 } qw(PO IOH IOL MO DO);
+my %is_busout = map { $_ => 1 } qw(PO IOH IOL MO DO XO YO);
 my %is_busin = map { $_ => 1 } qw(AI MI II XI YI DI);
 my %is_jmp = map { $_ => 1 } qw(JC JZ JNZ JGT JLT JMP);
 
