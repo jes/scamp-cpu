@@ -20,3 +20,7 @@ dec: 5 # decrement X register: X = X-1
 
 sub: 6 # X = X-Y
     EX NX F NO EO XI
+
+jmp: 7 # jump to immediate address from operand
+    PO MI
+    RO JMP

@@ -43,6 +43,8 @@ my %ucode = (
     JZ  => 0x0010,
     JGT => 0x0008,
     JLT => 0x0004,
+
+    JMP => 0x001c,
 );
 
 my $opcode = -1;
