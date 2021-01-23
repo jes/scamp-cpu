@@ -1,0 +1,123 @@
+#!/usr/bin/perl
+
+# Microcode assembler
+
+use strict;
+use warnings;
+
+my $MAX_OPCODE = 255;
+my $T_STATES = 8;
+
+my %is_alu = map { $_ => 1 } qw(EX NX EY NY F NO);
+my %is_busout = map { $_ => 1 } qw(PO IOH IOL RO XO YO DO RT P+);
+my %is_busin = map { $_ => 1 } qw(MI RI II XI YI DI);
+
+my %ucode = (
+    EO  => 0x8000,
+
+    EX  => 0x4000,
+    NX  => 0x2000,
+    EY  => 0x1000,
+    NY  => 0x0800,
+    F   => 0x0400,
+    NO  => 0x0200,
+
+    PO  => 0x0000,
+    IOH => 0x1000,
+    IOL => 0x2000,
+    RO  => 0x3000,
+    XO  => 0x4000,
+    YO  => 0x5000,
+    DO  => 0x6000,
+    RT  => 0x0800,
+    'P+'=> 0x0400,
+
+    MI  => 0x0040,
+    II  => 0x0080,
+    RI  => 0x00c0,
+    XI  => 0x0100,
+    YI  => 0x0140,
+    DI  => 0x0180,
+
+    JC  => 0x0020,
+    JZ  => 0x0010,
+    JGT => 0x0008,
+    JLT => 0x0004,
+);
+
+my $opcode = -1;
+
+my @ucode;
+
+while (<>) {
+    chomp;
+    s/#.*//; # strip comments
+    s/^\s+//; # strip leading spaces
+    s/\s$//; # strip trailing spaces
+    s/\s+/ /; # collapse spaces
+
+    next if $_ eq '';
+
+    if (/^(\w+): ?(\w)$/) { # new instruction starts
+        $opcode++;
+        die "too many opcodes: >$MAX_OPCODE\n" if $opcode > $MAX_OPCODE;
+        die "wrong opcode for $1: expected 0x$2, found $opcode\n" if $opcode!=hex($2);
+        emit_ucode(@ucode) if $opcode != 0;
+        @ucode = ();
+    } else {
+        my $uinstr = encode($_);
+        push @ucode, $uinstr;
+    }
+}
+
+die "opcode == -1 (maybe label your instructions?)" if $opcode == -1;
+
+emit_ucode(@ucode);
+
+# empty ucode is a no-op
+@ucode = ();
+
+# pad the rest of the microcode space with "long nops", this is needed so that
+# illegal instructions have the "fetch" ucode in them
+emit_ucode(@ucode) for ($opcode+1 .. $MAX_OPCODE);
+
+sub encode {
+    my ($uinstr) = @_;
+
+    # TODO: better syntax for specifying ALU flags (i.e. "X+Y" instead of "EX EY F")
+
+    my @bits = split / /, $uinstr;
+
+    my $num = 0;
+    for my $b (@bits) {
+        die "unrecognised ucode: $b" if !exists $ucode{$b};
+        $num |= $ucode{$b};
+    }
+
+    return $num;
+
+    # TODO:
+
+    # validate:
+    #  - only one busout
+    #  - only one busin
+    #  - busout XOR alu
+
+    # warn if busout without busin or vice versa
+}
+
+sub emit_ucode {
+    my (@ucode) = @_;
+
+    # confusing: always fetch the next instruction and increment PC, regardless of whatever
+    # the last instruction was
+    unshift @ucode, encode("PO MI"), encode("RO II P+");
+
+    # pad the rest of the ucode with "reset t-state" microcode
+    push @ucode, encode("RT") while @ucode < $T_STATES;
+
+    # TODO: say which opcode it is
+    die "too many microinstructions for some uinstruction" if @ucode > $T_STATES;
+
+    print sprintf("%04x\n", $_) for @ucode;
+}
