@@ -30,8 +30,8 @@ module CPU(clk);
     wire [15:0] uinstr;
 
     // control bits
-    wire EO_bar, PO_bar, IOH_bar, IOL_bar, RO, DO; // outputs to bus
-    wire MI_bar, II_bar, RI, XI_bar, YI_bar, DI; // inputs from bus
+    wire EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO; // outputs to bus
+    wire AI_bar, II_bar, MI, XI_bar, YI_bar, DI; // inputs from bus
     wire RT, PP; // reset T-state, increment PC
     wire JC, JZ, JGT, JLT; // jump flags
     wire [5:0] ALU_flags;
@@ -49,8 +49,8 @@ module CPU(clk);
 
     TState tstate (clk, RT, T);
     Decode decode (IR_val, T, uinstr);
-    Control control (uinstr, EO_bar, PO_bar, IOH, IOL, RO, DO, RT, PP, MI_bar, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
+    Control control (uinstr, EO_bar, PO_bar, IOH, IOL, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
 
-    Register mar (clk, bus, MI_bar, MAR_val);
+    Register addr (clk, bus, AI_bar, MAR_val);
 
 endmodule

@@ -26,10 +26,10 @@
 `include "ttl/74138.v"
 
 module Control(uinstr,
-        EO_bar, PO_bar, IOH_bar, IOL_bar, RO, DO, RT, PP, MI_bar, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
+        EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
 
     input [15:0] uinstr;
-    output EO_bar, PO_bar, IOH_bar, IOL_bar, RO, DO, RT, PP, MI_bar, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT;
+    output EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT;
     output [5:0] ALU_flags;
 
     wire [2:0] bus_out;
@@ -52,7 +52,7 @@ module Control(uinstr,
     assign JGT = uinstr[3];
     assign JLT = uinstr[2];
 
-    ttl_7404 inverter ({2'bZ, inv_RO, inv_DO, inv_RI, inv_DI}, {nc,nc, RO, DO, RI, DI});
+    ttl_7404 inverter ({2'bZ, inv_MO, inv_DO, inv_MI, inv_DI}, {nc,nc, MO, DO, MI, DI});
 
     ttl_74138 out_decoder (1'b0, 1'b0, EO_bar, bus_out, bus_out_dec);
     ttl_74138 in_decoder (1'b0, 1'b0, 1'b1, bus_in, bus_in_dec);
@@ -61,7 +61,7 @@ module Control(uinstr,
     assign PO_bar = bus_out_dec[0];  // PC out
     assign IOH_bar = bus_out_dec[1]; // IR out (high end)
     assign IOL_bar = bus_out_dec[2]; // IR out (low end)
-    assign inv_RO = bus_out_dec[3];  // RAM out
+    assign inv_MO = bus_out_dec[3];  // Memory out
     // spare: assign .. = bus_out_dec[4];  // X out
     // spare: assign .. = bus_out_dec[5];  // Y out
     assign inv_DO = bus_out_dec[6];  // device out
@@ -72,9 +72,9 @@ module Control(uinstr,
 
     // inv_bus_in decoding:
     // inv_bus_in == 0 means nobody inputs from bus
-    assign MI_Bar = bus_in_dec[1]; // MAR in
+    assign AI_Bar = bus_in_dec[1]; // Address in
     assign II_bar = bus_in_dec[2]; // IR in
-    assign inv_RI = bus_in_dec[3]; // RAM in
+    assign inv_MI = bus_in_dec[3]; // Memory in
     assign XI_bar = bus_in_dec[4]; // X in
     assign YI_Bar = bus_in_dec[5]; // Y in
     assign inv_DI = bus_in_dec[6]; // device in

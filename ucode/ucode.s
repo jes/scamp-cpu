@@ -24,17 +24,17 @@ sub: 06 # X = X-Y
     EX NX F NO EO XI
 
 jmp: 07 # jump to immediate address from operand
-    PO MI
-    RO JMP
+    PO AI
+    MO JMP
 
 jz: 08 # jump if last ALU output was 0
-    PO MI
-    RO JZ
+    PO AI
+    MO JZ
 
 djnz: 09 # decrement and jump if not zero
     EX NY F EO XI
-    PO MI
-    RO JNZ P+
+    PO AI
+    MO JNZ P+
 
 clc: 0a # clear carry
     EO F # 0+0 = 0

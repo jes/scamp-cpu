@@ -9,8 +9,8 @@ I was thinking we could dedicate the top 256 (or whatever) bytes of RAM to
 act as "registers", which could be conveniently accessed with a single opcode by
 loading the memory into Y, e.g.:
 
-    1. IOH MI (put FFxx into MAR)
-    2. RO  YI (put RAM contents into Y register)
+    1. IOH AI (put FFxx into MAR)
+    2. MO  YI (put RAM contents into Y register)
 
 The purpose of this document is to crystalise exactly what things are required from
 the instruction set so that I can be confident of things like:
@@ -41,12 +41,12 @@ bus fighting at worst.
 | PO   | Program counter output to bus |
 | IOH  | Immediate small value from instruction register output to bus with high bits set to 1 |
 | IOL  | Immediate small value from instrugtion register output to bus with high bits set to 0 |
-| RO   | RAM output to bus |
+| MO   | Memory output to bus |
 | DO   | I/O device output to bus |
 | EO   | ALU output to bus |
 | :--- | :------ |
-| MI   | Memory address register input from bus |
-| RI   | RAM input from bus |
+| AI   | Address register input from bus |
+| MI   | Memory input from bus |
 | II   | Instruction register input from bus |
 | XI   | X register input from bus |
 | YI   | Y register input from bus |
@@ -70,8 +70,8 @@ bus fighting at worst.
 
 Every instruction implicitly starts with microcode of:
 
-    PO MI     load address from program counter
-    RO II P+  load RAM into instruction register, increment PC
+    PO AI     load address from program counter
+    MO II P+  load RAM into instruction register, increment PC
 
 So I don't think we need to include that in the microcode. We could just do that for 2 cycles,
 and then start the "real" T-state counter. Maybe it's easier to waste decode ROM space on it

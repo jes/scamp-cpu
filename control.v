@@ -22,10 +22,10 @@
  */
 
 module Control(uinstr,
-        EO_bar, PO_bar, IOH_bar, IOL_bar, RO, DO, RT, PP, MI_bar, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
+        EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
 
     input [15:0] uinstr;
-    output EO_bar, PO_bar, IOH_bar, IOL_bar, RO, DO, RT, PP, MI_bar, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT;
+    output EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT;
     output [5:0] ALU_flags;
 
     wire [2:0] bus_out;
@@ -43,7 +43,7 @@ module Control(uinstr,
     assign PO_bar = !(EO_bar && bus_out == 0);  // PC out
     assign IOH_bar = !(EO_bar && bus_out == 1); // IR out (high end)
     assign IOL_bar = !(EO_bar && bus_out == 2); // IR out (low end)
-    assign RO = (EO_bar && bus_out == 3);  // RAM out
+    assign MO = (EO_bar && bus_out == 3);  // RAM out
     // spare: assign .. = !(EO_bar && bus_out == 4);
     // spare: assign .. = !(EO_bar && bus_out == 5);
     assign DO = (EO_bar && bus_out == 6);  // device out
@@ -55,9 +55,9 @@ module Control(uinstr,
 
     // bus_in decoding:
     // bus_in == 0 means nobody inputs from bus
-    assign MI_bar = !(bus_in == 1); // MAR in
+    assign AI_bar = !(bus_in == 1); // MAR in
     assign II_bar = !(bus_in == 2); // IR in
-    assign RI = (bus_in == 3); // RAM in
+    assign MI = (bus_in == 3); // RAM in
     assign XI_bar = !(bus_in == 4); // X in
     assign YI_bar = !(bus_in == 5); // Y in
     assign DI = (bus_in == 6); // device in

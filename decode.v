@@ -1,7 +1,7 @@
 /* Decode: Turn an instruction into a microinstruction
 
-    T0:  PO MI
-    T1:  RO II P+
+    T0:  PO AI
+    T1:  MO II P+
     T2+: look in DecodeROM at {T-2, instr[15:8]}
 */
 

@@ -9,8 +9,8 @@ my $MAX_OPCODE = 255;
 my $T_STATES = 8;
 
 my %is_alu = map { $_ => 1 } qw(EX NX EY NY F NO);
-my %is_busout = map { $_ => 1 } qw(PO IOH IOL RO DO);
-my %is_busin = map { $_ => 1 } qw(MI RI II XI YI DI);
+my %is_busout = map { $_ => 1 } qw(PO IOH IOL MO DO);
+my %is_busin = map { $_ => 1 } qw(AI MI II XI YI DI);
 my %is_jmp = map { $_ => 1 } qw(JC JZ JNZ JGT JLT JMP);
 
 my %ucode = (
@@ -26,14 +26,14 @@ my %ucode = (
     PO  => 0x0000,
     IOH => 0x1000,
     IOL => 0x2000,
-    RO  => 0x3000,
+    MO  => 0x3000,
     DO  => 0x6000,
     RT  => 0x0800,
     'P+'=> 0x0400,
 
-    MI  => 0x0040,
+    AI  => 0x0040,
     II  => 0x0080,
-    RI  => 0x00c0,
+    MI  => 0x00c0,
     XI  => 0x0100,
     YI  => 0x0140,
     DI  => 0x0180,
@@ -139,7 +139,7 @@ sub emit_ucode {
 
     # confusing: always fetch the next instruction and increment PC, regardless of whatever
     # the last instruction was
-    unshift @ucode, encode("PO MI"), encode("RO II P+");
+    unshift @ucode, encode("PO AI"), encode("MO II P+");
 
     # pad the rest of the ucode with "reset t-state" microcode
     push @ucode, encode("RT") while @ucode < $T_STATES;
