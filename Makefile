@@ -8,9 +8,9 @@ ttlcpu: ucode.hex
 	icepack ttlcpu.asc ttlcpu.bin
 
 ucode.hex: ucode/ucode.s
-	ucode/uasm < ucode/ucode.s > ucode.hex || rm ucode.hex
+	./ucode/uasm < ucode/ucode.s > ucode.hex || rm ucode.hex
 
-test:
+test: ucode.hex
 	./run-tests.sh
 
 burn:
