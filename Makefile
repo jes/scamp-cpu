@@ -8,7 +8,7 @@ ttlcpu: ucode.hex
 	icepack ttlcpu.asc ttlcpu.bin
 
 ucode.hex: ucode/ucode.s
-	ucode/uasm < ucode/ucode.s > ucode.hex
+	ucode/uasm < ucode/ucode.s > ucode.hex || rm ucode.hex
 
 test:
 	./run-tests.sh
@@ -17,4 +17,4 @@ burn:
 	iceFUNprof ttlcpu.bin
 
 clean:
-	rm -f *.asc *.bin *blif a.out ttl-*_tb.v
+	rm -f *.asc *.bin *blif a.out ttl-*_tb.v ucode.hex

@@ -11,6 +11,7 @@ my $T_STATES = 8;
 my %is_alu = map { $_ => 1 } qw(EX NX EY NY F NO);
 my %is_busout = map { $_ => 1 } qw(PO IOH IOL RO XO YO DO);
 my %is_busin = map { $_ => 1 } qw(MI RI II XI YI DI);
+my %is_jmp = map { $_ => 1 } qw(JC JZ JNZ JGT JLT JMP);
 
 my %ucode = (
     EO  => 0x8000,
@@ -41,6 +42,7 @@ my %ucode = (
 
     JC  => 0x0020,
     JZ  => 0x0010,
+    JNZ => 0x000c,
     JGT => 0x0008,
     JLT => 0x0004,
 
@@ -94,6 +96,7 @@ sub encode {
     my $have_busin;
     my $have_busout;
     my $have_alu;
+    my $have_jmp;
 
     my $num = 0;
     for my $b (@bits) {
@@ -113,6 +116,7 @@ sub encode {
             die "ALU conflicting with busout: $uinstr\n" if $have_busout;
             $have_alu = 1;
         }
+        $have_jmp = 1 if $is_jmp{$b};
     }
 
     die "ALU bits without EO: $uinstr\n" if $have_alu && $uinstr !~ /\bEO\b/;
@@ -120,7 +124,7 @@ sub encode {
     die "RT with ALU not allowed: $uinstr\n" if $have_alu && $uinstr =~ /\bRT\b/;
     die "P+ with ALU not allowed: $uinstr\n" if $have_alu && $uinstr =~ /\bP\+\b/;
 
-    warn "busout with no busin probably makes no sense: $uinstr\n" if ($have_busout && !$have_busin);
+    warn "busout with no busin probably makes no sense: $uinstr\n" if ($have_busout && !$have_busin && !$have_jmp);
     warn "busin with no busout probably makes no sense (will get PC on bus, please specify 'PO'): $uinstr\n" if ($have_busin && !$have_busout && !$have_alu);
 
     return $num;

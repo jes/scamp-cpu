@@ -24,3 +24,12 @@ sub: 6 # X = X-Y
 jmp: 7 # jump to immediate address from operand
     PO MI
     RO JMP
+
+jz: 8 # jump if last ALU output was 0
+    PO MI
+    RO JZ
+
+djnz: 9 # decrement and jump if not zero
+    EX NY F EO XI
+    PO MI
+    RO JNZ P+
