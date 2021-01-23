@@ -62,7 +62,7 @@ while (<>) {
 
     next if $_ eq '';
 
-    if (/^(\w+): ?(\w)$/) { # new instruction starts
+    if (/^(\w+): ?([0-9a-f]+)$/) { # new instruction starts
         $opcode++;
         die "too many opcodes: >$MAX_OPCODE\n" if $opcode > $MAX_OPCODE;
 
