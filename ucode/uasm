@@ -9,7 +9,7 @@ my $MAX_OPCODE = 255;
 my $T_STATES = 8;
 
 my %is_alu = map { $_ => 1 } qw(EX NX EY NY F NO);
-my %is_busout = map { $_ => 1 } qw(PO IOH IOL RO XO YO DO RT P+);
+my %is_busout = map { $_ => 1 } qw(PO IOH IOL RO XO YO DO);
 my %is_busin = map { $_ => 1 } qw(MI RI II XI YI DI);
 
 my %ucode = (
@@ -62,6 +62,7 @@ while (<>) {
         $opcode++;
         die "too many opcodes: >$MAX_OPCODE\n" if $opcode > $MAX_OPCODE;
         die "wrong opcode for $1: expected 0x$2, found $opcode\n" if $opcode!=hex($2);
+        die "initial instructions are unlabelled\n" if @ucode && $opcode == 0;
         emit_ucode(@ucode) if $opcode != 0;
         @ucode = ();
     } else {
@@ -88,22 +89,39 @@ sub encode {
 
     my @bits = split / /, $uinstr;
 
+    my $have_busin;
+    my $have_busout;
+    my $have_alu;
+
     my $num = 0;
     for my $b (@bits) {
         die "unrecognised ucode: $b" if !exists $ucode{$b};
         $num |= $ucode{$b};
+
+        if ($is_busin{$b}) {
+            die "multiple busin bits: $uinstr\n" if $have_busin;
+            $have_busin = 1;
+        }
+        if ($is_busout{$b}) {
+            die "multiple busout bits: $uinstr\n" if $have_busout;
+            die "busout conflicting with ALU: $uinstr\n" if $have_alu;
+            $have_busout = 1;
+        }
+        if ($is_alu{$b}) {
+            die "ALU conflicting with busout: $uinstr\n" if $have_busout;
+            $have_alu = 1;
+        }
     }
 
+    die "ALU bits without EO: $uinstr\n" if $have_alu && $uinstr !~ /\bEO\b/;
+
+    die "RT with ALU not allowed: $uinstr\n" if $have_alu && $uinstr =~ /\bRT\b/;
+    die "P+ with ALU not allowed: $uinstr\n" if $have_alu && $uinstr =~ /\bP\+\b/;
+
+    warn "busout with no busin probably makes no sense: $uinstr\n" if ($have_busout && !$have_busin);
+    warn "busin with no busout probably makes no sense (will get PC on bus, please specify 'PO'): $uinstr\n" if ($have_busin && !$have_busout && !$have_alu);
+
     return $num;
-
-    # TODO:
-
-    # validate:
-    #  - only one busout
-    #  - only one busin
-    #  - busout XOR alu
-
-    # warn if busout without busin or vice versa
 }
 
 sub emit_ucode {
