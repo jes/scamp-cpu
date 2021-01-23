@@ -52,12 +52,7 @@ module Control(uinstr,
     assign JGT = uinstr[3];
     assign JLT = uinstr[2];
 
-    // XXX: we only need to invert some of each of bus_out/bus_in; could lose 1 inverter
-    // XXX: refactor this so we assign to XX_bar from bus_out_dec and then invert only the
-    // required signals, instead of the entire bus_out_dec
-    ttl_7404 inverter1 ({2'bZ, bus_out_dec[7:6], bus_in_dec[7:6]}, {nc, nc, inv_bus_out_dec[7:6], inv_bus_in_dec[7:6]});
-    ttl_7404 inverter2 (bus_out_dec[5:0], inv_bus_out_dec[5:0]);
-    ttl_7404 inverter3 (bus_in_dec[5:0], inv_bus_in_dec[5:0]);
+    ttl_7404 inverter ({2'bZ, inv_RO, inv_DO, inv_RI, inv_DI}, {nc,nc, RO, DO, RI, DI});
 
     ttl_74138 out_decoder (1'b0, 1'b0, EO_bar, bus_out, bus_out_dec);
     ttl_74138 in_decoder (1'b0, 1'b0, 1'b1, bus_in, bus_in_dec);
@@ -66,10 +61,10 @@ module Control(uinstr,
     assign PO_bar = bus_out_dec[0];  // PC out
     assign IOH_bar = bus_out_dec[1]; // IR out (high end)
     assign IOL_bar = bus_out_dec[2]; // IR out (low end)
-    assign RO = inv_bus_out_dec[3];  // RAM out
+    assign inv_RO = bus_out_dec[3];  // RAM out
     // spare: assign .. = bus_out_dec[4];  // X out
     // spare: assign .. = bus_out_dec[5];  // Y out
-    assign DO = inv_bus_out_dec[6];  // device out
+    assign inv_DO = bus_out_dec[6];  // device out
     // spare: assign .. = inv_bus_out_dec[7];
 
     // decode RT/P+
@@ -79,10 +74,10 @@ module Control(uinstr,
     // inv_bus_in == 0 means nobody inputs from bus
     assign MI_Bar = bus_in_dec[1]; // MAR in
     assign II_bar = bus_in_dec[2]; // IR in
-    assign RI = inv_bus_in_dec[3]; // RAM in
+    assign inv_RI = bus_in_dec[3]; // RAM in
     assign XI_bar = bus_in_dec[4]; // X in
     assign YI_Bar = bus_in_dec[5]; // Y in
-    assign DI = inv_bus_in_dec[6]; // device in
+    assign inv_DI = bus_in_dec[6]; // device in
     // spare: assign .. = inv_bus_in_dec[7]
 
 endmodule
