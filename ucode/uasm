@@ -65,7 +65,10 @@ while (<>) {
     if (/^(\w+): ?(\w)$/) { # new instruction starts
         $opcode++;
         die "too many opcodes: >$MAX_OPCODE\n" if $opcode > $MAX_OPCODE;
+
+        # TODO: accept non-contiguous opcode (i.e. gaps)
         die "wrong opcode for $1: expected 0x$2, found $opcode\n" if $opcode!=hex($2);
+
         die "initial instructions are unlabelled\n" if @ucode && $opcode == 0;
         emit_ucode(@ucode) if $opcode != 0;
         @ucode = ();

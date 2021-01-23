@@ -1,35 +1,46 @@
 # Provisional microcode for testing
 
-add: 0 # X = X+Y
+add: 00 # X = X+Y
+    EO F
     EX EY F EO XI
 
-ldx: 1 # load X from IOL
+ldx: 01 # load X from IOL
     IOL XI
 
-ldy: 2 # load Y from IOL
+ldy: 02 # load Y from IOL
     IOL YI
 
-out: 3 # output X register
+out: 03 # output X register
     XO DI
 
-inc: 4 # increment X register: X = X+1
+inc: 04 # increment X register: X = X+1
     EX NX NY F NO EO XI
 
-dec: 5 # decrement X register: X = X-1
+dec: 05 # decrement X register: X = X-1
     EX NY F EO XI
 
-sub: 6 # X = X-Y
+sub: 06 # X = X-Y
+    EO F
     EX NX F NO EO XI
 
-jmp: 7 # jump to immediate address from operand
+jmp: 07 # jump to immediate address from operand
     PO MI
     RO JMP
 
-jz: 8 # jump if last ALU output was 0
+jz: 08 # jump if last ALU output was 0
     PO MI
     RO JZ
 
-djnz: 9 # decrement and jump if not zero
+djnz: 09 # decrement and jump if not zero
     EX NY F EO XI
     PO MI
     RO JNZ P+
+
+clc: 0a # clear carry
+    EO F # 0+0 = 0
+
+adc: 0b # add with carry
+    EX EY F EO XI
+
+sbc: 0c # subtract with carry (TODO: does this work or make sense?)
+    EX NX F NO EO XI
