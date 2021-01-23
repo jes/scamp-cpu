@@ -17,12 +17,27 @@ It is likely that steps 1 to 3 will go through several iterations while I figure
 the CPU is actually going to work, but hopefully step 4 will only happen once. It is likely
 that if step 4 needs to happen substantially more than once that it will never get completed.
 
+## Architecture
+
+It is a 16-bit CPU. The bus is 16-bit, registers are 16-bit, addresses are 16-bit, and memory contents are
+16-bit. The upper 8 bits of an instruction select the opcode, and the lower 8 bits are available
+for small immediate values.
+
+Here is a diagram of the architecture I currently have in mind:
+
+![](architecture.png)
+
+For more information, see [ucode/README.md](ucode/README.md) and [ISA.md](ISA.md).
+
 ## Resources
 
 I thoroughly recommend the Nand2Tetris course. https://nand2tetris.org/
 
 If you want to do the exercises from Nand2Tetris without learning what a hardware-description language
 is, and without going through all the lectures, you can play https://nandgame.com/
+
+Ben Eater's videos on 8-bit CPU design are excellent and heavily influenced
+the design of my CPU.
 
 ## Contact
 
