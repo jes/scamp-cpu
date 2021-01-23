@@ -25,7 +25,7 @@ of a "decode ROM", so that extra microcoded instructions can be created at runti
 
 ## Addressing
 
-Upper 3 bits indicate the T-state, lower 8 bits indicate the opcode.
+Upper 8 bits indicate the opcode, lower 3 bits indicate the T-state.
 
 9 bits of address space = 512 words. Each address contains 16 bits of microcode (spread
 over 2x 8-bit ROM chips).
