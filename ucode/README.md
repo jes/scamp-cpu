@@ -42,8 +42,6 @@ bus fighting at worst.
 | IOH  | Immediate small value from instruction register output to bus with high bits set to 1 |
 | IOL  | Immediate small value from instrugtion register output to bus with high bits set to 0 |
 | RO   | RAM output to bus |
-| XO   | X register output to bus |
-| YO   | Y register output to bus |
 | DO   | I/O device output to bus |
 | EO   | ALU output to bus |
 | :--- | :------ |
@@ -120,7 +118,7 @@ We might consider adding a bit to disable carry input to the ALU.
 ## Extensibility
 
 In addition to the 2 unused bits, and the spare but when !EO,
-bus_out/bus_in have one decoding each which is currently unused. In principle, as long as these unused signals are routed
+bus_out/bus_in have some decodings which are currently unused. In principle, as long as these unused signals are routed
 alongside everything else on the backplane, it would be possible to extend the CPU with an extra register (e.g. a
 dedicated stack pointer) or other modules, at a later date, by just plugging the new module into the backplane
 and writing microcode to make use of it.

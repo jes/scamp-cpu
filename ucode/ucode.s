@@ -11,7 +11,7 @@ ldy: 02 # load Y from IOL
     IOL YI
 
 out: 03 # output X register
-    XO DI
+    EO EX F DI
 
 inc: 04 # increment X register: X = X+1
     EX NX NY F NO EO XI

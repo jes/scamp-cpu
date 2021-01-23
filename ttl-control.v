@@ -26,10 +26,10 @@
 `include "ttl/74138.v"
 
 module Control(uinstr,
-        EO_bar, PO_bar, IOH_bar, IOL_bar, RO, XO_bar, YO_bar, DO, RT, PP, MI_bar, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
+        EO_bar, PO_bar, IOH_bar, IOL_bar, RO, DO, RT, PP, MI_bar, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
 
     input [15:0] uinstr;
-    output EO_bar, PO_bar, IOH_bar, IOL_bar, RO, XO_bar, YO_bar, DO, RT, PP, MI_bar, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT;
+    output EO_bar, PO_bar, IOH_bar, IOL_bar, RO, DO, RT, PP, MI_bar, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT;
     output [5:0] ALU_flags;
 
     wire [2:0] bus_out;
@@ -67,8 +67,8 @@ module Control(uinstr,
     assign IOH_bar = bus_out_dec[1]; // IR out (high end)
     assign IOL_bar = bus_out_dec[2]; // IR out (low end)
     assign RO = inv_bus_out_dec[3];  // RAM out
-    assign XO_bar = bus_out_dec[4];  // X out
-    assign YO_bar = bus_out_dec[5];  // Y out
+    // spare: assign .. = bus_out_dec[4];  // X out
+    // spare: assign .. = bus_out_dec[5];  // Y out
     assign DO = inv_bus_out_dec[6];  // device out
     // spare: assign .. = inv_bus_out_dec[7];
 

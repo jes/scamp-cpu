@@ -20,8 +20,6 @@ module test;
     parameter vIOH = vEY;
     parameter vIOL = vNX;
     parameter vRO = vNX|vEY;
-    parameter vXO = vEX;
-    parameter vYO = vEX|vEY;
     parameter vDO = vEX|vNX;
     parameter vRT = vNY;
     parameter vPP = vF;
@@ -39,8 +37,6 @@ module test;
     assign IOH = !IOH_bar;
     assign IOL = !IOL_bar;
     assign EO = !EO_bar;
-    assign XO = !XO_bar;
-    assign YO = !YO_bar;
     assign MI = !MI_bar;
     assign II = !II_bar;
     assign XI = !XI_bar;
@@ -48,7 +44,7 @@ module test;
 
     wire [15:0] real_uinstr = {!uinstr[15], uinstr[14:0]};
 
-    Control control (real_uinstr, EO_bar, PO_bar, IOH_bar, IOL_bar, RO, XO_bar, YO_bar, DO, RT, PP, MI_bar, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
+    Control control (real_uinstr, EO_bar, PO_bar, IOH_bar, IOL_bar, RO, DO, RT, PP, MI_bar, II_bar, RI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
 
     initial begin
         uinstr = vIOH | vJC;
@@ -63,17 +59,17 @@ module test;
         uinstr = vRO | vYI | vPP;
         #1 if (!RO || !YI || !PP) $display("Bad: !RO || !YI || !PP");
 
-        uinstr = vYO | vMI;
-        #1 if (!YO || !MI) $display("Bad: !YO || !MI");
+        uinstr = vDO | vMI;
+        #1 if (!DO || !MI) $display("Bad: !DO || !MI");
 
         uinstr = vEO | (vNX | vEY | vNY | vF | vNO) | vMI;
         #1 if (!EO || !MI || ALU_flags !== 31) $display("Bad: !EO || !MI || ALU_flags != 31,",ALU_flags);
 
         uinstr = vEO;
-        #1 if (PO || IOH || IOL || RO || XO || YO || DO) $display("Bad: output flags set when not wanted");
+        #1 if (PO || IOH || IOL || RO || DO) $display("Bad: output flags set when not wanted");
 
         uinstr = vPO;
-        #1 if (!PO || IOH || IOL || RO || XO || YO || DO) $display("Bad: output flags set wrong");
+        #1 if (!PO || IOH || IOL || RO || DO) $display("Bad: output flags set wrong");
 
         uinstr = vDI;
         #1 if (!DI || MI || II || RI || XI || YI) $display("Bad: input flags set wrong");
@@ -82,7 +78,7 @@ module test;
         #1 if (RT || PP || JC || JZ || JGT || JLT) $display("Bad: other flags set wrong");
 
         uinstr = 0;
-        #1 if (EO || IOH || IOL || RO || XO || YO || DO || RT || PP || MI || II || RI || XI || YI || DI || JC || JZ || JGT || JLT) $display("Bad, some flags set but none asked for");
+        #1 if (EO || IOH || IOL || RO || DO || RT || PP || MI || II || RI || XI || YI || DI || JC || JZ || JGT || JLT) $display("Bad, some flags set but none asked for");
         #1 if (!PO) $display("Bad: PO doesn't work");
 
         uinstr = vEO;
@@ -96,12 +92,6 @@ module test;
 
         uinstr = vRO;
         #1 if (!RO) $display("RO doesn't work");
-
-        uinstr = vXO;
-        #1 if (!XO) $display("XO doesn't work");
-
-        uinstr = vYO;
-        #1 if (!YO) $display("YO doesn't work");
 
         uinstr = vDO;
         #1 if (!DO) $display("DO doesn't work");
