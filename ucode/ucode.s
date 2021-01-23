@@ -42,7 +42,7 @@ clc: 0a # clear carry
 adc: 0b # add with carry
     EX EY F EO XI
 
-sbc: 0c # subtract with carry (TODO: does this work or make sense?)
+sbc: 0c # subtract with carry (XXX: does this work or make sense?)
     EX NX F NO EO XI
 
 and: 0d # X = X&Y
@@ -59,8 +59,10 @@ nor: 10 # X = ~(X|Y)
 
 shl: 11 # X = (X<<1) = X+X (clobbers Y register)
     XO YI         # Y = X
-    EO F          # clear carry (could potentially save a cycle with "XO YI F"? need to check)
+    EO F          # clear carry (XXX: could potentially save a cycle with "XO YI F"? need to check)
     EO XI EX EY F # X = X+Y
+
+# XXX: should there be a control bit to either clear the carry, or enable carry input to ALU, with it disabled by default?
 
 # XXX: how could we implement a right-shift?
 
@@ -73,3 +75,21 @@ xor: 12 # X = X^Y (clobbers a word in the upper page of RAM, based on the 8-bit 
     EO YI EX EY          # Y = X&Y
     MO XI                # X = M[ff..]
     EO XI EX EY NO       # X = ~(X&Y)
+
+push: 13 # push X onto stack pointed to by IOH (e.g. instruction 13ff if SP is at ffff), with post-decrement of sp (clobbers Y)
+    IOH AI # addr = IOH (i.e. SP)
+    MO YI  # Y = M[addr] (get current value of SP in Y)
+    MO AI  # addr = M[addr] (i.e. dereference SP) (XXX: we'd save a cycle if we could do YI and AI concurrently)
+    XO MI  # M[addr] = X
+    # EO F # clear carry (XXX: commented out because it makes "push" exceed the cycle limit)
+    IOH AI # addr = IOH (i.e. SP)
+    EO MI EY NX F # M[addr] = Y-1 (i.e. decrement SP)
+
+pop: 14 # pop X from stack pointed to by IOH (e.g. instruction 14ff if SP is at ffff), with pre-increment of sp
+    IOH AI # addr = IOH (i.e. SP)
+    MO YI  # Y = M[addr]
+    # EO F # clear carry (XXX: commented out because it makes "pop" exceed the cycle limit)
+    EO MI EY NX NY F NO # M[addr] = Y+1 (i.e. increment SP)
+    YO AI # addr = Y (i.e. new SP)
+    MO AI # addr = M[addr] (dereference new SP)
+    MO XI # X = M[addr]
