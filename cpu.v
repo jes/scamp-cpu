@@ -5,6 +5,7 @@
 `include "decode.v"
 `include "fr.v"
 `include "ir.v"
+`include "memory.v"
 `include "pc.v"
 `include "tstate.v"
 `include "register.v"
@@ -21,7 +22,8 @@ module CPU(clk);
     wire [15:0] E_val;
     wire [15:0] PC_val;
     wire [15:0] IR_val;
-    wire [15:0] MAR_val;
+    wire [15:0] AR_val;
+    wire [15:0] memory_val;
 
     // state
     wire [2:0] T;
@@ -51,6 +53,8 @@ module CPU(clk);
     Decode decode (IR_val, T, uinstr);
     Control control (uinstr, EO_bar, PO_bar, IOH, IOL, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
 
-    Register addr (clk, bus, AI_bar, MAR_val);
+    Register addr (clk, bus, AI_bar, AR_val);
+
+    Memory memory (clk, bus, MI, MO, AR_val, memory_val);
 
 endmodule
