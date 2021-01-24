@@ -1,9 +1,8 @@
 /* Boot ROM */
 
-module ROM(address, en_bar, bus);
+module ROM(address, value);
     input [7:0] address;
-    input en_bar;
-    output [15:0] bus;
+    output [15:0] value;
 
     reg [15:0] rom [0:255];
 
@@ -11,5 +10,5 @@ module ROM(address, en_bar, bus);
         $readmemh("bootrom.hex", rom);
     end
 
-    assign bus = en_bar? 16'bZ : rom[address];
+    assign value = rom[address];
 endmodule
