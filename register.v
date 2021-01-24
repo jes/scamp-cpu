@@ -10,7 +10,7 @@ module Register(clk, bus, load_bar, value);
     input load_bar;
     output [15:0] value;
 
-    reg [15:0] val;
+    reg [15:0] val = 0;
 
     assign load = !load_bar;
 

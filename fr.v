@@ -9,7 +9,7 @@ module FR(clk, in, load_bar, out);
     input load_bar;
     output [2:0] out;
 
-    reg [2:0] val;
+    reg [2:0] val = 0;
 
     assign out = val;
 

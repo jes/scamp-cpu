@@ -13,7 +13,7 @@ module IR(clk, bus, load_bar, enl_bar, enh_bar, value);
     input enh_bar;
     output [15:0] value;
 
-    reg [15:0] val;
+    reg [15:0] val = 0;
 
     assign load = !load_bar;
     assign enl = !enl_bar;

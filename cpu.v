@@ -10,11 +10,12 @@
 `include "tstate.v"
 `include "register.v"
 
-module CPU(clk);
+module CPU(clk, RST_bar, addr, bus, DI, DO);
     input clk;
-
-    // bus
-    wire [15:0] bus;
+    input RST_bar;
+    output [15:0] addr;
+    inout [15:0] bus;
+    output DI, DO;
 
     // register values
     wire [15:0] X_val;
@@ -27,7 +28,6 @@ module CPU(clk);
 
     // state
     wire [2:0] T;
-    wire reset_bar;
     wire JMP;
     wire [15:0] uinstr;
 
@@ -46,15 +46,41 @@ module CPU(clk);
     Register x (clk, bus, XI_bar, X_val);
     Register y (clk, bus, YI_bar, Y_val);
 
-    PC pc (clk, bus, JMP_bar, PO_bar, PC_val, PP, reset_bar);
+    PC pc (clk, bus, JMP_bar, PO_bar, PC_val, PP, RST_bar);
     IR ir (clk, bus, II_bar, IOL_bar, IOH_bar, IR_val);
 
-    TState tstate (clk, RT, T);
+    TState tstate (clk, RT|(!RST_bar), T);
     Decode decode (IR_val, T, uinstr);
-    Control control (uinstr, EO_bar, PO_bar, IOH, IOL, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
+    Control control (uinstr, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
 
-    Register addr (clk, bus, AI_bar, AR_val);
+    Register ar (clk, bus, AI_bar, AR_val);
 
     Memory memory (clk, bus, !MI, MO, AR_val, memory_val);
+
+    always @ (posedge clk) begin
+        $display("instr = ", IR_val);
+        $display("uinstr = ", uinstr);
+        $display("T = ", T);
+        $display("bus = ", bus);
+        $display("E_val = ", E_val);
+        if (!EO_bar) $display("+ EO");
+        if (!PO_bar) $display("+ PO");
+        if (!IOH_bar) $display("+ IOH");
+        if (!IOL_bar) $display("+ IOL");
+        if (MO) $display("+ MO");
+        if (DO) $display("+ DO");
+        if (RT) $display("+ RT");
+        if (PP) $display("+ P+");
+        if (!AI_bar) $display("+ AI");
+        if (!II_bar) $display("+ II");
+        if (MI) $display("+ MI");
+        if (!XI_bar) $display("+ XI");
+        if (!YI_bar) $display("+ YI");
+        if (DI) $display("+ DI");
+    end
+
+    always @ (negedge clk) begin
+        $display("");
+    end
 
 endmodule
