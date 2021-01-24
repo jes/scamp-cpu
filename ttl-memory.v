@@ -39,6 +39,9 @@ module Memory(clk, bus, load_bar, en, address, value);
     ttl_7432 orer1 ({address[15], address[14], address[13], address[12]}, {address[11], address[10], address[9], address[8]}, {or1, or2, or3, or4});
     ttl_7432 orer2 ({1'bZ, or5, or1, or2}, {1'bZ, or6, or3, or4}, {nc, want_ram, or5, or6});
 
+    // ramen_bar = want_ram NAND en
+    // want_rom = want_ram NAND want_ram = !want_ram
+    // romen_bar = want_rom NAND en
     ttl_7400 nander ({1'bZ, en, en, want_ram}, {1'bZ, want_ram, want_rom, want_ram}, {nc, ramen_bar, romen_bar, want_rom});
 
     // XXX: long-term, we can get rid of the "value" output, but for now it is
