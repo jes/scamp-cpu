@@ -8,11 +8,11 @@
 `include "rom.v"
 `include "ram.v"
 
-module Memory(clk, bus, load_bar, en_bar, address, value);
+module Memory(clk, bus, load_bar, en, address, value);
     input clk;
     inout [15:0] bus;
     input load_bar;
-    input en_bar;
+    input en;
     input [15:0] address;
     output [15:0] value;
 
@@ -23,5 +23,5 @@ module Memory(clk, bus, load_bar, en_bar, address, value);
     RAM ram (clk, bus, load_bar, address, ram_value);
 
     assign value = address < 256 ? rom_value : ram_value;
-    assign bus = en_bar ? 16'bZ : value;
+    assign bus = en ? value : 16'bZ;
 endmodule

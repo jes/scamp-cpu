@@ -55,6 +55,6 @@ module CPU(clk);
 
     Register addr (clk, bus, AI_bar, AR_val);
 
-    Memory memory (clk, bus, MI, MO, AR_val, memory_val);
+    Memory memory (clk, bus, !MI, MO, AR_val, memory_val);
 
 endmodule

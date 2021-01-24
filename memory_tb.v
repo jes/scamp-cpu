@@ -12,7 +12,7 @@ module test;
     reg [15:0] busreg;
     wire [15:0] bus = (en ? 16'bZ : busreg);
 
-    Memory memory(clk, bus, !load, !en, address, value);
+    Memory memory(clk, bus, !load, en, address, value);
 
     initial begin
         load = 0; en = 0; clk = 0; busreg = 1234;

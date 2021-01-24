@@ -51,5 +51,5 @@ module ALU4(X, Y, C, carry_in, carry_out, out, NZ_flag);
     ttl_74157 mux (1'b0, f, and_result, add_result, val);
     ttl_7486 outputxor ({no,no,no,no}, val, out);
 
-    ttl_7432 orer ({val[0],val[1],nor1,1'bZ},{val[2],val[3],nor2,1'bZ},{nor1,nor2,NZ_flag,nc});
+    ttl_7432 orer ({val[0],val[1],or1,1'bZ},{val[2],val[3],or2,1'bZ},{or1,or2,NZ_flag,nc});
 endmodule
