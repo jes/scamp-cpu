@@ -145,7 +145,7 @@ sub emit_ucode {
     push @ucode, encode("RT") while @ucode < $T_STATES;
 
     # TODO: say which opcode it is
-    die "too many microinstructions for some uinstruction" if @ucode > $T_STATES;
+    die "too many microinstructions for some instruction" if @ucode > $T_STATES;
 
     print sprintf("%04x\n", $_) for @ucode;
 }

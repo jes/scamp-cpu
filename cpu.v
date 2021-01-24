@@ -38,7 +38,7 @@ module CPU(clk);
 
     assign JMP_bar = !((JC&C) | (JZ&Z) | (JLT&LT) | (JGT&!Z&!LT));
 
-    ALU alu (X_val, Y_val, ALU_flags, EO_bar, bus, E_val, C_in, C_flag, Z_flag, LT_flag);
+    ALU alu (X_val, Y_val, ALU_flags, EO_bar, bus, E_val, C, C_flag, Z_flag, LT_flag);
     FR fr (clk, {C_flag, Z_flag, LT_flag}, EO_bar, {C, Z, LT});
 
     Register x (clk, bus, XI_bar, X_val);
