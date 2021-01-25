@@ -48,88 +48,88 @@ module test;
 
     initial begin
         uinstr = vIOH | vJC;
-        #1 if (!IOH || !JC) $display("Bad: !IOH || !JC");
+        #1 if (IOH!==1 || JC!==1) $display("Bad: !IOH || !JC");
 
         uinstr = vPO | vAI;
-        #1 if (!PO || !AI) $display("Bad: !PO || !AI");
+        #1 if (PO!==1 || AI!==1) $display("Bad: !PO || !AI");
 
         uinstr = vMO | vAI;
-        #1 if (!MO || !AI) $display("Bad: !MO || !AI");
+        #1 if (MO!==1 || AI!==1) $display("Bad: !MO || !AI");
 
         uinstr = vMO | vYI | vPP;
-        #1 if (!MO || !YI || !PP) $display("Bad: !MO || !YI || !PP");
+        #1 if (MO!==1 || YI!==1 || PP!==1) $display("Bad: !MO || !YI || !PP");
 
         uinstr = vDO | vAI;
-        #1 if (!DO || !AI) $display("Bad: !DO || !AI");
+        #1 if (DO!==1 || AI!==1) $display("Bad: !DO || !AI");
 
         uinstr = vEO | (vNX | vEY | vNY | vF | vNO) | vAI;
-        #1 if (!EO || !AI || ALU_flags !== 31) $display("Bad: !EO || !AI || ALU_flags != 31,",ALU_flags);
+        #1 if (EO!==1 || AI!==1 || ALU_flags !== 31) $display("Bad: !EO || !AI || ALU_flags != 31,",ALU_flags);
 
         uinstr = vEO;
-        #1 if (PO || IOH || IOL || MO || DO) $display("Bad: output flags set when not wanted");
+        #1 if (PO!==0 || IOH!==0 || IOL!==0 || MO!==0 || DO!==0) $display("Bad: output flags set when not wanted");
 
         uinstr = vPO;
-        #1 if (!PO || IOH || IOL || MO || DO) $display("Bad: output flags set wrong");
+        #1 if (PO!==1 || IOH!==0 || IOL!==0 || MO!==0 || DO!==0) $display("Bad: output flags set wrong");
 
         uinstr = vDI;
-        #1 if (!DI || AI || II || MI || XI || YI) $display("Bad: input flags set wrong");
+        #1 if (DI!==1 || AI!==0 || II!==0 || MI!==0 || XI!==0 || YI!==0) $display("Bad: input flags set wrong");
 
         uinstr = vEO;
-        #1 if (RT || PP || JC || JZ || JGT || JLT) $display("Bad: other flags set wrong");
+        #1 if (RT!==0 || PP!==0 || JC!==0 || JZ!==0 || JGT!==0 || JLT!==0) $display("Bad: other flags set wrong");
 
         uinstr = 0;
-        #1 if (EO || IOH || IOL || MO || DO || RT || PP || AI || II || MI || XI || YI || DI || JC || JZ || JGT || JLT) $display("Bad, some flags set but none asked for");
+        #1 if (EO!==0 || IOH!==0 || IOL!==0 || MO!==0 || DO!==0 || RT!==0 || PP!==0 || AI!==0 || II!==0 || MI!==0 || XI!==0 || YI!==0 || DI!==0 || JC!==0 || JZ!==0 || JGT!==0 || JLT!==0) $display("Bad, some flags set but none asked for");
         #1 if (!PO) $display("Bad: PO doesn't work");
 
         uinstr = vEO;
-        #1 if (!EO) $display("Bad: EO doesn't work");
+        #1 if (EO!==1) $display("Bad: EO doesn't work");
 
         uinstr = vIOH;
-        #1 if (!IOH) $display("Bad: IOH doesn't work");
+        #1 if (IOH!==1) $display("Bad: IOH doesn't work");
 
         uinstr = vIOL;
-        #1 if (!IOL) $display("Bad: IOL doesn't work");
+        #1 if (IOL!==1) $display("Bad: IOL doesn't work");
 
         uinstr = vMO;
-        #1 if (!MO) $display("MO doesn't work");
+        #1 if (MO!==1) $display("Bad: MO doesn't work");
 
         uinstr = vDO;
-        #1 if (!DO) $display("DO doesn't work");
+        #1 if (DO!==1) $display("Bad: DO doesn't work");
 
         uinstr = vRT;
-        #1 if (!RT) $display("RT doesn't work");
+        #1 if (RT!==1) $display("Bad: RT doesn't work");
 
         uinstr = vPP;
-        #1 if (!PP) $display("P+ doesn't work");
+        #1 if (PP!==1) $display("Bad: P+ doesn't work");
 
         uinstr = vAI;
-        #1 if (!AI) $display("AI doesn't work");
+        #1 if (AI!==1) $display("Bad: AI doesn't work");
 
         uinstr = vII;
-        #1 if (!II) $display("II doesn't work");
+        #1 if (II!==1) $display("Bad: II doesn't work");
 
         uinstr = vMI;
-        #1 if (!MI) $display("MI doesn't work");
+        #1 if (MI!==1) $display("Bad: MI doesn't work");
 
         uinstr = vXI;
-        #1 if (!XI) $display("XI doesn't work");
+        #1 if (XI!==1) $display("Bad: XI doesn't work");
 
         uinstr = vYI;
-        #1 if (!YI) $display("YI doesn't work");
+        #1 if (YI!==1) $display("Bad: YI doesn't work");
 
         uinstr = vDI;
-        #1 if (!DI) $display("DI doesn't work");
+        #1 if (DI!==1) $display("Bad: DI doesn't work");
 
         uinstr = vJC;
-        #1 if (!JC) $display("JC doesn't work");
+        #1 if (JC!==1) $display("Bad: JC doesn't work");
 
         uinstr = vJZ;
-        #1 if (!JZ) $display("JZ doesn't work");
+        #1 if (JZ!==1) $display("Bad: JZ doesn't work");
 
         uinstr = vJGT;
-        #1 if (!JGT) $display("JGT doesn't work");
+        #1 if (JGT!==1) $display("Bad: JGT doesn't work");
 
         uinstr = vJLT;
-        #1 if (!JLT) $display("JLT doesn't work");
+        #1 if (JLT!==1) $display("Bad: JLT doesn't work");
     end
 endmodule
