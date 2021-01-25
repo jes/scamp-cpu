@@ -16,11 +16,16 @@ ucode-low.hex: ucode.hex
 ucode-high.hex: ucode.hex
 	sed 's/..$$//' ucode.hex > ucode-high.hex
 
-test: ucode-low.hex ucode-high.hex
+bootrom-low.hex: bootrom.hex
+	sed 's/^..//' bootrom.hex > bootrom-low.hex
+bootrom-high.hex: bootrom.hex
+	sed 's/..$$//' bootrom.hex > bootrom-high.hex
+
+test: ucode-low.hex ucode-high.hex bootrom-low.hex bootrom-high.hex
 	./run-tests.sh
 
 burn:
 	iceFUNprof ttlcpu.bin
 
 clean:
-	rm -f *.asc *.bin *blif a.out ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex *.tmp
+	rm -f *.asc *.bin *blif a.out ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex bootrom-low.hex bootrom-high.hex *.tmp
