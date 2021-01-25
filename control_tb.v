@@ -11,10 +11,10 @@ module test;
     parameter vNY = 16'h0800;
     parameter vF  = 16'h0400;
     parameter vNO = 16'h0200;
-    parameter vJC = 16'h0020;
     parameter vJZ = 16'h0010;
     parameter vJGT = 16'h0008;
     parameter vJLT = 16'h0004;
+    parameter vJC = 16'h0002;
 
     parameter vPO = 0;
     parameter vIOH = vEY;
@@ -24,14 +24,14 @@ module test;
     parameter vRT = vNY;
     parameter vPP = vF;
 
-    parameter vAI = 16'h0040;
-    parameter vII = 16'h0080;
+    parameter vAI = 16'h0020;
+    parameter vII = 16'h0040;
     parameter vMI = vAI|vII;
-    parameter vXI = 16'h0100;
+    parameter vXI = 16'h0080;
     parameter vYI = vXI|vAI;
     parameter vDI = vXI|vII;
 
-    wire [5:0] ALU_flags;
+    wire [6:0] ALU_flags;
 
     assign PO = !PO_bar;
     assign IOH = !IOH_bar;
@@ -63,7 +63,7 @@ module test;
         #1 if (DO!==1 || AI!==1) $display("Bad: !DO || !AI");
 
         uinstr = vEO | (vNX | vEY | vNY | vF | vNO) | vAI;
-        #1 if (EO!==1 || AI!==1 || ALU_flags !== 31) $display("Bad: !EO || !AI || ALU_flags != 31,",ALU_flags);
+        #1 if (EO!==1 || AI!==1 || ALU_flags !== 62) $display("Bad: !EO || !AI || ALU_flags != 31,",ALU_flags);
 
         uinstr = vEO;
         #1 if (PO!==0 || IOH!==0 || IOL!==0 || MO!==0 || DO!==0) $display("Bad: output flags set when not wanted");

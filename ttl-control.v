@@ -9,14 +9,14 @@
      11 | EO ? NY : RT
      10 | EO ? F  : P+
       9 | EO ? NO : (unused)
-      8 | bus_in[2]
-      7 | bus_in[1]
-      6 | bus_in[0]
-      5 | JC
+      8 | EO ? CE : (unused)
+      7 | bus_in[2]
+      6 | bus_in[1]
+      5 | bus_in[0]
       4 | JZ
       3 | JGT
       2 | JLT
-      1 | (unused)
+      1 | JC
       0 | (unused)
 
  */
@@ -30,7 +30,7 @@ module Control(uinstr,
 
     input [15:0] uinstr;
     output EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT;
-    output [5:0] ALU_flags;
+    output [6:0] ALU_flags;
 
     wire [2:0] bus_out;
     wire [7:0] bus_out_dec;
@@ -41,14 +41,14 @@ module Control(uinstr,
 
     // ALU has no side effects if EO_bar, so we can safely tie
     // the bus_out signals to ALU_flags without checking EO
-    assign ALU_flags = uinstr[14:9];
+    assign ALU_flags = uinstr[14:8];
     assign bus_out = uinstr[14:12];
-    assign bus_in = uinstr[8:6];
+    assign bus_in = uinstr[7:5];
 
-    assign JC = uinstr[5];
     assign JZ = uinstr[4];
     assign JGT = uinstr[3];
     assign JLT = uinstr[2];
+    assign JC = uinstr[1];
 
     ttl_7404 inverter ({2'bZ, inv_MO, inv_DO, inv_MI, inv_DI}, {nc,nc, MO, DO, MI, DI});
 
