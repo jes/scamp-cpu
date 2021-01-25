@@ -112,3 +112,9 @@ ldy: 18 # load Y from address given in operand
     PO AI # addr = PC
     MO AI P+ # addr = M[addr], inc PC
     MO XI  # Y = M[addr]
+
+incy: 19 # increment Y register: Y = Y+1
+    EY NY NX F NO EO YI
+
+decy: 1a # decrement Y register: Y = Y-1
+    EY NX F EO YI

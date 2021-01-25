@@ -85,15 +85,11 @@ ldx(42)    # (clobber X)
 L: out     # output X
 
 # 15: conditional jump
-ldx(0)     # X = 0
-stx 0xffff # M[0xffff] = 0
-ldx(15)    # X = 15
+ldy(0)
+ldx(15)
 L:
-stx 0xfffe # M[0xfffe] = X
-ldx 0xffff # X = M[0xffff]
-inc        # X = X+1
-stx 0xffff # M[0xffff] = X
-ldx 0xfffe # X = M[0xfffe]
+incy
 djnz L
-ldx 0xffff # X = M[0xffff]
+sty 0xffff
+ldx 0xffff
 out
