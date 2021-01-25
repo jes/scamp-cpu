@@ -31,7 +31,7 @@ module test;
     parameter vYI = vXI|vAI;
     parameter vDI = vXI|vII;
 
-    wire [6:0] ALU_flags;
+    wire [5:0] ALU_flags;
 
     assign PO = !PO_bar;
     assign IOH = !IOH_bar;
@@ -44,7 +44,7 @@ module test;
 
     wire [15:0] real_uinstr = {!uinstr[15], uinstr[14:0]};
 
-    Control control (real_uinstr, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
+    Control control (real_uinstr, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE);
 
     initial begin
         uinstr = vIOH | vJC;
@@ -63,7 +63,7 @@ module test;
         #1 if (DO!==1 || AI!==1) $display("Bad: !DO || !AI");
 
         uinstr = vEO | (vNX | vEY | vNY | vF | vNO) | vAI;
-        #1 if (EO!==1 || AI!==1 || ALU_flags !== 62) $display("Bad: !EO || !AI || ALU_flags != 31,",ALU_flags);
+        #1 if (EO!==1 || AI!==1 || ALU_flags !== 31) $display("Bad: !EO || !AI || ALU_flags != 31,",ALU_flags);
 
         uinstr = vEO;
         #1 if (PO!==0 || IOH!==0 || IOL!==0 || MO!==0 || DO!==0) $display("Bad: output flags set when not wanted");

@@ -89,7 +89,7 @@ Provisionally, the microcode instruction word encodes the control bits as follow
 
 |   Bit | Meaning |
 | :---- | :------ |
-|    15 | EO |
+|    15 | !EO |
 |    14 | EO ? EX : bus_out[2] |
 |    13 | EO ? NX : bus_out[1] |
 |    12 | EO ? EY : bus_out[0] |

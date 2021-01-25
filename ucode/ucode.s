@@ -1,7 +1,6 @@
 # Provisional microcode for testing
 
 add: 00 # X = X+Y
-    EO F
     EX EY F EO XI
 
 ldx: 01 # load X from IOL
@@ -14,15 +13,12 @@ out: 03 # output X register
     XO DI
 
 inc: 04 # increment X register: X = X+1
-    EO F # clear carry
     EX NX NY F NO EO XI
 
 dec: 05 # decrement X register: X = X-1
-    EO F # clear carry
     EX NY F EO XI
 
 sub: 06 # X = X-Y
-    EO F
     EX NX EY F NO EO XI
 
 jmp: 07 # jump to immediate address from operand
@@ -34,7 +30,6 @@ jz: 08 # jump if last ALU output was 0
     MO JZ
 
 djnz: 09 # decrement and jump if not zero
-    EO F # clear carry
     EX NY F EO XI # dec X
     PO AI
     MO JNZ P+
@@ -43,10 +38,10 @@ clc: 0a # clear carry
     EO F # 0+0 = 0
 
 adc: 0b # add with carry
-    EX EY F EO XI
+    CE EX EY F EO XI
 
 sbc: 0c # subtract with carry (XXX: does this work or make sense?)
-    EX NX F NO EO XI
+    CE EX NX F NO EO XI
 
 and: 0d # X = X&Y
     EO XI EX EY
@@ -62,7 +57,6 @@ nor: 10 # X = ~(X|Y)
 
 shl: 11 # X = (X<<1) = X+X (clobbers Y register)
     XO YI         # Y = X
-    EO F          # clear carry (XXX: could potentially save a cycle with "XO YI F"? need to check)
     EO XI EX EY F # X = X+Y
 
 # XXX: should there be a control bit to either clear the carry, or enable carry input to ALU, with it disabled by default?
@@ -84,28 +78,25 @@ push: 13 # push X onto stack pointed to by IOH (e.g. instruction 13ff if SP is a
     MO YI  # Y = M[addr] (get current value of SP in Y)
     MO AI  # addr = M[addr] (i.e. dereference SP) (XXX: we'd save a cycle if we could do YI and AI concurrently)
     XO MI  # M[addr] = X
-    # EO F # clear carry (XXX: commented out because it makes "push" exceed the cycle limit)
     IOH AI # addr = IOH (i.e. SP)
     EO MI EY NX F # M[addr] = Y-1 (i.e. decrement SP)
 
 pop: 14 # pop X from stack pointed to by IOH (e.g. instruction 14ff if SP is at ffff), with pre-increment of sp
     IOH AI # addr = IOH (i.e. SP)
     MO YI  # Y = M[addr]
-    EO F # clear carry
-    EO MI EY NX NY F NO # M[addr] = Y+1 (i.e. increment SP)
+    EO YI EY NX NY F NO # Y = Y+1 (i.e. increment SP)
+    YO MI # M[addr] = Y (write incremented SP)
     YO AI # addr = Y (i.e. new SP)
     MO XI # X = M[addr]
 
 stx: 15 # load X into address given in operand
     PO AI # addr = PC
     MO AI P+ # addr = M[addr], inc PC
-    EO F
     XO MI # M[addr] = X
 
 sty: 16 # load Y into address given in operand
     PO AI # addr = PC
     MO AI P+ # addr = M[addr], inc PC
-    EO F
     YO MI # M[addr] = Y
 
 ldx: 17 # load X from address given in operand
@@ -119,9 +110,7 @@ ldy: 18 # load Y from address given in operand
     MO XI  # Y = M[addr]
 
 incy: 19 # increment Y register: Y = Y+1
-    EO F # clear carry
     EY NY NX F NO EO YI
 
 decy: 1a # decrement Y register: Y = Y-1
-    EO F # clear carry
     EY NX F EO YI

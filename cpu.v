@@ -39,7 +39,9 @@ module CPU(clk, RST_bar, addr, bus, DI, DO);
 
     assign JMP_bar = !((JC&C) | (JZ&Z) | (JLT&LT) | (JGT&!Z&!LT));
 
-    ALU alu (X_val, Y_val, ALU_flags, EO_bar, bus, E_val, C, C_flag, Z_flag, LT_flag);
+    assign C_in = C & CE;
+
+    ALU alu (X_val, Y_val, ALU_flags, EO_bar, bus, E_val, C_in, C_flag, Z_flag, LT_flag);
     FR fr (clk, {C_flag, Z_flag, LT_flag}, EO_bar, {C, Z, LT});
 
     Register x (clk, bus, XI_bar, X_val);
@@ -50,7 +52,7 @@ module CPU(clk, RST_bar, addr, bus, DI, DO);
 
     TState tstate (clk, RT|(!RST_bar), T);
     Decode decode (IR_val, T, uinstr);
-    Control control (uinstr, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
+    Control control (uinstr, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE);
 
     Register ar (clk, bus, AI_bar, AR_val);
 

@@ -40,11 +40,14 @@ module CPU(clk, RST_bar, addr, bus, DI, DO);
 
     // JMP_bar = !((JC&C) | (JZ&Z) | (JLT&LT) | (JGT&!Z&!LT))
     // TState_reset = RT|!RST_bar
-    ttl_7408 ander ({JC, JZ, JLT, JGT}, {C, Z, LT, not_Z_LT}, {JC_C, JZ_Z, JLT_LT, JGT_GT});
+    ttl_7408 ander1 ({JC, JZ, JLT, JGT}, {C, Z, LT, not_Z_LT}, {JC_C, JZ_Z, JLT_LT, JGT_GT});
     ttl_7432 orer ({RT, jmp1, JC_C, JZ_Z}, {RST, jmp2, JLT_LT, JGT_GT}, {TState_reset, JMP, jmp1, jmp2});
     ttl_7402 norer ({1'bZ, RST_bar, JMP, Z}, {1'bZ, RST_bar, JMP, LT}, {nc, RST, JMP_bar, not_Z_LT});
 
-    ALU alu (X_val, Y_val, ALU_flags, EO_bar, bus, E_val, C, C_flag, Z_flag, LT_flag);
+    // C_in = C & CE
+    ttl_7408 ander2 ({3'bZ, C}, {3'bZ, CE}, {nc,nc,nc, C_in});
+
+    ALU alu (X_val, Y_val, ALU_flags, EO_bar, bus, E_val, C_in, C_flag, Z_flag, LT_flag);
     FR fr (clk, {C_flag, Z_flag, LT_flag}, EO_bar, {C, Z, LT});
 
     Register x (clk, bus, XI_bar, X_val);
@@ -55,7 +58,7 @@ module CPU(clk, RST_bar, addr, bus, DI, DO);
 
     TState tstate (clk, TState_reset, T);
     Decode decode (IR_val, T, uinstr);
-    Control control (uinstr, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
+    Control control (uinstr, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE);
 
     Register ar (clk, bus, AI_bar, AR_val);
 

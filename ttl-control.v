@@ -2,7 +2,7 @@
 
     Bit | Meaning
     ----+--------
-     15 | EO
+     15 | !EO
      14 | EO ? EX : bus_out[2]
      13 | EO ? NX : bus_out[1]
      12 | EO ? EY : bus_out[0]
@@ -26,11 +26,11 @@
 `include "ttl/74138.v"
 
 module Control(uinstr,
-        EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags);
+        EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE);
 
     input [15:0] uinstr;
-    output EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT;
-    output [6:0] ALU_flags;
+    output EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, CE;
+    output [5:0] ALU_flags;
 
     wire [2:0] bus_out;
     wire [7:0] bus_out_dec;
@@ -41,7 +41,8 @@ module Control(uinstr,
 
     // ALU has no side effects if EO_bar, so we can safely tie
     // the bus_out signals to ALU_flags without checking EO
-    assign ALU_flags = uinstr[14:8];
+    assign ALU_flags = uinstr[14:9];
+    assign CE = uinstr[8];
     assign bus_out = uinstr[14:12];
     assign bus_in = uinstr[7:5];
 
