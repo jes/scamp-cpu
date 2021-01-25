@@ -42,5 +42,5 @@ module ALU(X, Y, C, en_bar, bus, val, C_in, C_flag, Z_flag, LT_flag);
 
     assign LT_flag = val[15];
 
-    ttl_7402 norer ({nonzero1,nonzero2,nor1,1'bZ},{nonzero3,nonzero4,nor2,1'bZ},{nor1,nor2,NZ_flag,nc});
+    ttl_7402 norer ({nonzero1,nonzero2,nor1,NZ_flag},{nonzero3,nonzero4,nor2,NZ_flag},{nor1,nor2,NZ_flag,Z_flag});
 endmodule

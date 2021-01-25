@@ -50,19 +50,19 @@ module test;
                 // 0
                 C = f;
                 #1 if (out !== 0) $display("Bad: 0: got 0=",out);
-                #1 if (!Z_flag) $display("Bad: 0 doesn't set Z_flag");
-                #1 if (LT_flag) $display("Bad: 0 sets LT_flag");
-                #1 if (C_flag) $display("Bad: 0 sets C_flag");
+                #1 if (Z_flag!==1) $display("Bad: 0 doesn't set Z_flag");
+                #1 if (LT_flag!==0) $display("Bad: 0 sets LT_flag");
+                #1 if (C_flag!==0) $display("Bad: 0 sets C_flag");
                 // 1
                 C = nx+ny+f+no;
                 #1 if (out !== 1) $display("Bad: 1: got 1=",out);
-                #1 if (Z_flag) $display("Bad: 1 sets Z_flag");
-                #1 if (LT_flag) $display("Bad: 1 sets LT_flag");
+                #1 if (Z_flag!==0) $display("Bad: 1 sets Z_flag");
+                #1 if (LT_flag!==0) $display("Bad: 1 sets LT_flag");
 
                 // -1
                 C = nx+ny;
                 #1 if (out !== 65535) $display("Bad: -1: got -1=",out);
-                #1 if (!LT_flag) $display("Bad: -1 does not set LT_flag");
+                #1 if (LT_flag!==1) $display("Bad: -1 does not set LT_flag");
 
                 // X
                 C = ex+f;
@@ -123,7 +123,7 @@ module test;
                 // test that carry out works
                 C=nx+ny+f;
                 #1 if (out !== 65534) $display("Bad: -1+-1 got,",out);
-                if (!C_flag) $display("Bad: C_flag not set");
+                if (C_flag!==1) $display("Bad: C_flag not set");
             end
         end
     end
