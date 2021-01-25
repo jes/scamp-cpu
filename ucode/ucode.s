@@ -32,7 +32,7 @@ jz: 08 # jump if last ALU output was 0
     MO JZ
 
 djnz: 09 # decrement and jump if not zero
-    EX NY F EO XI
+    EX NY F EO XI # dec X
     PO AI
     MO JNZ P+
 
@@ -72,9 +72,9 @@ xor: 12 # X = X^Y (clobbers a word in the upper page of RAM, based on the 8-bit 
     # computing ~(X&Y) and storing it in X
     IOH AI               # addr = IOH (i.e. ff..)
     EO MI EX EY NX NY NO # M[ff..] = X|Y
-    EO YI EX EY          # Y = X&Y
+    EO YI EX EY NO       # Y = ~(X&Y)
     MO XI                # X = M[ff..]
-    EO XI EX EY NO       # X = ~(X&Y)
+    EO XI EX EY          # X = X&Y
 
 push: 13 # push X onto stack pointed to by IOH (e.g. instruction 13ff if SP is at ffff), with post-decrement of sp (clobbers Y)
     IOH AI # addr = IOH (i.e. SP)
@@ -88,8 +88,27 @@ push: 13 # push X onto stack pointed to by IOH (e.g. instruction 13ff if SP is a
 pop: 14 # pop X from stack pointed to by IOH (e.g. instruction 14ff if SP is at ffff), with pre-increment of sp
     IOH AI # addr = IOH (i.e. SP)
     MO YI  # Y = M[addr]
-    # EO F # clear carry (XXX: commented out because it makes "pop" exceed the cycle limit)
+    EO F # clear carry
     EO MI EY NX NY F NO # M[addr] = Y+1 (i.e. increment SP)
     YO AI # addr = Y (i.e. new SP)
-    MO AI # addr = M[addr] (dereference new SP)
     MO XI # X = M[addr]
+
+stx: 15 # load X into address given in operand
+    PO AI # addr = PC
+    MO AI P+ # addr = M[addr], inc PC
+    XO MI # M[addr] = X
+
+sty: 16 # load Y into address given in operand
+    PO AI # addr = PC
+    MO AI P+ # addr = M[addr], inc PC
+    YO MI # M[addr] = Y
+
+ldx: 17 # load X from address given in operand
+    PO AI # addr = PC
+    MO AI P+ # addr = M[addr], inc PC
+    MO XI  # X = M[addr]
+
+ldy: 18 # load Y from address given in operand
+    PO AI # addr = PC
+    MO AI P+ # addr = M[addr], inc PC
+    MO XI  # Y = M[addr]
