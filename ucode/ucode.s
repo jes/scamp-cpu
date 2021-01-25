@@ -14,9 +14,11 @@ out: 03 # output X register
     XO DI
 
 inc: 04 # increment X register: X = X+1
+    EO F # clear carry
     EX NX NY F NO EO XI
 
 dec: 05 # decrement X register: X = X-1
+    EO F # clear carry
     EX NY F EO XI
 
 sub: 06 # X = X-Y
@@ -32,6 +34,7 @@ jz: 08 # jump if last ALU output was 0
     MO JZ
 
 djnz: 09 # decrement and jump if not zero
+    EO F # clear carry
     EX NY F EO XI # dec X
     PO AI
     MO JNZ P+
@@ -96,11 +99,13 @@ pop: 14 # pop X from stack pointed to by IOH (e.g. instruction 14ff if SP is at 
 stx: 15 # load X into address given in operand
     PO AI # addr = PC
     MO AI P+ # addr = M[addr], inc PC
+    EO F
     XO MI # M[addr] = X
 
 sty: 16 # load Y into address given in operand
     PO AI # addr = PC
     MO AI P+ # addr = M[addr], inc PC
+    EO F
     YO MI # M[addr] = Y
 
 ldx: 17 # load X from address given in operand
@@ -114,7 +119,9 @@ ldy: 18 # load Y from address given in operand
     MO XI  # Y = M[addr]
 
 incy: 19 # increment Y register: Y = Y+1
+    EO F # clear carry
     EY NY NX F NO EO YI
 
 decy: 1a # decrement Y register: Y = Y-1
+    EO F # clear carry
     EY NX F EO YI
