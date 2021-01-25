@@ -33,7 +33,7 @@ module test;
         #1 load = 0;
         #1 if (bus === 7890) $display("Bad: wrote to memory without clock edge:",bus);
         load = 1; en = 0;
-        #1 clk = 1; en = 1;
+        #1 clk = 1;
         #1 load = 0; en = 1;
         #1 if (bus !== 7890) $display("Bad: didn't write to memory at clock edge:",bus);
 

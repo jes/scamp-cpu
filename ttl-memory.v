@@ -5,13 +5,10 @@
    Always gives current value to 'value'
 */
 
-// XXX: ttl-rom.v and ttl-ram.v don't exist yet; in reality
-// they will just be ROM/RAM chips, with no associated logic
-`include "rom.v"
-
 `include "ttl/7400.v"
 `include "ttl/7432.v"
 `include "ttl/74244.v"
+`include "ttl/at28c16.v"
 `include "ttl/w24512a.v"
 
 module Memory(clk, bus, load, en, address);
@@ -24,10 +21,8 @@ module Memory(clk, bus, load, en, address);
     wire [15:0] rom_value;
     wire [15:0] ram_value;
 
-    ROM rom (address[7:0], rom_value);
-
-    ttl_74244 rombuf1 ({romen_bar,romen_bar}, rom_value[7:0], bus[7:0]);
-    ttl_74244 rombuf2 ({romen_bar,romen_bar}, rom_value[15:8], bus[15:8]);
+    at28c16 #(.ROM_FILE("bootrom-low.hex"), .ROM_BYTES(256)) rom1 ({3'b0, address[7:0]}, bus[7:0], romen_bar, 1'b0);
+    at28c16 #(.ROM_FILE("bootrom-high.hex"), .ROM_BYTES(256)) rom2 ({3'b0, address[7:0]}, bus[15:8], romen_bar, 1'b0);
 
     w24512a ram1 (address, bus[7:0], 1'b0, 1'b1, load_clk_bar, ramen_bar);
     w24512a ram2 (address, bus[15:8], 1'b0, 1'b1, load_clk_bar, ramen_bar);
