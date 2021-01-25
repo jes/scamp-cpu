@@ -29,7 +29,7 @@ if [ ! "$1" ]; then
     cat ${t}_tb.v | sed "s/include \"cpu.v\"/include \"ttl-cpu.v\"/" > ttl-${t}_tb.v
     iverilog ttl-${t}_tb.v
     ./a.out > ttl-out
-    rm -f ttl-{$t}_tb.v a.out
+    rm -f ttl-${t}_tb.v a.out
 
     diff -u out ttl-out
 fi
