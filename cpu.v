@@ -57,30 +57,34 @@ module CPU(clk, RST_bar, addr, bus, DI, DO);
 
     Memory memory (clk, bus, !MI, MO, AR_val, memory_val);
 
+    parameter DEBUG = 0;
+
     always @ (posedge clk) begin
-        $display("instr = ", IR_val);
-        $display("uinstr = ", uinstr);
-        $display("T = ", T);
-        $display("bus = ", bus);
-        $display("E_val = ", E_val);
-        if (!EO_bar) $display("+ EO");
-        if (!PO_bar) $display("+ PO");
-        if (!IOH_bar) $display("+ IOH");
-        if (!IOL_bar) $display("+ IOL");
-        if (MO) $display("+ MO");
-        if (DO) $display("+ DO");
-        if (RT) $display("+ RT");
-        if (PP) $display("+ P+");
-        if (!AI_bar) $display("+ AI");
-        if (!II_bar) $display("+ II");
-        if (MI) $display("+ MI");
-        if (!XI_bar) $display("+ XI");
-        if (!YI_bar) $display("+ YI");
-        if (DI) $display("+ DI");
+        if (DEBUG) begin
+            $display("instr = ", IR_val);
+            $display("uinstr = ", uinstr);
+            $display("T = ", T);
+            $display("bus = ", bus);
+            $display("E_val = ", E_val);
+            if (!EO_bar) $display("+ EO");
+            if (!PO_bar) $display("+ PO");
+            if (!IOH_bar) $display("+ IOH");
+            if (!IOL_bar) $display("+ IOL");
+            if (MO) $display("+ MO");
+            if (DO) $display("+ DO");
+            if (RT) $display("+ RT");
+            if (PP) $display("+ P+");
+            if (!AI_bar) $display("+ AI");
+            if (!II_bar) $display("+ II");
+            if (MI) $display("+ MI");
+            if (!XI_bar) $display("+ XI");
+            if (!YI_bar) $display("+ YI");
+            if (DI) $display("+ DI");
+        end
     end
 
     always @ (negedge clk) begin
-        $display("");
+        if (DEBUG) $display("");
     end
 
 endmodule
