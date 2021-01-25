@@ -38,7 +38,8 @@ module ALU(X, Y, C, en_bar, bus, val, C_in, C_flag, Z_flag, LT_flag);
     assign iny = ey ? Y : 0;
     assign argy = ny ? ~iny : iny;
 
-    assign {C_flag, fxy} = f ? (C_in+argx+argy) : (argx&argy);
+    assign fxy = f ? (C_in+argx+argy) : (argx&argy);
+    assign C_flag = (argx+argy > 65535);
 
     assign val = no ? ~fxy : fxy;
     assign bus = !en_bar ? val : 16'hZZZZ;
