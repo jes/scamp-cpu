@@ -34,10 +34,8 @@ module Control(uinstr,
 
     wire [2:0] bus_out;
     wire [7:0] bus_out_dec;
-    wire [7:0] inv_bus_out_dec;
     wire [2:0] bus_in;
     wire [7:0] bus_in_dec;
-    wire [7:0] inv_bus_in_dec;
 
     assign EO_bar = uinstr[15];
 
@@ -57,27 +55,27 @@ module Control(uinstr,
     ttl_74138 out_decoder (1'b0, 1'b0, EO_bar, bus_out, bus_out_dec);
     ttl_74138 in_decoder (1'b0, 1'b0, 1'b1, bus_in, bus_in_dec);
 
-    // inv_bus_out decoding:
+    // bus_out decoding:
     assign PO_bar = bus_out_dec[0];  // PC out
     assign IOH_bar = bus_out_dec[1]; // IR out (high end)
     assign IOL_bar = bus_out_dec[2]; // IR out (low end)
     assign inv_MO = bus_out_dec[3];  // Memory out
-    // spare: assign .. = bus_out_dec[4];  // X out
-    // spare: assign .. = bus_out_dec[5];  // Y out
+    // spare: assign .. = bus_out_dec[4];
+    // spare: assign .. = bus_out_dec[5];
     assign inv_DO = bus_out_dec[6];  // device out
-    // spare: assign .. = inv_bus_out_dec[7];
+    // spare: assign .. = bus_out_dec[7];
 
     // decode RT/P+
     ttl_7408 ander ({2'bZ, EO_bar, EO_bar}, {2'bZ, uinstr[11], uinstr[10]}, {nc,nc, RT, PP});
 
-    // inv_bus_in decoding:
-    // inv_bus_in == 0 means nobody inputs from bus
-    assign AI_Bar = bus_in_dec[1]; // Address in
+    // bus_in decoding:
+    // bus_in == 0 means nobody inputs from bus
+    assign AI_bar = bus_in_dec[1]; // Address in
     assign II_bar = bus_in_dec[2]; // IR in
     assign inv_MI = bus_in_dec[3]; // Memory in
     assign XI_bar = bus_in_dec[4]; // X in
-    assign YI_Bar = bus_in_dec[5]; // Y in
+    assign YI_bar = bus_in_dec[5]; // Y in
     assign inv_DI = bus_in_dec[6]; // device in
-    // spare: assign .. = inv_bus_in_dec[7]
+    // spare: assign .. = bus_in_dec[7]
 
 endmodule
