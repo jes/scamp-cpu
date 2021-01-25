@@ -56,7 +56,7 @@ module CPU(clk, RST_bar, addr, bus, DI, DO);
 
     Memory memory (clk, bus, MI, MO, AR_val);
 
-    parameter DEBUG = 1;
+    parameter DEBUG = 0;
 
     always @ (posedge clk) begin
         if (DEBUG) begin
@@ -83,5 +83,4 @@ module CPU(clk, RST_bar, addr, bus, DI, DO);
             $display("");
         end
     end
-
 endmodule
