@@ -8,10 +8,10 @@
 `include "rom.v"
 `include "ram.v"
 
-module Memory(clk, bus, load_bar, en, address);
+module Memory(clk, bus, load, en, address);
     input clk;
     inout [15:0] bus;
-    input load_bar;
+    input load;
     input en;
     input [15:0] address;
 
@@ -19,7 +19,7 @@ module Memory(clk, bus, load_bar, en, address);
     wire [15:0] ram_value;
 
     ROM rom (address[7:0], rom_value);
-    RAM ram (clk, bus, load_bar, address, ram_value);
+    RAM ram (clk, bus, !load_bar, address, ram_value);
 
     wire [15:0] value;
 

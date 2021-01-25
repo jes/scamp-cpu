@@ -54,7 +54,7 @@ module CPU(clk, RST_bar, addr, bus, DI, DO);
 
     Register ar (clk, bus, AI_bar, AR_val);
 
-    Memory memory (clk, bus, !MI, MO, AR_val);
+    Memory memory (clk, bus, MI, MO, AR_val);
 
     parameter DEBUG = 0;
 

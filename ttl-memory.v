@@ -14,10 +14,10 @@
 `include "ttl/74244.v"
 `include "ttl/w24512a.v"
 
-module Memory(clk, bus, load_bar, en, address);
+module Memory(clk, bus, load, en, address);
     input clk;
     inout [15:0] bus;
-    input load_bar;
+    input load;
     input en;
     input [15:0] address;
 
@@ -29,12 +29,8 @@ module Memory(clk, bus, load_bar, en, address);
     ttl_74244 rombuf1 ({romen_bar,romen_bar}, rom_value[7:0], bus[7:0]);
     ttl_74244 rombuf2 ({romen_bar,romen_bar}, rom_value[15:8], bus[15:8]);
 
-    // TODO: TTL this:
-    wire load_ram = !load_bar & clk;
-    wire load_ram_bar = !load_ram;
-
-    w24512a ram1 (address, bus[7:0], 1'b0, 1'b1, load_ram_bar, ramen_bar);
-    w24512a ram2 (address, bus[15:8], 1'b0, 1'b1, load_ram_bar, ramen_bar);
+    w24512a ram1 (address, bus[7:0], 1'b0, 1'b1, load_clk_bar, ramen_bar);
+    w24512a ram2 (address, bus[15:8], 1'b0, 1'b1, load_clk_bar, ramen_bar);
 
     // we want the RAM chip if any of the first 8 bits are 1, and the ROM
     // chip otherwise (i.e. ROM if address < 256, else RAM)
@@ -44,5 +40,5 @@ module Memory(clk, bus, load_bar, en, address);
     // ramen_bar = want_ram NAND en
     // want_rom = want_ram NAND want_ram = !want_ram
     // romen_bar = want_rom NAND en
-    ttl_7400 nander ({1'bZ, en, en, want_ram}, {1'bZ, want_ram, want_rom, want_ram}, {nc, ramen_bar, romen_bar, want_rom});
+    ttl_7400 nander ({load, en, en, want_ram}, {clk, want_ram, want_rom, want_ram}, {load_clk_bar, ramen_bar, romen_bar, want_rom});
 endmodule
