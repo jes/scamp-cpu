@@ -10,7 +10,7 @@
 `include "tstate.v"
 `include "register.v"
 
-module CPU(clk, RST_bar, addr, bus, DI, DO);
+module CPU #(parameter DEBUG=0) (clk, RST_bar, addr, bus, DI, DO);
     input clk;
     input RST_bar;
     output [15:0] addr;
@@ -57,8 +57,6 @@ module CPU(clk, RST_bar, addr, bus, DI, DO);
     Register ar (clk, bus, AI_bar, AR_val);
 
     Memory memory (clk, bus, MI, MO, AR_val);
-
-    parameter DEBUG = 0;
 
     always @ (posedge clk) begin
         if (DEBUG) begin

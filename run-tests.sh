@@ -18,3 +18,18 @@ for t in $TESTS; do
     ./a.out
     rm -f ttl-${t}_tb.v a.out
 done
+
+if [ ! "$1" ]; then
+    echo verbose...
+    t=verbose
+
+    iverilog ${t}_tb.v
+    ./a.out > out
+    rm -f a.out
+    cat ${t}_tb.v | sed "s/include \"cpu.v\"/include \"ttl-cpu.v\"/" > ttl-${t}_tb.v
+    iverilog ttl-${t}_tb.v
+    ./a.out > ttl-out
+    rm -f ttl-{$t}_tb.v a.out
+
+    diff -u out ttl-out
+fi
