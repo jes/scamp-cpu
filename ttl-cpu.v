@@ -38,7 +38,10 @@ module CPU(clk, RST_bar, addr, bus, DI, DO);
     wire JC, JZ, JGT, JLT; // jump flags
     wire [5:0] ALU_flags;
 
-    assign JMP_bar = !((JC&C) | (JZ&Z) | (JLT&LT) | (JGT&!Z&!LT));
+    // JMP_bar = !((JC&C) | (JZ&Z) | (JLT&LT) | (JGT&!Z&!LT))
+    ttl_7408 ander ({JC, JZ, JLT, JGT}, {C, Z, LT, not_Z_LT}, {JC_C, JZ_Z, JLT_LT, JGT_GT});
+    ttl_7432 orer ({1'bZ, jmp1, JC_C, JZ_Z}, {1'bZ, jmp2, JLT_LT, JGT_GT}, {nc, JMP, jmp1, jmp2});
+    ttl_7402 norer ({2'bZ, JMP, Z}, {2'bZ, JMP, LT}, {nc,nc, JMP_bar, not_Z_LT});
 
     ALU alu (X_val, Y_val, ALU_flags, EO_bar, bus, E_val, C, C_flag, Z_flag, LT_flag);
     FR fr (clk, {C_flag, Z_flag, LT_flag}, EO_bar, {C, Z, LT});
