@@ -16,7 +16,7 @@ module PC(clk, bus, load_bar, en_bar, value, inc, reset_bar);
     ttl_74244 outbufhigh ({en_bar,en_bar}, value[15:8], bus[15:8]);
 
     ttl_74161 counter1 (reset_bar, load_bar, inc, inc, bus[3:0], clk, RCO1, value[3:0]);
-    ttl_74161 counter2 (reset_bar, load_bar, inc, RCO1, bus[7:4], clk, RCO2, value[7:4]);
-    ttl_74161 counter3 (reset_bar, load_bar, inc, RCO2, bus[11:8], clk, RCO3, value[11:8]);
-    ttl_74161 counter4 (reset_bar, load_bar, inc, RCO3, bus[15:12], clk, RCO4, value[15:12]);
+    ttl_74161 counter2 (reset_bar, load_bar, RCO1, inc, bus[7:4], clk, RCO2, value[7:4]);
+    ttl_74161 counter3 (reset_bar, load_bar, RCO2, inc, bus[11:8], clk, RCO3, value[11:8]);
+    ttl_74161 counter4 (reset_bar, load_bar, RCO3, inc, bus[15:12], clk, RCO4, value[15:12]);
 endmodule
