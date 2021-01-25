@@ -67,8 +67,18 @@ module CPU(clk, RST_bar, addr, bus, DI, DO);
             $display("E_val = ", E_val);
             $display("PC = ", PC_val);
             $display("AR = ", AR_val);
+            $display("X = ", X_val);
+            $display("Y = ", Y_val);
             $display("C = ", C, " Z = ", Z, " LT = ", LT);
-            if (!EO_bar) $write(" EO");
+            if (!EO_bar) begin
+                $write(" EO");
+                if (ALU_flags[5]) $write(" EX");
+                if (ALU_flags[4]) $write(" NX");
+                if (ALU_flags[3]) $write(" EY");
+                if (ALU_flags[2]) $write(" NY");
+                if (ALU_flags[1]) $write(" F");
+                if (ALU_flags[0]) $write(" NO");
+            end
             if (!PO_bar) $write(" PO");
             if (!IOH_bar) $write(" IOH");
             if (!IOL_bar) $write(" IOL");
