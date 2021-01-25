@@ -24,7 +24,6 @@ module CPU(clk, RST_bar, addr, bus, DI, DO);
     wire [15:0] PC_val;
     wire [15:0] IR_val;
     wire [15:0] AR_val;
-    wire [15:0] memory_val;
 
     // state
     wire [2:0] T;
@@ -55,7 +54,7 @@ module CPU(clk, RST_bar, addr, bus, DI, DO);
 
     Register ar (clk, bus, AI_bar, AR_val);
 
-    Memory memory (clk, bus, !MI, MO, AR_val, memory_val);
+    Memory memory (clk, bus, !MI, MO, AR_val);
 
     parameter DEBUG = 0;
 
