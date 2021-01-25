@@ -70,25 +70,22 @@ module CPU(clk, RST_bar, addr, bus, DI, DO);
             $display("T = ", T);
             $display("bus = ", bus);
             $display("E_val = ", E_val);
-            if (!EO_bar) $display("+ EO");
-            if (!PO_bar) $display("+ PO");
-            if (!IOH_bar) $display("+ IOH");
-            if (!IOL_bar) $display("+ IOL");
-            if (MO) $display("+ MO");
-            if (DO) $display("+ DO");
-            if (RT) $display("+ RT");
-            if (PP) $display("+ P+");
-            if (!AI_bar) $display("+ AI");
-            if (!II_bar) $display("+ II");
-            if (MI) $display("+ MI");
-            if (!XI_bar) $display("+ XI");
-            if (!YI_bar) $display("+ YI");
-            if (DI) $display("+ DI");
+            if (!EO_bar) $write(" EO");
+            if (!PO_bar) $write(" PO");
+            if (!IOH_bar) $write(" IOH");
+            if (!IOL_bar) $write(" IOL");
+            if (MO) $write(" MO");
+            if (DO) $write(" DO");
+            if (RT) $write(" RT");
+            if (PP) $write(" P+");
+            if (!AI_bar) $write(" AI");
+            if (!II_bar) $write(" II");
+            if (MI) $write(" MI");
+            if (!XI_bar) $write(" XI");
+            if (!YI_bar) $write(" YI");
+            if (DI) $write(" DI");
+            $display("");
+            $display("");
         end
     end
-
-    always @ (negedge clk) begin
-        if (DEBUG) $display("");
-    end
-
 endmodule
