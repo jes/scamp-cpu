@@ -1,4 +1,4 @@
-/* Decode: Turn an instruction into a microinstruction
+/* Ucode: Turn an instruction into a microinstruction
 
     T0:  PO AI
     T1:  MO II P+
@@ -7,7 +7,7 @@
 
 `include "ttl/at28c16.v"
 
-module Decode(instr, T, uinstr);
+module Ucode(instr, T, uinstr);
     input [15:0] instr;
     input [2:0] T;
     output [15:0] uinstr;

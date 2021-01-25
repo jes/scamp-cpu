@@ -2,7 +2,7 @@
 
 `include "alu.v"
 `include "control.v"
-`include "decode.v"
+`include "ucode.v"
 `include "fr.v"
 `include "ir.v"
 `include "memory.v"
@@ -51,7 +51,7 @@ module CPU #(parameter DEBUG=0) (clk, RST_bar, addr, bus, DI, DO);
     IR ir (clk, bus, II_bar, IOL_bar, IOH_bar, IR_val);
 
     TState tstate (clk, RT|(!RST_bar), T);
-    Decode decode (IR_val, T, uinstr);
+    Ucode ucode (IR_val, T, uinstr);
     Control control (uinstr, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE);
 
     Register ar (clk, bus, AI_bar, AR_val);

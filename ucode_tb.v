@@ -1,6 +1,6 @@
 /* Decode testbench */
 
-`include "decode.v"
+`include "ucode.v"
 
 module test;
     reg [15:0] instr;
@@ -8,7 +8,7 @@ module test;
 
     wire [15:0] uinstr;
 
-    Decode decode(instr, T, uinstr);
+    Ucode ucode(instr, T, uinstr);
 
     initial begin
         instr = 0; T = 0;
