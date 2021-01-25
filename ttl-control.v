@@ -23,13 +23,15 @@
 
 `include "ttl/7404.v"
 `include "ttl/7408.v"
+`include "ttl/7432.v"
 `include "ttl/74138.v"
 
-module Control(uinstr,
-        EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE);
+module Control(uinstr, Z, C, LT,
+        EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE, C_in, JMP_bar);
 
     input [15:0] uinstr;
-    output EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, CE;
+    input Z, C, LT;
+    output EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, CE, C_in, JMP_bar;
     output [5:0] ALU_flags;
 
     wire [2:0] bus_out;
@@ -51,7 +53,7 @@ module Control(uinstr,
     assign JLT = uinstr[2];
     assign JC = uinstr[1];
 
-    ttl_7404 inverter ({2'bZ, inv_MO, inv_DO, inv_MI, inv_DI}, {nc,nc, MO, DO, MI, DI});
+    ttl_7404 inverter ({Z_LT, JMP, inv_MO, inv_DO, inv_MI, inv_DI}, {not_Z_LT, JMP_bar, MO, DO, MI, DI});
 
     ttl_74138 out_decoder (1'b0, 1'b0, EO_bar, bus_out, bus_out_dec);
     ttl_74138 in_decoder (1'b0, 1'b0, 1'b1, bus_in, bus_in_dec);
@@ -79,4 +81,10 @@ module Control(uinstr,
     assign inv_DI = bus_in_dec[6]; // device in
     // spare: assign .. = bus_in_dec[7]
 
+    // JMP = (JC&C) | (JZ&Z) | (JLT&LT) | (JGT&!Z&!LT)
+    ttl_7408 ander1 ({JC, JZ, JLT, JGT}, {C, Z, LT, not_Z_LT}, {JC_C, JZ_Z, JLT_LT, JGT_GT});
+    ttl_7432 orer ({Z, jmp1, JC_C, JZ_Z}, {LT, jmp2, JLT_LT, JGT_GT}, {Z_LT, JMP, jmp1, jmp2});
+
+    // C_in = C & CE
+    ttl_7408 ander2 ({3'bZ, C}, {3'bZ, CE}, {nc,nc,nc, C_in});
 endmodule

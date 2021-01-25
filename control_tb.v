@@ -44,7 +44,7 @@ module test;
 
     wire [15:0] real_uinstr = {!uinstr[15], uinstr[14:0]};
 
-    Control control (real_uinstr, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE);
+    Control control (real_uinstr, Z, C, LT, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE, C_in, JMP_bar);
 
     initial begin
         uinstr = vIOH | vJC;
@@ -131,5 +131,7 @@ module test;
 
         uinstr = vJLT;
         #1 if (JLT!==1) $display("Bad: JLT doesn't work");
+
+        // TODO: test C_in,JMP_bar calculation based on Z,C,LT
     end
 endmodule

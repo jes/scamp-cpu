@@ -21,11 +21,12 @@
 
  */
 
-module Control(uinstr,
-        EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE);
+module Control(uinstr, Z, C, LT,
+        EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE, C_in, JMP_bar);
 
     input [15:0] uinstr;
-    output EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, CE;
+    input Z, C, LT;
+    output EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, CE, C_in, JMP_bar;
     output [5:0] ALU_flags;
 
     wire [2:0] bus_out;
@@ -68,4 +69,7 @@ module Control(uinstr,
     assign JGT = uinstr[3];
     assign JLT = uinstr[2];
     assign JC = uinstr[1];
+
+    assign JMP_bar = !((JC&C) | (JZ&Z) | (JLT&LT) | (JGT&!Z&!LT));
+    assign C_in = C & CE;
 endmodule
