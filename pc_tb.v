@@ -115,5 +115,19 @@ module test;
         #1
         clk = 1;
         #1 if (bus !== 2056) $display("Bad: put value on bus without en=1,",value);
+
+        clk = 0;
+        #1
+        inc = 0; load = 1; busreg = 240;
+        #1
+        clk = 1;
+        #1 if (value !== 240) $display("Bad: didn't load 240,",value);
+
+        clk = 0;
+        #1
+        inc = 1; load = 0;
+        #1
+        clk = 1;
+        #1 if (value !== 241) $display("Bad: didn't increment 240 to 241,",value);
     end
 endmodule
