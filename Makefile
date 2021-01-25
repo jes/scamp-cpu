@@ -1,4 +1,4 @@
-SOURCES = alu.v
+SOURCES = top.v
 
 .PHONY: ttlcpu test burn clean
 
