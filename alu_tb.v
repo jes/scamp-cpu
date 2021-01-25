@@ -23,8 +23,8 @@ module test;
     integer x, y;
 
     initial begin
-        for (x = 0; x < 65536; x = x + 2040) begin
-            for (y = 0; y < 65536; y = y + 3567) begin
+        for (x = 0; x < 65536; x = x + 4080) begin
+            for (y = 0; y < 65536; y = y + 5567) begin
                 X = x; Y = y; en = 1;
 
                 // X+Y
