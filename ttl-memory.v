@@ -29,10 +29,12 @@ module Memory(clk, bus, load_bar, en, address);
     ttl_74244 rombuf1 ({romen_bar,romen_bar}, rom_value[7:0], bus[7:0]);
     ttl_74244 rombuf2 ({romen_bar,romen_bar}, rom_value[15:8], bus[15:8]);
 
-    // TODO: ram should only take in new value on rising clock edge
-    // (load_bar should be AND'd with !clk?)
-    w24512a ram1 (address, bus[7:0], 1'b0, 1'b1, load_bar&!clk, ramen_bar);
-    w24512a ram2 (address, bus[15:8], 1'b0, 1'b1, load_bar&!clk, ramen_bar);
+    // TODO: TTL this:
+    wire load_ram = !load_bar & clk;
+    wire load_ram_bar = !load_ram;
+
+    w24512a ram1 (address, bus[7:0], 1'b0, 1'b1, load_ram_bar, ramen_bar);
+    w24512a ram2 (address, bus[15:8], 1'b0, 1'b1, load_ram_bar, ramen_bar);
 
     // we want the RAM chip if any of the first 8 bits are 1, and the ROM
     // chip otherwise (i.e. ROM if address < 256, else RAM)

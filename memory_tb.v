@@ -40,7 +40,8 @@ module test;
         clk = 0;
         address = 600; busreg = 8907; en = 0; load = 1;
         #1
-        clk = 1; en = 1;
+        clk = 1;
+        #1 en = 1; load = 0;
         #1 if (bus !== 8907) $display("Bad: didn't write to memory at clock edge (2nd):",bus);
 
         clk = 0;
