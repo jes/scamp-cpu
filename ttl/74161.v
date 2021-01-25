@@ -1,5 +1,8 @@
 // 4-bit modulo 16 binary counter with parallel load, asynchronous clear
 
+`ifndef TTL_74161
+`define TTL_74161
+
 module ttl_74161 #(parameter WIDTH = 4, DELAY_RISE = 0, DELAY_FALL = 0)
 (
   input Clear_bar,
@@ -48,3 +51,5 @@ assign #(DELAY_RISE, DELAY_FALL) RCO = RCO_current;
 assign #(DELAY_RISE, DELAY_FALL) Q = Q_current;
 
 endmodule
+
+`endif

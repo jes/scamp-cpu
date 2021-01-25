@@ -1,5 +1,8 @@
 // 3-line to 8-line decoder/demultiplexer (inverted outputs)
 
+`ifndef TTL_74138
+`define TTL_74138
+
 module ttl_74138 #(parameter WIDTH_OUT = 8, WIDTH_IN = $clog2(WIDTH_OUT),
                    DELAY_RISE = 0, DELAY_FALL = 0)
 (
@@ -29,3 +32,5 @@ end
 assign #(DELAY_RISE, DELAY_FALL) Y = computed;
 
 endmodule
+
+`endif

@@ -1,5 +1,8 @@
 // Quad 2-input OR gate
 
+`ifndef TTL_7432
+`define TTL_7432
+
 module ttl_7432 #(parameter BLOCKS = 4, WIDTH_IN = 2, DELAY_RISE = 0, DELAY_FALL = 0)
 (
   input [BLOCKS-1:0] A,
@@ -21,3 +24,5 @@ end
 assign #(DELAY_RISE, DELAY_FALL) Y = computed;
 
 endmodule
+
+`endif

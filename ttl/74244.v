@@ -1,5 +1,8 @@
 // Octal buffer with 3-state output
 
+`ifndef TTL_74244
+`define TTL_74244
+
 module ttl_74244 #(parameter WIDTH = 8, DELAY_RISE = 0, DELAY_FALL = 0)
 (
   input [(WIDTH-1)/4:0] G_bar,
@@ -21,3 +24,5 @@ end
 assign #(DELAY_RISE, DELAY_FALL) Y = computed;
 
 endmodule
+
+`endif

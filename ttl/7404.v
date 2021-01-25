@@ -1,5 +1,8 @@
 // Hex inverter
 
+`ifndef TTL_7404
+`define TTL_7404
+
 module ttl_7404 #(parameter BLOCKS = 6, DELAY_RISE = 0, DELAY_FALL = 0)
 (
   input [BLOCKS-1:0] A,
@@ -18,3 +21,5 @@ end
 assign #(DELAY_RISE, DELAY_FALL) Y = computed;
 
 endmodule
+
+`endif

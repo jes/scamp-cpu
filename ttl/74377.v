@@ -1,5 +1,8 @@
 // Octal D flip-flop with enable
 
+`ifndef TTL_74377
+`define TTL_74377
+
 module ttl_74377 #(parameter WIDTH = 8, DELAY_RISE = 0, DELAY_FALL = 0)
 (
   input Enable_bar,
@@ -9,7 +12,7 @@ module ttl_74377 #(parameter WIDTH = 8, DELAY_RISE = 0, DELAY_FALL = 0)
 );
 
 //------------------------------------------------//
-reg [WIDTH-1:0] Q_current;
+reg [WIDTH-1:0] Q_current = 255; // XXX: initialise to *something* so that Icarus Verilog doesn't propagate "unknown" everywhere
 
 always @(posedge Clk)
 begin
@@ -21,3 +24,5 @@ end
 assign #(DELAY_RISE, DELAY_FALL) Q = Q_current;
 
 endmodule
+
+`endif
