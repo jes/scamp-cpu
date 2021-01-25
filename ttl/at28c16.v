@@ -7,6 +7,9 @@
      at28c16 rom #(ROM_FILE="bootrom.hex") (addr, bus, oe_bar, ce_bar);
 */
 
+`ifndef AT28C16
+`define AT28C16
+
 module at28c16 #(parameter ROM_FILE = "/dev/null", parameter ROM_BYTES = 2048) (addr, bus, oe_bar, ce_bar);
     input [10:0] addr;
     output [7:0] bus;
@@ -22,3 +25,5 @@ module at28c16 #(parameter ROM_FILE = "/dev/null", parameter ROM_BYTES = 2048) (
 
     assign bus = en ? rom[addr] : 8'bZ;
 endmodule
+
+`endif

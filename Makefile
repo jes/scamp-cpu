@@ -11,11 +11,16 @@ ucode.hex: ucode/ucode.s
 	./ucode/uasm < ucode/ucode.s > ucode.hex.tmp
 	mv ucode.hex.tmp ucode.hex
 
-test: ucode.hex
+ucode-low.hex: ucode.hex
+	sed 's/^..//' ucode.hex > ucode-low.hex
+ucode-high.hex: ucode.hex
+	sed 's/..$$//' ucode.hex > ucode-high.hex
+
+test: ucode-low.hex ucode-high.hex
 	./run-tests.sh
 
 burn:
 	iceFUNprof ttlcpu.bin
 
 clean:
-	rm -f *.asc *.bin *blif a.out ttl-*_tb.v ucode.hex *.tmp
+	rm -f *.asc *.bin *blif a.out ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex *.tmp
