@@ -12,7 +12,7 @@ module ttl_74377 #(parameter WIDTH = 8, DELAY_RISE = 0, DELAY_FALL = 0)
 );
 
 //------------------------------------------------//
-reg [WIDTH-1:0] Q_current = 255; // XXX: initialise to *something* so that Icarus Verilog doesn't propagate "unknown" everywhere
+reg [WIDTH-1:0] Q_current = 0; // XXX: initialise to *something* so that Icarus Verilog doesn't propagate "unknown" everywhere
 
 always @(posedge Clk)
 begin
