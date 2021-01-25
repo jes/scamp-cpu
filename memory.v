@@ -19,7 +19,7 @@ module Memory(clk, bus, load, en, address);
     wire [15:0] ram_value;
 
     ROM rom (address[7:0], rom_value);
-    RAM ram (clk, bus, !load_bar, address, ram_value);
+    RAM ram (clk, bus, !load, address, ram_value);
 
     wire [15:0] value;
 
