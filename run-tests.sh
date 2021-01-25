@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TESTS="register pc decode control tstate ir fr memory alu"
+TESTS="register pc decode control tstate ir fr memory alu cpu"
 
 if [ "$1" ]; then
     TESTS=$1

@@ -11,6 +11,9 @@ module test;
 
     reg [15:0] cycle = 0;
 
+    parameter EXPECT_OUTPUTS = 5;
+    reg [15:0] outputs = 0;
+
     initial begin
         reset_bar = 0; clk = 0;
         #1 clk = 1;
@@ -22,9 +25,14 @@ module test;
 
             #1 clk = 1;
 
-            #1 if (DI) $display("output: ", bus);
+            #1 if (DI) begin
+                if (bus !== outputs) $display("Bad: output ",outputs, " != ", outputs, ": ", bus);
+                outputs = outputs + 1;
+            end
 
             clk = 0;
         end
+
+        if (outputs !== EXPECT_OUTPUTS) $display("Bad: only got ", outputs, " outputs, expected ", EXPECT_OUTPUTS);
     end
 endmodule
