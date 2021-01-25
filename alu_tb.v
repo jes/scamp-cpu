@@ -22,22 +22,29 @@ module test;
 
     integer x, y;
 
+    parameter THOROUGH = 0;
+    parameter X_INC = THOROUGH ? 255 : 4080;
+    parameter Y_INC = THOROUGH ? 567 : 15381;
+
     initial begin
-        for (x = 0; x < 65536; x = x + 4080) begin
-            for (y = 0; y < 65536; y = y + 5567) begin
+        for (x = 0; x < 65536; x = x + X_INC) begin
+            for (y = 119; y < 65536; y = y + Y_INC) begin
                 X = x; Y = y; en = 1;
 
                 // X+Y
                 C = ex+ey+f;
                 #1 if (out !== X+Y) $display("Bad: X+Y: got ",x,"+",y,"=",out);
+                #1 if (Z_flag!==0 && out !==0) $display("Bad: X+Y: Z_flag is set but output=",out);
 
                 // X-Y
                 C = ex+ey+nx+f+no;
                 #1 if (out !== X-Y) $display("Bad: X-Y: got ",x,"-",y,"=",out);
+                #1 if (Z_flag!==0 && out !==0) $display("Bad: X-Y: Z_flag is set but output=",out);
 
                 // Y-X
                 C = ex+ey+ny+f+no;
                 #1 if (out !== Y-X) $display("Bad: Y-X: got ",y,"-",x,"=",out);
+                #1 if (Z_flag!==0 && out !==0) $display("Bad: Y-X: Z_flag is set but output=",out);
 
                 // X&Y
                 C = ex+ey;
@@ -67,10 +74,12 @@ module test;
                 // X
                 C = ex+f;
                 #1 if (out !== X) $display("Bad: X: got ",x,"=",out);
+                #1 if (Z_flag!==0 && out !==0) $display("Bad: X: Z_flag is set but output=",out);
 
                 // Y
                 C = ey+f;
                 #1 if (out !== Y) $display("Bad: Y: got ",y,"=",out);
+                #1 if (Z_flag!==0 && out !==0) $display("Bad: Y: Z_flag is set but output=",out);
 
                 // !X
                 C = nx+ex+f;
@@ -83,26 +92,32 @@ module test;
                 // -X
                 C = ex+ny+f+no;
                 #1 if (out !== -X) $display("Bad: -X: got -",x,"=",out);
+                #1 if (Z_flag!==0 && out !==0) $display("Bad: -X: Z_flag is set but output=",out);
 
                 // -Y
                 C = ey+nx+f+no;
                 #1 if (out !== -Y) $display("Bad: -Y: got -",y,"=",out);
+                #1 if (Z_flag!==0 && out !==0) $display("Bad: -Y: Z_flag is set but output=",out);
 
                 // X+1
                 C = nx+ex+ny+f+no;
                 #1 if (out !== (X+1)%65536) $display("Bad: X+1: got ",x,"+1=",out);
+                #1 if (Z_flag!==0 && out !==0) $display("Bad: X+1: Z_flag is set but output=",out);
 
                 // Y+1
                 C = ny+ey+nx+f+no;
                 #1 if (out !== (Y+1)%65536) $display("Bad: Y+1: got ",y,"+1=",out);
+                #1 if (Z_flag!==0 && out !==0) $display("Bad: Y+1: Z_flag is set but output=",out);
 
                 // X-1
                 C = ex+ny+f;
                 #1 if (out !== (65536+X-1)%65536) $display("Bad: X-1: got ",x,"-1=",out);
+                #1 if (Z_flag!==0 && out !==0) $display("Bad: X-1: Z_flag is set but output=",out);
 
                 // Y-1
                 C = ey+nx+f;
                 #1 if (out !== (65536+Y-1)%65536) $display("Bad: Y-1: got ",y,"-1=",out);
+                #1 if (Z_flag!==0 && out !==0) $display("Bad: Y-1: Z_flag is set but output=",out);
 
                 // test that bus output works
                 C = nx+ny; en = 1;

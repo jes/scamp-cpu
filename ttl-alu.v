@@ -17,6 +17,7 @@
    */
 
 `include "ttl/7402.v"
+`include "ttl/7432.v"
 `include "ttl/74244.v"
 `include "ttl-alu4.v"
 
@@ -42,5 +43,6 @@ module ALU(X, Y, C, en_bar, bus, val, C_in, C_flag, Z_flag, LT_flag);
 
     assign LT_flag = val[15];
 
-    ttl_7402 norer ({nonzero1,nonzero2,nor1,NZ_flag},{nonzero3,nonzero4,nor2,NZ_flag},{nor1,nor2,NZ_flag,Z_flag});
+    ttl_7432 orer ({1'bZ, nonzero1, nonzero2, or1}, {1'bZ, nonzero3, nonzero4, or2}, {nc, or1, or2, nonzero});
+    ttl_7402 norer ({3'bZ, nonzero}, {3'bZ, nonzero}, {nc,nc,nc, Z_flag});
 endmodule
