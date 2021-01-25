@@ -46,7 +46,7 @@ module CPU #(parameter DEBUG=0) (clk, RST_bar, addr, bus, DI, DO);
     PC pc (clk, bus, JMP_bar, PO_bar, PC_val, PP, RST_bar);
     IR ir (clk, bus, II_bar, IOL_bar, IOH_bar, IR_val);
 
-    TState tstate (clk, RT|(!RST_bar), T);
+    TState tstate (clk, RT, RST_bar, T);
     Ucode ucode (IR_val, T, uinstr);
     Control control (uinstr, Z, C, LT, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE, C_in, JMP_bar);
 

@@ -7,7 +7,10 @@ module test;
 
     wire [2:0] T;
 
-    TState tstate (clk, reset, T);
+    assign reset1 = reset;
+    assign reset2_bar = 1;
+
+    TState tstate (clk, reset1, reset2_bar, T);
 
     initial begin
         clk = 1;
