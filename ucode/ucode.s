@@ -21,7 +21,7 @@ dec: 05 # decrement X register: X = X-1
 
 sub: 06 # X = X-Y
     EO F
-    EX NX F NO EO XI
+    EX NX EY F NO EO XI
 
 jmp: 07 # jump to immediate address from operand
     PO AI
