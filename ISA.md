@@ -283,6 +283,7 @@ of the TPA to disk should be optimised.
     pop (x), (SP)
     pop (y), (SP)
     pop (imm16), (SP)
+    ret (SP)
 
 The (SP) arg is an imm8h stack pointer. I envisage defining a stack pointer in assembly language,
 and using it like:
@@ -291,7 +292,7 @@ and using it like:
     push (SP), x
     pop x, (SP)
 
-"push" post-decrements (SP), and "pop" pre-increments it.
+"push" post-decrements (SP), and "pop" pre-increments it. "ret" is basically just "pop pc, (SP)"
 
 ### Misc
 
@@ -316,12 +317,24 @@ The microcode is a bit too restricted to make an instruction that would push PC+
 argument, so the general method of calling would be to have the assembler generate the hardcoded
 return address, and push it, and then jump to the callee.
 
+In general, calling is:
+
+    0: push (SP), 4 # push (SP), imm16
+    2: jmp imm16
+    4: ...
+
 In the event that position-independent code is required, use something like:
 
     0: ld x, pc
-    1: add x, 2      # with the "add x, imm8l" opcode (1 word)
+    1: add x, 4      # with the "add x, imm8l" opcode (1 word)
     2: push (SP), x
     3: jmp imm16
+    5: ...
+
+The "ret" instruction can be used to return to the caller. It pops the return address
+from the stack and jumps to it.
+
+    0: ret
 
 ### Shift-right
 
