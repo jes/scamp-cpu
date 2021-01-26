@@ -59,8 +59,6 @@ shl: 11 # X = (X<<1) = X+X (clobbers Y register)
     XO YI         # Y = X
     X+Y XI
 
-# XXX: should there be a control bit to either clear the carry, or enable carry input to ALU, with it disabled by default?
-
 # XXX: how could we implement a right-shift?
 
 xor: 12 # X = X^Y (clobbers a word in the upper page of RAM, based on the 8-bit immediate constant in the opcode)
