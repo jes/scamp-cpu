@@ -72,11 +72,11 @@ exceeding 6 T-states. We also might be able to add more if there is opcode space
 Where instructions clobber an address in memory (e.g. xor), there should probably be a
 default that is normally used, and also some syntax to choose an alternative.
 
-In total we currently have 161 opcodes.
+In total we currently have 169 opcodes.
 
 ### Load/store
 
-30 opcodes:
+38 opcodes:
 
     ld x, y
     ld y, x
@@ -108,6 +108,14 @@ In total we currently have 161 opcodes.
     ld ((imm16)), y
     ld x, pc
     ld y, pc
+    ld x, (imm16+x)
+    ld y, (imm16+x)
+    ld x, (imm16+y)
+    ld y, (imm16+y)
+    ld x, ((imm16)+x)
+    ld y, ((imm16)+x)
+    ld x, ((imm16)+y)
+    ld y, ((imm16)+y)
 
 ### Jump
 

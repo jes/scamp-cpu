@@ -157,3 +157,9 @@ jr_neg: 20 # jump to a negative offset -1 to -256, relative to address of next i
     PO XI     # X = PC
     IOL YI    # Y = IOL
     JMP X-Y-1 # jump to X-Y-1
+
+ldxoy: 21 # load x from imm16 + y
+    PO AI # addr = PC
+    MO XI P+ # X = M[addr], inc PC
+    AI X+Y # addr = X+Y (= imm16 + y)
+    MO XI # X = M[addr] = M[imm16+y]
