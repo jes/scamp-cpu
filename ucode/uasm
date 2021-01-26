@@ -95,9 +95,13 @@ my %alu = (
     "~X&Y" => "EX NX EY",
     "Y&~X" => "EX NX EY",
     "~X&~Y" => "EX NX EY NY",
+    "~(X|Y)" => "EX NX EY NY",
     "~Y&~X" => "EX NX EY NY",
+    "~(Y|X)" => "EX NX EY NY",
     "~X|~Y" => "EX EY NO",
+    "~(X&Y)" => "EX EY NO",
     "~Y|~X" => "EX EY NO",
+    "~(Y&X)" => "EX EY NO",
 );
 
 my $opcode = -1;

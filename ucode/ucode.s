@@ -69,7 +69,7 @@ xor: 12 # X = X^Y (clobbers a word in the upper page of RAM, based on the 8-bit 
     # computing ~(X&Y) and storing it in X
     IOH AI               # addr = IOH (i.e. ff..)
     EO MI X|Y            # M[addr] = X|Y
-    EO YI ~X|~Y          # Y = ~(X&Y) == ~X|~Y
+    EO YI ~(X&Y)         # Y = ~(X&Y)
     MO XI                # X = M[ff..]
     EO XI X&Y            # X = X&Y
 
