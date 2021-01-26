@@ -59,8 +59,6 @@ shl: 11 # X = (X<<1) = X+X (clobbers Y register)
     XO YI         # Y = X
     X+Y XI
 
-# XXX: how could we implement a right-shift?
-
 xor: 12 # X = X^Y (clobbers a word in the upper page of RAM, based on the 8-bit immediate constant in the opcode)
     # the idea here is to calculate X^Y == (X|Y) & ~(X&Y) by first storing X|Y in memory,
     # then storing X&Y in Y, then loading the original X|Y from memory into X, then
@@ -105,10 +103,39 @@ ldx: 17 # load X from address given in operand
 ldy: 18 # load Y from address given in operand
     PO AI # addr = PC
     MO AI P+ # addr = M[addr], inc PC
-    MO XI  # Y = M[addr]
+    MO YI  # Y = M[addr]
 
 incy: 19 # increment Y register: Y = Y+1
     YI Y+1
 
 decy: 1a # decrement Y register: Y = Y-1
     YI Y-1
+
+# some special instructions for efficiently computing ">>8":
+# e.g.:
+# initialise by putting X in 0xffff for tbsz:
+#   stx 0xffff
+# initialise 0xfffe to 0 for sb:
+#   ldy(0)
+#   sty 0xfffe
+#
+# repeatedly tbsz and sb of the same value shifted right by 8
+#   tbsz(0xff) 0x8000
+#   sb(0x80)
+#   tbsz(0xff) 0x4000
+#   sb(0x40)
+# so the >>8 operation takes up to 8*(8+6) = 112 cycles, plus setup time
+
+tbsz: 1b # test bitwise and skip if zero (address of val in IOH, val to test against in immediate operand)
+    IOH AI # addr = IOH
+    MO XI  # X = M[IOH]
+    PO AI  # addr = PC
+    MO YI P+ # Y = M[PC], inc PC
+    X&Y    # compute X&Y
+    PO JNZ P+ # skip next 1 word if zero
+
+sb: 1c # set bits in val at 0xfffe based on bits in IOL (M[0xfffe] |= IOL)
+    -2 AI # addr = 0xfffe
+    MO XI # X = M[0xfffe]
+    IOL YI # Y = IOL
+    MI X|Y # M[0xfffe] = X|Y
