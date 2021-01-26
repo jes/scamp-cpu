@@ -48,12 +48,30 @@ inc, dec, add, sub, adc (add w/ carry), sbc (sub w/ carry), clc (clear carry)
 
 and, or, not
 
-XXX: We could add an extra control bit to the ALU to allow it to
-select from XOR and 1 other function as well as ADD and AND.
+### Shift-right
 
-We probably really want some efficient way to shift right by either 1 or 4 bits, to
-dramatically improve right shift operations. Shift-right 6 becomes "shr4, shr4, add, add"
-instead of long division, or 16 individual bit comparisons, or something else.
+These 2 instructions are kind of a bodge to support shift-right:
+
+tbsz (test bits and skip if zero), sb (set bits)
+
+tbsz takes the address of the value from IOH, and a bitmask as an argument, and skips the program
+counter over the next 1-word instruction if none of the bits set in the value are also set in
+the bitmask (i.e. if "val & mask == 0").
+
+sb is a 1-word instruction that computes "M[0xfffe] |= IOL", i.e. OR's some of the lower
+8 bits set in IOL into the value in M[0xfffe].
+
+Use it by repeatedly tbsz of some value in the upper 8 bits, followed by sb of the
+same value in the lower 8 bits:
+
+    tbsz(0xff) 0x8000 # skip next if !(M[0xffff] & 0x8000)
+    sb(0x80)          # M[0xfffe] |= 0x80
+    tbsz(0xff) 0x4000 # skip next if !(M[0xffff] & 0x4000)
+    sb(0x40)          # M[0xfffe] |= 0x40
+    ...
+
+so the >>8 operation takes up to 8*(8+6) = 112 cycles, plus setup time
+
 
 ### I/O
 
