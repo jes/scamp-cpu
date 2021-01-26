@@ -139,3 +139,11 @@ sb: 1c # set bits in val at 0xfffe based on bits in IOL (M[0xfffe] |= IOL)
     MO XI # X = M[0xfffe]
     IOL YI # Y = IOL
     MI X|Y # M[0xfffe] = X|Y
+
+ldxi: 1d # load x from 16-bit immediate operand
+    PO AI   # addr = PC
+    MO XI P+ # X = M[addr], inc PC
+
+ldyi: 1e # load y from 16-bit immediate operand
+    PO AI   # addr = PC
+    MO YI P+ # Y = M[addr], inc PC

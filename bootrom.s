@@ -95,12 +95,7 @@ ldx 0xffff
 out
 
 # 16: shift-right by 8
-ldx(0x80)
-shl
-shl
-shl
-shl
-shl
+ldxi 0x1000
 stx 0xffff # store 0x1000 at 0xffff
 ldy(0)
 sty 0xfffe # store 0 at 0xfffe
