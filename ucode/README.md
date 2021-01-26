@@ -122,3 +122,41 @@ bus_out/bus_in have some decodings which are currently unused. In principle, as 
 alongside everything else on the backplane, it would be possible to extend the CPU with an extra register (e.g. a
 dedicated stack pointer) or other modules, at a later date, by just plugging the new module into the backplane
 and writing microcode to make use of it.
+
+## Tricks
+
+### Conditionally skip the next instruction
+
+The obvious way to conditionally skip the next instruction is to generate the address to jump
+to, stash it somewhere, perform the operation that will set the condition flags, and then
+ask for a conditional jump.
+
+With the restriction that the instruction to skip is only 1 word, we can instead perform
+the comparison operation, and then:
+
+    PO JNZ P+
+
+In this case using JNZ for the conditional jump. PO means the current value of the program
+counter will be on the bus, which currently points to the next instruction. If the result
+of the comparison was not zero, then JNZ makes the PC load its value from the bus, meaning
+it doesn't change. Otherwise, P+ means the PC is incremented, which skips it past the next
+instruction.
+
+If the next instruction is going to be 2 words, then:
+
+    PO JNZ P+
+    PO JNZ P+
+
+will achieve the same goal.
+
+I can't think of a general way to skip the next instruction without knowing its length.
+
+We might want to add some "relative jump" instructions that can fit in a single opcode, e.g.:
+
+    jr(5):
+
+    PO XI
+    IOL YI
+    JMP X+Y
+
+This way the single word that is conditionally skipped can branch to a larger section of code.
