@@ -2,37 +2,77 @@
 
 Microcode will be stored in a ROM.
 
-The immediate small-valued constant can be placed on the bus either as 00xx or FFxx
-using the IOL and IOH control bits respectively.
+The immediate small-valued constant, from the low 8 bits of the instruction, can
+be placed on the bus either as 00xx or FFxx using the IOL and IOH control bits respectively.
 
-I was thinking we could dedicate the top 256 (or whatever) bytes of RAM to
-act as "registers", which could be conveniently accessed with a single opcode by
-loading the memory into Y, e.g.:
+The top 256 (or whatever) bytes of RAM are available to act as "registers", which can be
+conveniently accessed with a single-word instruction, e.g.:
 
     1. IOH AI (put FFxx into MAR)
     2. MO  YI (put RAM contents into Y register)
 
-The purpose of this document is to crystalise exactly what things are required from
-the instruction set so that I can be confident of things like:
+The T-State counter counts from 0 to 7 and then wraps. The first 2 states of every instruction
+are required to be:
 
- - how the instruction set is going to be laid out
- - how many control bits are required
- - how many T-states are required
- - what kind of decoding logic is required
+    1. PO AI
+    2. MO II P+
 
-It might be interesting if some of the opcode space were dedicated to a "decode RAM" instead
-of a "decode ROM", so that extra microcoded instructions can be created at runtime.
+In order to fetch the next instruction. These are provided implicitly by the microassembler (see
+[./uasm](./uasm)).
 
 ## Addressing
 
-Upper 8 bits indicate the opcode, lower 3 bits indicate the T-state.
+The upper 8 bits of the microcode address indicate the opcode, lower 3 bits indicate the T-state.
 
-9 bits of address space = 512 words. Each address contains 16 bits of microcode (spread
+11 bits of address space = 2048 words. Each address contains 16 bits of microcode (spread
 over 2x 8-bit ROM chips).
 
 Each microinstruction just switches on/off the CPU's control bits. Not all bits
 can be on at the same time, because this would be nonsensical at best, and cause
 bus fighting at worst.
+
+## Microassembler syntax
+
+Comments begin with "#" and run to the end of the line.
+All excess whitespace is ignored.
+
+Each instruction begins with a name for the instruction, although this is currently
+ignored. The name is followed by a colon, followed by the number for the opcode. These
+are represented in hex, and are required to count up sequentially starting from 0. Example:
+
+    clc: 0a    # The 'clc' instruction has opcode 0x0a
+
+After the label and opcode number comes 1 microinstruction per line. Each microinstruction
+consists of several control bits, e.g.
+
+    PO AI
+
+Turns on the "PO" (program counter output to bus) and "AI" (address register input from bus)
+bits, with the result that the address register takes the value from the program counter.
+
+The "xO" and "xI" bits are encoded into the microinstruction, see the "Decoding" section,
+so only one "xO" and one "xI" may be present at a time. The microassembler enforces this.
+
+When not specifying any "xO", ALU operations become available. Specify ALU operations in
+relatively-natural syntax, e.g.:
+
+    X+Y     # compute X+Y
+    X       # pass X straight through the ALU
+    ~(X|Y)  # compute X nor Y
+
+This syntactic sugar automatically enables "EO" and the relevant function selection flags, although
+this can be done manually. The above examples are equivalent to:
+
+    EO EX EY F      # compute X+Y
+    EO EX F         # pass X straight through the ALU
+    EO EX NX EY NY  # compute X nor Y
+
+There is also syntactic sugar for "JNZ" which is equivalent to "JLT JGT", and for "JMP"
+which is equivalent to "JZ JLT JGT".
+
+Other than that, the microinstruction flags available should exactly match the control bits
+documented below. The microassembler should give a warning or error message if you do
+something wrong.
 
 ## Control bits
 
@@ -150,3 +190,10 @@ If the next instruction is going to be 2 words, then:
 will achieve the same goal.
 
 I can't think of a general way to skip the next instruction without knowing its length.
+
+### Microcode RAM
+
+It would be interesting if some of the opcode space were dedicated to a "decode RAM" instead
+of a "decode ROM", so that extra microcoded instructions can be created at runtime. I'm not
+going to do it for this machine, because although it would be easy to implement, it sounds like
+it makes for hard-to-debug programs, which I'll have enough of already.
