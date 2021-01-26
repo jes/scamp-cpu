@@ -150,13 +150,3 @@ If the next instruction is going to be 2 words, then:
 will achieve the same goal.
 
 I can't think of a general way to skip the next instruction without knowing its length.
-
-We might want to add some "relative jump" instructions that can fit in a single opcode, e.g.:
-
-    jr(5):
-
-    PO XI
-    IOL YI
-    JMP X+Y
-
-This way the single word that is conditionally skipped can branch to a larger section of code.

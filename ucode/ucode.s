@@ -147,3 +147,13 @@ ldxi: 1d # load x from 16-bit immediate operand
 ldyi: 1e # load y from 16-bit immediate operand
     PO AI   # addr = PC
     MO YI P+ # Y = M[addr], inc PC
+
+jr_pos: 1f # jump to a positive offset 1 to 256, relative to address of next instr
+    PO XI     # X = PC
+    IOL YI    # Y = IOL
+    JMP X+Y+1 # jump to X+Y+1
+
+jr_neg: 20 # jump to a negative offset -1 to -256, relative to address of next instr
+    PO XI     # X = PC
+    IOL YI    # Y = IOL
+    JMP X-Y-1 # jump to X-Y-1
