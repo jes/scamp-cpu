@@ -84,17 +84,17 @@ immediate address operand:
 
     [opcode] [address of first number] [address of result]
 
-    1. PO AI          load address from PC (address of first number)
-    2. MO AI          load address from RAM
-    3. MO YI P+       load RAM contents into Y, increment PC
-    4. YO AI          load address from Y
-    5. MO XI P+       load RAM into X, increment PC
-    6. ALU=Y+1 EO AI  load Y+1 into address
-    7. MO YI          load RAM into Y
-    8. ALU=X+Y EO AI  load X+Y into X
-    9. PO AI          load address from PC (address of result)
-   10. MO AI          load address from RAM
-   11. XO MI          store X in address from PC
+    1.  PO AI          load address from PC (address of first number)
+    2.  MO AI          load address from RAM
+    3.  MO YI P+       load RAM contents into Y, increment PC
+    4.  YO AI          load address from Y
+    5.  MO XI P+       load RAM into X, increment PC
+    6.  ALU=Y+1 EO AI  load Y+1 into address
+    7.  MO YI          load RAM into Y
+    8.  ALU=X+Y EO AI  load X+Y into X
+    9.  PO AI          load address from PC (address of result)
+    10. MO AI          load address from RAM
+    11. XO MI          store X in address from PC
 
 11 microcode steps is probably pushing it a bit. It would be good if we could fit everything
 in 8, because then we only need 3 bits for T-state. Maybe 4 would be fine.
