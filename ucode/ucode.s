@@ -1,7 +1,7 @@
 # Provisional microcode for testing
 
 add: 00 # X = X+Y
-    EX EY F EO XI
+    EO X+Y XI
 
 ldx: 01 # load X from IOL
     IOL XI
@@ -13,13 +13,13 @@ out: 03 # output X register
     XO DI
 
 inc: 04 # increment X register: X = X+1
-    EX NX NY F NO EO XI
+    EO X+1 XI
 
 dec: 05 # decrement X register: X = X-1
-    EX NY F EO XI
+    EO X-1 XI
 
 sub: 06 # X = X-Y
-    EX NX EY F NO EO XI
+    EO X-Y XI
 
 jmp: 07 # jump to immediate address from operand
     PO AI
@@ -30,34 +30,34 @@ jz: 08 # jump if last ALU output was 0
     MO JZ
 
 djnz: 09 # decrement and jump if not zero
-    EX NY F EO XI # dec X
+    EO X-1 XI
     PO AI
     MO JNZ P+
 
 clc: 0a # clear carry
-    EO F # 0+0 = 0
+    EO 0
 
 adc: 0b # add with carry
-    CE EX EY F EO XI
+    CE EO X+Y XI
 
 sbc: 0c # subtract with carry (XXX: does this work or make sense?)
-    CE EX NX F NO EO XI
+    CE EO X-Y XI
 
 and: 0d # X = X&Y
-    EO XI EX EY
+    EO X&Y XI
 
 or: 0e # X = X|Y
-    EO XI EX EY NX NY NO
+    EO X|Y XI
 
 nand: 0f # X = ~(X&Y)
-    EO XI EX EY NO
+    EO ~X|~Y XI
 
 nor: 10 # X = ~(X|Y)
-    EO XI EX EY NX NY
+    EO ~X&~Y XI
 
 shl: 11 # X = (X<<1) = X+X (clobbers Y register)
     XO YI         # Y = X
-    EO XI EX EY F # X = X+Y
+    EO X+Y XI
 
 # XXX: should there be a control bit to either clear the carry, or enable carry input to ALU, with it disabled by default?
 
@@ -68,10 +68,10 @@ xor: 12 # X = X^Y (clobbers a word in the upper page of RAM, based on the 8-bit 
     # then storing X&Y in Y, then loading the original X|Y from memory into X, then
     # computing ~(X&Y) and storing it in X
     IOH AI               # addr = IOH (i.e. ff..)
-    EO MI EX EY NX NY NO # M[ff..] = X|Y
-    EO YI EX EY NO       # Y = ~(X&Y)
+    EO MI X|Y            # M[addr] = X|Y
+    EO YI ~X|~Y          # Y = ~(X&Y) == ~X|~Y
     MO XI                # X = M[ff..]
-    EO XI EX EY          # X = X&Y
+    EO XI X&Y            # X = X&Y
 
 push: 13 # push X onto stack pointed to by IOH (e.g. instruction 13ff if SP is at ffff), with post-decrement of sp (clobbers Y)
     IOH AI # addr = IOH (i.e. SP)
@@ -79,12 +79,12 @@ push: 13 # push X onto stack pointed to by IOH (e.g. instruction 13ff if SP is a
     MO AI  # addr = M[addr] (i.e. dereference SP) (XXX: we'd save a cycle if we could do YI and AI concurrently)
     XO MI  # M[addr] = X
     IOH AI # addr = IOH (i.e. SP)
-    EO MI EY NX F # M[addr] = Y-1 (i.e. decrement SP)
+    EO MI Y-1 # M[addr] = Y-1 (i.e. decrement SP)
 
 pop: 14 # pop X from stack pointed to by IOH (e.g. instruction 14ff if SP is at ffff), with pre-increment of sp
     IOH AI # addr = IOH (i.e. SP)
     MO YI  # Y = M[addr]
-    EO YI EY NX NY F NO # Y = Y+1 (i.e. increment SP)
+    EO YI Y+1 # Y = Y+1 (i.e. increment SP)
     YO MI # M[addr] = Y (write incremented SP)
     YO AI # addr = Y (i.e. new SP)
     MO XI # X = M[addr]
@@ -110,7 +110,7 @@ ldy: 18 # load Y from address given in operand
     MO XI  # Y = M[addr]
 
 incy: 19 # increment Y register: Y = Y+1
-    EY NY NX F NO EO YI
+    EO YI Y+1
 
 decy: 1a # decrement Y register: Y = Y-1
-    EY NX F EO YI
+    EO YI Y-1

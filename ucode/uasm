@@ -51,6 +51,55 @@ my %ucode = (
     YO  => 0x9400, # EO | EY | F
 );
 
+my %alu = (
+    "-2" => "NX NY F",
+    "-1" => "NO",
+    "0" => "",
+    "1" => "NX NY F NO",
+    "X-1" => "EX NY F",
+    "X" => "EX F",
+    "X+1" => "EX NX NY F NO",
+    "-X-2" => "EX NX NY F",
+    "-X-1" => "EX F NO", # == ~X
+    "-X" => "EX NY F NO",
+    "Y-1" => "NX EY F",
+    "Y" => "EY F",
+    "Y+1" => "NX EY NY F NO",
+    "-Y-2" => "NX EY NY F",
+    "-Y-1" => "EY F NO", # == ~Y
+    "-Y" => "NX EY F NO",
+    "X+Y" => "EX EY F",
+    "Y+X" => "EX EY F",
+    "X+Y+1" => "EX NX EY NY F NO",
+    "Y+X+1" => "EX NX EY NY F NO",
+    "X-Y-1" => "EX EY NY F",
+    "X-Y" => "EX NX EY F NO",
+    "Y-X-1" => "EX NX EY F",
+    "Y-X" => "EX EY NY F NO",
+    "-X-Y-2" => "EX NX EY NY F",
+    "-Y-X-2" => "EX NX EY NY F",
+    "-X-Y-1" => "EX EY F NO",
+    "-Y-X-1" => "EX EY F NO",
+    "~X" => "EX F NO",
+    "~Y" => "EY F NO",
+    "X&Y" => "EX EY",
+    "Y&X" => "EX EY",
+    "X|Y" => "EX NX EY NY NO",
+    "Y|X" => "EX NX EY NY NO",
+    "X&~Y" => "EX EY NY",
+    "~Y&X" => "EX EY NY",
+    "X|~Y" => "EX NX EY NO",
+    "~Y|X" => "EX NX EY NO",
+    "~X|Y" => "EX EY NY NO",
+    "Y|~X" => "EX EY NY NO",
+    "~X&Y" => "EX NX EY",
+    "Y&~X" => "EX NX EY",
+    "~X&~Y" => "EX NX EY NY",
+    "~Y&~X" => "EX NX EY NY",
+    "~X|~Y" => "EX EY NO",
+    "~Y|~X" => "EX EY NO",
+);
+
 my $opcode = -1;
 
 my @ucode;
@@ -103,8 +152,19 @@ sub encode {
     my $have_alu;
     my $have_jmp;
 
+    # append bits that form alu controls
+    my @alu_bits;
+    for my $b (@bits) {
+        if (exists $alu{$b}) {
+            push @alu_bits, "EO", split / /, $alu{$b};
+        }
+    }
+
+    push @bits, @alu_bits;
+
     my $num = 0;
     for my $b (@bits) {
+        next if exists $alu{$b}; # skip these bits, we already appended them
         die "unrecognised ucode: $b" if !exists $ucode{$b};
         $num |= $ucode{$b};
 
@@ -124,7 +184,7 @@ sub encode {
         $have_jmp = 1 if $is_jmp{$b};
     }
 
-    die "ALU bits without EO: $uinstr\n" if $have_alu && $uinstr !~ /\bEO\b/;
+    die "ALU bits without EO: $uinstr\n" if $have_alu && $uinstr !~ /\bEO\b/ && !@alu_bits;
 
     die "RT with ALU not allowed: $uinstr\n" if $have_alu && $uinstr =~ /\bRT\b/;
     die "P+ with ALU not allowed: $uinstr\n" if $have_alu && $uinstr =~ /\bP\+\b/;
