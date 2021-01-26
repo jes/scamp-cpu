@@ -50,10 +50,10 @@ or: 0e # X = X|Y
     EO X|Y XI
 
 nand: 0f # X = ~(X&Y)
-    EO ~X|~Y XI
+    EO ~(X&Y) XI
 
 nor: 10 # X = ~(X|Y)
-    EO ~X&~Y XI
+    EO ~(X|Y) XI
 
 shl: 11 # X = (X<<1) = X+X (clobbers Y register)
     XO YI         # Y = X
