@@ -77,7 +77,7 @@ opcodes, with as little hardcoding as possible.
 
 The registers are called "x" and "y". Immediate values
 are called "imm8l" if produced with "IOL" (0 to 255), "imm8h" if produced with "IOH" (0xff00 to
-0xff), or "imm16" if produced with an extra word operand, in which case the operands
+0xffff), or "imm16" if produced with an extra word operand, in which case the operands
 should appear in the machine code in the same order as they appear in the mnemonic. "SP" means
 the same as "imm8h", but considers the imm8h value to be a stack pointer.
 
@@ -492,7 +492,11 @@ Will generate a word containing 0x1010, whose address will be available in the "
 
 ## Labels
 
-Labels (and macro names)
+Labels and macro names must match
+
+    /^a-zA-Z_[a-zA-Z_0-9]*$/
+
+i.e. begin with uppercase, lowercase, or underscore, and then contain only uppercase, lowercase, underscore, and numeric.
 
 ## Values
 
