@@ -78,8 +78,9 @@ opcodes, with as little hardcoding as possible.
 The registers are called "x" and "y". Immediate values
 are called "imm8l" if produced with "IOL" (0 to 255), "imm8h" if produced with "IOH" (0xff00 to
 0xffff), or "imm16" if produced with an extra word operand, in which case the operands
-should appear in the machine code in the same order as they appear in the mnemonic. "SP" means
-the same as "imm8h", but considers the imm8h value to be a stack pointer.
+should appear in the machine code in the same order as they appear in the mnemonic.
+"r" means one of the pseudo-registers r0 to r255, which is equivalent to an "(imm8h)" argument.
+"sp" means r255, i.e. "(0xffff)".
 
 The assembly language should be as orthogonal as possible, with the assembler responsible for
 deciding which opcode to use, e.g. "ld x, 5" can be accomplished with both "ld x, imm8l" and
@@ -91,6 +92,10 @@ exceeding 6 T-states. We also might be able to add more if there is opcode space
 
 Where instructions clobber an address in memory (e.g. xor), there should probably be a
 default that is normally used, and also some syntax to choose an alternative.
+
+We should make sure that where 2 opcodes can perform an equivalent operation (e.g. "ld x, imm8h"
+and "ld x, imm16") that the shorter/faster/better one has the lower opcode, so that the assembler
+can know to always choose the smallest opcode that can fulfill an instruction.
 
 In total we currently have 165 opcodes.
 
@@ -128,6 +133,10 @@ In total we currently have 165 opcodes.
     ld x, (imm16)--
     ld y, (imm16)++
     ld y, (imm16)--
+    ld x, r
+    ld y, r
+    ld r, x
+    ld r, y
 
 ### Jump
 
@@ -255,27 +264,26 @@ of the TPA to disk should be optimised.
 
 11 opcodes:
 
-    push (SP), x
-    push (SP), y
-    push (SP), (x)
-    push (SP), (y)
-    push (SP), imm16
-    push (SP), (imm16)
-    pop x, (SP)
-    pop y, (SP)
-    pop (x), (SP)
-    pop (y), (SP)
-    pop (imm16), (SP)
-    ret (SP)
+    push x
+    push y
+    push r
+    push (x)
+    push (y)
+    push (r)
+    push imm16
+    push (imm16)
+    pop x
+    pop y
+    pop r
+    pop (x)
+    pop (y)
+    pop (r)
+    pop (imm16)
+    ret
 
-The (SP) arg is an imm8h stack pointer. I envisage defining a stack pointer in assembly language,
-and using it like:
+The stack pointer is always r255.
 
-    .def SP 0xff00
-    push (SP), x
-    pop x, (SP)
-
-"push" post-decrements (SP), and "pop" pre-increments it. "ret" is basically just "pop pc, (SP)"
+"push" post-decrements sp, and "pop" pre-increments it. "ret" is basically just "pop pc".
 
 ### Misc
 
@@ -290,8 +298,8 @@ and using it like:
     djnz x, imm16
     djnz y, imm16
     djnz (imm16), imm16
-    tbsz (imm8h), imm16
-    sb 0xfffe, imm8l
+    tbsz r, imm16
+    sb r254, imm8l
 
 Decrement and jump if not zero. Test bits and skip if zero. Set bits in M[0xfffe].
 
