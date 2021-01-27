@@ -67,6 +67,13 @@ module test;
                 C = nx+ny;
                 #1 if (out !== 65535) $display("Bad: -1: got -1=",out);
                 #1 if (LT_flag!==1) $display("Bad: -1 does not set LT_flag");
+                #1 if (Z_flag!==0) $display("Bad: -1 sets Z_flag");
+
+                // -1
+                C = no;
+                #1 if (out !== 65535) $display("Bad: -1 (2): got -1=",out);
+                #1 if (LT_flag!==1) $display("Bad: -1 (2) does not set LT_flag");
+                #1 if (Z_flag!==0) $display("Bad: -1 (2) sets Z_flag");
 
                 // X
                 C = ex+f;
