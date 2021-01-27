@@ -60,6 +60,7 @@ show includes:
 
  * opcode in hex
  * instruction length in words
+ * clock cycles to execute it (including 2 for fetch)
  * whether it clobbers or not for each of X, Y, flags, and memory (do we
     make a distinction between "writes to" and "clobbers"? e.g. "ld x, *" writes to X, so
     you lose what was already in X, but it's not exactly "clobbered"), and the nature of
