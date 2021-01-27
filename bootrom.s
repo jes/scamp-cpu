@@ -67,10 +67,10 @@ shl        # X = 256
 shl        # X = 512
 stx 0xffff # M[0xffff] = 512 (set SP = 512)
 ldx(13)    # X = 13
-clc        # XXX: clear carry, for push (we should add a carry-enable bit to ucode)
+nop
 push(255)  # push X
 ldx(12)    # X = 12
-clc        # XXX: clear carry, for push (we should add a carry-enable bit to ucode)
+nop
 push(255)  # push X
 ldx(42)    # (clobber X)
 pop(255)   # pop 12 into X
