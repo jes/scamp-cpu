@@ -15,15 +15,14 @@
 
    Output to bus is enabled when en_bar is low. Output to val always.
    */
-module ALU(X, Y, C, en_bar, bus, val, C_in, C_flag, Z_flag, LT_flag);
+module ALU(X, Y, C, en_bar, bus, val, Z_flag, LT_flag);
     input [15:0] X;
     input [15:0] Y;
     input [5:0] C;
     input en_bar;
     output [15:0] bus;
     output [15:0] val;
-    input C_in;
-    output C_flag, Z_flag, LT_flag;
+    output Z_flag, LT_flag;
 
     assign {ex,nx,ey,ny,f,no} = C;
 
@@ -38,8 +37,7 @@ module ALU(X, Y, C, en_bar, bus, val, C_in, C_flag, Z_flag, LT_flag);
     assign iny = ey ? Y : 0;
     assign argy = ny ? ~iny : iny;
 
-    assign fxy = f ? (C_in+argx+argy) : (argx&argy);
-    assign C_flag = (argx+argy > 65535);
+    assign fxy = f ? (argx+argy) : (argx&argy);
 
     assign val = no ? ~fxy : fxy;
     assign bus = !en_bar ? val : 16'hZZZZ;

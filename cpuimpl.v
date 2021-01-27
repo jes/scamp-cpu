@@ -20,8 +20,8 @@ module CPU #(parameter DEBUG=0) (clk, RST_bar, addr, bus, DI, DO);
     wire [15:0] uinstr;
     wire [5:0] ALU_flags;
 
-    ALU alu (X_val, Y_val, ALU_flags, EO_bar, bus, E_val, C_in, C_flag, Z_flag, LT_flag);
-    FR fr (clk, {C_flag, Z_flag, LT_flag}, EO_bar, {C, Z, LT});
+    ALU alu (X_val, Y_val, ALU_flags, EO_bar, bus, E_val, Z_flag, LT_flag);
+    FR fr (clk, {Z_flag, LT_flag}, EO_bar, {Z, LT});
 
     Register x (clk, bus, XI_bar, X_val);
     Register y (clk, bus, YI_bar, Y_val);
@@ -31,7 +31,7 @@ module CPU #(parameter DEBUG=0) (clk, RST_bar, addr, bus, DI, DO);
 
     TState tstate (clk, RT, RST_bar, T);
     Ucode ucode (IR_val, T, uinstr);
-    Control control (uinstr, Z, C, LT, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE, C_in, JMP_bar);
+    Control control (uinstr, Z, LT, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, ALU_flags, JMP_bar);
 
     Register ar (clk, bus, AI_bar, AR_val);
 
@@ -48,7 +48,7 @@ module CPU #(parameter DEBUG=0) (clk, RST_bar, addr, bus, DI, DO);
             $display("AR = ", AR_val);
             $display("X = ", X_val);
             $display("Y = ", Y_val);
-            $display("C = ", C, " Z = ", Z, " LT = ", LT);
+            $display("Z = ", Z, " LT = ", LT);
             if (!EO_bar) begin
                 $write(" EO");
                 if (ALU_flags[5]) $write(" EX");
@@ -71,7 +71,6 @@ module CPU #(parameter DEBUG=0) (clk, RST_bar, addr, bus, DI, DO);
             if (!XI_bar) $write(" XI");
             if (!YI_bar) $write(" YI");
             if (DI) $write(" DI");
-            if (JC) $write(" JC");
             if (JZ) $write(" JZ");
             if (JGT) $write(" JGT");
             if (JLT) $write(" JLT");

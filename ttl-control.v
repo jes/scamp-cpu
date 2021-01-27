@@ -9,14 +9,14 @@
      11 | EO ? NY : RT
      10 | EO ? F  : P+
       9 | EO ? NO : (unused)
-      8 | EO ? CE : (unused)
+      8 | (unused)
       7 | bus_in[2]
       6 | bus_in[1]
       5 | bus_in[0]
       4 | JZ
       3 | JGT
       2 | JLT
-      1 | JC
+      1 | (unused)
       0 | (unused)
 
  */
@@ -26,12 +26,12 @@
 `include "ttl/7432.v"
 `include "ttl/74138.v"
 
-module Control(uinstr, Z, C, LT,
-        EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE, C_in, JMP_bar);
+module Control(uinstr, Z, LT,
+        EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, ALU_flags, JMP_bar);
 
     input [15:0] uinstr;
-    input Z, C, LT;
-    output EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, CE, C_in, JMP_bar;
+    input Z, LT;
+    output EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, JMP_bar;
     output [5:0] ALU_flags;
 
     wire [2:0] bus_out;
@@ -44,14 +44,12 @@ module Control(uinstr, Z, C, LT,
     // ALU has no side effects if EO_bar, so we can safely tie
     // the bus_out signals to ALU_flags without checking EO
     assign ALU_flags = uinstr[14:9];
-    assign CE = uinstr[8];
     assign bus_out = uinstr[14:12];
     assign bus_in = uinstr[7:5];
 
     assign JZ = uinstr[4];
     assign JGT = uinstr[3];
     assign JLT = uinstr[2];
-    assign JC = uinstr[1];
 
     ttl_7404 inverter ({Z_LT, JMP, inv_MO, inv_DO, inv_MI, inv_DI}, {not_Z_LT, JMP_bar, MO, DO, MI, DI});
 
@@ -81,10 +79,7 @@ module Control(uinstr, Z, C, LT,
     assign inv_DI = bus_in_dec[6]; // device in
     // spare: assign .. = bus_in_dec[7]
 
-    // JMP = (JC&C) | (JZ&Z) | (JLT&LT) | (JGT&!Z&!LT)
-    ttl_7408 ander1 ({JC, JZ, JLT, JGT}, {C, Z, LT, not_Z_LT}, {JC_C, JZ_Z, JLT_LT, JGT_GT});
-    ttl_7432 orer ({Z, jmp1, JC_C, JZ_Z}, {LT, jmp2, JLT_LT, JGT_GT}, {Z_LT, JMP, jmp1, jmp2});
-
-    // C_in = C & CE
-    ttl_7408 ander2 ({3'bZ, C}, {3'bZ, CE}, {nc,nc,nc, C_in});
+    // JMP = (JZ&Z) | (JLT&LT) | (JGT&!Z&!LT)
+    ttl_7408 ander1 ({1'bZ, JZ, JLT, JGT}, {1'bZ, Z, LT, not_Z_LT}, {nc, JZ_Z, JLT_LT, JGT_GT});
+    ttl_7432 orer ({1'bZ, Z, JZ_Z, JLT_LT}, {1'bZ, LT, JGT_GT, jmp1}, {nc, Z_LT, jmp1, JMP});
 endmodule

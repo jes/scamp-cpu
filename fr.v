@@ -5,11 +5,11 @@
 
 module FR(clk, in, load_bar, out);
     input clk;
-    input [2:0] in;
+    input [1:0] in;
     input load_bar;
-    output [2:0] out;
+    output [1:0] out;
 
-    reg [2:0] val = 0;
+    reg [1:0] val = 0;
 
     assign out = val;
 

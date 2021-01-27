@@ -13,10 +13,8 @@ module test;
 
     reg en;
 
-    reg C_in = 0;
-
     assign en_bar = !en;
-    ALU alu (X, Y, C, en_bar, bus, out, C_in, C_flag, Z_flag, LT_flag);
+    ALU alu (X, Y, C, en_bar, bus, out, Z_flag, LT_flag);
 
     parameter ex=32, nx=16, ey=8, ny=4, f=2, no=1;
 
@@ -59,7 +57,6 @@ module test;
                 #1 if (out !== 0) $display("Bad: 0: got 0=",out);
                 #1 if (Z_flag!==1) $display("Bad: 0 doesn't set Z_flag");
                 #1 if (LT_flag!==0) $display("Bad: 0 sets LT_flag");
-                #1 if (C_flag!==0) $display("Bad: 0 sets C_flag");
                 // 1
                 C = nx+ny+f+no;
                 #1 if (out !== 1) $display("Bad: 1: got 1=",out);
@@ -126,19 +123,6 @@ module test;
                 // test that bus output can be disabled
                 en = 0;
                 #1 if (bus !== 16'bZ) $display("Bad: still outputting to bus, ",bus);
-
-                // test that carry out works
-                C=ex+ey+f;
-                #1
-                sum = out;
-                C_in = 1;
-                #1 if (out !== sum+1) $display("Bad: C_in not working on X+Y",out);
-                C_in = 0;
-
-                // test that carry out works
-                C=nx+ny+f;
-                #1 if (out !== 65534) $display("Bad: -1+-1 got,",out);
-                if (C_flag!==1) $display("Bad: C_flag not set");
             end
         end
     end

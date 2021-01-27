@@ -14,7 +14,6 @@ module test;
     parameter vJZ = 16'h0010;
     parameter vJGT = 16'h0008;
     parameter vJLT = 16'h0004;
-    parameter vJC = 16'h0002;
 
     parameter vPO = 0;
     parameter vIOH = vEY;
@@ -44,11 +43,11 @@ module test;
 
     wire [15:0] real_uinstr = {!uinstr[15], uinstr[14:0]};
 
-    Control control (real_uinstr, Z, C, LT, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JC, JZ, JGT, JLT, ALU_flags, CE, C_in, JMP_bar);
+    Control control (real_uinstr, Z, LT, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, ALU_flags, JMP_bar);
 
     initial begin
-        uinstr = vIOH | vJC;
-        #1 if (IOH!==1 || JC!==1) $display("Bad: !IOH || !JC");
+        uinstr = vIOH | vJZ;
+        #1 if (IOH!==1 || JZ!==1) $display("Bad: !IOH || !JZ");
 
         uinstr = vPO | vAI;
         #1 if (PO!==1 || AI!==1) $display("Bad: !PO || !AI");
@@ -75,10 +74,10 @@ module test;
         #1 if (DI!==1 || AI!==0 || II!==0 || MI!==0 || XI!==0 || YI!==0) $display("Bad: input flags set wrong");
 
         uinstr = vEO;
-        #1 if (RT!==0 || PP!==0 || JC!==0 || JZ!==0 || JGT!==0 || JLT!==0) $display("Bad: other flags set wrong");
+        #1 if (RT!==0 || PP!==0 || JZ!==0 || JGT!==0 || JLT!==0) $display("Bad: other flags set wrong");
 
         uinstr = 0;
-        #1 if (EO!==0 || IOH!==0 || IOL!==0 || MO!==0 || DO!==0 || RT!==0 || PP!==0 || AI!==0 || II!==0 || MI!==0 || XI!==0 || YI!==0 || DI!==0 || JC!==0 || JZ!==0 || JGT!==0 || JLT!==0) $display("Bad, some flags set but none asked for");
+        #1 if (EO!==0 || IOH!==0 || IOL!==0 || MO!==0 || DO!==0 || RT!==0 || PP!==0 || AI!==0 || II!==0 || MI!==0 || XI!==0 || YI!==0 || DI!==0 || JZ!==0 || JGT!==0 || JLT!==0) $display("Bad, some flags set but none asked for");
         #1 if (!PO) $display("Bad: PO doesn't work");
 
         uinstr = vEO;
@@ -120,9 +119,6 @@ module test;
         uinstr = vDI;
         #1 if (DI!==1) $display("Bad: DI doesn't work");
 
-        uinstr = vJC;
-        #1 if (JC!==1) $display("Bad: JC doesn't work");
-
         uinstr = vJZ;
         #1 if (JZ!==1) $display("Bad: JZ doesn't work");
 
@@ -132,6 +128,6 @@ module test;
         uinstr = vJLT;
         #1 if (JLT!==1) $display("Bad: JLT doesn't work");
 
-        // TODO: test C_in,JMP_bar calculation based on Z,C,LT
+        // TODO: test JMP_bar calculation based on Z,LT
     end
 endmodule

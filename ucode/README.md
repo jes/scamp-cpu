@@ -94,7 +94,6 @@ something wrong.
 | :--- | :------ |
 | P+   | increment program counter |
 | RT   | reset T-state counter |
-| JC   | jump if carry |
 | JZ   | jump if zero |
 | JGT  | jump if greater than zero |
 | JLT  | jump if less than zero |
@@ -136,14 +135,14 @@ Provisionally, the microcode instruction word encodes the control bits as follow
 |    11 | EO ? NY : RT |
 |    10 | EO ? F  : P+ |
 |     9 | EO ? NO : (unused) |
-|     8 | EO ? CE : (unused) |
+|     8 | (unused) |
 |     7 | bus_in[2] |
 |     6 | bus_in[1] |
 |     5 | bus_in[0] |
 |     4 | JZ |
 |     3 | JGT |
 |     2 | JLT |
-|     1 | JC |
+|     1 | (unused) |
 |     0 | (unused) |
 
 This uses 14 bits, leaving 1 bit spare to add an extra ALU flag (e.g. 2 more functions),
@@ -152,8 +151,6 @@ We could use an unused bit to drive P+ directly so that it can be used concurren
 ALU, in case that is ever useful.
 
 We also have 1 bit spare that we can toggle when !EO.
-
-We might consider adding a bit to disable carry input to the ALU.
 
 ## Extensibility
 
