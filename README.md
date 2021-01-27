@@ -1,6 +1,6 @@
 # TTL CPU
 
-I want to make a CPU out of discrete logic chips.
+I want to make a CPU out of TTL chips.
 
 This repo is likely to be a loosely-connected collection of Verilog source, KiCad files, text notes,
 and software.
