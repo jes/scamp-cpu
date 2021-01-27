@@ -192,20 +192,6 @@ In total we currently have 185 opcodes.
     sub x, (imm16)
     sub x, (imm16)++
     sub x, (imm16)--
-    adc x, x
-    adc x, y
-    adc x, imm16
-    adc x, (imm16)
-    adc x, (imm16)++
-    adc x, (imm16)--
-    sbc x, y
-    sbc x, (imm16)
-    sbc x, (imm16)++
-    sbc x, (imm16)--
-    clc
-
-We should check whether the carry input is actually wanted, and maybe just get rid
-of it entirely. We still have the carry output, in case it's ever useful.
 
 So far this mostly includes register and immediate-mode arguments. If opcode space
 allows, we could add some memory operands for either source or destination, as well

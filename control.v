@@ -37,7 +37,6 @@ module Control(uinstr, Z, LT,
     // ALU has no side effects if EO_bar, so we can safely tie
     // the bus_out signals to ALU_flags without checking EO
     assign ALU_flags = uinstr[14:9];
-    assign CE = uinstr[8];
     assign bus_out = uinstr[14:12];
     assign bus_in = uinstr[7:5];
 

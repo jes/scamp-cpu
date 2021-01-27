@@ -34,14 +34,9 @@ djnz: 09 # decrement and jump if not zero
     PO AI
     MO JNZ P+
 
-clc: 0a # clear carry
-    0
-
-adc: 0b # add with carry
-    CE X+Y XI
-
-sbc: 0c # subtract with carry (XXX: does this work or make sense?)
-    CE X-Y XI
+nop: 0a
+nop: 0b
+nop: 0c
 
 and: 0d # X = X&Y
     X&Y XI

@@ -5,8 +5,6 @@ The ALU comes from Nand2Tetris, with the following changes:
  * the ZX/ZY ("zero x"/"zero y") flags are replaced with EX/EY ("enable x"/"enable y")
    which do the same thing but inverted, so that it can be implemented with an AND gate
    instead of a mux
- * there is a carry input to the adder, from the flags register, which can be enabled
-   with CE
 
 ## Operations
 
@@ -18,11 +16,6 @@ just "NX" without "EX" gives 0xffff for the X input).
 NO is bitwise negation of the output.
 
 The "F" bit selects addition instead of AND.
-
-In all cases, the carry input is ignored for AND, and enabled via CE for addition.
-
-The carry output is always set by the adder, even when the AND operation is selected.
-"NO" has no effect on the carry output.
 
 Here is a table of all unique operations:
 
