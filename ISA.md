@@ -165,8 +165,8 @@ In total we currently have 185 opcodes.
     jge (y)
     jle (y)
     jc (y)
-    jr (imm8l) # imm8l is a positive offset
-    jr (imm8l) # imm8l is a negative offset
+    jr imm8l # imm8l is a positive offset
+    jr imm8l # imm8l is a negative offset
 
 ### Arithmetic
 
