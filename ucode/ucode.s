@@ -64,16 +64,16 @@ xor: 12 # X = X^Y (clobbers a word in the upper page of RAM, based on the 8-bit 
     MO XI                # X = M[ff..]
     XI X&Y            # X = X&Y
 
-push: 13 # push X onto stack pointed to by IOH (e.g. instruction 13ff if SP is at ffff), with post-decrement of sp (clobbers Y)
-    IOH AI # addr = IOH (i.e. SP)
+push: 13 # push X onto stack with post-decrement of sp (clobbers Y)
+    -1 AI # addr = -1 (i.e. SP)
     MO YI  # Y = M[addr] (get current value of SP in Y)
     MO AI  # addr = M[addr] (i.e. dereference SP) (XXX: we'd save a cycle if we could do YI and AI concurrently)
     XO MI  # M[addr] = X
-    IOH AI # addr = IOH (i.e. SP)
+    -1 AI # addr = -1 (i.e. SP)
     MI Y-1 # M[addr] = Y-1 (i.e. decrement SP)
 
-pop: 14 # pop X from stack pointed to by IOH (e.g. instruction 14ff if SP is at ffff), with pre-increment of sp
-    IOH AI # addr = IOH (i.e. SP)
+pop: 14 # pop X from stack with pre-increment of sp (clobbers Y)
+    -1 AI # addr = -1 (i.e. SP)
     MO YI  # Y = M[addr]
     YI Y+1 # Y = Y+1 (i.e. increment SP)
     YO MI # M[addr] = Y (write incremented SP)
