@@ -194,3 +194,47 @@ It would be interesting if some of the opcode space were dedicated to a "decode 
 of a "decode ROM", so that extra microcoded instructions can be created at runtime. I'm not
 going to do it for this machine, because although it would be easy to implement, it sounds like
 it makes for hard-to-debug programs, which I'll have enough of already.
+
+### Microjump
+
+The microcode doesn't provide a mechanism to jump to a different microinstruction, but we could
+do it anyway. Something like:
+
+    XO II
+
+Will put the X register into the instruction register, and will proceed from the next T state from
+the instruction indexed by the high byte of the X register.
+
+#### Longer instructions
+
+If we have up to 2 instructions that need more than 6 cycles, then we can make their T7 microcode
+say "-1 II" or "0 II". This will then proceed from T0 of instruction 255 or 0, respectively. If we
+make sure that T0 of these instructions does *not* fetch the next instruction from memory, then we
+get 8 extra cycles for our useful instruction.
+
+This would need some logic to make sure that when the CPU is reset it always comes up with a
+non-0 and non-255 value in the instruction register, otherwise it could for example get stuck in the 0
+instruction.
+
+I wonder if it would work to make the 0 instruction do something like:
+
+    [ 6 useful cycles ]
+    PO AI
+    MO II
+
+It would then load the next instruction. With the next instruction loaded, we'd then run that instruction's
+T0 and T1 microcode, which would repeat "PO AI" and "MO II", but now with P+, and carry on as normal.
+
+But most likely it is better to just keep instructions small enough to fit into 6 T-states.
+
+#### Conditional microjump
+
+There isn't an obvious general-case way to do a useful conditional microjump, but in special cases (e.g.
+tbsz comes to mind), we could arrange for the X register to contain 0 in the "want the jump" case, and
+some other value otherwise, for example:
+
+    7. X&Y II
+
+In the event that "X&Y" is 0, we'll next execute instruction 0 at T0, which could do some useful work. In other
+cases we'll jump to some non-0 instruction, which will have the normal "fetch" microcode at T0, and we have effectively
+microjumped to address 0, conditional on the result of some expression.
