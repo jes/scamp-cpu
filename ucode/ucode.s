@@ -164,7 +164,7 @@ ldxoy: 21 # load x from imm16 + y
     AI X+Y # addr = X+Y (= imm16 + y)
     MO XI # X = M[addr] = M[imm16+y]
 
-ret: 14 # pop PC from stack pointed to by IOH (e.g. instruction 14ff if SP is at ffff), with pre-increment of sp
+ret: 22 # pop PC from stack pointed to by IOH (e.g. instruction 14ff if SP is at ffff), with pre-increment of sp
     IOH AI # addr = IOH (i.e. SP)
     MO YI  # Y = M[addr]
     YI Y+1 # Y = Y+1 (i.e. increment SP)
