@@ -2,7 +2,7 @@
 
     T0:  PO AI
     T1:  MO II P+
-    T2+: look in DecodeROM at {T-2, instr[15:8]}
+    T2+: look in DecodeROM at {instr[15:8],T}
 */
 
 `include "ttl/at28c16.v"

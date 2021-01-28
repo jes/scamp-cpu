@@ -2,7 +2,7 @@
 
     T0:  PO AI
     T1:  MO II P+
-    T2+: look in DecodeROM at {T-2, instr[15:8]}
+    T2+: look in DecodeROM at {instr[15:8],T}
 */
 
 module Ucode(instr, T, uinstr);
@@ -12,7 +12,7 @@ module Ucode(instr, T, uinstr);
 
     reg [15:0] rom [0:2047];
 
-    wire [7:0] addr;
+    wire [10:0] addr;
     assign addr = {instr[15:8], T};
 
     initial begin
