@@ -11,7 +11,6 @@ module test;
     parameter vNY = 16'h0800;
     parameter vF  = 16'h0400;
     parameter vNO = 16'h0200;
-    parameter vS8 = 16'h0100;
     parameter vJZ = 16'h0010;
     parameter vJGT = 16'h0008;
     parameter vJLT = 16'h0004;
@@ -37,15 +36,14 @@ module test;
     assign IOH = !IOH_bar;
     assign IOL = !IOL_bar;
     assign EO = !EO_bar;
-    assign S8 = !S8_bar;
     assign AI = !AI_bar;
     assign II = !II_bar;
     assign XI = !XI_bar;
     assign YI = !YI_bar;
 
-    wire [15:0] real_uinstr = {!uinstr[15], uinstr[14:9], !uinstr[8], uinstr[7:0]};
+    wire [15:0] real_uinstr = {!uinstr[15], uinstr[14:0]};
 
-    Control control (real_uinstr, Z, LT, EO_bar, S8_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, ALU_flags, JMP_bar);
+    Control control (real_uinstr, Z, LT, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, ALU_flags, JMP_bar);
 
     initial begin
         uinstr = vIOH | vJZ;
@@ -79,7 +77,7 @@ module test;
         #1 if (RT!==0 || PP!==0 || JZ!==0 || JGT!==0 || JLT!==0) $display("Bad: other flags set wrong");
 
         uinstr = 0;
-        #1 if (EO!==0 || S8!==0 || IOH!==0 || IOL!==0 || MO!==0 || DO!==0 || RT!==0 || PP!==0 || AI!==0 || II!==0 || MI!==0 || XI!==0 || YI!==0 || DI!==0 || JZ!==0 || JGT!==0 || JLT!==0) $display("Bad, some flags set but none asked for");
+        #1 if (EO!==0 || IOH!==0 || IOL!==0 || MO!==0 || DO!==0 || RT!==0 || PP!==0 || AI!==0 || II!==0 || MI!==0 || XI!==0 || YI!==0 || DI!==0 || JZ!==0 || JGT!==0 || JLT!==0) $display("Bad, some flags set but none asked for");
         #1 if (!PO) $display("Bad: PO doesn't work");
 
         uinstr = vEO;
@@ -129,9 +127,6 @@ module test;
 
         uinstr = vJLT;
         #1 if (JLT!==1) $display("Bad: JLT doesn't work");
-
-        uinstr = vS8;
-        #1 if (S8!==1) $display("Bad: S8 doesn't work");
 
         // TODO: test JMP_bar calculation based on Z,LT
     end

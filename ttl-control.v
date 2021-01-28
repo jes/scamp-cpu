@@ -9,7 +9,7 @@
      11 | EO ? NY : RT
      10 | EO ? F  : P+
       9 | EO ? NO : (unused)
-      8 | !S8
+      8 | (unused)
       7 | bus_in[2]
       6 | bus_in[1]
       5 | bus_in[0]
@@ -27,11 +27,11 @@
 `include "ttl/74138.v"
 
 module Control(uinstr, Z, LT,
-        EO_bar, S8_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, ALU_flags, JMP_bar);
+        EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, ALU_flags, JMP_bar);
 
     input [15:0] uinstr;
     input Z, LT;
-    output EO_bar, S8_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, JMP_bar;
+    output EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, JMP_bar;
     output [5:0] ALU_flags;
 
     wire [2:0] bus_out;
@@ -46,8 +46,6 @@ module Control(uinstr, Z, LT,
     assign ALU_flags = uinstr[14:9];
     assign bus_out = uinstr[14:12];
     assign bus_in = uinstr[7:5];
-
-    assign S8_bar = uinstr[8];
 
     assign JZ = uinstr[4];
     assign JGT = uinstr[3];

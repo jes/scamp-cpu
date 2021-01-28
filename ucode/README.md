@@ -84,7 +84,6 @@ something wrong.
 | MO   | Memory output to bus |
 | DO   | I/O device output to bus |
 | EO   | ALU output to bus |
-| S8   | ALU>>8 output to bus |
 | :--- | :------ |
 | AI   | Address register input from bus |
 | MI   | Memory input from bus |
@@ -136,7 +135,7 @@ Provisionally, the microcode instruction word encodes the control bits as follow
 |    11 | EO ? NY : RT |
 |    10 | EO ? F  : P+ |
 |     9 | EO ? NO : (unused) |
-|     8 | !S8 |
+|     8 | (unused) |
 |     7 | bus_in[2] |
 |     6 | bus_in[1] |
 |     5 | bus_in[0] |
