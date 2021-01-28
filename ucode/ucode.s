@@ -166,3 +166,11 @@ ret: 22 # pop PC from stack pointed to by IOH (e.g. instruction 14ff if SP is at
     YO MI # M[addr] = Y (write incremented SP)
     YO AI # addr = Y (i.e. new SP)
     MO JMP # jmp to M[addr]
+
+xor_imm8h_x: 23 # xor (imm8h), x
+    IOH AI   # addr = IOH
+    MO YI    # Y = M[addr]
+    MI X|Y   # M[addr] = X|Y
+    YI ~(X&Y)# Y = ~(X&Y)
+    MO XI    # X = M[addr]
+    MI X&Y   # M[addr] = X&Y

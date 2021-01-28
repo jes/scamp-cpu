@@ -118,3 +118,14 @@ sb(0x01)
 # if we're lucky, 0xfffe now has 0x1000 >> 8
 ldx 0xfffe
 out
+
+# 17: xor (imm8h), x
+# 17 = 0x0011 = 0b0000000000010001
+#            a: 0b0110100101010010 = 0x6952
+#            b: 0b0110100101000011 = 0x6943
+ldxi 0x6952
+stx r255
+ldxi 0x6943
+xor r255, x
+ldx 0xffff
+out
