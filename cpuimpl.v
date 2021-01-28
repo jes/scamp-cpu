@@ -20,7 +20,7 @@ module CPU #(parameter DEBUG=0) (clk, RST_bar, addr, bus, DI, DO);
     wire [15:0] uinstr;
     wire [5:0] ALU_flags;
 
-    ALU alu (X_val, Y_val, ALU_flags, EO_bar, bus, E_val, Z_flag, LT_flag);
+    ALU alu (X_val, Y_val, ALU_flags, EO_bar, 1'b1, bus, E_val, Z_flag, LT_flag);
     FR fr (clk, {Z_flag, LT_flag}, EO_bar, {Z, LT});
 
     Register x (clk, bus, XI_bar, X_val);

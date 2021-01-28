@@ -12,9 +12,11 @@ module test;
     reg [15:0] sum;
 
     reg en;
+    reg shr8 = 0;
 
     assign en_bar = !en;
-    ALU alu (X, Y, C, en_bar, bus, out, Z_flag, LT_flag);
+    assign shr8_bar = !shr8;
+    ALU alu (X, Y, C, en_bar, shr8_bar, bus, out, Z_flag, LT_flag);
 
     parameter ex=32, nx=16, ey=8, ny=4, f=2, no=1;
 
@@ -130,6 +132,12 @@ module test;
                 // test that bus output can be disabled
                 en = 0;
                 #1 if (bus !== 16'bZ) $display("Bad: still outputting to bus, ",bus);
+
+                // test that >>8 works
+                en = 0; shr8 = 1;
+                C = ex+f;
+                #1 if (bus !== (X>>8)) $display("Bad: X>>8: got ",X,">>8=",out);
+                shr8 = 0;
             end
         end
     end
