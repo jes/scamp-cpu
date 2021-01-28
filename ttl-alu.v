@@ -21,11 +21,11 @@
 `include "ttl/74244.v"
 `include "ttl-alu4.v"
 
-module ALU(X, Y, C, en_bar, shr8_bar, bus, val, Z_flag, LT_flag);
+module ALU(X, Y, C, en_bar, bus, val, Z_flag, LT_flag);
     input [15:0] X;
     input [15:0] Y;
     input [5:0] C;
-    input en_bar, shr8_bar;
+    input en_bar;
     output [15:0] bus;
     output [15:0] val;
     output Z_flag, LT_flag;
@@ -35,11 +35,8 @@ module ALU(X, Y, C, en_bar, shr8_bar, bus, val, Z_flag, LT_flag);
     ALU4 alu3 (X[11:8], Y[11:8], C, carry2, carry3, val[11:8], nonzero3);
     ALU4 alu4 (X[15:12], Y[15:12], C, carry3, nc, val[15:12], nonzero4);
 
-    ttl_74244 buflow1 ({en_bar,en_bar}, val[7:0], bus[7:0]);
-    ttl_74244 bufhigh1 ({en_bar,en_bar}, val[15:8], bus[15:8]);
-
-    ttl_74244 buflow2 ({shr8_bar,shr8_bar}, val[15:8], bus[7:0]);
-    ttl_74244 bufhigh2 ({shr8_bar,shr8_bar}, 8'b0, bus[15:8]);
+    ttl_74244 buflow ({en_bar,en_bar}, val[7:0], bus[7:0]);
+    ttl_74244 bufhigh ({en_bar,en_bar}, val[15:8], bus[15:8]);
 
     assign LT_flag = val[15];
 
