@@ -456,6 +456,17 @@ Padding words with value 0x0000 will be generated between the location of "ptr" 
 "Hello, world!" string, such that the string will be located at address 0x200 if the generated
 output is loaded at 0x100 (i.e. the string will be 0x100 words into the generated output).
 
+### .gap VALUE
+
+Leave a gap of N unused words
+
+Example:
+
+    .at 0x200
+    buffer: .gap 256
+
+Creates a 256-byte buffer at address 0x200, with the label "buffer".
+
 ### .str "TEXT"
 
 Generate the given string, with 1 character per word (i.e. the upper 8 bits of each value is
