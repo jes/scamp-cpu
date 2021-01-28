@@ -23,6 +23,8 @@ my %ucode = (
     F   => 0x0400,
     NO  => 0x0200,
 
+    S8  => 0x0100,
+
     PO  => 0x0000,
     IOH => 0x1000,
     IOL => 0x2000,
@@ -195,8 +197,8 @@ sub encode {
     warn "busout with no busin probably makes no sense: $uinstr\n" if ($have_busout && !$have_busin && !$have_jmp);
     warn "busin with no busout probably makes no sense (will get PC on bus, please specify 'PO'): $uinstr\n" if ($have_busin && !$have_busout && !$have_alu);
 
-    # the "EO" bit is active-low, so needs toggling:
-    $num ^= 0x8000;
+    # these bits are active-low, so need toggling:
+    $num ^= $ucode{$_} for qw(EO S8);
 
     return $num;
 }

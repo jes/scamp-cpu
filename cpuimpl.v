@@ -20,7 +20,7 @@ module CPU #(parameter DEBUG=0) (clk, RST_bar, addr, bus, DI, DO);
     wire [15:0] uinstr;
     wire [5:0] ALU_flags;
 
-    ALU alu (X_val, Y_val, ALU_flags, EO_bar, 1'b1, bus, E_val, Z_flag, LT_flag);
+    ALU alu (X_val, Y_val, ALU_flags, EO_bar, S8_bar, bus, E_val, Z_flag, LT_flag);
     FR fr (clk, {Z_flag, LT_flag}, EO_bar, {Z, LT});
 
     Register x (clk, bus, XI_bar, X_val);
@@ -31,7 +31,7 @@ module CPU #(parameter DEBUG=0) (clk, RST_bar, addr, bus, DI, DO);
 
     TState tstate (clk, RT, RST_bar, T);
     Ucode ucode (IR_val, T, uinstr);
-    Control control (uinstr, Z, LT, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, ALU_flags, JMP_bar);
+    Control control (uinstr, Z, LT, EO_bar, S8_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, ALU_flags, JMP_bar);
 
     Register ar (clk, bus, AI_bar, AR_val);
 

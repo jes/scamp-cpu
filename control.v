@@ -9,7 +9,7 @@
      11 | EO ? NY : RT
      10 | EO ? F  : P+
       9 | EO ? NO : (unused)
-      8 | (unused)
+      8 | !S8
       7 | bus_in[2]
       6 | bus_in[1]
       5 | bus_in[0]
@@ -22,11 +22,11 @@
  */
 
 module Control(uinstr, Z, LT,
-        EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, ALU_flags, JMP_bar);
+        EO_bar, S8_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, ALU_flags, JMP_bar);
 
     input [15:0] uinstr;
     input Z, LT;
-    output EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, JMP_bar;
+    output EO_bar, S8_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, JMP_bar;
     output [5:0] ALU_flags;
 
     wire [2:0] bus_out;
@@ -53,6 +53,8 @@ module Control(uinstr, Z, LT,
     // decode RT/P+
     assign RT = EO_bar && uinstr[11];
     assign PP = EO_bar && uinstr[10];
+
+    assign S8_bar = uinstr[8];
 
     // bus_in decoding:
     // bus_in == 0 means nobody inputs from bus
