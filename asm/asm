@@ -1,0 +1,111 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+my %macro = (
+    'sp' => 'r255',
+);
+
+my %label = ();
+my $pc = 0;
+my $start = 0;
+my @code;
+
+# add macros for ".def r0 (0x0000)" for 0..255
+# TODO: maybe add a flag to turn off the the default macros?
+$macro{"r$_"} = sprintf("(0x%04x)", $_) for (0..255);
+
+while (my $line = <>) {
+    chomp $line;
+
+    # strip comments, whitespace
+    $line =~ s/#.*//;
+    $line =~ s/^\s+//;
+    $line =~ s/\s+$//;
+
+    # apply macro substitutions
+    my $was;
+    do {
+        $was = $line;
+        $line =~ s/\b$_\b/$macro{$_}/g for keys %macro;
+    } until ($line eq $was); # apply macros until no change
+
+    # store labels
+    while ($line =~ s/^([a-z_][a-z_0-9]*):\s*//i) {
+        $label{namearg($1)} = $pc;
+    }
+
+    next if $line eq '';
+
+    my ($op, $args_str) = split /\s+/, $line, 2;
+    my @args = split /\s*,\s*/, $args_str||'';
+
+    if ($op eq '.def') {
+        @args = split /\s+/, $args_str;
+        params($op, 2, @args);
+        my $name = namearg($args[0]);
+        die "error: line $.: duplicate macro name: $name\n" if $macro{$name};
+        $line =~ s/\s*$op\s*$name\s*//;
+        $macro{$name} = $line;
+    } elsif ($op eq '.at') {
+        params($op, 1, @args);
+        if ($pc == 0) {
+            $start = numarg($args[0]);
+        } else {
+            emit(0x0000) for ($pc+1 .. numarg($args[0]));
+        }
+        $pc = numarg($args[0]);
+    } elsif ($op eq '.gap') {
+        params($op, 1, @args);
+        emit(0x0000) for (1 .. numarg($args[0]));
+    } elsif ($op eq '.word') {
+        params($op, 1, @args);
+        emit(numarg($args[0]));
+    } elsif ($op eq '.str') {
+        die "error: line $.: .str not implemented\n";
+    } elsif ($op eq '.pstr') {
+        die "error: line $.: .pstr not implemented\n";
+    } else {
+        # TODO: for each available instruction, see if the text could be fulfilled by that
+        # instruction; if so: output it and break
+        die "error: line $.: unrecognised operation: $op\n";
+    }
+}
+
+# now turn the code into hex output
+for my $c (@code) {
+    if ($c =~ /\D/) {
+        die "error: label $c not found\n" if !exists $label{$c};
+        $c = $label{$c};
+    }
+    $c = $c+65536 if $c < 0;
+    die "error: $c out of range\n" if $c < 0 || $c > 0xffff;
+    print sprintf("%04x\n", $c);
+}
+
+sub namearg {
+    my ($arg) = @_;
+    die "error: line $.: invalid name: $arg\n" if $arg !~ /^[a-z_][a-z_0-9]*$/i;
+    die "error: line $.: '$arg' is a reserved name\n" if $arg =~ /^(x|y)$/;
+    return $arg;
+}
+
+sub numarg {
+    my ($arg) = @_;
+    my $val = $arg;
+    my $neg = 1 if $val =~ s/^-//;
+    $val = hex($1) if $val =~ /^0x([0-9a-f]+)$/i;
+    die "error: line $.: invalid number: $arg\n" if $val !~ /^[0-9]+$/;
+    return $neg ? -$val : $val;
+}
+
+sub params {
+    my ($op, $n, @args) = @_;
+    die "error: line $.: $op: expected $n arguments, found " . (scalar @args) . "\n" if @args != $n;
+}
+
+sub emit {
+    my ($word) = @_;
+    push @code, $word;
+}
