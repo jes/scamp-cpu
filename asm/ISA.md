@@ -429,22 +429,16 @@ into:
     push (0xff00), x
     push (0xff00), x
 
-### .org VALUE
-
-Set the address at which the first word of the generated output will be loaded into memory.
-
-Example:
-
-    .org 0x100
-
 ### .at VALUE
 
-Set the address at which the next word should be loaded into memory. Use in combination with
-.org to make sure everything is where you expect.
+Set the address at which the next word should be loaded into memory. Use it
+to make sure everything is where you expect. No padding words will be output
+when ".at" is used before any words have been generated, but subsequently padding
+will be generated so that everything is correct relative to the first ".at".
 
 Example:
 
-    .org 0x100
+    .at 0x100
     ld x, (ptr)
     out 0x80, (x)
     ...
@@ -499,7 +493,7 @@ Will generate a word containing 0x1010, whose address will be available in the "
 
 Labels and macro names must match
 
-    /^a-zA-Z_[a-zA-Z_0-9]*$/
+    /^[a-zA-Z_][a-zA-Z_0-9]*$/
 
 i.e. begin with uppercase, lowercase, or underscore, and then contain only uppercase, lowercase, underscore, and numeric.
 

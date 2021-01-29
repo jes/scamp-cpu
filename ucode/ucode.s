@@ -75,9 +75,8 @@ push: 13 # push X onto stack with post-decrement of sp (clobbers Y)
 pop: 14 # pop X from stack with pre-increment of sp (clobbers Y)
     -1 AI # addr = -1 (i.e. SP)
     MO YI  # Y = M[addr]
-    YI Y+1 # Y = Y+1 (i.e. increment SP)
-    YO MI # M[addr] = Y (write incremented SP)
-    YO AI # addr = Y (i.e. new SP)
+    Y+1 MI # M[addr] = Y (write incremented SP)
+    Y+1 AI # addr = Y (i.e. new SP)
     MO XI # X = M[addr]
 
 stx: 15 # load X into address given in operand
