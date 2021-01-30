@@ -12,6 +12,7 @@ my $curinstr = '';
 my %instructions;
 
 while (<>) {
+    my $orig = $_;
     chomp;
     s/#.*//; # strip comments
     s/^\s+//; # strip leading spaces
@@ -23,14 +24,26 @@ while (<>) {
     if (/^([a-z_0-9, \(\)\+-]+): ?([0-9a-f]*)$/i) { # new instruction starts
         $opcode++;
         $curinstr = $1;
+
+        my $remark = '';
+        if ($orig =~ /#/) {
+            $remark = $orig;
+            $remark =~ s/^.*#\s*//;
+        }
+
         $instructions{$curinstr} = {
             opcode => $opcode,
             cycles => 2, # every instruction takes at least 2 cycles
             ucode => [],
+            words => ($curinstr =~ /i16/ ? 2 : 1), # XXX: ?
+            clobbers => [],
+            remark => $remark,
         };
     } else {
         $instructions{$curinstr}{cycles}++;
         push @{ $instructions{$curinstr}{ucode} }, $_;
+        push @{ $instructions{$curinstr}{clobbers} }, 'x' if /XI/ && !grep { /x/ } @{ $instructions{$curinstr}{clobbers} };
+        push @{ $instructions{$curinstr}{clobbers} }, 'y' if /YI/ && !grep { /y/ } @{ $instructions{$curinstr}{clobbers} };
     }
 }
 

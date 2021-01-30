@@ -32,8 +32,12 @@ asm/instructions.json: ucode/ucode.s
 	./ucode/mk-instructions-json < ucode/ucode.s > asm/instructions.json.tmp
 	mv ./asm/instructions.json.tmp ./asm/instructions.json
 
+asm/table.html: asm/instructions.json
+	./asm/mk-table-html > asm/table.html.tmp
+	mv ./asm/table.html.tmp ./asm/table.html
+
 burn:
 	iceFUNprof ttlcpu.bin
 
 clean:
-	rm -f *.asc *.bin *blif a.out ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex bootrom-low.hex bootrom-high.hex *.tmp asm/instructions.json
+	rm -f *.asc *.bin *blif a.out ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex bootrom-low.hex bootrom-high.hex *.tmp asm/instructions.json asm/table.html
