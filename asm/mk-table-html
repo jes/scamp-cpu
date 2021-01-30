@@ -134,10 +134,10 @@ tt {
 <body>
 <h1>Instruction set cheatsheet</h1>
 <ul>
-<li>The instruction word is the opcode shifted left by 8 bits, so opcode <tt>04</tt> becomes <tt>0400</tt>.</li>
+<li>The instruction word is the opcode shifted left by 8 bits, so opcode <tt>06</tt> becomes <tt>0600</tt>.</li>
 <li>Typically the first parameter is the destination and first operand, and the second parameter is the other operand.</li>
 <li><tt>i8l</tt> and <tt>i8h</tt> parameters are stored in the lower 8 bits of the instruction word, so <tt>add x, 5</tt> becomes
-<tt>0405</tt>. <tt>i8h</tt> is the same as <tt>i8l</tt> except it sets the upper 8 bits to 1, so <tt>add x, 0xff05</tt> becomes <tt>0505</tt>.
+<tt>0605</tt>. <tt>i8h</tt> is the same as <tt>i8l</tt> except it sets the upper 8 bits to 1, so <tt>add x, 0xff05</tt> becomes <tt>0705</tt>.
 They can also be used via <tt>(i16)</tt> parameters.</li>
 <li>Side effects on <tt>x</tt>, <tt>r254</tt>, or <tt>y</tt> are documented as "clobbers". Generally
 <tt>x</tt> is the only one to worry about.</li>
