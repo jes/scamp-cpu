@@ -1,26 +1,26 @@
-add x, (i8h):
+add x, (i8h): # Add the <tt>r</tt> to <tt>x</tt>.
     IOH AI
     MO YI
     XI X+Y
 
-add x, i16:
+add x, i16: # Add the <tt>i16</tt> to <tt>x</tt>.
     PO AI
     MO YI P+
     XI X+Y
 
-add x, (i16):
+add x, (i16): # Add the value in <tt>(i16)</tt> to <tt>x</tt>.
     PO AI
     MO AI P+
     MO YI
     XI X+Y
 
-add x, ((i8h)):
+add x, ((i8h)): # Add the value in <tt>(r)</tt> to <tt>x</tt>.
     IOH AI
     MO AI
     MO YI
     XI X+Y
 
-add x, ((i8h)++):
+add x, ((i8h)++): # Add the value in <tt>(r)</tt> to <tt>x</tt>. Increment <tt>r</tt>.
     IOH AI
     MO YI
     Y+1 MI
@@ -28,7 +28,7 @@ add x, ((i8h)++):
     MO YI
     XI X+Y
 
-add x, ((i8h)--):
+add x, ((i8h)--): # Add the value in <tt>(r)</tt> to <tt>x</tt>. Decrement <tt>r</tt>.
     IOH AI
     MO YI
     Y-1 MI
@@ -36,79 +36,79 @@ add x, ((i8h)--):
     MO YI
     XI X+Y
 
-add x, i8l:
+add x, i8l: # Add the <tt>i8l</tt> to <tt>x</tt>.
     IOL YI
     XI X+Y
 
-add x, i8h:
+add x, i8h: # Add the <tt>i8h</tt> to <tt>x</tt>.
     IOH YI
     XI X+Y
 
-add (i8h), x:
+add (i8h), x: # Add <tt>x</tt> to the <tt>r</tt>.
     IOH AI
     MO YI
     MI Y+X
 
-add (i16), x:
+add (i16), x: # Add <tt>x</tt> to the value in <tt>(i16)</tt>.
     PO AI
     MO AI P+
     MO YI
     MI Y+X
 
-add ((i8h)), x:
+add ((i8h)), x: # Add <tt>x</tt> to the value in <tt>(r)</tt>.
     IOH AI
     MO AI
     MO YI
     MI Y+X
 
-inc x:
+inc x: # Increment <tt>x</tt>.
     XI X+1
 
-inc (i8h):
+inc (i8h): # Increment <tt>r</tt>.
     IOH AI
     MO YI
     MI Y+1
 
-inc (x):
+inc (x): # Increment the value in <tt>(x)</tt>.
     XO AI
     MO YI
     MI Y+1
 
-inc ((i8h)):
+inc ((i8h)): # Increment the value in <tt>(r)</tt>.
     IOH AI
     MO AI
     MO YI
     MI Y+1
 
-inc (i16):
+inc (i16): # Increment the value in <tt>(i16)</tt>.
     PO AI
     MO AI P+
     MO YI
     MI Y+1
 
-sub x, (i8h):
+sub x, (i8h): # Subtract the <tt>r</tt> from <tt>x</tt>.
     IOH AI
     MO YI
     XI X-Y
 
-sub x, i16:
+sub x, i16: # Subtract the <tt>i16</tt> from <tt>x</tt>.
     PO AI
     MO YI P+
     XI X-Y
 
-sub x, (i16):
+sub x, (i16): # Subtract the value in <tt>(i16)</tt> from <tt>x</tt>.
     PO AI
     MO AI P+
     MO YI
     XI X-Y
 
-sub x, ((i8h)):
+sub x, ((i8h)): # Subtract the value in <tt>(r)</tt> from <tt>x</tt>.
     IOH AI
     MO AI
     MO YI
     XI X-Y
 
-sub x, ((i8h)++):
+sub x, ((i8h)++): # Subtract the value in <tt>(r)</tt> from <tt>x</tt>. Increment <tt>r</tt>.
     IOH AI
     MO YI
     Y+1 MI
@@ -116,7 +116,7 @@ sub x, ((i8h)++):
     MO YI
     XI X-Y
 
-sub x, ((i8h)--):
+sub x, ((i8h)--): # Subtract the value in <tt>(r)</tt> from <tt>x</tt>. Decrement <tt>r</tt>.
     IOH AI
     MO YI
     Y-1 MI
@@ -124,51 +124,51 @@ sub x, ((i8h)--):
     MO YI
     XI X-Y
 
-sub x, i8l:
+sub x, i8l: # Subtract the <tt>i8l</tt> from <tt>x</tt>.
     IOL YI
     XI X-Y
 
-sub x, i8h:
+sub x, i8h: # Subtract the <tt>i8h</tt> from <tt>x</tt>.
     IOH YI
     XI X-Y
 
-sub (i8h), x:
+sub (i8h), x: # Subtract <tt>x</tt> from the <tt>r</tt>.
     IOH AI
     MO YI
     MI Y-X
 
-sub (i16), x:
+sub (i16), x: # Subtract <tt>x</tt> from the value in <tt>(i16)</tt>.
     PO AI
     MO AI P+
     MO YI
     MI Y-X
 
-sub ((i8h)), x:
+sub ((i8h)), x: # Subtract <tt>x</tt> from the value in <tt>(r)</tt>.
     IOH AI
     MO AI
     MO YI
     MI Y-X
 
-dec x:
+dec x: # Decrement <tt>x</tt>.
     XI X-1
 
-dec (i8h):
+dec (i8h): # Decrement <tt>r</tt>.
     IOH AI
     MO YI
     MI Y-1
 
-dec (x):
+dec (x): # Decrement the value in <tt>(x)</tt>.
     XO AI
     MO YI
     MI Y-1
 
-dec ((i8h)):
+dec ((i8h)): # Decrement the value in <tt>(r)</tt>.
     IOH AI
     MO AI
     MO YI
     MI Y-1
 
-dec (i16):
+dec (i16): # Decrement the value in <tt>(i16)</tt>.
     PO AI
     MO AI P+
     MO YI
@@ -698,7 +698,14 @@ out i16, (i8h):
     MO AI P+
     YO DI
 
-nop:
+slownop: # Do nothing, and take 8 cycles.
+    PO
+    PO
+    PO
+    PO
+    PO
+    PO
+
 nop:
 
 jmp i16:
@@ -815,7 +822,7 @@ nop:
 nop:
 nop:
 nop:
-nop:
+nop: # Do nothing.
 
 ld x, (i8h):
     IOH AI
