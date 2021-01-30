@@ -149,10 +149,32 @@ jmp double
 Lret:
 out 0, x
 
+# 21: xor subroutine call
+ld x, Lret2
+push x
+ld x, 0x1500 # (21 << 8)
+push x
+jmp shr8
+Lret2:
+out 0, x
+
 # infinite loop
 jr- 1
 
 double:
-pop x
-shl x
-ret
+    pop x
+    shl x
+    ret
+
+shr8:
+    pop x
+    ld r0, x
+    ld r254, 0
+    shr8_loop:
+        shl r254
+        tbsz r0, 0x8000
+        sb 0x01
+        shl r0
+        jnz shr8_loop
+    ld x, r254
+    ret

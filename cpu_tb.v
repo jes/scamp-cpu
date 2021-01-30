@@ -11,7 +11,7 @@ module test;
 
     reg [15:0] cycle = 0;
 
-    parameter EXPECT_OUTPUTS = 21;
+    parameter EXPECT_OUTPUTS = 22;
     reg [15:0] outputs = 0;
 
     initial begin
@@ -19,8 +19,8 @@ module test;
         #1 clk = 1;
         #1 clk = 0; reset_bar = 1;
 
-        /* run the CPU for 1000 cycles */
-        while (cycle < 1000) begin
+        /* run the CPU for 2000 cycles */
+        while (cycle < 2000) begin
             cycle = cycle + 1;
 
             #1 clk = 1;
