@@ -7,6 +7,8 @@ use warnings;
 
 use JSON qw(encode_json);
 
+my $nopcode;
+
 my $opcode = -1;
 my $curinstr = '';
 my %instructions;
@@ -35,6 +37,8 @@ while (<>) {
             $remark =~ s/^.*#\s*//;
         }
 
+        $nopcode = $opcode if !defined $nopcode && $curinstr eq 'nop';
+
         $instructions{$curinstr} = {
             opcode => $opcode,
             cycles => 2, # every instruction takes at least 2 cycles
@@ -50,5 +54,7 @@ while (<>) {
         push @{ $instructions{$curinstr}{clobbers} }, 'y' if /YI/ && !grep { /y/ } @{ $instructions{$curinstr}{clobbers} };
     }
 }
+
+$instructions{nop}{opcode} = $nopcode;
 
 print encode_json(\%instructions);
