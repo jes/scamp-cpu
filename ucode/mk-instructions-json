@@ -8,6 +8,7 @@ use warnings;
 use JSON qw(encode_json);
 
 my $opcode = -1;
+my $curinstr = '';
 my %instructions;
 
 while (<>) {
@@ -21,7 +22,15 @@ while (<>) {
 
     if (/^([a-z_0-9, \(\)\+-]+): ?([0-9a-f]*)$/i) { # new instruction starts
         $opcode++;
-        $instructions{$1} = $opcode;
+        $curinstr = $1;
+        $instructions{$curinstr} = {
+            opcode => $opcode,
+            cycles => 2, # every instruction takes at least 2 cycles
+            ucode => [],
+        };
+    } else {
+        $instructions{$curinstr}{cycles}++;
+        push @{ $instructions{$curinstr}{ucode} }, $_;
     }
 }
 

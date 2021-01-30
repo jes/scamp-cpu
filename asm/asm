@@ -101,9 +101,7 @@ while (my $line = <>) {
             my @new = grep { /imm8/ } @match;
             @match = @new if @new;
         }
-        # TODO: should we just pick arbitrarily instead of dying?
-        # maybe instructions.json should encode how many cycles an instruction takes,
-        # and we'll choose the fastest?
+        # TODO: should we just pick the fastest instruction instead of dying?
         die "error: line $.: multiple instructions match (probably an assembler bug): " . join(',', map { "[$_]" } @match) . "\n" if @match > 1;
 
         # generate code:
@@ -113,7 +111,7 @@ while (my $line = <>) {
         #  - the imm16 argument comes next, if any
         #  - if we don't yet know the address for a label, just
         #    store the text and it'll get filled in later
-        my $opcode = $instructions->{$match[0]} << 8;
+        my $opcode = $instructions->{$match[0]}{opcode} << 8;
         my @operands;
 
         my ($instrop, $params_str) = split / /, $match[0], 2;
