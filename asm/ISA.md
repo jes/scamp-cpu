@@ -36,14 +36,14 @@ there are any obvious candidates for creating instructions that do the job of 2 
 Even if we don't hide "Y", it should be a point of philosophy that instructions will clobber the
 Y register in preference to the X register where there is a free choice.
 
-Apart from instructions that do specifically require an imm8h, we should flesh out the instruction
-set with all immediate values as imm16, and then add optimised versions later for common
+Apart from instructions that do specifically require an i8h, we should flesh out the instruction
+set with all immediate values as i16, and then add optimised versions later for common
 operations.
 
-We could consider the imm8h addresses to be "registers", and make a "r0" .. "r255" syntax for
+We could consider the i8h addresses to be "registers", and make a "r0" .. "r255" syntax for
 addressing them. So then instead of "add x, (0xff00)", you'd be able to write "add x, r0" and
-it all becomes much easier to read. It also clarifies the difference between the (imm16) and (imm8h)
-addressing modes, and we could potentially make the assembler warn if you use a (imm16) that is in
+it all becomes much easier to read. It also clarifies the difference between the (i16) and (i8h)
+addressing modes, and we could potentially make the assembler warn if you use a (i16) that is in
 the top page.
 
 ## Instruction table
@@ -76,15 +76,15 @@ opcodes, with as little hardcoding as possible.
 ## Instructions
 
 The registers are called "x" and "y". Immediate values
-are called "imm8l" if produced with "IOL" (0 to 255), "imm8h" if produced with "IOH" (0xff00 to
-0xffff), or "imm16" if produced with an extra word operand, in which case the operands
+are called "i8l" if produced with "IOL" (0 to 255), "i8h" if produced with "IOH" (0xff00 to
+0xffff), or "i16" if produced with an extra word operand, in which case the operands
 should appear in the machine code in the same order as they appear in the mnemonic.
-"r" means one of the pseudo-registers r0 to r255, which is equivalent to an "(imm8h)" argument.
+"r" means one of the pseudo-registers r0 to r255, which is equivalent to an "(i8h)" argument.
 "sp" means r255, i.e. "(0xffff)".
 
 The assembly language should be as orthogonal as possible, with the assembler responsible for
-deciding which opcode to use, e.g. "ld x, 5" can be accomplished with both "ld x, imm8l" and
-"ld x, imm16".
+deciding which opcode to use, e.g. "ld x, 5" can be accomplished with both "ld x, i8l" and
+"ld x, i16".
 
 The instructions listed below are currently aspirational. The list might have to be cut down if
 the opcode space is not large enough, and some opcodes might not be implementable without
@@ -93,8 +93,8 @@ exceeding 6 T-states. We also might be able to add more if there is opcode space
 Where instructions clobber an address in memory (e.g. xor), there should probably be a
 default that is normally used, and also some syntax to choose an alternative.
 
-We should make sure that where 2 opcodes can perform an equivalent operation (e.g. "ld x, imm8h"
-and "ld x, imm16") that the shorter/faster/better one has the lower opcode, so that the assembler
+We should make sure that where 2 opcodes can perform an equivalent operation (e.g. "ld x, i8h"
+and "ld x, i16") that the shorter/faster/better one has the lower opcode, so that the assembler
 can know to always choose the smallest opcode that can fulfill an instruction.
 
 In total we currently have 165 opcodes.
@@ -105,34 +105,34 @@ In total we currently have 165 opcodes.
 
     ld x, y
     ld y, x
-    ld x, imm16
-    ld y, imm16
-    ld x, (imm16)
-    ld y, (imm16)
-    ld x, ((imm16))
-    ld y, ((imm16))
+    ld x, i16
+    ld y, i16
+    ld x, (i16)
+    ld y, (i16)
+    ld x, ((i16))
+    ld y, ((i16))
     ld (x), x
     ld (x), y
     ld (y), x
     ld (y), y
-    ld (imm16), x
-    ld (imm16), y
-    ld ((imm16)), x
-    ld ((imm16)), y
+    ld (i16), x
+    ld (i16), y
+    ld ((i16)), x
+    ld ((i16)), y
     ld x, pc
     ld y, pc
-    ld x, (imm16+x)
-    ld y, (imm16+x)
-    ld x, (imm16+y)
-    ld y, (imm16+y)
-    ld x, ((imm16)+x)
-    ld y, ((imm16)+x)
-    ld x, ((imm16)+y)
-    ld y, ((imm16)+y)
-    ld x, (imm16)++
-    ld x, (imm16)--
-    ld y, (imm16)++
-    ld y, (imm16)--
+    ld x, (i16+x)
+    ld y, (i16+x)
+    ld x, (i16+y)
+    ld y, (i16+y)
+    ld x, ((i16)+x)
+    ld y, ((i16)+x)
+    ld x, ((i16)+y)
+    ld y, ((i16)+y)
+    ld x, (i16)++
+    ld x, (i16)--
+    ld y, (i16)++
+    ld y, (i16)--
     ld x, r
     ld y, r
     ld r, x
@@ -142,22 +142,22 @@ In total we currently have 165 opcodes.
 
 34 opcodes:
 
-    jmp imm16
-    jz  imm16
-    jnz imm16
-    jgt imm16
-    jlt imm16
-    jge imm16
-    jle imm16
-    jc  imm16
-    jmp (imm16)
-    jz  (imm16)
-    jnz (imm16)
-    jgt (imm16)
-    jlt (imm16)
-    jge (imm16)
-    jle (imm16)
-    jc  (imm16)
+    jmp i16
+    jz  i16
+    jnz i16
+    jgt i16
+    jlt i16
+    jge i16
+    jle i16
+    jc  i16
+    jmp (i16)
+    jz  (i16)
+    jnz (i16)
+    jgt (i16)
+    jlt (i16)
+    jge (i16)
+    jle (i16)
+    jc  (i16)
     jmp (x)
     jz (x)
     jnz (x)
@@ -174,8 +174,8 @@ In total we currently have 165 opcodes.
     jge (y)
     jle (y)
     jc (y)
-    jr imm8l # imm8l is a positive offset
-    jr imm8l # imm8l is a negative offset
+    jr i8l # i8l is a positive offset
+    jr i8l # i8l is a negative offset
 
 ### Arithmetic
 
@@ -189,24 +189,24 @@ In total we currently have 165 opcodes.
     inc (y)
     dec (x)
     dec (y)
-    inc (imm16)
-    dec (imm16)
+    inc (i16)
+    dec (i16)
     add x, x
     add x, y
-    add x, imm16
-    add x, (imm16)
-    add x, (imm16)++
-    add x, (imm16)--
+    add x, i16
+    add x, (i16)
+    add x, (i16)++
+    add x, (i16)--
     sub x, y
-    sub x, (imm16)
-    sub x, (imm16)++
-    sub x, (imm16)--
+    sub x, (i16)
+    sub x, (i16)++
+    sub x, (i16)--
 
 So far this mostly includes register and immediate-mode arguments. If opcode space
 allows, we could add some memory operands for either source or destination, as well
 as opcodes for the more elaborate ALU operations like "X+Y+1", "-X-Y-2".
 
-The assembler could also provide "sub r, imm16" as "add r, -imm16" and
+The assembler could also provide "sub r, i16" as "add r, -i16" and
 "sub r, r" as "ld x, 0".
 
 ### Logic
@@ -215,26 +215,26 @@ The assembler could also provide "sub r, imm16" as "add r, -imm16" and
 
     and x, y
     and y, x
-    and x, imm16
-    and y, imm16
+    and x, i16
+    and y, i16
     or x, y
     or y, x
-    or x, imm16
-    or y, imm16
+    or x, i16
+    or y, i16
     not x
     not y
     nand x, y
     nand y, x
-    nand x, imm16
-    nand y, imm16
+    nand x, i16
+    nand y, i16
     nor x, y
     nor y, x
-    nor x, imm16
-    nor y, imm16
+    nor x, i16
+    nor y, i16
     xor x, y
     xor y, x
-    xor x, imm16
-    xor y, imm16
+    xor x, i16
+    xor y, i16
 
 Again we could add some memory operands if opcode space allows.
 
@@ -242,16 +242,16 @@ Again we could add some memory operands if opcode space allows.
 
 10 opcodes:
 
-    in x, imm16
+    in x, i16
     in x, y
-    in y, imm16
+    in y, i16
     in y, x
     out x, y
     out y, x
-    out imm16, x
-    out imm16, y
-    out imm16, imm16
-    out imm16, imm16
+    out i16, x
+    out i16, y
+    out i16, i16
+    out i16, i16
 
 Device numbers and data are both 16 bits wide.
 
@@ -270,15 +270,15 @@ of the TPA to disk should be optimised.
     push (x)
     push (y)
     push (r)
-    push imm16
-    push (imm16)
+    push i16
+    push (i16)
     pop x
     pop y
     pop r
     pop (x)
     pop (y)
     pop (r)
-    pop (imm16)
+    pop (i16)
     ret
 
 The stack pointer is always r255.
@@ -295,40 +295,40 @@ The stack pointer is always r255.
 
 5 opcodes:
 
-    djnz x, imm16
-    djnz y, imm16
-    djnz (imm16), imm16
-    tbsz r, imm16
-    sb r254, imm8l
+    djnz x, i16
+    djnz y, i16
+    djnz (i16), i16
+    tbsz r, i16
+    sb r254, i8l
 
 Decrement and jump if not zero. Test bits and skip if zero. Set bits in M[0xfffe].
 
 Also consider making single instructions that do things like:
 
-    ld (imm16), x
-    inc (imm16)
+    ld (i16), x
+    inc (i16)
 
 or
-    ld x, (imm16)
-    inc (imm16)
+    ld x, (i16)
+    inc (i16)
 
 ## ALU & Load
 
 We could easily make instructions like:
 
-    ld (imm16), x+y
-    ld (imm16), x-y
-    ld (imm16), x-1
-    ld (imm16), x+1
-    ld (imm16), y-1
-    ld (imm16), y+1
+    ld (i16), x+y
+    ld (i16), x-y
+    ld (i16), x-1
+    ld (i16), x+1
+    ld (i16), y-1
+    ld (i16), y+1
     ...
-    ld x, (imm16)+y
-    ld x, (imm16)-y
-    ld y, (imm16)+x
-    ld y, (imm16)-x
-    ld x, (imm16)-1
-    ld x, (imm16)+1
+    ld x, (i16)+y
+    ld x, (i16)-y
+    ld y, (i16)+x
+    ld y, (i16)-x
+    ld x, (i16)-1
+    ld x, (i16)+1
     ...
 
 For all of the sensible ALU operations. Just a case of working out which ones are useful
@@ -341,16 +341,16 @@ return address, and push it, and then jump to the callee.
 
 In general, calling is:
 
-    0: push (SP), 4 # push (SP), imm16
-    2: jmp imm16
+    0: push (SP), 4 # push (SP), i16
+    2: jmp i16
     4: ...
 
 In the event that position-independent code is required, use something like:
 
     0: ld x, pc
-    1: add x, 4      # with the "add x, imm8l" opcode (1 word)
+    1: add x, 4      # with the "add x, i8l" opcode (1 word)
     2: push (SP), x
-    3: jmp imm16
+    3: jmp i16
     5: ...
 
 The "ret" instruction can be used to return to the caller. It pops the return address
@@ -503,8 +503,8 @@ Values are decimal by default.
 
 Hex values are written starting with "0x", and binary values starting with "0b".
 
-All numeric values are 16 bits long, but in special cases the assembler may put them in an imm8l
-or imm8h where possible.
+All numeric values are 16 bits long, but in special cases the assembler may put them in an i8l
+or i8h where possible.
 
 Inside strings, the following escape sequences are available:
 

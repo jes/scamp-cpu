@@ -96,9 +96,9 @@ while (my $line = <>) {
         }
         die "error: line $.: unrecognised operation: $line\n" if !@match;
 
-        # pick an imm8 operand in preference to an imm16
+        # pick an i8 operand in preference to an i16
         if (@match > 1) {
-            my @new = grep { /imm8/ } @match;
+            my @new = grep { /i8/ } @match;
             @match = @new if @new;
         }
         # TODO: should we just pick the fastest instruction instead of dying?
@@ -106,9 +106,9 @@ while (my $line = <>) {
 
         # generate code:
         #  - upper 8 bits of instruction come from opcode
-        #  - lower 8 bits of instruction are imm8l/imm8h, if any,
+        #  - lower 8 bits of instruction are i8l/i8h, if any,
         #    otherwise ignored (so 0)
-        #  - the imm16 argument comes next, if any
+        #  - the i16 argument comes next, if any
         #  - if we don't yet know the address for a label, just
         #    store the text and it'll get filled in later
         my $opcode = $instructions->{$match[0]}{opcode} << 8;
@@ -118,9 +118,9 @@ while (my $line = <>) {
         my @params = split /\s*,\s*/, $params_str;
 
         for my $i (0 .. $#argpattern) {
-            if ($params[$i] =~ /imm8/) {
+            if ($params[$i] =~ /i8/) {
                 $opcode |= arg2num($args[$i])&0xff;
-            } elsif ($params[$i] =~ /imm16/) {
+            } elsif ($params[$i] =~ /i16/) {
                 push @operands, arg2num($args[$i]);
             }
         }
@@ -161,8 +161,8 @@ sub arg2num {
 # examples:
 # x => x
 # (x) => \(x\)
-# (65535)++ => \((imm8h|imm16)\)\+\+
-# 605 => imm16
+# (65535)++ => \((i8h|i16)\)\+\+
+# 605 => i16
 sub arg2pattern {
     my ($arg) = @_;
 
@@ -173,9 +173,9 @@ sub arg2pattern {
         my ($v) = @_;
 
         return $v if $v =~ /^(x|y|pc)$/;
-        return '(imm8h|imm16)' if $v =~ /^\d+$/ && $v >= 0xff00 && $v <= 0xffff;
-        return '(imm8l|imm16)' if $v =~ /^\d+$/ && $v >= 0x0000 && $v <= 0x00ff;
-        return 'imm16';
+        return '(i8h|i16)' if $v =~ /^\d+$/ && $v >= 0xff00 && $v <= 0xffff;
+        return '(i8l|i16)' if $v =~ /^\d+$/ && $v >= 0x0000 && $v <= 0x00ff;
+        return 'i16';
     };
 
     $arg =~ s/\b([a-z_0-9]+)\b/$subst->($1)/gei;
