@@ -364,24 +364,24 @@ ret: # jmp (++(0xffff))
 jr+ imm8l: # clobbers X
     PO YI
     IOL XI
-    JMP X+Y+1
+    JMP X+Y
 
 jr- imm8l: # clobbers X
     PO YI
     IOL XI
-    JMP Y-X-1
+    JMP Y-X
 
 jr+ (imm8h): # clobbers X
     PO YI
     IOH AI
     MO XI
-    JMP X+Y+1
+    JMP X+Y
 
 jr- (imm8h): # clobbers X
     PO YI
     IOH AI
     MO XI
-    JMP Y-X-1
+    JMP Y-X
 
 ld x, (imm8h):
     IOH AI
