@@ -11,7 +11,7 @@ module test;
 
     reg [15:0] cycle = 0;
 
-    parameter EXPECT_OUTPUTS = 18;
+    parameter EXPECT_OUTPUTS = 19;
     reg [15:0] outputs = 0;
 
     initial begin

@@ -112,3 +112,9 @@ ld y, x
 ld x, 0x6943
 xor x, y
 out 0, x
+
+# 18: relative jump
+ld r0, 18
+jr+ 1
+ld r0, 0
+out 0, r0

@@ -86,7 +86,7 @@ while (my $line = <>) {
         for my $a (@args) {
             push @argpattern, arg2pattern($a);
         }
-        my $re = $op;
+        my $re = "\Q$op\E";
         $re .= ' ' . join(', ', @argpattern) if @argpattern;
 
         # find instructions that match the pattern
