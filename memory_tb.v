@@ -16,15 +16,6 @@ module test;
     initial begin
         load = 0; en = 1; clk = 0; busreg = 1234;
 
-        /* Test reading from ROM */
-        address = 0;
-        #1 if (bus !== 16'h0100) $display("Bad: address 0 != 0x0100:",bus);
-
-        address = 1;
-        #1 if (bus !== 16'h0300) $display("Bad: address 1 != 0x0300:",bus);
-
-        address = 2;
-        #1 if (bus !== 16'h0101) $display("Bad: address 2 != 0x0101:",bus);
         en = 0;
         #1 if (bus !== 1234) $display("Bad: modified bus without en:",bus);
 
@@ -55,7 +46,8 @@ module test;
         address = 0; busreg = 12345; load = 1;
         #1
         clk = 1;
-        #1 if (bus !== 16'h0100) $display("Bad: looks like we overwrote ROM:",bus);
+        #1 load = 0; en = 1;
+        #1 if (bus === 12345) $display("Bad: looks like we overwrote ROM:",bus);
 
         /* Test asking for values on the bus and verifying that they change at positive edges */
         clk = 0;
