@@ -119,5 +119,28 @@ jr+ 1
 ld r0, 0
 out 0, r0
 
+# 19: summing numbers in a list, using auto-increment
+ld r0, 10
+ld r1, 1
+ld r2, 2
+ld r3, 5
+ld r4, 0
+ld r5, 0
+ld r6, 3
+ld r7, 3
+ld r8, 4
+ld r9, 0
+ld r10, 1
+.def sum r11
+.def ptr r12
+ld ptr, 0xff01
+ld sum, 0
+L3:
+    ld x, (ptr++)
+    add sum, x
+    dec r0
+    jnz L3
+out 0, sum
+
 # infinite loop
 jr- 1
