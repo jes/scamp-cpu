@@ -83,7 +83,7 @@ td.inst-nor { background-color: #dcd; }
 td.inst-xor { background-color: #bcd; }
 td.inst-in { background-color: #ccb; }
 td.inst-out { background-color: #bcc; }
-td.inst-ld { background-color: #dbc; }
+td.inst-ld { background-color: #bdc; }
 td.inst-push, td.inst-pop, td.inst-ret { background-color: #cbc; }
 td.inst-j { background-color: #dcb; }
 td.inst-shl, td.inst-shl2, td.inst-shl3 { background-color: #cbd; }
