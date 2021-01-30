@@ -19,6 +19,10 @@ while (<>) {
     s/\s$//; # strip trailing spaces
     s/\s+/ /; # collapse spaces
 
+    if ($orig =~ /# clobbers: (\w+)/) {
+        push @{ $instructions{$curinstr}{clobbers} }, $1;
+    }
+
     next if $_ eq '';
 
     if (/^([a-z_0-9, \(\)\+-]+): ?([0-9a-f]*)$/i) { # new instruction starts

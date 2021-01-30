@@ -27,11 +27,9 @@ for my $a (qw(0 1 2 3 4 5 6 7 8 9 a b c d e f)) {
         my @clobbers = @{ $i->{clobbers}||[] };
         @clobbers = grep {!/x/} @clobbers if $inst =~ /^\S+ x\b/;
         @clobbers = grep {!/y/} @clobbers if $inst =~ /^\S+ y\b/;
+        my $clobber_warnings = join('', map { "<span class=\"clob$_\">*</span>" } sort @clobbers);
         @clobbers = ('(none)') if !@clobbers;
         my $clobbers = join(',', map { "<span class=\"clob$_\">$_</span>" } sort @clobbers);
-        my $clobber_warnings = '';
-        $clobber_warnings .= '<span class="clobx">*</span>' if grep {/x/} @clobbers;
-        $clobber_warnings .= '<span class="cloby">*</span>' if grep {/y/} @clobbers;
 
         my $microcode = join('<br>', map { "&nbsp;&nbsp;$_" } @{ $i->{ucode}||[] });
 
@@ -44,19 +42,20 @@ for my $a (qw(0 1 2 3 4 5 6 7 8 9 a b c d e f)) {
         $i->{words} ||= '';
         $i->{cycles} ||= '';
 
-        print "<td class=\"inst\"><div style=\"padding:2px\"><span style=\"font-weight:bold\">$instop</span> $instargs $clobber_warnings</div><div class=\"popup\"><b>Opcode:</b> $opcode<br><b>Words:</b> $i->{words}<br><b>Cycles:</b> $i->{cycles}<br><b>Clobbers:</b> $clobbers<b><br>Microcode:</b><br>$microcode<br>$remark</div></td>";
+        print "<td class=\"inst\"><div style=\"padding:2px\"><span style=\"font-weight:bold\">$instop</span> $instargs $clobber_warnings</div><div class=\"popup\"><b>Opcode:</b> $opcode<br><b>Words:</b> $i->{words}<br><b>Cycles:</b> $i->{cycles}<br><b>Clobbers:</b> $clobbers<b><br>Microcode:</b><br>$microcode<br><span class=\"remark\">$remark</span></div></td>";
     }
     print "</tr>\n";
 }
 print "</table>\n";
 print "<div class=\"clobx\">* clobbers x</div>\n";
+print "<div class=\"clobr254\">* clobbers r254</div>\n";
 print "<div class=\"cloby\">* clobbers y</div>\n";
 print footer();
 
 sub header {
     qq{<html>
 <head>
-<title>Instruction set</title>
+<title>Instruction set cheatsheet</title>
 <style type="text/css">
 table {
     margin-right: 100px;
@@ -81,7 +80,6 @@ div.popup {
     pointer-events: none;
     position: absolute;
     background: #eee;
-    border: solid 1px black;
     width: 200px;
     padding: 2px;
 }
@@ -89,11 +87,19 @@ th {
     background-color: #333;
     color: #ccc;
 }
+.clobr254 {
+    color: #a50;
+}
 .clobx {
     color: #f00;
+    font-weight: bold;
 }
 .cloby {
     color: #888;
+}
+.remark {
+    font-family: sans-serif;
+    font-size: 0.8em;
 }
 tt {
     font-weight: bold;
@@ -102,26 +108,31 @@ tt {
 </style>
 </head>
 <body>
-<h1>Instruction set</h1>
+<h1>Instruction set cheatsheet</h1>
 <ul>
 <li>The instruction word is the opcode shifted left by 8 bits, so opcode <tt>04</tt> becomes <tt>0400</tt>.</li>
-<li><tt>x</tt> and <tt>y</tt> parameters refer to the registers.</li>
+<li>Typically the first parameter is the destination and first operand, and the second parameter is the other operand.</li>
 <li><tt>i8l</tt> and <tt>i8h</tt> parameters are stored in the lower 8 bits of the instruction word, so <tt>add x, 5</tt> becomes
-<tt>0405</tt>. <tt>i8h</tt> is the same as <tt>i8l</tt> except it sets the upper 8 bits to 1, so <tt>add x, 0xff05</tt> becomes <tt>0505</tt>.</li>
-<li><tt>r</tt> parameters are "pseudo-registers", which are any word in the top 256 words of memory, equivalent to <tt>(i8h)</tt>.
-<tt>r0</tt> is the same as <tt>(0xff00)</tt>, <tt>r1</tt> is <tt>(0xff01)</tt>, and so on.
+<tt>0405</tt>. <tt>i8h</tt> is the same as <tt>i8l</tt> except it sets the upper 8 bits to 1, so <tt>add x, 0xff05</tt> becomes <tt>0505</tt>.
 They can also be used via <tt>(i16)</tt> parameters.</li>
-<li>Side effects on the <tt>x</tt> or <tt>y</tt> register are documented as "clobbers". You generally won't
+<li>Side effects on <tt>x</tt>, <tt>r254</tt>, or <tt>y</tt> are documented as "clobbers". You generally won't
 mind <tt>y</tt> being clobbered.</li>
-<li><tt>y</tt> is only exposed for the <tt>xor x, y</tt> instruction, because
-<tt>xor x, r</tt> would take too many cycles.</li>
 <li><tt>++</tt> and <tt>--</tt> refer to pre-/post- increment/decrement of a value or pointer.</li>
 </ul>
 };
 }
 
 sub footer {
-    qq{</body>
+    qq{<ul>
+<li>The <tt>x</tt> register functions as an accumulator.</li>
+<li>The <tt>y</tt> register is only exposed for the <tt>xor x, y</tt> instruction, because
+<tt>xor x, r</tt> would take too many cycles.</li>
+<li><tt>r</tt> parameters are "pseudo-registers", which are any word in the top 256 words of memory, equivalent to <tt>(i8h)</tt>.
+<tt>r0</tt> is the same as <tt>(0xff00)</tt>, <tt>r1</tt> is <tt>(0xff01)</tt>, and so on.
+<li><tt>r0</tt> to <tt>r253</tt> are free for general purposes.</li>
+<li><tt>r254</tt> is used as scratch space for <tt>xor</tt> and as the implicit operand for <tt>sb</tt>.</li>
+<li><tt>r255</tt> is the stack pointer, also called <tt>sp</tt>.</li>
+</ul></body>
 </html>
 };
 }

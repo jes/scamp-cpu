@@ -751,56 +751,56 @@ or x, i8l:
     XI X|Y
 
 xor x, y:
-    # the idea here is to calculate X^Y == (X|Y) & ~(X&Y) by first storing X|Y in memory,
-    # then storing X&Y in Y, then loading the original X|Y from memory into X, then
-    # computing ~(X&Y) and storing it in X
-    -2 AI      # addr = -2
-    MI X|Y     # M[-2] = X|Y
-    YI ~(X&Y)  # Y = ~(X&Y)
-    MO XI      # X = M[-2]
-    XI X&Y     # X = X&Y
+    # clobbers: r254
+    -2 AI
+    MI X|Y
+    YI ~(X&Y)
+    MO XI
+    XI X&Y
 
 xor x, i8l:
-    -2 AI      # addr = -2
-    IOL YI     # Y = IOL
-    MI X|Y     # M[-2] = X|Y
-    YI ~(X&Y)  # Y = ~(X&Y)
-    MO XI      # X = M[-2]
-    XI X&Y     # X = X&Y
+    # clobbers: r254
+    -2 AI
+    IOL YI
+    MI X|Y
+    YI ~(X&Y)
+    MO XI
+    XI X&Y
 
 xor x, i8h:
-    -2 AI      # addr = -2
-    IOH YI     # Y = IOH
-    MI X|Y     # M[-2] = X|Y
-    YI ~(X&Y)  # Y = ~(X&Y)
-    MO XI      # X = M[-2]
-    XI X&Y     # X = X&Y
+    # clobbers: r254
+    -2 AI
+    IOH YI
+    MI X|Y
+    YI ~(X&Y)
+    MO XI
+    XI X&Y
 
-shl x:
-    YI X
-    XI X+Y
-
-shl2 x:
-    YI X
-    XI X+Y
+shl x: # Bitwise shift-left by 1 bit.
     YI X
     XI X+Y
 
-shl3 x:
-    YI X
-    XI X+Y
+shl2 x: # Bitwise shift-left by 2 bits.
     YI X
     XI X+Y
     YI X
     XI X+Y
 
-shl (i8h): # clobbers X
+shl3 x: # Bitwise shift-left by 3 bits.
+    YI X
+    XI X+Y
+    YI X
+    XI X+Y
+    YI X
+    XI X+Y
+
+shl (i8h): # Bitwise shift-left by 1 bit.
     IOH AI
     MO XI
     YI X
     XI X+Y
 
-shl2 (i8h): # clobbers X
+shl2 (i8h): # Bitwise shift-left by 2 bits.
     IOH AI
     MO XI
     YI X
@@ -808,49 +808,49 @@ shl2 (i8h): # clobbers X
     YI X
     XI X+Y
 
-push x: # ld ((-1)--), x
+push x:
     -1 AI
-    MO YI # XXX: we'd save a cycle if we could do "YI AI" in one step
+    MO YI
     MO AI
     MI XO
     -1 AI
     Y-1 MI
 
-push i8l: # ld ((-1)--), i8l
+push i8l:
     -1 AI
-    MO YI # XXX: we'd save a cycle if we could do "YI AI" in one step
+    MO YI
     MO AI
     MI IOL
     -1 AI
     Y-1 MI
 
-push i8h: # ld ((-1)--), i8h
+push i8h:
     -1 AI
-    MO YI # XXX: we'd save a cycle if we could do "YI AI" in one step
+    MO YI
     MO AI
     MI IOH
     -1 AI
     Y-1 MI
 
-pop x: # ld x, (++(-1))
+pop x:
     -1 AI
     MO XI
-    MI X+1 # XXX: we'd save a cyle if we could do "MI AI" in one step
+    MI X+1
     AI X+1
     MO XI
 
 nop:
 
-tbsz (i8h), i16: # test bits and skip if zero (address in IOH, val to test against in i16)
-    IOH AI # addr = IOH
-    MO XI  # X = M[IOH]
-    PO AI  # addr = PC
-    MO YI P+ # Y = M[PC], inc PC
-    X&Y    # compute X&Y
-    PO JNZ P+ # skip next 1 word if zero
+tbsz (i8h), i16: # Test bits and skip if zero: if none of the bits set in the <tt>i16</tt> are also set in <tt>r</tt>, then skip the next 1-word instruction. Use in tandem with <tt>sb</tt> to compute bitwise shift-right of 8 or more bits.
+    IOH AI
+    MO XI
+    PO AI
+    MO YI P+
+    X&Y
+    PO JNZ P+
 
-sb i8l: # set bits in val at 0xfffe based on bits in IOL (M[0xfffe] |= IOL)
-    -2 AI # addr = 0xfffe
-    MO XI # X = M[0xfffe]
-    IOL YI # Y = IOL
-    MI X|Y # M[0xfffe] = X|Y
+sb i8l: # Set bits in <tt>r254</tt> based on the <tt>i8l</tt>. i.e. <tt>r254 |= i8l</tt>.
+    -2 AI
+    MO XI
+    IOL YI
+    MI X|Y
