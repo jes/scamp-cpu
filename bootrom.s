@@ -131,16 +131,14 @@ ld r7, 3
 ld r8, 4
 ld r9, 0
 ld r10, 1
-.def sum r11
 .def ptr r12
 ld ptr, 0xff01
-ld sum, 0
+ld x, 0
 L3:
-    ld x, (ptr++)
-    add sum, x
+    add x, (ptr++)
     dec r0
     jnz L3
-out 0, sum
+out 0, x
 
 # infinite loop
 jr- 1

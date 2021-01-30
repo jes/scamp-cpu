@@ -20,6 +20,22 @@ add x, ((i8h)):
     MO YI
     XI X+Y
 
+add x, ((i8h)++):
+    IOH AI
+    MO YI
+    Y+1 MI
+    YO AI
+    MO YI
+    XI X+Y
+
+add x, ((i8h)--):
+    IOH AI
+    MO YI
+    Y-1 MI
+    YO AI
+    MO YI
+    XI X+Y
+
 add x, i8l:
     IOL YI
     XI X+Y
@@ -64,6 +80,22 @@ sub x, (i16):
 sub x, ((i8h)):
     IOH AI
     MO AI
+    MO YI
+    XI X-Y
+
+sub x, ((i8h)++):
+    IOH AI
+    MO YI
+    Y+1 MI
+    YO AI
+    MO YI
+    XI X-Y
+
+sub x, ((i8h)--):
+    IOH AI
+    MO YI
+    Y-1 MI
+    YO AI
     MO YI
     XI X-Y
 
