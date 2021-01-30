@@ -770,12 +770,12 @@ jnz (i16):
 jgt (i16):
     PO AI
     MO AI P+
-    MO JZ JGT
+    MO JGT
 
 jlt (i16):
     PO AI
     MO AI P+
-    MO JZ JLT
+    MO JLT
 
 jge (i16):
     PO AI
