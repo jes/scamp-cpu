@@ -1,131 +1,114 @@
-# Note: currently this has to be assembled manually
-
 # 0
-ldx(0)    # load X with immediate 0
-out       # output X
+ld x, 0
+out 0, x
 
 # 1
-ldx(1)    # load X with immediate 1
-out       # output X
+ld x, 1
+out 0, x
 
 # 2
-ldx(2)    # load X with immediate 2
-out       # output X
+ld x, 2
+out 0, x
 
 # 3
-ldx(3)    # load X with immediate 3
-out       # output X
+ld x, 3
+out 0, x
 
 # 4: add 1+3
-ldx(1)    # load X with immediate 1
-ldy(3)    # load Y with immediate 3
-add       # X = X + Y
-out       # output X
+ld x, 1
+add x, 3
+out 0, x
 
 # 5: sub 100-95
-ldx(100)  # load X with immediate 100
-ldy(95)   # load Y with immediate 95
-sub       # X = X - Y
-out       # output X
+ld x, 100
+sub x, 95
+out 0, x
 
 # 6: inc 5+1
-ldx(5)
-inc
-out
+ld x, 5
+inc x
+out 0, x
 
 # 7: dec 8-1
-ldx(8)
-dec
-out
+ld x, 8
+dec x
+out 0, x
 
 # 8: shl 4
-ldx(4)
-shl
-out
+ld x, 4
+shl x
+out 0, x
 
 # 9: 1001 == 1000 | 0001
-ldx(8)
-ldy(1)
-or
-out
+ld x, 8
+or x, 1
+out 0, x
 
 # 10: 1010 == 1110 & 1011
-ldx(14)
-ldy(11)
-and
-out
+ld x, 14
+and x, 11
+out 0, x
 
 # 11: 1011 == 11101 ^ 10110
-ldx(29)
-ldy(22)
-xor
-out
+ld x, 29
+ld y, 22
+xor x, y
+out 0, x
 
 # 12,13: push 13, push 12, pop, out, pop, out
-ldx(128)   # X = 128
-shl        # X = 256
-shl        # X = 512
-stx 0xffff # M[0xffff] = 512 (set SP = 512)
-ldx(13)    # X = 13
-nop
-push(255)  # push X
-ldx(12)    # X = 12
-nop
-push(255)  # push X
-ldx(42)    # (clobber X)
-pop(255)   # pop 12 into X
-out        # output X
-pop(255)   # pop 13 into X
-out        # output X
+ld sp, 512
+push 13
+push 12
+ld x, 42
+pop x
+out 0, x
+pop x
+out 0, x
 
 # 14: unconditional jump
-ldx(14)    # X = 14
-jmp L      # jmp to L
-ldx(42)    # (clobber X)
-L: out     # output X
+ld x, 14
+jmp L
+ld x, 42
+L: out 0, x
 
 # 15: conditional jump
-ldy(0)
-ldx(15)
-L:
-incy
-djnz L
-sty 0xffff
-ldx 0xffff
-out
+ld r0, 0
+ld x, 15
+L2:
+inc r0
+dec x
+jnz L2
+out 0, r0
 
 # 16: shift-right by 8
-ldxi 0x1000
-stx 0xffff # store 0x1000 at 0xffff
-ldy(0)
-sty 0xfffe # store 0 at 0xfffe
-tbsz(0xff) 0x8000
-sb(0x80)
-tbsz(0xff) 0x4000
-sb(0x40)
-tbsz(0xff) 0x2000
-sb(0x20)
-tbsz(0xff) 0x1000
-sb(0x10)
-tbsz(0xff) 0x0800
-sb(0x08)
-tbsz(0xff) 0x0400
-sb(0x04)
-tbsz(0xff) 0x0200
-sb(0x02)
-tbsz(0xff) 0x0100
-sb(0x01)
-# if we're lucky, 0xfffe now has 0x1000 >> 8
-ldx 0xfffe
-out
+ld r0, 0x1000
+ld r254, 0
+tbsz r0, 0x8000
+sb 0x80
+tbsz r0, 0x4000
+sb 0x40
+tbsz r0, 0x2000
+sb 0x20
+tbsz r0, 0x1000
+sb 0x10
+tbsz r0, 0x0800
+sb 0x08
+tbsz r0, 0x0400
+sb 0x04
+tbsz r0, 0x0200
+sb 0x02
+tbsz r0, 0x0100
+sb 0x01
+# if we're lucky, r254 now has 0x1000 >> 8
+ld x, r254
+out 0, x
 
 # 17: xor (imm8h), x
 # 17 = 0x0011 = 0b0000000000010001
 #            a: 0b0110100101010010 = 0x6952
 #            b: 0b0110100101000011 = 0x6943
-ldxi 0x6952
-stx r255
-ldxi 0x6943
-xor r255, x
-ldx 0xffff
-out
+ld x, 0x6952
+ld y, x
+ld x, 0x6943
+xor x, y
+out 0, x

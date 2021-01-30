@@ -39,9 +39,9 @@ while (my $line = <>) {
     } until ($line eq $was); # apply macros until no change
 
     # resolve hex
-    $line =~ s/\b0x([0-9a-f]+)\b/hex($1)/ei;
+    $line =~ s/\b0x([0-9a-f]+)\b/hex($1)/gei;
     # resolve binary
-    $line =~ s/\b(0b[01]+)\b/oct($1)/ei;
+    $line =~ s/\b(0b[01]+)\b/oct($1)/gei;
 
     # store labels
     while ($line =~ s/^([a-z_][a-z_0-9]*):\s*//i) {
@@ -86,7 +86,8 @@ while (my $line = <>) {
         for my $a (@args) {
             push @argpattern, arg2pattern($a);
         }
-        my $re = "$op " . join(', ', @argpattern);
+        my $re = $op;
+        $re .= ' ' . join(', ', @argpattern) if @argpattern;
 
         # find instructions that match the pattern
         my @match;
@@ -115,10 +116,13 @@ while (my $line = <>) {
         my $opcode = $instructions->{$match[0]} << 8;
         my @operands;
 
+        my ($instrop, $params_str) = split / /, $match[0], 2;
+        my @params = split /\s*,\s*/, $params_str;
+
         for my $i (0 .. $#argpattern) {
-            if ($argpattern[$i] =~ /imm8/) {
+            if ($params[$i] =~ /imm8/) {
                 $opcode |= arg2num($args[$i])&0xff;
-            } elsif ($argpattern[$i] =~ /imm16/) {
+            } elsif ($params[$i] =~ /imm16/) {
                 push @operands, arg2num($args[$i]);
             }
         }
@@ -176,7 +180,7 @@ sub arg2pattern {
         return 'imm16';
     };
 
-    $arg =~ s/\b([a-z_0-9]+)\b/$subst->($1)/ei;
+    $arg =~ s/\b([a-z_0-9]+)\b/$subst->($1)/gei;
 
     return $arg;
 }

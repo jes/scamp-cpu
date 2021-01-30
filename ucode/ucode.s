@@ -1,126 +1,847 @@
-# Provisional microcode for testing
+add x, (imm8h):
+    IOH AI
+    MO YI
+    XI X+Y
 
-add: 00 # X = X+Y
-    X+Y XI
+add x, imm16:
+    PO AI
+    MO YI P+
+    XI X+Y
 
-ldx: 01 # load X from IOL
-    IOL XI
+add x, (imm16):
+    PO AI
+    MO AI P+
+    MO YI
+    XI X+Y
 
-ldy: 02 # load Y from IOL
+add x, ((imm8h)):
+    IOH AI
+    MO AI
+    MO YI
+    XI X+Y
+
+add x, imm8l:
     IOL YI
+    XI X+Y
 
-out: 03 # output X register
+add x, imm8h:
+    IOH YI
+    XI X+Y
+
+add (imm8h), x:
+    IOH AI
+    MO YI
+    MI Y+X
+
+add (imm16), x:
+    PO AI
+    MO AI P+
+    MO YI
+    MI Y+X
+
+add ((imm8h)), x:
+    IOH AI
+    MO AI
+    MO YI
+    MI Y+X
+
+sub x, (imm8h):
+    IOH AI
+    MO YI
+    XI X-Y
+
+sub x, imm16:
+    PO AI
+    MO YI P+
+    XI X-Y
+
+sub x, (imm16):
+    PO AI
+    MO AI P+
+    MO YI
+    XI X-Y
+
+sub x, ((imm8h)):
+    IOH AI
+    MO AI
+    MO YI
+    XI X-Y
+
+sub x, imm8l:
+    IOL YI
+    XI X-Y
+
+sub x, imm8h:
+    IOH YI
+    XI X-Y
+
+sub (imm8h), x:
+    IOH AI
+    MO YI
+    MI Y-X
+
+sub (imm16), x:
+    PO AI
+    MO AI P+
+    MO YI
+    MI Y-X
+
+sub ((imm8h)), x:
+    IOH AI
+    MO AI
+    MO YI
+    MI Y-X
+
+inc (x):
+    XO AI
+    MO YI
+    MI Y+1
+
+dec (x):
+    XO AI
+    MO YI
+    MI Y-1
+
+inc x:
+    XI X+1
+
+dec x:
+    XI X-1
+
+inc (imm8h):
+    IOH AI
+    MO YI
+    MI Y+1
+
+dec (imm8h):
+    IOH AI
+    MO YI
+    MI Y-1
+
+inc (imm16):
+    PO AI
+    MO AI P+
+    MO YI
+    MI Y+1
+
+dec (imm16):
+    PO AI
+    MO AI P+
+    MO YI
+    MI Y-1
+
+inc ((imm8h)):
+    IOH AI
+    MO AI
+    MO YI
+    MI Y+1
+
+dec ((imm8h)):
+    IOH AI
+    MO AI
+    MO YI
+    MI Y-1
+
+in x, (imm8h):
+    IOH AI
+    MO AI
+    DO XI
+
+in x, imm16:
+    PO AI
+    MO AI P+
+    DO XI
+
+in x, (imm16):
+    PO AI
+    MO AI P+
+    MO AI
+    DO XI
+
+in x, ((imm8h)):
+    IOH AI
+    MO AI
+    MO AI
+    DO XI
+
+in x, imm8l:
+    IOL AI
+    DO XI
+
+in x, imm8h:
+    IOH AI
+    DO XI
+
+in (imm8h), x:
+    AI XO
+    DO YI
+    IOH AI
+    MI YO
+
+in (imm16), x:
+    AI XO
+    DO YI
+    PO AI
+    MO AI P+
+    MI YO
+
+in ((imm8h)), x:
+    AI XO
+    DO YI
+    IOH AI
+    MO AI
+    MI YO
+
+out x, (imm8h):
+    IOH AI
+    MO YI
+    XO AI
+    YO DI
+
+out x, imm16:
+    PO AI
+    MO YI P+
+    XO AI
+    YO DI
+
+out x, (imm16):
+    PO AI
+    MO AI P+
+    MO YI
+    XO AI
+    YO DI
+
+out x, ((imm8h)):
+    IOH AI
+    MO AI
+    MO YI
+    XO AI
+    YO DI
+
+out x, imm8l:
+    XO AI
+    IOL DI
+
+out x, imm8h:
+    XO AI
+    IOH DI
+
+out (imm8h), x:
+    IOH AI
+    MO AI
     XO DI
 
-inc: 04 # increment X register: X = X+1
-    X+1 XI
+out imm16, x:
+    PO AI
+    MO AI P+
+    XO DI
 
-dec: 05 # decrement X register: X = X-1
-    X-1 XI
+out (imm16), x:
+    PO AI
+    MO AI P+
+    MO AI
+    XO DI
 
-sub: 06 # X = X-Y
-    X-Y XI
+out ((imm8h)), x:
+    IOH AI
+    MO AI
+    MO AI
+    XO DI
 
-jmp: 07 # jump to immediate address from operand
+out imm8l, x:
+    IOL AI
+    XO DI
+
+out imm8h, x:
+    IOH AI
+    XO DI
+
+out imm16, (imm8h):
+    IOH AI
+    MO YI
+    PO AI
+    MO AI P+
+    YO DI
+
+in (imm8h), imm16:
+    IOH AI
+    MO YI
+    PO AI
+    MO AI P+
+    YI DO
+
+jmp x:
+    XO JMP
+
+jz x:
+    XO JZ
+
+jnz x:
+    XO JNZ
+
+jgt x:
+    XO JGT
+
+jlt x:
+    XO JLT
+
+jge x:
+    XO JZ JGT
+
+jle x:
+    XO JZ JLT
+
+jmp imm16:
     PO AI
     MO JMP
 
-jz: 08 # jump if last ALU output was 0
+jz imm16:
     PO AI
-    MO JZ
+    MO JZ P+
 
-djnz: 09 # decrement and jump if not zero
-    X-1 XI
+jnz imm16:
     PO AI
     MO JNZ P+
 
-nop: 0a
-nop: 0b
-nop: 0c
+jgt imm16:
+    PO AI
+    MO JGT P+
 
-and: 0d # X = X&Y
-    X&Y XI
+jlt imm16:
+    PO AI
+    MO JLT P+
 
-or: 0e # X = X|Y
-    X|Y XI
+jge imm16:
+    PO AI
+    MO JZ JGT P+
 
-nand: 0f # X = ~(X&Y)
-    ~(X&Y) XI
+jle imm16:
+    PO AI
+    MO JZ JLT P+
 
-nor: 10 # X = ~(X|Y)
-    ~(X|Y) XI
+jmp (imm16):
+    PO AI
+    MO AI
+    MO JMP
 
-shl: 11 # X = (X<<1) = X+X (clobbers Y register)
-    XO YI         # Y = X
-    X+Y XI
+jz (imm16):
+    PO AI
+    MO AI P+
+    MO JZ
 
-xor: 12 # X = X^Y (clobbers a word in the upper page of RAM, based on the 8-bit immediate constant in the opcode)
+jnz (imm16):
+    PO AI
+    MO AI P+
+    MO JNZ
+
+jgt (imm16):
+    PO AI
+    MO AI P+
+    MO JZ JGT
+
+jlt (imm16):
+    PO AI
+    MO AI P+
+    MO JZ JLT
+
+jge (imm16):
+    PO AI
+    MO AI P+
+    MO JZ JGT
+
+jle (imm16):
+    PO AI
+    MO AI P+
+    MO JZ JLT
+
+ret: # jmp (++(0xffff))
+    -1 AI
+    MO YI
+    MI Y+1
+    MO AI
+    MO JMP
+
+jr+ imm8l: # clobbers X
+    PO YI
+    IOL XI
+    JMP X+Y+1
+
+jr- imm8l: # clobbers X
+    PO YI
+    IOL XI
+    JMP Y-X-1
+
+jr+ (imm8h): # clobbers X
+    PO YI
+    IOH AI
+    MO XI
+    JMP X+Y+1
+
+jr- (imm8h): # clobbers X
+    PO YI
+    IOH AI
+    MO XI
+    JMP Y-X-1
+
+ld x, (imm8h):
+    IOH AI
+    MO XI
+
+ld x, imm16:
+    PO AI
+    MO XI P+
+
+ld x, (imm16):
+    PO AI
+    MO AI P+
+    MO XI
+
+ld x, ((imm8h)):
+    IOH AI
+    MO AI
+    MO XI
+
+ld x, ((imm16)):
+    PO AI
+    MO AI P+
+    MO AI
+    MO XI
+
+ld x, imm8l:
+    IOL XI
+
+ld x, imm8h:
+    IOH XI
+
+ld x, ++(imm8h):
+    IOH AI
+    MO XI
+    X+1 MI # XXX: we'd save a cycle if we could do "MI XI" in one step
+    X+1 XI
+
+ld x, --(imm8h):
+    IOH AI
+    MO XI
+    X-1 MI # XXX: we'd save a cycle if we could do "MI XI" in one step
+    X-1 XI
+
+ld x, (imm8h)++:
+    IOH AI
+    MO XI
+    X+1 MI
+
+ld x, (imm8h)--:
+    IOH AI
+    MO XI
+    X-1 MI
+
+ld x, ++(imm16):
+    PO AI
+    MO AI P+
+    MO XI
+    X+1 MI # XXX: we'd save a cycle if we could do "MI XI" in one step
+    X+1 XI
+
+ld x, --(imm16):
+    PO AI
+    MO AI P+
+    MO XI
+    X-1 MI # XXX: we'd save a cycle if we could do "MI XI" in one step
+    X-1 XI
+
+ld x, (imm16)++:
+    PO AI
+    MO AI P+
+    MO XI
+    X+1 MI
+
+ld x, (imm16)--:
+    PO AI
+    MO AI P+
+    MO XI
+    X-1 MI
+
+ld x, (++(imm8h)):
+    IOH AI
+    MO XI
+    MI X+1 # XXX: we'd save a cycle if we could do "MI AI" in one step
+    AI X+1
+    MO XI
+
+ld x, (--(imm8h)):
+    IOH AI
+    MO XI
+    MI X-1 # XXX: we'd save a cycle if we could do "MI AI" in one step
+    AI X-1
+    MO XI
+
+ld x, ((imm8h)++):
+    IOH AI
+    MO YI # XXX: we'd save a cycle if we could do "YI AI" in one step
+    MO AI
+    MO XI
+    IOH AI
+    MI Y+1
+
+ld x, ((imm8h)--):
+    IOH AI
+    MO YI # XXX: we'd save a cycle if we could do "YI AI" in one step
+    MO AI
+    MO XI
+    IOH AI
+    MI Y-1
+
+ld (imm8h), x:
+    IOH AI
+    MI XO
+
+ld (imm16), x:
+    PO AI
+    MO AI P+
+    MI XO
+
+ld ((imm8h)), x:
+    IOH AI
+    MO AI
+    MI XO
+
+ld ((imm16)), x:
+    PO AI
+    MO AI P+
+    MO AI
+    MI XO
+
+ld (++(imm8h)), x:
+    IOH AI
+    MO YI
+    Y+1 MI # XXX: we'd save a cycle if we could do "MI AI" in one step
+    Y+1 AI
+    MI XO
+
+ld (--(imm8h)), x:
+    IOH AI
+    MO YI
+    Y-1 MI # XXX: we'd save a cycle if we could do "MI AI" in one step
+    Y-1 AI
+    MI XO
+
+ld ((imm8h)++), x:
+    IOH AI
+    MO YI # XXX: we'd save a cycle if we could do "YI AI" in one step
+    MO AI
+    MI XO
+    IOH AI
+    Y+1 MI
+
+ld ((imm8h)--), x:
+    IOH AI
+    MO YI # XXX: we'd save a cycle if we could do "YI AI" in one step
+    MO AI
+    MI XO
+    IOH AI
+    Y-1 MI
+
+ld (imm8h), (imm16):
+    PO AI
+    MO AI P+
+    MO YI
+    IOH AI
+    MI YO
+
+ld (imm16), (imm8h):
+    IOH AI
+    MO YI
+    PO AI
+    MO AI
+    MI YO P+
+
+ld (imm8h), imm16:
+    PO AI
+    MO YI P+
+    IOH AI
+    MI YO
+
+ld y, x: # The "ld y, ..." instructions exist solely for use with "xor x, y"
+    YI XO
+
+ld y, (imm8h):
+    IOH AI
+    MO YI
+
+ld y, imm8h:
+    IOH YI
+
+ld y, imm8l:
+    IOL YI
+
+ld y, imm16:
+    PO AI
+    MO YI P+
+
+and (imm16), x:
+    PO AI
+    MO AI P+
+    MO YI
+    MI Y&X
+
+and ((imm8h)), x:
+    IOH AI
+    MO AI
+    MO YI
+    MI Y&X
+
+and (imm8h), x:
+    IOH AI
+    MO YI
+    MI Y&X
+
+and x, (imm16):
+    PO AI
+    MO AI P+
+    MO YI
+    XI X&Y
+
+and x, imm16:
+    PO AI
+    MO YI P+
+    XI X&Y
+
+and x, ((imm8h)):
+    IOH AI
+    MO AI
+    MO YI
+    XI X&Y
+
+and x, (imm8h):
+    IOH AI
+    MO YI
+    XI X&Y
+
+and x, imm8l:
+    IOL YI
+    XI X&Y
+
+nand (imm16), x:
+    PO AI
+    MO AI P+
+    MO YI
+    MI ~(Y&X)
+
+nand ((imm8h)), x:
+    IOH AI
+    MO AI
+    MO YI
+    MI ~(Y&X)
+
+nand (imm8h), x:
+    IOH AI
+    MO YI
+    MI ~(Y&X)
+
+nand x, (imm16):
+    PO AI
+    MO AI P+
+    MO YI
+    XI ~(X&Y)
+
+nand x, imm16:
+    PO AI
+    MO YI P+
+    XI ~(X&Y)
+
+nand x, ((imm8h)):
+    IOH AI
+    MO AI
+    MO YI
+    XI ~(X&Y)
+
+nand x, (imm8h):
+    IOH AI
+    MO YI
+    XI ~(X&Y)
+
+nand x, imm8l:
+    IOL YI
+    XI ~(X&Y)
+
+nor (imm16), x:
+    PO AI
+    MO AI P+
+    MO YI
+    MI ~(Y|X)
+
+nor ((imm8h)), x:
+    IOH AI
+    MO AI
+    MO YI
+    MI ~(Y|X)
+
+nor (imm8h), x:
+    IOH AI
+    MO YI
+    MI ~(Y|X)
+
+nor x, (imm16):
+    PO AI
+    MO AI P+
+    MO YI
+    XI ~(X|Y)
+
+nor x, imm16:
+    PO AI
+    MO YI P+
+    XI ~(X|Y)
+
+nor x, ((imm8h)):
+    IOH AI
+    MO AI
+    MO YI
+    XI ~(X|Y)
+
+nor x, (imm8h):
+    IOH AI
+    MO YI
+    XI ~(X|Y)
+
+nor x, imm8l:
+    IOL YI
+    XI ~(X|Y)
+
+or (imm16), x:
+    PO AI
+    MO AI P+
+    MO YI
+    MI Y|X
+
+or ((imm8h)), x:
+    IOH AI
+    MO AI
+    MO YI
+    MI Y|X
+
+or (imm8h), x:
+    IOH AI
+    MO YI
+    MI Y|X
+
+or x, (imm16):
+    PO AI
+    MO AI P+
+    MO YI
+    XI X|Y
+
+or x, imm16:
+    PO AI
+    MO YI P+
+    XI X|Y
+
+or x, ((imm8h)):
+    IOH AI
+    MO AI
+    MO YI
+    XI X|Y
+
+or x, (imm8h):
+    IOH AI
+    MO YI
+    XI X|Y
+
+or x, imm8l:
+    IOL YI
+    XI X|Y
+
+xor x, y:
     # the idea here is to calculate X^Y == (X|Y) & ~(X&Y) by first storing X|Y in memory,
     # then storing X&Y in Y, then loading the original X|Y from memory into X, then
     # computing ~(X&Y) and storing it in X
-    IOH AI               # addr = IOH (i.e. ff..)
-    MI X|Y            # M[addr] = X|Y
-    YI ~(X&Y)         # Y = ~(X&Y)
-    MO XI                # X = M[ff..]
-    XI X&Y            # X = X&Y
+    -2 AI      # addr = -2
+    MI X|Y     # M[-2] = X|Y
+    YI ~(X&Y)  # Y = ~(X&Y)
+    MO XI      # X = M[-2]
+    XI X&Y     # X = X&Y
 
-push: 13 # push X onto stack with post-decrement of sp (clobbers Y)
-    -1 AI # addr = -1 (i.e. SP)
-    MO YI  # Y = M[addr] (get current value of SP in Y)
-    MO AI  # addr = M[addr] (i.e. dereference SP) (XXX: we'd save a cycle if we could do YI and AI concurrently)
-    XO MI  # M[addr] = X
-    -1 AI # addr = -1 (i.e. SP)
-    MI Y-1 # M[addr] = Y-1 (i.e. decrement SP)
+xor x, imm8l:
+    -2 AI      # addr = -2
+    IOL YI     # Y = IOL
+    MI X|Y     # M[-2] = X|Y
+    YI ~(X&Y)  # Y = ~(X&Y)
+    MO XI      # X = M[-2]
+    XI X&Y     # X = X&Y
 
-pop: 14 # pop X from stack with pre-increment of sp (clobbers Y)
-    -1 AI # addr = -1 (i.e. SP)
-    MO YI  # Y = M[addr]
-    Y+1 MI # M[addr] = Y (write incremented SP)
-    Y+1 AI # addr = Y (i.e. new SP)
-    MO XI # X = M[addr]
+xor x, imm8h:
+    -2 AI      # addr = -2
+    IOH YI     # Y = IOH
+    MI X|Y     # M[-2] = X|Y
+    YI ~(X&Y)  # Y = ~(X&Y)
+    MO XI      # X = M[-2]
+    XI X&Y     # X = X&Y
 
-stx: 15 # load X into address given in operand
-    PO AI # addr = PC
-    MO AI P+ # addr = M[addr], inc PC
-    XO MI # M[addr] = X
+shl x:
+    YI X
+    XI X+Y
 
-sty: 16 # load Y into address given in operand
-    PO AI # addr = PC
-    MO AI P+ # addr = M[addr], inc PC
-    YO MI # M[addr] = Y
+shl2 x:
+    YI X
+    XI X+Y
+    YI X
+    XI X+Y
 
-ldx: 17 # load X from address given in operand
-    PO AI # addr = PC
-    MO AI P+ # addr = M[addr], inc PC
-    MO XI  # X = M[addr]
+shl3 x:
+    YI X
+    XI X+Y
+    YI X
+    XI X+Y
+    YI X
+    XI X+Y
 
-ldy: 18 # load Y from address given in operand
-    PO AI # addr = PC
-    MO AI P+ # addr = M[addr], inc PC
-    MO YI  # Y = M[addr]
+shl (imm8h): # clobbers X
+    IOH AI
+    MO XI
+    YI X
+    XI X+Y
 
-incy: 19 # increment Y register: Y = Y+1
-    YI Y+1
+shl2 (imm8h): # clobbers X
+    IOH AI
+    MO XI
+    YI X
+    XI X+Y
+    YI X
+    XI X+Y
 
-decy: 1a # decrement Y register: Y = Y-1
-    YI Y-1
+push x: # ld ((-1)--), x
+    -1 AI
+    MO YI # XXX: we'd save a cycle if we could do "YI AI" in one step
+    MO AI
+    MI XO
+    -1 AI
+    Y-1 MI
 
-# some special instructions for efficiently computing ">>8":
-# e.g.:
-# initialise by putting X in 0xffff for tbsz:
-#   stx 0xffff
-# initialise 0xfffe to 0 for sb:
-#   ldy(0)
-#   sty 0xfffe
-#
-# repeatedly tbsz and sb of the same value shifted right by 8
-#   tbsz(0xff) 0x8000
-#   sb(0x80)
-#   tbsz(0xff) 0x4000
-#   sb(0x40)
-# so the >>8 operation takes up to 8*(8+6) = 112 cycles, plus setup time
+push imm8l: # ld ((-1)--), imm8l
+    -1 AI
+    MO YI # XXX: we'd save a cycle if we could do "YI AI" in one step
+    MO AI
+    MI IOL
+    -1 AI
+    Y-1 MI
 
-tbsz: 1b # test bitwise and skip if zero (address of val in IOH, val to test against in immediate operand)
+push imm8h: # ld ((-1)--), imm8h
+    -1 AI
+    MO YI # XXX: we'd save a cycle if we could do "YI AI" in one step
+    MO AI
+    MI IOH
+    -1 AI
+    Y-1 MI
+
+pop x: # ld x, (++(-1))
+    -1 AI
+    MO XI
+    MI X+1 # XXX: we'd save a cyle if we could do "MI AI" in one step
+    AI X+1
+    MO XI
+
+nop:
+
+tbsz (imm8h), imm16: # test bits and skip if zero (address in IOH, val to test against in imm16)
     IOH AI # addr = IOH
     MO XI  # X = M[IOH]
     PO AI  # addr = PC
@@ -128,48 +849,8 @@ tbsz: 1b # test bitwise and skip if zero (address of val in IOH, val to test aga
     X&Y    # compute X&Y
     PO JNZ P+ # skip next 1 word if zero
 
-sb: 1c # set bits in val at 0xfffe based on bits in IOL (M[0xfffe] |= IOL)
+sb imm8l: # set bits in val at 0xfffe based on bits in IOL (M[0xfffe] |= IOL)
     -2 AI # addr = 0xfffe
     MO XI # X = M[0xfffe]
     IOL YI # Y = IOL
     MI X|Y # M[0xfffe] = X|Y
-
-ldxi: 1d # load x from 16-bit immediate operand
-    PO AI   # addr = PC
-    MO XI P+ # X = M[addr], inc PC
-
-ldyi: 1e # load y from 16-bit immediate operand
-    PO AI   # addr = PC
-    MO YI P+ # Y = M[addr], inc PC
-
-jr_pos: 1f # jump to a positive offset 1 to 256, relative to address of next instr
-    PO XI     # X = PC
-    IOL YI    # Y = IOL
-    JMP X+Y+1 # jump to X+Y+1
-
-jr_neg: 20 # jump to a negative offset -1 to -256, relative to address of next instr
-    PO XI     # X = PC
-    IOL YI    # Y = IOL
-    JMP X-Y-1 # jump to X-Y-1
-
-ldxoy: 21 # load x from imm16 + y
-    PO AI # addr = PC
-    MO XI P+ # X = M[addr], inc PC
-    AI X+Y # addr = X+Y (= imm16 + y)
-    MO XI # X = M[addr] = M[imm16+y]
-
-ret: 22 # pop PC from stack pointed to by IOH (e.g. instruction 14ff if SP is at ffff), with pre-increment of sp
-    IOH AI # addr = IOH (i.e. SP)
-    MO YI  # Y = M[addr]
-    YI Y+1 # Y = Y+1 (i.e. increment SP)
-    YO MI # M[addr] = Y (write incremented SP)
-    YO AI # addr = Y (i.e. new SP)
-    MO JMP # jmp to M[addr]
-
-xor_imm8h_x: 23 # xor (imm8h), x
-    IOH AI   # addr = IOH
-    MO YI    # Y = M[addr]
-    MI X|Y   # M[addr] = X|Y
-    YI ~(X&Y)# Y = ~(X&Y)
-    MO XI    # X = M[addr]
-    MI X&Y   # M[addr] = X&Y
