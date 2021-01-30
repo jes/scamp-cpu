@@ -601,7 +601,7 @@ shl (i8h): # Bitwise shift-left by 1 bit.
     IOH AI
     MO XI
     YI X
-    XI X+Y
+    MI X+Y
 
 shl2 (i8h): # Bitwise shift-left by 2 bits.
     IOH AI
@@ -609,7 +609,7 @@ shl2 (i8h): # Bitwise shift-left by 2 bits.
     YI X
     XI X+Y
     YI X
-    XI X+Y
+    MI X+Y
 
 tbsz (i8h), i16: # Test bits and skip if zero: if none of the bits set in the <tt>i16</tt> are also set in <tt>r</tt>, then skip the next 1-word instruction. Use in tandem with <tt>sb</tt> to compute bitwise shift-right of 8 or more bits.
     IOH AI
