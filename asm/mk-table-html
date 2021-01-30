@@ -137,8 +137,7 @@ tt {
 <li>The instruction word is the opcode shifted left by 8 bits, so opcode <tt>06</tt> becomes <tt>0600</tt>.</li>
 <li>Typically the first parameter is the destination and first operand, and the second parameter is the other operand.</li>
 <li><tt>i8l</tt> and <tt>i8h</tt> parameters are stored in the lower 8 bits of the instruction word, so <tt>add x, 5</tt> becomes
-<tt>0605</tt>. <tt>i8h</tt> is the same as <tt>i8l</tt> except it sets the upper 8 bits to 1, so <tt>add x, 0xff05</tt> becomes <tt>0705</tt>.
-They can also be used via <tt>(i16)</tt> parameters.</li>
+<tt>0605</tt>. <tt>i8h</tt> is the same as <tt>i8l</tt> except it sets the upper 8 bits to 1, so <tt>add x, 0xff05</tt> becomes <tt>0705</tt>.</li>
 <li>Side effects on <tt>x</tt>, <tt>r254</tt>, or <tt>y</tt> are documented as "clobbers". Generally
 <tt>x</tt> is the only one to worry about.</li>
 <li><tt>++</tt> and <tt>--</tt> refer to pre-/post- increment/decrement of a value or pointer.</li>
@@ -152,6 +151,7 @@ sub footer {
 <li>The <tt>y</tt> register is only exposed for the <tt>xor x, y</tt> instruction, because
 <tt>xor x, r</tt> would take too many cycles.</li>
 <li><tt>r</tt> parameters are "pseudo-registers", which are any word in the top 256 words of memory, equivalent to <tt>(i8h)</tt>.
+They can also be used via <tt>(i16)</tt> parameters.</li>
 <tt>r0</tt> is the same as <tt>(0xff00)</tt>, <tt>r1</tt> is <tt>(0xff01)</tt>, and so on.
 <li><tt>r0</tt> to <tt>r253</tt> are free for general purposes.</li>
 <li><tt>r254</tt> is used as scratch space for <tt>xor</tt> and as the implicit operand for <tt>sb</tt>.</li>
