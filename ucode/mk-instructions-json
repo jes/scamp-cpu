@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+
+# Make instructions.json for the assembler
+
+use strict;
+use warnings;
+
+use JSON qw(encode_json);
+
+my $opcode = -1;
+my %instructions;
+
+while (<>) {
+    chomp;
+    s/#.*//; # strip comments
+    s/^\s+//; # strip leading spaces
+    s/\s$//; # strip trailing spaces
+    s/\s+/ /; # collapse spaces
+
+    next if $_ eq '';
+
+    if (/^([a-z0-9, \(\)\+-]+): ?([0-9a-f]*)$/) { # new instruction starts
+        $opcode++;
+        $instructions{$1} = $opcode;
+    }
+}
+
+print encode_json(\%instructions);

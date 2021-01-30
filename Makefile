@@ -24,8 +24,12 @@ bootrom-high.hex: bootrom.hex
 test: ucode-low.hex ucode-high.hex bootrom-low.hex bootrom-high.hex
 	./run-tests.sh
 
+asm/instructions.json: ucode/ucode.s
+	./ucode/mk-instructions-json < ucode/ucode.s > asm/instructions.json.tmp
+	mv ./asm/instructions.json.tmp ./asm/instructions.json
+
 burn:
 	iceFUNprof ttlcpu.bin
 
 clean:
-	rm -f *.asc *.bin *blif a.out ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex bootrom-low.hex bootrom-high.hex *.tmp
+	rm -f *.asc *.bin *blif a.out ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex bootrom-low.hex bootrom-high.hex *.tmp asm/instructions.json

@@ -1,7 +1,14 @@
 #!/usr/bin/perl
 
+# Assembler
+
 use strict;
 use warnings;
+
+use JSON qw(decode_json);
+use FindBin;
+
+my $instructions = load_instructions();
 
 my %macro = (
     'sp' => 'r255',
@@ -67,9 +74,20 @@ while (my $line = <>) {
     } elsif ($op eq '.pstr') {
         die "error: line $.: .pstr not implemented\n";
     } else {
-        # TODO: for each available instruction, see if the text could be fulfilled by that
-        # instruction; if so: output it and break
-        die "error: line $.: unrecognised operation: $op\n";
+        # TODO: turn each argument into a form like "(++(imm8h))",
+        # and also make a note that an "imm16" instruction can always
+        # take an imm8l or imm8h. If we just have a label, we have to
+        # call it imm16 because we don't know yet. When the line can
+        # match both an imm16 and an imm8*, pick the imm8* version.
+        for my $i (keys %$instructions) {
+            die "error: line $.: unrecognised operation: $op\n";
+        }
+        #  - upper 8 bits of instruction come from opcode
+        #  - lower 8 bits of instruction are imm8l/imm8h, if any,
+        #    otherwise ignored (so 0)
+        #  - the imm16 argument comes next, if any
+        #  - if we don't yet know the address for a label, just
+        #    store the text and it'll get filled in later
     }
 }
 
@@ -108,4 +126,13 @@ sub params {
 sub emit {
     my ($word) = @_;
     push @code, $word;
+}
+
+sub load_instructions {
+    my $file = $FindBin::Bin . "/instructions.json";
+    open(my $fh, '<', $file)
+        or die "can't read $file: $!";
+    my $c = join('', <$fh>);
+    close $fh;
+    return decode_json($c);
 }
