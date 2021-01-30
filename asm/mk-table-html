@@ -76,16 +76,16 @@ td.inst-inc { background-color: #cbb; }
 td.inst-sub { background-color: #cdc; }
 td.inst-dec { background-color: #bcb; }
 td.inst-and { background-color: #ccd; }
-td.inst-not { background-color: #bbc; }
+td.inst-not { background-color: #dcb; }
 td.inst-or { background-color: #ddc; }
 td.inst-nand { background-color: #cdd; }
 td.inst-nor { background-color: #dcd; }
 td.inst-xor { background-color: #bcd; }
-td.inst-in { background-color: #ccb; }
-td.inst-out { background-color: #bcc; }
-td.inst-ld { background-color: #bdc; }
-td.inst-push, td.inst-pop, td.inst-ret { background-color: #cbc; }
-td.inst-j { background-color: #dcb; }
+td.inst-in { background-color: #cbc; }
+td.inst-out { background-color: #bdc; }
+td.inst-ld { background-color: #bcc; }
+td.inst-push, td.inst-pop, td.inst-ret { background-color: #bbc; }
+td.inst-j { background-color: #ccb; }
 td.inst-shl, td.inst-shl2, td.inst-shl3 { background-color: #cbd; }
 td.inst-tbsz { background-color: #cdb; }
 
@@ -107,7 +107,8 @@ div.popup {
 }
 th {
     background-color: #333;
-    color: #ccc;
+    color: white;
+    padding: 2px;
 }
 .clobr254 {
     color: #a50;
