@@ -238,43 +238,30 @@ and ((i8h)), x:
     MO YI
     MI Y&X
 
-push x:
-    -1 AI
+not x:
+    XI ~X
+
+not (i8h):
+    IOH AI
     MO YI
+    MI ~Y
+
+not (x):
+    XO AI
+    MO YI
+    MI ~Y
+
+not ((i8h)):
+    IOH AI
     MO AI
-    MI XO
-    -1 AI
-    Y-1 MI
-
-push i8l:
-    -1 AI
     MO YI
-    MO AI
-    MI IOL
-    -1 AI
-    Y-1 MI
+    MI ~Y
 
-push i8h:
-    -1 AI
+not (i16):
+    PO AI
+    MO AI P+
     MO YI
-    MO AI
-    MI IOH
-    -1 AI
-    Y-1 MI
-
-pop x:
-    -1 AI
-    MO XI
-    MI X+1
-    AI X+1
-    MO XI
-
-ret: # Pop an address off the stack and jump to it.
-    -1 AI
-    MO YI
-    MI Y+1
-    AI Y+1
-    MO JMP
+    MI ~Y
 
 or x, (i8h):
     IOH AI
@@ -746,11 +733,44 @@ nop:
 nop:
 nop:
 nop:
-nop:
-nop:
-nop:
-nop:
-nop:
+
+push x:
+    -1 AI
+    MO YI
+    MO AI
+    MI XO
+    -1 AI
+    Y-1 MI
+
+push i8l:
+    -1 AI
+    MO YI
+    MO AI
+    MI IOL
+    -1 AI
+    Y-1 MI
+
+push i8h:
+    -1 AI
+    MO YI
+    MO AI
+    MI IOH
+    -1 AI
+    Y-1 MI
+
+pop x:
+    -1 AI
+    MO XI
+    MI X+1
+    AI X+1
+    MO XI
+
+ret: # Pop an address off the stack and jump to it.
+    -1 AI
+    MO YI
+    MI Y+1
+    AI Y+1
+    MO JMP
 
 jmp (i16):
     PO AI

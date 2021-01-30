@@ -76,14 +76,15 @@ td.inst-inc { background-color: #cbb; }
 td.inst-sub { background-color: #cdc; }
 td.inst-dec { background-color: #bcb; }
 td.inst-and { background-color: #ccd; }
+td.inst-not { background-color: #bbc; }
 td.inst-or { background-color: #ddc; }
 td.inst-nand { background-color: #cdd; }
 td.inst-nor { background-color: #dcd; }
 td.inst-xor { background-color: #bcd; }
-td.inst-in { background-color: #bcc; }
-td.inst-out { background-color: #cbc; }
-td.inst-ld { background-color: #bbc; }
-td.inst-push, td.inst-pop, td.inst-ret { background-color: #ccb; }
+td.inst-in { background-color: #ccb; }
+td.inst-out { background-color: #bcc; }
+td.inst-ld { background-color: #dbc; }
+td.inst-push, td.inst-pop, td.inst-ret { background-color: #cbc; }
 td.inst-j { background-color: #dcb; }
 td.inst-shl, td.inst-shl2, td.inst-shl3 { background-color: #cbd; }
 td.inst-tbsz { background-color: #cdb; }
