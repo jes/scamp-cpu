@@ -354,30 +354,30 @@ jle (i16):
     MO AI P+
     MO JZ JLT
 
-ret: # jmp (++(0xffff))
+ret: # Pop an address off the stack and jump to it.
     -1 AI
     MO YI
     MI Y+1
     MO AI
     MO JMP
 
-jr+ i8l: # clobbers X
+jr+ i8l: # Jump forwards relative to the address of the next instruction. <tt>jr+ 0</tt> is a no-op.
     PO YI
     IOL XI
     JMP X+Y
 
-jr- i8l: # clobbers X
+jr- i8l: # Jump backwards relative to the address of the next instruction. <tt>jr- 0</tt> is a no-op. <tt>jr- 1</tt> is an infinite loop.
     PO YI
     IOL XI
     JMP Y-X
 
-jr+ (i8h): # clobbers X
+jr+ (i8h): # Jump forwards relative to the address of the next instruction. <tt>jr+ 0</tt> is a no-op.
     PO YI
     IOH AI
     MO XI
     JMP X+Y
 
-jr- (i8h): # clobbers X
+jr- (i8l): # Jump backwards relative to the address of the next instruction. <tt>jr- 0</tt> is a no-op. <tt>jr- 1</tt> is an infinite loop.
     PO YI
     IOH AI
     MO XI
@@ -416,13 +416,13 @@ ld x, i8h:
 ld x, ++(i8h):
     IOH AI
     MO XI
-    X+1 MI # XXX: we'd save a cycle if we could do "MI XI" in one step
+    X+1 MI
     X+1 XI
 
 ld x, --(i8h):
     IOH AI
     MO XI
-    X-1 MI # XXX: we'd save a cycle if we could do "MI XI" in one step
+    X-1 MI
     X-1 XI
 
 ld x, (i8h)++:
@@ -439,14 +439,14 @@ ld x, ++(i16):
     PO AI
     MO AI P+
     MO XI
-    X+1 MI # XXX: we'd save a cycle if we could do "MI XI" in one step
+    X+1 MI
     X+1 XI
 
 ld x, --(i16):
     PO AI
     MO AI P+
     MO XI
-    X-1 MI # XXX: we'd save a cycle if we could do "MI XI" in one step
+    X-1 MI
     X-1 XI
 
 ld x, (i16)++:
@@ -464,20 +464,20 @@ ld x, (i16)--:
 ld x, (++(i8h)):
     IOH AI
     MO XI
-    MI X+1 # XXX: we'd save a cycle if we could do "MI AI" in one step
+    MI X+1
     AI X+1
     MO XI
 
 ld x, (--(i8h)):
     IOH AI
     MO XI
-    MI X-1 # XXX: we'd save a cycle if we could do "MI AI" in one step
+    MI X-1
     AI X-1
     MO XI
 
 ld x, ((i8h)++):
     IOH AI
-    MO YI # XXX: we'd save a cycle if we could do "YI AI" in one step
+    MO YI
     MO AI
     MO XI
     IOH AI
@@ -485,7 +485,7 @@ ld x, ((i8h)++):
 
 ld x, ((i8h)--):
     IOH AI
-    MO YI # XXX: we'd save a cycle if we could do "YI AI" in one step
+    MO YI
     MO AI
     MO XI
     IOH AI
@@ -514,20 +514,20 @@ ld ((i16)), x:
 ld (++(i8h)), x:
     IOH AI
     MO YI
-    Y+1 MI # XXX: we'd save a cycle if we could do "MI AI" in one step
+    Y+1 MI
     Y+1 AI
     MI XO
 
 ld (--(i8h)), x:
     IOH AI
     MO YI
-    Y-1 MI # XXX: we'd save a cycle if we could do "MI AI" in one step
+    Y-1 MI
     Y-1 AI
     MI XO
 
 ld ((i8h)++), x:
     IOH AI
-    MO YI # XXX: we'd save a cycle if we could do "YI AI" in one step
+    MO YI
     MO AI
     MI XO
     IOH AI
@@ -535,7 +535,7 @@ ld ((i8h)++), x:
 
 ld ((i8h)--), x:
     IOH AI
-    MO YI # XXX: we'd save a cycle if we could do "YI AI" in one step
+    MO YI
     MO AI
     MI XO
     IOH AI
@@ -561,20 +561,20 @@ ld (i8h), i16:
     IOH AI
     MI YO
 
-ld y, x: # The "ld y, ..." instructions exist solely for use with "xor x, y"
+ld y, x: # The <tt>ld y, ...</tt>" instructions exist solely for use with <tt>xor x, y</tt>.
     YI XO
 
-ld y, (i8h):
+ld y, (i8h): # The <tt>ld y, ...</tt>" instructions exist solely for use with <tt>xor x, y</tt>.
     IOH AI
     MO YI
 
-ld y, i8h:
+ld y, i8h: # The <tt>ld y, ...</tt>" instructions exist solely for use with <tt>xor x, y</tt>.
     IOH YI
 
-ld y, i8l:
+ld y, i8l: # The <tt>ld y, ...</tt>" instructions exist solely for use with <tt>xor x, y</tt>.
     IOL YI
 
-ld y, i16:
+ld y, i16: # The <tt>ld y, ...</tt>" instructions exist solely for use with <tt>xor x, y</tt>.
     PO AI
     MO YI P+
 
