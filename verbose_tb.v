@@ -11,7 +11,6 @@ module test;
 
     reg [15:0] cycle = 0;
 
-    parameter EXPECT_OUTPUTS = 16;
     reg [15:0] outputs = 0;
 
     initial begin
@@ -33,6 +32,6 @@ module test;
             clk = 0;
         end
 
-        if (outputs !== EXPECT_OUTPUTS) $display("Bad: got ", outputs, " outputs, expected ", EXPECT_OUTPUTS);
+        $display("Got ", outputs, " outputs");
     end
 endmodule
