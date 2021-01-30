@@ -70,6 +70,7 @@ td {
     background-color: #ccc;
     color: black;
     padding: 2px;
+    vertical-align: top;
 }
 td.inst-add { background-color: #dcc; }
 td.inst-inc { background-color: #cbb; }
