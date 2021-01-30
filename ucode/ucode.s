@@ -61,6 +61,31 @@ add ((i8h)), x:
     MO YI
     MI Y+X
 
+inc x:
+    XI X+1
+
+inc (i8h):
+    IOH AI
+    MO YI
+    MI Y+1
+
+inc (x):
+    XO AI
+    MO YI
+    MI Y+1
+
+inc ((i8h)):
+    IOH AI
+    MO AI
+    MO YI
+    MI Y+1
+
+inc (i16):
+    PO AI
+    MO AI P+
+    MO YI
+    MI Y+1
+
 sub x, (i8h):
     IOH AI
     MO YI
@@ -124,37 +149,24 @@ sub ((i8h)), x:
     MO YI
     MI Y-X
 
-inc (x):
-    XO AI
-    MO YI
-    MI Y+1
-
-dec (x):
-    XO AI
-    MO YI
-    MI Y-1
-
-inc x:
-    XI X+1
-
 dec x:
     XI X-1
-
-inc (i8h):
-    IOH AI
-    MO YI
-    MI Y+1
 
 dec (i8h):
     IOH AI
     MO YI
     MI Y-1
 
-inc (i16):
-    PO AI
-    MO AI P+
+dec (x):
+    XO AI
     MO YI
-    MI Y+1
+    MI Y-1
+
+dec ((i8h)):
+    IOH AI
+    MO AI
+    MO YI
+    MI Y-1
 
 dec (i16):
     PO AI
@@ -162,17 +174,171 @@ dec (i16):
     MO YI
     MI Y-1
 
-inc ((i8h)):
+and x, (i8h):
+    IOH AI
+    MO YI
+    XI X&Y
+
+and x, i16:
+    PO AI
+    MO YI P+
+    XI X&Y
+
+and x, (i16):
+    PO AI
+    MO AI P+
+    MO YI
+    XI X&Y
+
+and x, ((i8h)):
     IOH AI
     MO AI
+    MO YI
+    XI X&Y
+
+and x, ((i8h)++):
+    IOH AI
+    MO YI
+    Y+1 MI
+    YO AI
+    MO YI
+    XI X&Y
+
+and x, ((i8h)--):
+    IOH AI
+    MO YI
+    Y-1 MI
+    YO AI
+    MO YI
+    XI X&Y
+
+and x, i8l:
+    IOL YI
+    XI X&Y
+
+and x, i8h:
+    IOH YI
+    XI X&Y
+
+and (i8h), x:
+    IOH AI
+    MO YI
+    MI Y&X
+
+
+and (i16), x:
+    PO AI
+    MO AI P+
+    MO YI
+    MI Y&X
+
+and ((i8h)), x:
+    IOH AI
+    MO AI
+    MO YI
+    MI Y&X
+
+push x:
+    -1 AI
+    MO YI
+    MO AI
+    MI XO
+    -1 AI
+    Y-1 MI
+
+push i8l:
+    -1 AI
+    MO YI
+    MO AI
+    MI IOL
+    -1 AI
+    Y-1 MI
+
+push i8h:
+    -1 AI
+    MO YI
+    MO AI
+    MI IOH
+    -1 AI
+    Y-1 MI
+
+pop x:
+    -1 AI
+    MO XI
+    MI X+1
+    AI X+1
+    MO XI
+
+ret: # Pop an address off the stack and jump to it.
+    -1 AI
     MO YI
     MI Y+1
+    AI Y+1
+    MO JMP
 
-dec ((i8h)):
+or x, (i8h):
+    IOH AI
+    MO YI
+    XI X|Y
+
+or x, i16:
+    PO AI
+    MO YI P+
+    XI X|Y
+
+or x, (i16):
+    PO AI
+    MO AI P+
+    MO YI
+    XI X|Y
+
+or x, ((i8h)):
     IOH AI
     MO AI
     MO YI
-    MI Y-1
+    XI X|Y
+
+or x, ((i8h)++):
+    IOH AI
+    MO YI
+    Y+1 MI
+    YO AI
+    MO YI
+    XI X|Y
+
+or x, ((i8h)--):
+    IOH AI
+    MO YI
+    Y-1 MI
+    YO AI
+    MO YI
+    XI X|Y
+
+or x, i8l:
+    IOL YI
+    XI X|Y
+
+or x, i8h:
+    IOH YI
+    XI X|Y
+
+or (i8h), x:
+    IOH AI
+    MO YI
+    MI Y|X
+
+
+or (i16), x:
+    PO AI
+    MO AI P+
+    MO YI
+    MI Y|X
+
+or ((i8h)), x:
+    IOH AI
+    MO AI
+    MO YI
+    MI Y|X
 
 in x, (i8h):
     IOH AI
@@ -200,6 +366,69 @@ in x, i8l:
     IOL AI
     DO XI
 
+nand x, (i8h):
+    IOH AI
+    MO YI
+    XI ~(X&Y)
+
+nand x, i16:
+    PO AI
+    MO YI P+
+    XI ~(X&Y)
+
+nand x, (i16):
+    PO AI
+    MO AI P+
+    MO YI
+    XI ~(X&Y)
+
+nand x, ((i8h)):
+    IOH AI
+    MO AI
+    MO YI
+    XI ~(X&Y)
+
+nand x, ((i8h)++):
+    IOH AI
+    MO YI
+    Y+1 MI
+    YO AI
+    MO YI
+    XI ~(X&Y)
+
+nand x, ((i8h)--):
+    IOH AI
+    MO YI
+    Y-1 MI
+    YO AI
+    MO YI
+    XI ~(X&Y)
+
+nand x, i8l:
+    IOL YI
+    XI ~(X&Y)
+
+nand x, i8h:
+    IOH YI
+    XI ~(X&Y)
+
+nand (i8h), x:
+    IOH AI
+    MO YI
+    MI ~(Y&X)
+
+nand (i16), x:
+    PO AI
+    MO AI P+
+    MO YI
+    MI ~(Y&X)
+
+nand ((i8h)), x:
+    IOH AI
+    MO AI
+    MO YI
+    MI ~(Y&X)
+
 in x, i8h:
     IOH AI
     DO XI
@@ -223,6 +452,76 @@ in ((i8h)), x:
     IOH AI
     MO AI
     MI YO
+
+in (i8h), i16:
+    IOH AI
+    MO YI
+    PO AI
+    MO AI P+
+    YI DO
+
+nor x, (i8h):
+    IOH AI
+    MO YI
+    XI ~(X|Y)
+
+nor x, i16:
+    PO AI
+    MO YI P+
+    XI ~(X|Y)
+
+nor x, (i16):
+    PO AI
+    MO AI P+
+    MO YI
+    XI ~(X|Y)
+
+nor x, ((i8h)):
+    IOH AI
+    MO AI
+    MO YI
+    XI ~(X|Y)
+
+nor x, ((i8h)++):
+    IOH AI
+    MO YI
+    Y+1 MI
+    YO AI
+    MO YI
+    XI ~(X|Y)
+
+nor x, ((i8h)--):
+    IOH AI
+    MO YI
+    Y-1 MI
+    YO AI
+    MO YI
+    XI ~(X|Y)
+
+nor x, i8l:
+    IOL YI
+    XI ~(X|Y)
+
+nor x, i8h:
+    IOH YI
+    XI ~(X|Y)
+
+nor (i8h), x:
+    IOH AI
+    MO YI
+    MI ~(Y|X)
+
+nor (i16), x:
+    PO AI
+    MO AI P+
+    MO YI
+    MI ~(Y|X)
+
+nor ((i8h)), x:
+    IOH AI
+    MO AI
+    MO YI
+    MI ~(Y|X)
 
 out x, (i8h):
     IOH AI
@@ -254,6 +553,80 @@ out x, i8l:
     XO AI
     IOL DI
 
+xor x, y:
+    # clobbers: r254
+    -2 AI
+    MI X|Y
+    YI ~(X&Y)
+    MO XI
+    XI X&Y
+
+xor x, i8l:
+    # clobbers: r254
+    -2 AI
+    IOL YI
+    MI X|Y
+    YI ~(X&Y)
+    MO XI
+    XI X&Y
+
+xor x, i8h:
+    # clobbers: r254
+    -2 AI
+    IOH YI
+    MI X|Y
+    YI ~(X&Y)
+    MO XI
+    XI X&Y
+
+shl x: # Bitwise shift-left by 1 bit.
+    YI X
+    XI X+Y
+
+shl2 x: # Bitwise shift-left by 2 bits.
+    YI X
+    XI X+Y
+    YI X
+    XI X+Y
+
+shl3 x: # Bitwise shift-left by 3 bits.
+    YI X
+    XI X+Y
+    YI X
+    XI X+Y
+    YI X
+    XI X+Y
+
+shl (i8h): # Bitwise shift-left by 1 bit.
+    IOH AI
+    MO XI
+    YI X
+    XI X+Y
+
+shl2 (i8h): # Bitwise shift-left by 2 bits.
+    IOH AI
+    MO XI
+    YI X
+    XI X+Y
+    YI X
+    XI X+Y
+
+tbsz (i8h), i16: # Test bits and skip if zero: if none of the bits set in the <tt>i16</tt> are also set in <tt>r</tt>, then skip the next 1-word instruction. Use in tandem with <tt>sb</tt> to compute bitwise shift-right of 8 or more bits.
+    IOH AI
+    MO XI
+    PO AI
+    MO YI P+
+    X&Y
+    PO JNZ P+
+
+sb i8l: # Set bits in <tt>r254</tt> based on the <tt>i8l</tt>. i.e. <tt>r254 |= i8l</tt>.
+    -2 AI
+    MO XI
+    IOL YI
+    MI X|Y
+
+nop:
+
 out x, i8h:
     XO AI
     IOH DI
@@ -280,28 +653,6 @@ out ((i8h)), x:
     MO AI
     XO DI
 
-out i8l, x:
-    IOL AI
-    XO DI
-
-out i8h, x:
-    IOH AI
-    XO DI
-
-out i16, (i8h):
-    IOH AI
-    MO YI
-    PO AI
-    MO AI P+
-    YO DI
-
-in (i8h), i16:
-    IOH AI
-    MO YI
-    PO AI
-    MO AI P+
-    YI DO
-
 jmp x:
     XO JMP
 
@@ -322,6 +673,46 @@ jge x:
 
 jle x:
     XO JZ JLT
+
+jr+ i8l: # Jump forwards relative to the address of the next instruction. <tt>jr+ 0</tt> is a no-op.
+    PO YI
+    IOL XI
+    JMP X+Y
+
+jr- i8l: # Jump backwards relative to the address of the next instruction. <tt>jr- 0</tt> is a no-op. <tt>jr- 1</tt> is an infinite loop.
+    PO YI
+    IOL XI
+    JMP Y-X
+
+jr+ (i8h): # Jump forwards relative to the address of the next instruction. <tt>jr+ 0</tt> is a no-op.
+    PO YI
+    IOH AI
+    MO XI
+    JMP X+Y
+
+jr- (i8h): # Jump backwards relative to the address of the next instruction. <tt>jr- 0</tt> is a no-op. <tt>jr- 1</tt> is an infinite loop.
+    PO YI
+    IOH AI
+    MO XI
+    JMP Y-X
+
+out i8l, x:
+    IOL AI
+    XO DI
+
+out i8h, x:
+    IOH AI
+    XO DI
+
+out i16, (i8h):
+    IOH AI
+    MO YI
+    PO AI
+    MO AI P+
+    YO DI
+
+nop:
+nop:
 
 jmp i16:
     PO AI
@@ -350,6 +741,16 @@ jge i16:
 jle i16:
     PO AI
     MO JZ JLT P+
+
+nop:
+nop:
+nop:
+nop:
+nop:
+nop:
+nop:
+nop:
+nop:
 
 jmp (i16):
     PO AI
@@ -386,34 +787,15 @@ jle (i16):
     MO AI P+
     MO JZ JLT
 
-ret: # Pop an address off the stack and jump to it.
-    -1 AI
-    MO YI
-    MI Y+1
-    MO AI
-    MO JMP
-
-jr+ i8l: # Jump forwards relative to the address of the next instruction. <tt>jr+ 0</tt> is a no-op.
-    PO YI
-    IOL XI
-    JMP X+Y
-
-jr- i8l: # Jump backwards relative to the address of the next instruction. <tt>jr- 0</tt> is a no-op. <tt>jr- 1</tt> is an infinite loop.
-    PO YI
-    IOL XI
-    JMP Y-X
-
-jr+ (i8h): # Jump forwards relative to the address of the next instruction. <tt>jr+ 0</tt> is a no-op.
-    PO YI
-    IOH AI
-    MO XI
-    JMP X+Y
-
-jr- (i8l): # Jump backwards relative to the address of the next instruction. <tt>jr- 0</tt> is a no-op. <tt>jr- 1</tt> is an infinite loop.
-    PO YI
-    IOH AI
-    MO XI
-    JMP Y-X
+nop:
+nop:
+nop:
+nop:
+nop:
+nop:
+nop:
+nop:
+nop:
 
 ld x, (i8h):
     IOH AI
@@ -593,296 +975,19 @@ ld (i8h), i16:
     IOH AI
     MI YO
 
-ld y, x: # The <tt>ld y, ...</tt>" instructions exist solely for use with <tt>xor x, y</tt>.
+ld y, x: # The <tt>ld y, ...</tt> instructions exist solely for use with <tt>xor x, y</tt>.
     YI XO
 
-ld y, (i8h): # The <tt>ld y, ...</tt>" instructions exist solely for use with <tt>xor x, y</tt>.
+ld y, (i8h): # The <tt>ld y, ...</tt> instructions exist solely for use with <tt>xor x, y</tt>.
     IOH AI
     MO YI
 
-ld y, i8h: # The <tt>ld y, ...</tt>" instructions exist solely for use with <tt>xor x, y</tt>.
+ld y, i8h: # The <tt>ld y, ...</tt> instructions exist solely for use with <tt>xor x, y</tt>.
     IOH YI
 
-ld y, i8l: # The <tt>ld y, ...</tt>" instructions exist solely for use with <tt>xor x, y</tt>.
+ld y, i8l: # The <tt>ld y, ...</tt> instructions exist solely for use with <tt>xor x, y</tt>.
     IOL YI
 
-ld y, i16: # The <tt>ld y, ...</tt>" instructions exist solely for use with <tt>xor x, y</tt>.
+ld y, i16: # The <tt>ld y, ...</tt> instructions exist solely for use with <tt>xor x, y</tt>.
     PO AI
     MO YI P+
-
-and (i16), x:
-    PO AI
-    MO AI P+
-    MO YI
-    MI Y&X
-
-and ((i8h)), x:
-    IOH AI
-    MO AI
-    MO YI
-    MI Y&X
-
-and (i8h), x:
-    IOH AI
-    MO YI
-    MI Y&X
-
-and x, (i16):
-    PO AI
-    MO AI P+
-    MO YI
-    XI X&Y
-
-and x, i16:
-    PO AI
-    MO YI P+
-    XI X&Y
-
-and x, ((i8h)):
-    IOH AI
-    MO AI
-    MO YI
-    XI X&Y
-
-and x, (i8h):
-    IOH AI
-    MO YI
-    XI X&Y
-
-and x, i8l:
-    IOL YI
-    XI X&Y
-
-nand (i16), x:
-    PO AI
-    MO AI P+
-    MO YI
-    MI ~(Y&X)
-
-nand ((i8h)), x:
-    IOH AI
-    MO AI
-    MO YI
-    MI ~(Y&X)
-
-nand (i8h), x:
-    IOH AI
-    MO YI
-    MI ~(Y&X)
-
-nand x, (i16):
-    PO AI
-    MO AI P+
-    MO YI
-    XI ~(X&Y)
-
-nand x, i16:
-    PO AI
-    MO YI P+
-    XI ~(X&Y)
-
-nand x, ((i8h)):
-    IOH AI
-    MO AI
-    MO YI
-    XI ~(X&Y)
-
-nand x, (i8h):
-    IOH AI
-    MO YI
-    XI ~(X&Y)
-
-nand x, i8l:
-    IOL YI
-    XI ~(X&Y)
-
-nor (i16), x:
-    PO AI
-    MO AI P+
-    MO YI
-    MI ~(Y|X)
-
-nor ((i8h)), x:
-    IOH AI
-    MO AI
-    MO YI
-    MI ~(Y|X)
-
-nor (i8h), x:
-    IOH AI
-    MO YI
-    MI ~(Y|X)
-
-nor x, (i16):
-    PO AI
-    MO AI P+
-    MO YI
-    XI ~(X|Y)
-
-nor x, i16:
-    PO AI
-    MO YI P+
-    XI ~(X|Y)
-
-nor x, ((i8h)):
-    IOH AI
-    MO AI
-    MO YI
-    XI ~(X|Y)
-
-nor x, (i8h):
-    IOH AI
-    MO YI
-    XI ~(X|Y)
-
-nor x, i8l:
-    IOL YI
-    XI ~(X|Y)
-
-or (i16), x:
-    PO AI
-    MO AI P+
-    MO YI
-    MI Y|X
-
-or ((i8h)), x:
-    IOH AI
-    MO AI
-    MO YI
-    MI Y|X
-
-or (i8h), x:
-    IOH AI
-    MO YI
-    MI Y|X
-
-or x, (i16):
-    PO AI
-    MO AI P+
-    MO YI
-    XI X|Y
-
-or x, i16:
-    PO AI
-    MO YI P+
-    XI X|Y
-
-or x, ((i8h)):
-    IOH AI
-    MO AI
-    MO YI
-    XI X|Y
-
-or x, (i8h):
-    IOH AI
-    MO YI
-    XI X|Y
-
-or x, i8l:
-    IOL YI
-    XI X|Y
-
-xor x, y:
-    # clobbers: r254
-    -2 AI
-    MI X|Y
-    YI ~(X&Y)
-    MO XI
-    XI X&Y
-
-xor x, i8l:
-    # clobbers: r254
-    -2 AI
-    IOL YI
-    MI X|Y
-    YI ~(X&Y)
-    MO XI
-    XI X&Y
-
-xor x, i8h:
-    # clobbers: r254
-    -2 AI
-    IOH YI
-    MI X|Y
-    YI ~(X&Y)
-    MO XI
-    XI X&Y
-
-shl x: # Bitwise shift-left by 1 bit.
-    YI X
-    XI X+Y
-
-shl2 x: # Bitwise shift-left by 2 bits.
-    YI X
-    XI X+Y
-    YI X
-    XI X+Y
-
-shl3 x: # Bitwise shift-left by 3 bits.
-    YI X
-    XI X+Y
-    YI X
-    XI X+Y
-    YI X
-    XI X+Y
-
-shl (i8h): # Bitwise shift-left by 1 bit.
-    IOH AI
-    MO XI
-    YI X
-    XI X+Y
-
-shl2 (i8h): # Bitwise shift-left by 2 bits.
-    IOH AI
-    MO XI
-    YI X
-    XI X+Y
-    YI X
-    XI X+Y
-
-push x:
-    -1 AI
-    MO YI
-    MO AI
-    MI XO
-    -1 AI
-    Y-1 MI
-
-push i8l:
-    -1 AI
-    MO YI
-    MO AI
-    MI IOL
-    -1 AI
-    Y-1 MI
-
-push i8h:
-    -1 AI
-    MO YI
-    MO AI
-    MI IOH
-    -1 AI
-    Y-1 MI
-
-pop x:
-    -1 AI
-    MO XI
-    MI X+1
-    AI X+1
-    MO XI
-
-nop:
-
-tbsz (i8h), i16: # Test bits and skip if zero: if none of the bits set in the <tt>i16</tt> are also set in <tt>r</tt>, then skip the next 1-word instruction. Use in tandem with <tt>sb</tt> to compute bitwise shift-right of 8 or more bits.
-    IOH AI
-    MO XI
-    PO AI
-    MO YI P+
-    X&Y
-    PO JNZ P+
-
-sb i8l: # Set bits in <tt>r254</tt> based on the <tt>i8l</tt>. i.e. <tt>r254 |= i8l</tt>.
-    -2 AI
-    MO XI
-    IOL YI
-    MI X|Y

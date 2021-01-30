@@ -140,5 +140,19 @@ L3:
     jnz L3
 out 0, x
 
+# 20: subroutine call
+ld x, Lret
+push x
+push 10
+ld x, 42
+jmp double
+Lret:
+out 0, x
+
 # infinite loop
 jr- 1
+
+double:
+pop x
+shl x
+ret

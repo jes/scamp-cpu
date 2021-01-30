@@ -115,7 +115,7 @@ while (my $line = <>) {
         my @operands;
 
         my ($instrop, $params_str) = split / /, $match[0], 2;
-        my @params = split /\s*,\s*/, $params_str;
+        my @params = split /\s*,\s*/, $params_str||'';
 
         for my $i (0 .. $#argpattern) {
             if ($params[$i] =~ /i8/) {

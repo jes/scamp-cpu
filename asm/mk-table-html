@@ -39,10 +39,14 @@ for my $a (qw(0 1 2 3 4 5 6 7 8 9 a b c d e f)) {
         $instop ||= '';
         $instargs ||= '';
 
+        my $instopcss = $instop;
+        $instopcss = 'j' if $instop =~ /^j/;
+        $instopcss = 'tbsz' if $instop eq 'sb';
+
         $i->{words} ||= '';
         $i->{cycles} ||= '';
 
-        print "<td class=\"inst\"><div style=\"padding:2px\"><span style=\"font-weight:bold\">$instop</span> $instargs $clobber_warnings</div><div class=\"popup\"><b>Opcode:</b> $opcode<br><b>Words:</b> $i->{words}<br><b>Cycles:</b> $i->{cycles}<br><b>Clobbers:</b> $clobbers<b><br>Microcode:</b><br>$microcode<br><span class=\"remark\">$remark</span></div></td>";
+        print "<td class=\"inst inst-$instopcss\"><div style=\"padding:2px\"><span style=\"font-weight:bold\">$instop</span> $instargs $clobber_warnings</div><div class=\"popup\"><b>Opcode:</b> $opcode<br><b>Words:</b> $i->{words}<br><b>Cycles:</b> $i->{cycles}<br><b>Clobbers:</b> $clobbers<b><br>Microcode:</b><br>$microcode<br><span class=\"remark\">$remark</span></div></td>";
     }
     print "</tr>\n";
 }
@@ -58,7 +62,7 @@ sub header {
 <title>Instruction set cheatsheet</title>
 <style type="text/css">
 table {
-    margin-right: 100px;
+    margin-right: 150px;
     font-size: 1.0em;
     font-family: monospace;
 }
@@ -67,6 +71,23 @@ td {
     color: black;
     padding: 2px;
 }
+td.inst-add { background-color: #dcc; }
+td.inst-inc { background-color: #cbb; }
+td.inst-sub { background-color: #cdc; }
+td.inst-dec { background-color: #bcb; }
+td.inst-and { background-color: #ccd; }
+td.inst-or { background-color: #ddc; }
+td.inst-nand { background-color: #cdd; }
+td.inst-nor { background-color: #dcd; }
+td.inst-xor { background-color: #bcd; }
+td.inst-in { background-color: #bcc; }
+td.inst-out { background-color: #cbc; }
+td.inst-ld { background-color: #bbc; }
+td.inst-push, td.inst-pop, td.inst-ret { background-color: #ccb; }
+td.inst-j { background-color: #dcb; }
+td.inst-shl, td.inst-shl2, td.inst-shl3 { background-color: #cbd; }
+td.inst-tbsz { background-color: #cdb; }
+
 td.inst:hover {
     background-color: #eee;
 }
@@ -115,8 +136,8 @@ tt {
 <li><tt>i8l</tt> and <tt>i8h</tt> parameters are stored in the lower 8 bits of the instruction word, so <tt>add x, 5</tt> becomes
 <tt>0405</tt>. <tt>i8h</tt> is the same as <tt>i8l</tt> except it sets the upper 8 bits to 1, so <tt>add x, 0xff05</tt> becomes <tt>0505</tt>.
 They can also be used via <tt>(i16)</tt> parameters.</li>
-<li>Side effects on <tt>x</tt>, <tt>r254</tt>, or <tt>y</tt> are documented as "clobbers". You generally won't
-mind <tt>y</tt> being clobbered.</li>
+<li>Side effects on <tt>x</tt>, <tt>r254</tt>, or <tt>y</tt> are documented as "clobbers". Generally
+<tt>x</tt> is the only one to worry about.</li>
 <li><tt>++</tt> and <tt>--</tt> refer to pre-/post- increment/decrement of a value or pointer.</li>
 </ul>
 };
