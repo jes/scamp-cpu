@@ -51,9 +51,9 @@ for my $a (qw(0 1 2 3 4 5 6 7 8 9 a b c d e f)) {
     print "</tr>\n";
 }
 print "</table>\n";
-print "<div class=\"clobx\">* clobbers x</div>\n";
-print "<div class=\"clobr254\">* clobbers r254</div>\n";
-print "<div class=\"cloby\">* clobbers y</div>\n";
+print "<div class=\"clobx\">* clobbers <tt>x</tt></div>\n";
+print "<div class=\"clobr254\">* clobbers <tt>r254</tt></div>\n";
+print "<div class=\"cloby\">* clobbers <tt>y</tt></div>\n";
 print footer();
 
 sub header {
@@ -61,6 +61,9 @@ sub header {
 <head>
 <title>Instruction set cheatsheet</title>
 <style type="text/css">
+body {
+    font-family: sans-serif;
+}
 table {
     margin-right: 150px;
     font-size: 1.0em;
@@ -151,8 +154,8 @@ sub footer {
 <li>The <tt>y</tt> register is only exposed for the <tt>xor x, y</tt> instruction, because
 <tt>xor x, r</tt> would take too many cycles.</li>
 <li><tt>r</tt> parameters are "pseudo-registers", which are any word in the top 256 words of memory, equivalent to <tt>(i8h)</tt>.
-They can also be used via <tt>(i16)</tt> parameters.</li>
-<tt>r0</tt> is the same as <tt>(0xff00)</tt>, <tt>r1</tt> is <tt>(0xff01)</tt>, and so on.
+They can also be used via <tt>(i16)</tt> parameters.
+<tt>r0</tt> is the same as <tt>(0xff00)</tt>, <tt>r1</tt> is <tt>(0xff01)</tt>, and so on.</li>
 <li><tt>r0</tt> to <tt>r253</tt> are free for general purposes.</li>
 <li><tt>r254</tt> is used as scratch space for <tt>xor</tt> and as the implicit operand for <tt>sb</tt>.</li>
 <li><tt>r255</tt> is the stack pointer, also called <tt>sp</tt>.</li>
