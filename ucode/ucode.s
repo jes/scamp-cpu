@@ -645,12 +645,6 @@ ld y, (i8h): # The <tt>ld y, ...</tt> instructions exist solely for use with <tt
     IOH AI
     MO YI
 
-ld y, i8h: # The <tt>ld y, ...</tt> instructions exist solely for use with <tt>xor x, y</tt>.
-    IOH YI
-
-ld y, i8l: # The <tt>ld y, ...</tt> instructions exist solely for use with <tt>xor x, y</tt>.
-    IOL YI
-
 ld y, i16: # The <tt>ld y, ...</tt> instructions exist solely for use with <tt>xor x, y</tt>.
     PO AI
     MO YI P+
