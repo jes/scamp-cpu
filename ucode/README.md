@@ -36,14 +36,20 @@ bus fighting at worst.
 Comments begin with "#" and run to the end of the line.
 All excess whitespace is ignored.
 
-Each instruction begins with a name for the instruction, although this is currently
-ignored. The name is followed by a colon, followed by the number for the opcode. These
-are represented in hex, and are required to count up sequentially starting from 0. Example:
+Each instruction begins with a name for the instruction.
+The name is followed by a colon, optionally followed by the number for the opcode. These
+are represented in hex and, where present, are required to count up sequentially starting from 0. Example:
 
     clc: 0a    # The 'clc' instruction has opcode 0x0a
 
-After the label and opcode number comes 1 microinstruction per line. Each microinstruction
-consists of several control bits, e.g.
+A comment on the same line as the instruction name turns into the text
+that eventually appears at the bottom of the "hover" box on the instruction set cheatsheet.
+
+A line in the microcde that says " # clobbers: ..." turns into an indication in the cheatsheet
+that that instruction clobbers the given register. This is only required where it can't be
+worked out automatically by mk-table-html, e.g. for r254.
+
+Each microinstruction consists of several control bits, e.g.
 
     PO AI
 

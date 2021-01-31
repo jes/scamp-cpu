@@ -660,6 +660,8 @@ nop:
 nop:
 nop:
 nop:
+nop:
+nop:
 
 out x, (i8h):
     IOH AI
