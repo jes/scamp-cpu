@@ -53,7 +53,7 @@ while (my $line = <>) {
     next if $line eq '';
 
     my ($op, $args_str) = split /\s+/, $line, 2;
-    my @args = split /\s*,\s*/, $args_str||'';
+    my @args = split /\s*,\s*/, $args_str//'';
 
     if ($op eq '.def') {
         @args = split /\s+/, $args_str;
@@ -96,13 +96,10 @@ while (my $line = <>) {
         }
         die "error: line $.: unrecognised operation: $line\n" if !@match;
 
-        # pick an i8 operand in preference to an i16
-        if (@match > 1) {
-            my @new = grep { /i8/ } @match;
-            @match = @new if @new;
-        }
-        # TODO: should we just pick the fastest instruction instead of dying?
-        die "error: line $.: multiple instructions match (probably an assembler bug): " . join(',', map { "[$_]" } @match) . "\n" if @match > 1;
+        # sort the matches by cycle count, so we choose the fastest match;
+        # we can get multiple matches in cases like "ld r0, r1" where
+        # both "ld (i16), (i8h)" and "ld (i8h), (i16)" match
+        @match = sort { $instructions->{$a}{cycles} <=> $instructions->{$b}{cycles} } @match;
 
         # generate code:
         #  - upper 8 bits of instruction come from opcode
@@ -147,10 +144,13 @@ for my $c (@code) {
 # (65535)++ => 65535
 # 605 => 605
 # (val) => val
+# 1((65535)) => 1
 sub arg2num {
     my ($arg) = @_;
 
     die "error: line $.: can't convert register to number: $arg\n" if $arg =~ /^(x|y|pc)$/;
+
+    return $1 if $arg =~ /(\d+)\(\(65535\)\)/;
 
     # remove (, ), +
     $arg =~ s/[\(\)\+]//g;
@@ -173,9 +173,9 @@ sub arg2pattern {
         my ($v) = @_;
 
         return $v if $v =~ /^(x|y|pc)$/;
-        return '(i8h|i16)' if $v =~ /^\d+$/ && $v >= 0xff00 && $v <= 0xffff;
-        return '(i8l|i16)' if $v =~ /^\d+$/ && $v >= 0x0000 && $v <= 0x00ff;
-        return 'i16';
+        return "(i8h|i16|$v)" if $v =~ /^\d+$/ && $v >= 0xff00 && $v <= 0xffff;
+        return "(i8l|i16|$v)" if $v =~ /^\d+$/ && $v >= 0x0000 && $v <= 0x00ff;
+        return "(i16|$v)";
     };
 
     $arg =~ s/\b([a-z_0-9]+)\b/$subst->($1)/gei;

@@ -10,6 +10,8 @@ my $instructions_json;
 my $instructions = load_instructions();
 my %op2inst = map { $instructions->{$_}{opcode} => $_ } keys %$instructions;
 
+my %clobsym = (x => '!', y => '+');
+
 print header();
 print "<table>\n";
 print "<tr><td></td>";
@@ -23,11 +25,13 @@ for my $a (qw(0 1 2 3 4 5 6 7 8 9 a b c d e f)) {
         my $i = $instructions->{$inst};
 
         $inst =~ s/\(i8h\)/r/g;
+        $inst =~ s/\(65534\)/r254/g;
+        $inst =~ s/\(65535\)/sp/g;
 
         my @clobbers = @{ $i->{clobbers}||[] };
         @clobbers = grep {!/x/} @clobbers if $inst =~ /^\S+ x\b/;
         @clobbers = grep {!/y/} @clobbers if $inst =~ /^\S+ y\b/;
-        my $clobber_warnings = join('', map { "<span class=\"clob$_\">*</span>" } sort @clobbers);
+        my $clobber_warnings = join('', map { "<span class=\"clob$_\">" . ($clobsym{$_}||'*') . "</span>" } sort @clobbers);
         @clobbers = ('(none)') if !@clobbers;
         my $clobbers = join(',', map { "<span class=\"clob$_\">$_</span>" } sort @clobbers);
 
@@ -51,9 +55,9 @@ for my $a (qw(0 1 2 3 4 5 6 7 8 9 a b c d e f)) {
     print "</tr>\n";
 }
 print "</table>\n";
-print "<div class=\"clobx\">* clobbers <tt>x</tt></div>\n";
+print "<div class=\"clobx\">$clobsym{x} clobbers <tt>x</tt></div>\n";
 print "<div class=\"clobr254\">* clobbers <tt>r254</tt></div>\n";
-print "<div class=\"cloby\">* clobbers <tt>y</tt></div>\n";
+print "<div class=\"cloby\">$clobsym{y} clobbers <tt>y</tt></div>\n";
 print footer();
 
 sub header {
@@ -88,10 +92,11 @@ td.inst-xor { background-color: #bcd; }
 td.inst-in { background-color: #cbc; }
 td.inst-out { background-color: #bdc; }
 td.inst-ld { background-color: #bcc; }
-td.inst-push, td.inst-pop, td.inst-ret { background-color: #bbc; }
+td.inst-push, td.inst-pop { background-color: #bbc; }
 td.inst-j { background-color: #ccb; }
 td.inst-shl, td.inst-shl2, td.inst-shl3 { background-color: #cbd; }
 td.inst-tbsz { background-color: #cdb; }
+td.inst-call, td.inst-ret { background-color: #dbc; }
 
 td.inst:hover {
     background-color: #eee;
@@ -157,7 +162,7 @@ sub footer {
 They can also be used via <tt>(i16)</tt> parameters.
 <tt>r0</tt> is the same as <tt>(0xff00)</tt>, <tt>r1</tt> is <tt>(0xff01)</tt>, and so on.</li>
 <li><tt>r0</tt> to <tt>r253</tt> are free for general purposes.</li>
-<li><tt>r254</tt> is used as scratch space for <tt>xor</tt> and as the implicit operand for <tt>sb</tt>.</li>
+<li><tt>r254</tt> is used as scratch space for <tt>xor</tt>, as the operand for <tt>sb</tt>, and to pass the return address for <tt>call</tt>/<tt>ret</tt>.</li>
 <li><tt>r255</tt> is the stack pointer, also called <tt>sp</tt>.</li>
 </ul></body>
 </html>

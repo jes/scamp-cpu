@@ -19,7 +19,7 @@ module test;
         #1 clk = 0; reset_bar = 1;
 
         /* run the CPU for 1000 cycles */
-        while (cycle < 1000) begin
+        while (cycle < 2000) begin
             cycle = cycle + 1;
 
             #1 clk = 1;

@@ -84,24 +84,23 @@ out 0, r0
 ld r0, 0x1000
 ld r254, 0
 tbsz r0, 0x8000
-sb 0x80
+sb r254, 0x80
 tbsz r0, 0x4000
-sb 0x40
+sb r254, 0x40
 tbsz r0, 0x2000
-sb 0x20
+sb r254, 0x20
 tbsz r0, 0x1000
-sb 0x10
+sb r254, 0x10
 tbsz r0, 0x0800
-sb 0x08
+sb r254, 0x08
 tbsz r0, 0x0400
-sb 0x04
+sb r254, 0x04
 tbsz r0, 0x0200
-sb 0x02
+sb r254, 0x02
 tbsz r0, 0x0100
-sb 0x01
+sb r254, 0x01
 # if we're lucky, r254 now has 0x1000 >> 8
-ld x, r254
-out 0, x
+out 0, r254
 
 # 17: xor x, y
 # 17 = 0x0011 = 0b0000000000010001
@@ -141,40 +140,69 @@ L3:
 out 0, x
 
 # 20: subroutine call
-ld x, Lret
-push x
 push 10
 ld x, 42
-jmp double
-Lret:
-out 0, x
+call double
+out 0, r0
 
 # 21: xor subroutine call
-ld x, Lret2
-push x
 ld x, 0x1500 # (21 << 8)
 push x
-jmp shr8
-Lret2:
+call shr8
+out 0, r0
+
+# 22: stack-relative
+push 22
+push 40
+ld x, 2(sp)
 out 0, x
+
+# 23: indirect call
+push 10
+push 5
+push 8
+ld x, add3
+ld (funcptr), x
+call (funcptr)
+out 0, r0
 
 # infinite loop
 jr- 1
 
+# double 1 arg from the stack and return the result in r0
 double:
     pop x
-    shl x
+    ld r0, x
+    shl r0
     ret
 
+# >>8 1 arg from the stack and return the result in r0
 shr8:
-    pop x
+    ld x, 1(sp) # grab arg from stack
     ld r0, x
+    ld r253, r254 # stash return address
     ld r254, 0
     shr8_loop:
         shl r254
         tbsz r0, 0x8000
-        sb 0x01
+        sb r254, 0x01
         shl r0
         jnz shr8_loop
-    ld x, r254
-    ret
+    ld r0, r254
+    ld r254, r253 # restore return address
+    ret 1
+
+# add 3 args from the stack and return the result in r0
+add3:
+    ld r0, 0
+    ld x, 1(sp)
+    add r0, x
+    ld x, 2(sp)
+    add r0, x
+    ld x, 3(sp)
+    add r0, x
+    ret 3
+
+# XXX: ".at 0x100" so that funcptr is writable (first 256 bytes are rom)
+.at 0x100
+funcptr:
