@@ -68,8 +68,21 @@ add ((i8h)), x: # Add <tt>x</tt> to the value in <tt>(r)</tt>.
     MO YI
     MI Y+X
 
-nop:
-nop:
+add (i8h), i16:
+    PO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    MI Y+X
+
+add ((i8h)), i16:
+    PO AI
+    MO XI P+
+    IOH AI
+    MO AI
+    MO YI
+    MI Y+X
+
 nop:
 nop:
 
@@ -143,8 +156,21 @@ sub ((i8h)), x: # Subtract <tt>x</tt> from the value in <tt>(r)</tt>.
     MO YI
     MI Y-X
 
-nop:
-nop:
+sub (i8h), i16:
+    PO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    MI Y-X
+
+sub ((i8h)), i16:
+    PO AI
+    MO XI P+
+    IOH AI
+    MO AI
+    MO YI
+    MI Y-X
+
 nop:
 nop:
 
@@ -218,8 +244,21 @@ and ((i8h)), x:
     MO YI
     MI Y&X
 
-nop:
-nop:
+and (i8h), i16:
+    PO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    MI Y&X
+
+and ((i8h)), i16:
+    PO AI
+    MO XI P+
+    IOH AI
+    MO AI
+    MO YI
+    MI Y&X
+
 nop:
 nop:
 
@@ -293,8 +332,21 @@ or ((i8h)), x:
     MO YI
     MI Y|X
 
-nop:
-nop:
+or (i8h), i16:
+    PO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    MI Y|X
+
+or ((i8h)), i16:
+    PO AI
+    MO XI P+
+    IOH AI
+    MO AI
+    MO YI
+    MI Y|X
+
 nop:
 nop:
 
@@ -368,8 +420,21 @@ nand ((i8h)), x:
     MO YI
     MI ~(Y&X)
 
-nop:
-nop:
+nand (i8h), i16:
+    PO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    MI ~(Y&X)
+
+nand ((i8h)), i16:
+    PO AI
+    MO XI P+
+    IOH AI
+    MO AI
+    MO YI
+    MI ~(Y&X)
+
 nop:
 nop:
 
@@ -443,8 +508,21 @@ nor ((i8h)), x:
     MO YI
     MI ~(Y|X)
 
-nop:
-nop:
+nor (i8h), i16:
+    PO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    MI ~(Y|X)
+
+nor ((i8h)), i16:
+    PO AI
+    MO XI P+
+    IOH AI
+    MO AI
+    MO YI
+    MI ~(Y|X)
+
 nop:
 nop:
 
@@ -638,6 +716,13 @@ ld (i8h), i16:
     IOH AI
     MI YO
 
+ld ((i8h)), i16:
+    PO AI
+    MO YI P+
+    IOH AI
+    MO AI
+    MI YO
+
 ld y, x: # The <tt>ld y, ...</tt> instructions exist solely for use with <tt>xor x, y</tt>.
     YI XO
 
@@ -649,7 +734,6 @@ ld y, i16: # The <tt>ld y, ...</tt> instructions exist solely for use with <tt>x
     PO AI
     MO YI P+
 
-nop:
 nop:
 nop:
 nop:
@@ -949,11 +1033,31 @@ jle (i16):
     MO AI P+
     MO JZ JLT
 
-nop:
-nop:
-nop:
-nop:
-nop:
+test x:
+    X
+
+test (i8h):
+    IOH AI
+    MO YI
+    Y
+
+test (x):
+    XO AI
+    MO YI
+    Y
+
+test ((i8h)):
+    IOH AI
+    MO AI
+    MO YI
+    Y
+
+test (i16):
+    PO AI
+    MO AI P+
+    MO YI
+    Y
+
 nop:
 nop:
 nop:
