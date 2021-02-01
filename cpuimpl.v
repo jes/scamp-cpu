@@ -35,6 +35,8 @@ module CPU #(parameter DEBUG=0) (clk, RST_bar, addr, bus, DI, DO);
 
     Register ar (clk, bus, AI_bar, AR_val);
 
+    assign addr = AR_val;
+
     Memory memory (clk, bus, MI, MO, AR_val);
 
     always @ (posedge clk) begin
