@@ -213,8 +213,7 @@ print:
     pop x
     ld r0, x
     print_loop:
-        ld x, (r0)
-        out 2, x
+        out 2, (r0)
         inc r0
         test (r0)
         jnz print_loop

@@ -818,7 +818,14 @@ out i16, (i8h):
     MO AI P+
     YO DI
 
-nop:
+out i16, ((i8h)):
+    IOH AI
+    MO AI
+    MO YI
+    PO AI
+    MO AI P+
+    YO DI
+
 nop:
 nop:
 
@@ -879,7 +886,14 @@ in (i8h), i16:
     MO AI P+
     YI DO
 
-nop:
+in ((i8h)), i16:
+    IOH AI
+    MO AI
+    MO YI
+    PO AI
+    MO AI P+
+    YI DO
+
 nop:
 nop:
 nop:
