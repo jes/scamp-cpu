@@ -32,4 +32,9 @@ if [ ! "$1" ]; then
     rm -f ttl-${t}_tb.v a.out
 
     diff -u out ttl-out
+
+    echo computer...
+    iverilog computer.v
+    ./a.out
+    rm -f a.out
 fi
