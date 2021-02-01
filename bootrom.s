@@ -166,6 +166,11 @@ ld (funcptr), x
 call (funcptr)
 out 0, r0
 
+# print a string
+ld x, str
+push x
+call print
+
 # infinite loop
 jr- 1
 
@@ -202,6 +207,20 @@ add3:
     ld x, 3(sp)
     add r0, x
     ret 3
+
+# take a pointer to a nul-terminated string, and print it
+print:
+    pop x
+    ld r0, x
+    print_loop:
+        ld x, (r0)
+        out 2, x
+        inc r0
+        test (r0)
+        jnz print_loop
+    ret
+
+str: .str "Hello, world!\n\0"
 
 # XXX: ".at 0x100" so that funcptr is writable (first 256 bytes are rom)
 .at 0x100

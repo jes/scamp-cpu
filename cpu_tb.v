@@ -25,7 +25,7 @@ module test;
 
             #1 clk = 1;
 
-            #1 if (DI) begin
+            #1 if (addr == 0 && DI) begin
                 if (bus !== outputs) $display("Bad: output ",outputs, " != ", outputs, ": ", bus);
                 outputs = outputs + 1;
             end

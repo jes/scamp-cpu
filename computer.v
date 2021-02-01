@@ -1,16 +1,21 @@
 /* CPU testbench */
 `include "cpu.v"
 
+`include "ttl/mos_6551.v"
+
 module test;
     reg clk;
     reg reset_bar = 1;
     wire [15:0] addr;
     wire [15:0] bus;
 
-    CPU #(.DEBUG(1)) cpu (clk, reset_bar, addr, bus, DI, DO);
+    CPU cpu (clk, reset_bar, addr, bus, DI, DO);
+
+    mos_6551 acia (clk, addr[1], !(DI | DO), reset_bar, {addr[3],addr[2]}, DO, bus[7:0]);
 
     reg [15:0] cycle = 0;
 
+    parameter EXPECT_OUTPUTS = 24;
     reg [15:0] outputs = 0;
 
     initial begin
@@ -32,6 +37,6 @@ module test;
             clk = 0;
         end
 
-        $display("Got ", outputs, " outputs");
+        if (outputs !== EXPECT_OUTPUTS) $display("Bad: got ", outputs, " outputs, expected ", EXPECT_OUTPUTS);
     end
 endmodule
