@@ -77,7 +77,18 @@ while (my $line = <>) {
         params($op, 1, @args);
         emit(numarg($args[0]));
     } elsif ($op eq '.str') {
-        die "error: line $.: .str not implemented\n";
+        my $str = $line;
+        $str =~ s/^\s*.str\s*"//;
+        $str =~ s/"\s*$//;
+        $str =~ s/\\r/\r/g;
+        $str =~ s/\\n/\n/g;
+        $str =~ s/\\t/\t/g;
+        $str =~ s/\\\[/\[/g;
+        $str =~ s/\\x(..)/hex($1)/ge;
+        $str =~ s/\\0/\0/g;
+        $str =~ s/\\\\/\\/g;
+        my @c = split //, $str;
+        emit(ord($_)) for @c;
     } elsif ($op eq '.pstr') {
         die "error: line $.: .pstr not implemented\n";
     } else {
