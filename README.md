@@ -1,9 +1,11 @@
-# TTL CPU
+# SCAMP CPU
 
 I want to make a CPU out of TTL chips.
 
 This repo is likely to be a loosely-connected collection of Verilog source, KiCad files, text notes,
 and software.
+
+It's called "SCAMP" which means something like "Simple Computing and Arithmetic Microcoded Processor".
 
 ## Plan
 
