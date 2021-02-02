@@ -83,7 +83,14 @@ add ((i8h)), i16:
     MO YI
     MI Y+X
 
-nop:
+add (i8h), (i16):
+    PO AI
+    MO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    MI Y+X
+
 nop:
 
 sub x, (i8h): # Subtract the <tt>r</tt> from <tt>x</tt>.
@@ -171,7 +178,14 @@ sub ((i8h)), i16:
     MO YI
     MI Y-X
 
-nop:
+sub (i8h), (i16):
+    PO AI
+    MO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    MI Y-X
+
 nop:
 
 and x, (i8h):
@@ -259,7 +273,14 @@ and ((i8h)), i16:
     MO YI
     MI Y&X
 
-nop:
+and (i8h), (i16):
+    PO AI
+    MO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    MI Y&X
+
 nop:
 
 or x, (i8h):
@@ -347,7 +368,14 @@ or ((i8h)), i16:
     MO YI
     MI Y|X
 
-nop:
+or (i8h), (i16):
+    PO AI
+    MO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    MI Y|X
+
 nop:
 
 nand x, (i8h):
@@ -435,7 +463,14 @@ nand ((i8h)), i16:
     MO YI
     MI ~(Y&X)
 
-nop:
+nand (i8h), (i16):
+    PO AI
+    MO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    MI ~(Y&X)
+
 nop:
 
 nor x, (i8h):
@@ -523,7 +558,14 @@ nor ((i8h)), i16:
     MO YI
     MI ~(Y|X)
 
-nop:
+nor (i8h), (i16):
+    PO AI
+    MO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    MI ~(Y|X)
+
 nop:
 
 ld x, (i8h):

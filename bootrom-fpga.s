@@ -5,9 +5,9 @@ loop:
 
     ld (0xffa0), 0
 
-    push 0xffa0
-    push 0x0f
-    push 8
+    push 0xffa0 # address to update
+    push 0x0f   # bits to set
+    push 8      # bit to test
     call setbits
 
     push 0xffa0
@@ -15,7 +15,6 @@ loop:
     push 4
     call setbits
 
-    not (0xffa0)
     out 2, (0xffa0)
     out 3, (0xffa0)
 
@@ -31,31 +30,22 @@ loop:
     push 1
     call setbits
 
-    not (0xffa0)
     out 0, (0xffa0)
     out 1, (0xffa0)
 
     jmp loop
 
 setbits:
-    #ld x, sp
-    #ld r19, 2(x)
-    #ld r18, 1(x)
-    #ld r20, (x)
+    ld x, sp
+    ld r20, 1(x) # bit to test
+    ld r19, 2(x) # bits to set
+    ld r18, 3(x) # address to update
 
-    pop x
-    ld r20, x # bit to test
-    pop x
-    ld r19, x # bits to set
-    pop x
-    ld r18, x # address to write
-
-    ld x, r4
-    and x, r20
+    and r20, r4
     jz end
 
     ld x, r19
     or (r18), x # set bits in address
 
 end:
-    ret 0
+    ret 3
