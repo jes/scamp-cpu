@@ -165,8 +165,8 @@ sub arg2num {
     return $1 if $arg =~ /(\d+)\(x\)/;
     return $1 if $arg =~ /(\d+)\(\(65535\)\)/;
 
-    # remove (, ), +
-    $arg =~ s/[\(\)\+]//g;
+    # remove (, ), +, -
+    $arg =~ s/[\(\)\+-]//g;
 
     return $arg;
 }
