@@ -660,6 +660,20 @@ ld x, i8l((65535)): # Load <tt>x</tt> from the address <tt>(sp)+i8l</tt>.
     X+Y AI
     MO XI
 
+ld (i8h), (x):
+    XO AI
+    MO YI
+    IOH AI
+    MI YO
+
+ld (i8h), i16(x):
+    PO AI
+    MO YI P+
+    AI X+Y
+    MO YI
+    IOH AI
+    MI YO
+
 ld ((i16)), x:
     PO AI
     MO AI P+
@@ -734,8 +748,6 @@ ld y, i16: # The <tt>ld y, ...</tt> instructions exist solely for use with <tt>x
     PO AI
     MO YI P+
 
-nop:
-nop:
 nop:
 nop:
 nop:
@@ -880,19 +892,19 @@ in ((i8h)), x:
     MI YO
 
 in (i8h), i16:
-    IOH AI
-    MO YI
     PO AI
     MO AI P+
     YI DO
+    IOH AI
+    MI YO
 
 in ((i8h)), i16:
-    IOH AI
-    MO AI
-    MO YI
     PO AI
     MO AI P+
     YI DO
+    IOH AI
+    MO AI
+    MI YO
 
 nop:
 nop:
@@ -1265,4 +1277,3 @@ slownop: # Do nothing, and take 8 cycles.
     PO
     PO
     PO
-

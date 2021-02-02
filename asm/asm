@@ -156,11 +156,13 @@ for my $c (@code) {
 # 605 => 605
 # (val) => val
 # 1((65535)) => 1
+# 1(x) => 1
 sub arg2num {
     my ($arg) = @_;
 
     die "error: line $.: can't convert register to number: $arg\n" if $arg =~ /^(x|y|pc)$/;
 
+    return $1 if $arg =~ /(\d+)\(x\)/;
     return $1 if $arg =~ /(\d+)\(\(65535\)\)/;
 
     # remove (, ), +
