@@ -1,8 +1,9 @@
 /* CPU */
 
-module CPU #(parameter DEBUG=0) (clk, clk90, RST_bar, addr, bus, DI, DO, PC_val);
+module CPU #(parameter DEBUG=0) (clk, clk90, RST_bar, addr, bus, busin, DI, DO, PC_val);
     input clk;
     input clk90;
+    input [15:0] busin;
     input RST_bar;
     output [15:0] addr;
     output [15:0] bus;
@@ -39,7 +40,7 @@ module CPU #(parameter DEBUG=0) (clk, clk90, RST_bar, addr, bus, DI, DO, PC_val)
 
     assign addr = AR_val;
 
-    assign bus = (!PO_bar ? PC_val : (MO ? memory_val : (DO ? 0 : (!EO_bar ? E_val : (!IOH_bar ? (16'hff00 | IR_val[7:0]) : (!IOL_bar ? (IR_val[7:0]) : 0))))));
+    assign bus = (!PO_bar ? PC_val : (MO ? memory_val : (DO ? busin : (!EO_bar ? E_val : (!IOH_bar ? (16'hff00 | IR_val[7:0]) : (!IOL_bar ? (IR_val[7:0]) : 0))))));
 
     wire [15:0] memory_val;
 

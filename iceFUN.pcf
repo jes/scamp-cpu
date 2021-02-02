@@ -13,3 +13,7 @@ set_io --warn-no-port lcol2 	D10
 set_io --warn-no-port lcol3 	A6
 set_io --warn-no-port lcol4 	C5
 set_io --warn-no-port clk  	P7
+set_io --warn-no-port key1 A5
+set_io --warn-no-port key2 A11
+set_io --warn-no-port key3 C6
+set_io --warn-no-port key4 C11

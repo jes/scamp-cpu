@@ -2,7 +2,7 @@
 `include "fpga-cpu.v"
 `include "ledscan.v"
 
-module top(clk,led1,led2,led3,led4,led5,led6,led7,led8,lcol1,lcol2,lcol3,lcol4);
+module top(clk,led1,led2,led3,led4,led5,led6,led7,led8,lcol1,lcol2,lcol3,lcol4,key1,key2,key3,key4);
     input clk;
     output led1;
     output led2;
@@ -16,6 +16,10 @@ module top(clk,led1,led2,led3,led4,led5,led6,led7,led8,lcol1,lcol2,lcol3,lcol4);
     output lcol2;
     output lcol3;
     output lcol4;
+    input key1;
+    input key2;
+    input key3;
+    input key4;
 
     /* LED output */
     reg [7:0] leds1;
@@ -44,9 +48,12 @@ module top(clk,led1,led2,led3,led4,led5,led6,led7,led8,lcol1,lcol2,lcol3,lcol4);
     reg slowclk90 = 0;
     reg [31:0] count = 1000000; // needs to be long at first because rams don't work for 3 usec
     reg [31:0] count90 = 0;
-    parameter clockdelay = 1000000;
+    parameter clockdelay = 10000;
 
-    CPU cpu (slowclk, slowclk90, reset_bar, addr, bus, DI, DO, PC_val);
+    wire [15:0] busin;
+    assign busin = ((DO && addr == 0) ? (key1|(key2<<1)|(key3<<2)|(key4<<3)) : 0);
+
+    CPU cpu (slowclk, slowclk90, reset_bar, addr, bus, busin, DI, DO, PC_val);
 
     reg [15:0] cycle = 0;
 
