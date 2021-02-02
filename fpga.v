@@ -48,7 +48,7 @@ module top(clk,led1,led2,led3,led4,led5,led6,led7,led8,lcol1,lcol2,lcol3,lcol4,k
     reg slowclk90 = 0;
     reg [31:0] count = 1000000; // needs to be long at first because rams don't work for 3 usec
     reg [31:0] count90 = 0;
-    parameter clockdelay = 10000;
+    parameter clockdelay = 100;
 
     wire [15:0] busin;
     assign busin = ((DO && addr == 0) ? (key1|(key2<<1)|(key3<<2)|(key4<<3)) : 0);
