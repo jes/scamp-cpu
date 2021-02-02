@@ -1,8 +1,8 @@
 SOURCES = fpga.v
 
-.PHONY: ttlcpu test burn clean
+.PHONY: test burn clean
 
-ttlcpu: ucode.hex bootrom.hex
+ttlcpu.bin: ucode.hex bootrom.hex
 	yosys -p "synth_ice40 -top top -json ttlcpu.json" $(SOURCES)
 	nextpnr-ice40 -r --hx8k --json ttlcpu.json --package cb132 --asc ttlcpu.asc --opt-timing --pcf iceFUN.pcf
 	icepack ttlcpu.asc ttlcpu.bin
@@ -36,7 +36,7 @@ asm/table.html: asm/instructions.json
 	./asm/mk-table-html > asm/table.html.tmp
 	mv ./asm/table.html.tmp ./asm/table.html
 
-burn:
+burn: ttlcpu.bin
 	iceFUNprog ttlcpu.bin
 
 clean:
