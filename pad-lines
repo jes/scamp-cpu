@@ -1,0 +1,14 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+my $n = shift @ARGV or die "usage: pad-lines N LINE\n";
+my $line = shift @ARGV or die "usage: pad-lines N LINE\n";
+
+while (<>) {
+    print;
+}
+
+print "$line\n" for ($.+1 .. $n);
+
