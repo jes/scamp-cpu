@@ -8,7 +8,7 @@ module test;
     wire [2:0] T;
 
     assign reset1 = reset;
-    assign reset2_bar = 1;
+    reg reset2_bar = 1;
 
     TState tstate (clk, reset1, reset2_bar, T);
 
@@ -67,6 +67,16 @@ module test;
         #1 if (T !== 2) $display("Bad: didn't reach T2 after 2 falling edges");
 
         reset = 1;
+        #1 if (T !== 0) $display("Bad: didn't reset back to T0");
+
+        #1
+        reset = 0;
+        clk = 1;
+        #1
+        clk = 0;
+        #1 if (T !== 1) $display("Bad: didn't reach T1 (2)");
+
+        reset2_bar = 0;
         #1 if (T !== 0) $display("Bad: didn't reset back to T0");
     end
 endmodule
