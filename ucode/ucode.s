@@ -695,7 +695,7 @@ ld x, ((i16)):
     MO AI
     MO XI
 
-ld x, i8l((65535)): # Load <tt>x</tt> from the address <tt>(sp)+i8l</tt>.
+ld x, i8l((65535)): # Load <tt>x</tt> from the address <tt>sp+i8l</tt>.
     -1 AI
     MO YI
     IOL XI
@@ -708,7 +708,7 @@ ld (i8h), (x):
     IOH AI
     MI YO
 
-ld (i8h), i16(x):
+ld (i8h), i16(x): # Load <tt>x</tt> from the address <tt>x+i16</tt>.
     PO AI
     MO YI P+
     AI X+Y
