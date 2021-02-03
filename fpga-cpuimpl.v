@@ -21,10 +21,10 @@ module CPU #(parameter DEBUG=0) (clk, clk90, RST_bar, addr, bus, busin, DI, DO, 
     // state
     wire [2:0] T;
     wire [15:0] uinstr;
-    wire [5:0] ALU_flags;
+    wire [5:0] ALU_op;
 
-    ALU alu (X_val, Y_val, ALU_flags, EO_bar, bus, E_val, Z_flag, LT_flag);
-    FR fr (clk, {Z_flag, LT_flag}, EO_bar, {Z, LT});
+    ALU alu (X_val, Y_val, ALU_op, EO_bar, bus, E_val, Z_new, LT_new);
+    FR fr (clk, {Z_new, LT_new}, EO_bar, {Z, LT});
 
     Register x (clk, bus, XI_bar, X_val);
     Register y (clk, bus, YI_bar, Y_val);
@@ -34,7 +34,7 @@ module CPU #(parameter DEBUG=0) (clk, clk90, RST_bar, addr, bus, busin, DI, DO, 
 
     TState tstate (clk, RT, RST_bar, T);
     Ucode ucode (clk90, IR_val, T, uinstr);
-    Control control (uinstr, Z, LT, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, ALU_flags, JMP_bar);
+    Control control (uinstr, Z, LT, EO_bar, PO_bar, IOH_bar, IOL_bar, MO, DO, RT, PP, AI_bar, II_bar, MI, XI_bar, YI_bar, DI, JZ, JGT, JLT, ALU_op, JMP_bar);
 
     Register ar (clk, bus, AI_bar, AR_val);
 
@@ -60,12 +60,12 @@ module CPU #(parameter DEBUG=0) (clk, clk90, RST_bar, addr, bus, busin, DI, DO, 
             $display("Z = ", Z, " LT = ", LT);
             if (!EO_bar) begin
                 $write(" EO");
-                if (ALU_flags[5]) $write(" EX");
-                if (ALU_flags[4]) $write(" NX");
-                if (ALU_flags[3]) $write(" EY");
-                if (ALU_flags[2]) $write(" NY");
-                if (ALU_flags[1]) $write(" F");
-                if (ALU_flags[0]) $write(" NO");
+                if (ALU_op[5]) $write(" EX");
+                if (ALU_op[4]) $write(" NX");
+                if (ALU_op[3]) $write(" EY");
+                if (ALU_op[2]) $write(" NY");
+                if (ALU_op[1]) $write(" F");
+                if (ALU_op[0]) $write(" NO");
             end
             if (!PO_bar) $write(" PO");
             if (!IOH_bar) $write(" IOH");
