@@ -65,7 +65,7 @@ while (my $line = <>) {
         next;
     }
 
-    emit("__asm_addr_$pc");
+    emit("__asm_addr_$pc") if $verbose;
 
     my ($op, $args_str) = split /\s+/, $line, 2;
     my @args = split /\s*,\s*/, $args_str//'';
