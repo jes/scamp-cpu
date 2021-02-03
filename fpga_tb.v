@@ -8,8 +8,9 @@ module test;
     wire [15:0] bus;
 
     wire [15:0] PC_val;
+    wire [15:0] busin;
 
-    CPU cpu (clk, clk90, reset_bar, addr, bus, DI, DO, PC_val);
+    CPU cpu (clk, clk90, reset_bar, addr, bus, busin, DI, DO, PC_val);
 
     reg [15:0] cycle = 0;
 
