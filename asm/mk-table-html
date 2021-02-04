@@ -12,12 +12,12 @@ my %op2inst = map { $instructions->{$_}{opcode} => $_ } keys %$instructions;
 
 my %clobsym = (x => '!', y => '^', flags => '+');
 
-my @uses_alu = sort { length($b) <=> length($a) } (
+my %uses_alu = map { $_ => 1 } (
     "-2", "-1", "0", "1", "X-1", "X", "X+1", "-X-2", "-X-1", "-X", "Y-1", "Y", "Y+1",
     "-Y-2", "-Y-1", "-Y", "X+Y", "Y+X", "X+Y+1", "Y+X+1", "X-Y-1", "X-Y", "Y-X-1", "Y-X",
     "-X-Y-2", "-Y-X-2", "-X-Y-1", "-Y-X-1", "~X", "~Y", "X&Y", "Y&X", "X|Y", "Y|X",
     "X&~Y", "~Y&X", "X|~Y", "~Y|X", "~X|Y", "Y|~X", "~X&Y", "Y&~X", "~X&~Y", "~(X|Y)",
-    "~Y&~X", "~(Y|X)", "~X|~Y", "~(X&Y)", "~Y|~X", "~(Y&X)"
+    "~Y&~X", "~(Y|X)", "~X|~Y", "~(X&Y)", "~Y|~X", "~(Y&X)", "XO", "YO"
 );
 
 print header();
@@ -40,12 +40,20 @@ for my $a (qw(0 1 2 3 4 5 6 7 8 9 a b c d e f)) {
         @clobbers = grep {!/x/} @clobbers if $inst =~ /^\S+ x\b/;
         @clobbers = grep {!/y/} @clobbers if $inst =~ /^\S+ y\b/;
 
-        my $microcode = join('<br>', map { "&nbsp;&nbsp;$_" } @{ $i->{ucode}||[] });
         my $clobbers_flags = 0;
-        for my $alu_code (@uses_alu) {
-            $clobbers_flags = 1 if
-                $microcode =~ s/(^|(?<=&nbsp;)|(?<=\s))\Q$alu_code\E\b/<span class=\"clobflags\">$1$alu_code<\/span>/g;
+        my @ucode;
+        for my $uinstr (@{ $i->{ucode}||[] }) {
+            my @uops;
+            for my $uop (split /\s+/, $uinstr) {
+                if ($uses_alu{$uop}) {
+                    $uop = "<span class=\"clobflags\">$uop</span>";
+                    $clobbers_flags = 1;
+                }
+                push @uops, $uop;
+            }
+            push @ucode, join(' ', @uops);
         }
+        my $microcode = join('<br>', map { s/&/&amp;/g; "&nbsp;&nbsp;$_" } @ucode);
         push @clobbers, 'flags', if $clobbers_flags;
 
         my $clobber_warnings = join('', map { "<span class=\"clob$_\">" . ($clobsym{$_}||'*') . "</span>" } sort @clobbers);
@@ -165,8 +173,7 @@ tt {
 <li>Typically the first parameter is the destination and first operand, and the second parameter is the other operand.</li>
 <li><tt>i8l</tt> and <tt>i8h</tt> parameters are stored in the lower 8 bits of the instruction word, so <tt>add x, 5</tt> becomes
 <tt>0605</tt>. <tt>i8h</tt> is the same as <tt>i8l</tt> except it sets the upper 8 bits to 1, so <tt>add x, 0xff05</tt> becomes <tt>0705</tt>.</li>
-<li>Side effects on <tt>x</tt>, <tt>r254</tt>, or <tt>y</tt> are documented as "clobbers". Generally
-<tt>x</tt> is the only one to worry about.</li>
+<li>Side effects on <tt>flags</tt>, <tt>x</tt>, <tt>r254</tt>, or <tt>y</tt> are documented as "clobbers".</li>
 <li><tt>++</tt> and <tt>--</tt> refer to pre-/post- increment/decrement of a value or pointer.</li>
 </ul>
 };
