@@ -2,6 +2,9 @@
 
 // if select is high we get B on the output, if select is low we get A
 
+`ifndef TTL_74157
+`define TTL_74157
+
 module ttl_74157 #(parameter BLOCKS = 4, WIDTH_IN = 2, WIDTH_SELECT = $clog2(WIDTH_IN),
                    DELAY_RISE = 0, DELAY_FALL = 0)
 (
@@ -31,3 +34,5 @@ end
 assign #(DELAY_RISE, DELAY_FALL) Y = computed;
 
 endmodule
+
+`endif
