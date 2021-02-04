@@ -10,7 +10,15 @@ my $instructions_json;
 my $instructions = load_instructions();
 my %op2inst = map { $instructions->{$_}{opcode} => $_ } keys %$instructions;
 
-my %clobsym = (x => '!', y => '+');
+my %clobsym = (x => '!', y => '^', flags => '+');
+
+my @uses_alu = sort { length($b) <=> length($a) } (
+    "-2", "-1", "0", "1", "X-1", "X", "X+1", "-X-2", "-X-1", "-X", "Y-1", "Y", "Y+1",
+    "-Y-2", "-Y-1", "-Y", "X+Y", "Y+X", "X+Y+1", "Y+X+1", "X-Y-1", "X-Y", "Y-X-1", "Y-X",
+    "-X-Y-2", "-Y-X-2", "-X-Y-1", "-Y-X-1", "~X", "~Y", "X&Y", "Y&X", "X|Y", "Y|X",
+    "X&~Y", "~Y&X", "X|~Y", "~Y|X", "~X|Y", "Y|~X", "~X&Y", "Y&~X", "~X&~Y", "~(X|Y)",
+    "~Y&~X", "~(Y|X)", "~X|~Y", "~(X&Y)", "~Y|~X", "~(Y&X)"
+);
 
 print header();
 print "<table>\n";
@@ -31,11 +39,18 @@ for my $a (qw(0 1 2 3 4 5 6 7 8 9 a b c d e f)) {
         my @clobbers = @{ $i->{clobbers}||[] };
         @clobbers = grep {!/x/} @clobbers if $inst =~ /^\S+ x\b/;
         @clobbers = grep {!/y/} @clobbers if $inst =~ /^\S+ y\b/;
+
+        my $microcode = join('<br>', map { "&nbsp;&nbsp;$_" } @{ $i->{ucode}||[] });
+        my $clobbers_flags = 0;
+        for my $alu_code (@uses_alu) {
+            $clobbers_flags = 1 if
+                $microcode =~ s/(^|(?<=&nbsp;)|(?<=\s))\Q$alu_code\E\b/<span class=\"clobflags\">$1$alu_code<\/span>/g;
+        }
+        push @clobbers, 'flags', if $clobbers_flags;
+
         my $clobber_warnings = join('', map { "<span class=\"clob$_\">" . ($clobsym{$_}||'*') . "</span>" } sort @clobbers);
         @clobbers = ('(none)') if !@clobbers;
         my $clobbers = join(',', map { "<span class=\"clob$_\">$_</span>" } sort @clobbers);
-
-        my $microcode = join('<br>', map { "&nbsp;&nbsp;$_" } @{ $i->{ucode}||[] });
 
         my $remark = $i->{remark}||'';
 
@@ -50,14 +65,15 @@ for my $a (qw(0 1 2 3 4 5 6 7 8 9 a b c d e f)) {
         $i->{words} ||= '';
         $i->{cycles} ||= '';
 
-        print "<td class=\"inst inst-$instopcss\"><div style=\"padding:2px\"><span style=\"font-weight:bold\">$instop</span> $instargs $clobber_warnings</div><div class=\"popup\"><b>Opcode:</b> $opcode<br><b>Words:</b> $i->{words}<br><b>Cycles:</b> $i->{cycles}<br><b>Clobbers:</b> $clobbers<b><br>Microcode:</b><br>$microcode<br><span class=\"remark\">$remark</span></div></td>";
+        print "<td class=\"inst inst-$instopcss\"><div style=\"padding:2px\"><span style=\"font-weight:bold\">$instop</span> $instargs $clobber_warnings</div><div class=\"popup\"><b>Opcode:</b> $opcode<br><b>Words:</b> $i->{words}<br><b>Cycles:</b> $i->{cycles}<br><b>Clobbers:</b> $clobbers<b><br>Microcode:</b><br>$microcode<br><span class=\"remark\">$remark</span></div></td>\n";
     }
     print "</tr>\n";
 }
 print "</table>\n";
-print "<div class=\"clobx\">$clobsym{x} clobbers <tt>x</tt></div>\n";
-print "<div class=\"clobr254\">* clobbers <tt>r254</tt></div>\n";
-print "<div class=\"cloby\">$clobsym{y} clobbers <tt>y</tt></div>\n";
+print "<div class=\"clobflags\"><tt>$clobsym{flags}</tt> sets <tt>flags</tt></div>\n";
+print "<div class=\"clobx\"><tt>$clobsym{x}</tt> clobbers <tt>x</tt></div>\n";
+print "<div class=\"clobr254\"><tt>*</tt> clobbers <tt>r254</tt></div>\n";
+print "<div class=\"cloby\"><tt>$clobsym{y}</tt> clobbers <tt>y</tt></div>\n";
 print footer();
 
 sub header {
@@ -119,6 +135,9 @@ th {
     color: white;
     padding: 2px;
 }
+.clobflags {
+    color: #080;
+}
 .clobr254 {
     color: #a50;
 }
@@ -164,6 +183,8 @@ They can also be used via <tt>(i16)</tt> parameters.
 <li><tt>r0</tt> to <tt>r253</tt> are free for general purposes.</li>
 <li><tt>r254</tt> is used as scratch space for <tt>xor</tt>, as the operand for <tt>sb</tt>, and to pass the return address for <tt>call</tt>/<tt>ret</tt>.</li>
 <li><tt>r255</tt> is the stack pointer, also called <tt>sp</tt>.</li>
+<li>The <tt>flags</tt> are set/reset whenever the ALU is used. The <tt>Z</tt> flag is set when the ALU output is 0. The <tt>LT</tt> flag is set when the ALU output
+is less than 0, i.e. when the most-significant bit of the output is 1.</li>
 </ul></body>
 </html>
 };

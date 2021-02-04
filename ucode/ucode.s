@@ -1056,11 +1056,31 @@ jle i16: # Jump to <tt>i16</tt> if <tt>Z</tt> is set or <tt>LT</tt> is set.
     PO AI
     MO JZ JLT P+
 
-nop:
-nop:
-nop:
-nop:
-nop:
+neg x: # Arithmetic negate <tt>x</tt>.
+    XI -X
+
+neg (i8h): # Arithmetic negate <tt>r</tt>.
+    IOH AI
+    MO YI
+    MI -Y
+
+neg (x): # Arithmetic negate the value in <tt>(x)</tt>.
+    XO AI
+    MO YI
+    MI -Y
+
+neg ((i8h)): # Arithmetic negate the value in <tt>(r)</tt>.
+    IOH AI
+    MO AI
+    MO YI
+    MI -Y
+
+neg (i16): # Arithmetic negate the value in <tt>(i16)</tt>.
+    PO AI
+    MO AI P+
+    MO YI
+    MI -Y
+
 nop:
 nop:
 nop:
