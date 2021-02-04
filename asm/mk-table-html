@@ -87,7 +87,7 @@ print footer();
 sub header {
     qq{<html>
 <head>
-<title>Instruction set cheatsheet</title>
+<title>SCAMP Instruction set cheatsheet</title>
 <style type="text/css">
 body {
     font-family: sans-serif;
@@ -169,7 +169,7 @@ tt {
 </style>
 </head>
 <body>
-<h1>Instruction set cheatsheet</h1>
+<h1>SCAMP Instruction set cheatsheet</h1>
 <ul>
 <li>The instruction word is the opcode shifted left by 8 bits, so opcode <tt>06</tt> becomes <tt>0600</tt>.</li>
 <li>Typically the first parameter is the destination and first operand, and the second parameter is the other operand.</li>
