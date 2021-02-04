@@ -7,7 +7,6 @@
 
 `include "ttl/7400.v"
 `include "ttl/7432.v"
-`include "ttl/74244.v"
 `include "ttl/at28c16.v"
 `include "ttl/w24512a.v"
 

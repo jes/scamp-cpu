@@ -8,7 +8,6 @@
    Always gives current value to 'value'
 */
 
-`include "ttl/74244.v"
 `include "ttl/74377.v"
 
 module Register(clk, bus, load_bar, value);
