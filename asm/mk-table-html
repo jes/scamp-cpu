@@ -109,6 +109,8 @@ td.inst-sub { background-color: #cdc; }
 td.inst-dec { background-color: #bcb; }
 td.inst-and { background-color: #ccd; }
 td.inst-not { background-color: #dcb; }
+td.inst-test { background-color: #bdd; }
+td.inst-neg { background-color: #dbd; }
 td.inst-or { background-color: #ddc; }
 td.inst-nand { background-color: #cdd; }
 td.inst-nor { background-color: #dcd; }
