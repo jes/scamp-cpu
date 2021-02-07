@@ -1,5 +1,32 @@
 # Cards
 
+## Physical dimensions
+
+Cards are 237.49 mm long, 102.87 mm deep.
+
+The backplane connector is at the back of the card, on the top side, in the centre. The rearmost holes
+for the backplane connector pins are set forward 2.54 mm from the rear edge of the card.
+
+Mounting holes for the front panel are set back 5.08 mm from the front edge of the card and set in 7.62 mm
+from the side edge of the card. The holes are 3.2 mm in diameter, intended to take an M3 screw.
+
+What dimensions to use for the 3d printed front panel? In particular, we need to ensure that the ALU card
+has space for wires to pass between the upper and lower decks to connect to the LEDs.
+
+What vertical spacing between cards? We only really need room to fit:
+
+ * a populated ZIF socket
+ * plugged-in pin header for LED wires
+
+If the backplane is going to be made of multiple PCBs connected together, then it's worth thinking about
+how (if) the uniform connector spacing is going to be maintained across the join.
+
+Also worth thinking about how the case is going to be constructed. We want:
+
+ * a power supply
+ * guide rails to guide the cards onto the backplane connector
+ * some mechanism to cause the cards to unplug from the backplane without being unduly inconvenient
+
 ## ALU
 
 The ALU is comprised of 2 identical PCBs, populated differently.
