@@ -4,7 +4,7 @@ SOURCES = verilog/fpga.v
 
 ttlcpu.bin: ucode.hex bootrom.hex
 	yosys -p "synth_ice40 -top top -json ttlcpu.json" $(SOURCES)
-	nextpnr-ice40 -r --hx8k --json ttlcpu.json --package cb132 --asc ttlcpu.asc --opt-timing --pcf iceFUN.pcf
+	nextpnr-ice40 -r --hx8k --json ttlcpu.json --package cb132 --asc ttlcpu.asc --opt-timing --pcf verilog/iceFUN.pcf
 	icepack ttlcpu.asc ttlcpu.bin
 
 ucode.hex: ucode/ucode.s
