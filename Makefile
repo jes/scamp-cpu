@@ -40,4 +40,4 @@ burn: ttlcpu.bin
 	iceFUNprog ttlcpu.bin
 
 clean:
-	rm -f *.asc *.bin *blif verilog/a.out verilog/ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex bootrom-low.hex bootrom-high.hex *.tmp asm/instructions.json asm/table.html
+	rm -f *.asc *.bin *blif verilog/a.out verilog/ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex bootrom.hex bootrom-low.hex bootrom-high.hex *.tmp asm/instructions.json asm/table.html ttlcpu.json
