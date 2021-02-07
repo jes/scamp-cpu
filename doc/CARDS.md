@@ -10,6 +10,8 @@ for the backplane connector pins are set forward 2.54 mm from the rear edge of t
 Mounting holes for the front panel are set back 5.08 mm from the front edge of the card and set in 7.62 mm
 from the side edge of the card. The holes are 3.2 mm in diameter, intended to take an M3 screw.
 
+Leave a good few mm at each side of the card to slide in the guide rails.
+
 What dimensions to use for the 3d printed front panel? In particular, we need to ensure that the ALU card
 has space for wires to pass between the upper and lower decks to connect to the LEDs.
 
