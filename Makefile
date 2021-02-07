@@ -1,4 +1,4 @@
-SOURCES = fpga.v
+SOURCES = verilog/fpga.v
 
 .PHONY: test burn clean
 
@@ -26,7 +26,7 @@ bootrom-high.hex: bootrom.hex
 	sed 's/..$$//' bootrom.hex > bootrom-high.hex
 
 test: ucode-low.hex ucode-high.hex bootrom-low.hex bootrom-high.hex
-	./run-tests.sh
+	cd verilog && ./run-tests.sh
 
 asm/instructions.json: ucode/ucode.s
 	./ucode/mk-instructions-json < ucode/ucode.s > asm/instructions.json.tmp
