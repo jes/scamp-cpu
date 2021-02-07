@@ -29,7 +29,7 @@ Here is a diagram of the architecture I currently have in mind:
 
 ![](doc/architecture.png)
 
-For more information, see [ucode/README.md](ucode/README.md) and [ISA.md](ISA.md).
+For more information, see [doc/UCODE.md](doc/UCODE.md) and [doc/ISA.md](doc/ISA.md).
 
 ## Resources
 
