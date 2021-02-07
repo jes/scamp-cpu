@@ -55,11 +55,8 @@ void load_bootrom(void) {
 uint16_t alu(uint16_t argx, uint16_t argy) {
     uint16_t val;
 
-    if (EX) argx = X;
-    else    argx = 0;
-
-    if (EY) argy = Y;
-    else    argy = 0;
+    if (!EX) argx = 0;
+    if (!EY) argy = 0;
 
     if (NX) argx = ~argx;
     if (NY) argy = ~argy;
