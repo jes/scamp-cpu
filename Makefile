@@ -1,6 +1,8 @@
 SOURCES = verilog/fpga.v
 
-.PHONY: test burn clean
+.PHONY: all test burn clean
+
+all: ttlcpu.bin asm/table.html emulator/scamp
 
 ttlcpu.bin: ucode.hex bootrom.hex
 	yosys -p "synth_ice40 -top top -json ttlcpu.json" $(SOURCES)
@@ -36,8 +38,11 @@ asm/table.html: asm/instructions.json
 	./asm/mk-table-html > asm/table.html.tmp
 	mv ./asm/table.html.tmp ./asm/table.html
 
+emulator/scamp: emulator/scamp.c
+	cc -o emulator/scamp $< -Wall -Wextra
+
 burn: ttlcpu.bin
 	iceFUNprog ttlcpu.bin
 
 clean:
-	rm -f *.asc *.bin *blif verilog/a.out verilog/ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex bootrom.hex bootrom-low.hex bootrom-high.hex *.tmp asm/instructions.json asm/table.html ttlcpu.json
+	rm -f *.asc *.bin *blif verilog/a.out verilog/ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex bootrom.hex bootrom-low.hex bootrom-high.hex *.tmp asm/instructions.json asm/table.html ttlcpu.json emulator/scamp
