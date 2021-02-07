@@ -1,6 +1,6 @@
 # ALU
 
-The ALU comes from Nand2Tetris, with the following changes:
+The ALU comes from Nand2Tetris, with the only change being:
 
  * the ZX/ZY ("zero x"/"zero y") flags are replaced with EX/EY ("enable x"/"enable y")
    which do the same thing but inverted, so that it can be implemented with an AND gate
@@ -79,9 +79,7 @@ Here is an exhaustive table of all possible inputs:
 |  0 |  0 |  1 |  1 | 0 |  1 | -1
 |  0 |  0 |  1 |  1 | 1 |  0 | ~Y
 |  0 |  0 |  1 |  1 | 1 |  1 | Y
-| :- | :- | :- | :- | :-| :- | :----- |
-| EX | NX | EY | NY | F | NO | Result |
-| :- | :- | :- | :- | :-| :- | :----- |
+| _EX_ | _NX_ | _EY_ | _NY_ | _F_ | _NO_ | _Result_ |
 |  0 |  1 |  0 |  0 | 0 |  0 | 0
 |  0 |  1 |  0 |  0 | 0 |  1 | -1
 |  0 |  1 |  0 |  0 | 1 |  0 | -1
@@ -98,9 +96,7 @@ Here is an exhaustive table of all possible inputs:
 |  0 |  1 |  1 |  1 | 0 |  1 | Y
 |  0 |  1 |  1 |  1 | 1 |  0 | -Y-2
 |  0 |  1 |  1 |  1 | 1 |  1 | Y+1
-| :- | :- | :- | :- | :-| :- | :----- |
-| EX | NX | EY | NY | F | NO | Result |
-| :- | :- | :- | :- | :-| :- | :----- |
+| _EX_ | _NX_ | _EY_ | _NY_ | _F_ | _NO_ | _Result_ |
 |  1 |  0 |  0 |  0 | 0 |  0 | 0
 |  1 |  0 |  0 |  0 | 0 |  1 | -1
 |  1 |  0 |  0 |  0 | 1 |  0 | X
@@ -117,9 +113,7 @@ Here is an exhaustive table of all possible inputs:
 |  1 |  0 |  1 |  1 | 0 |  1 | ~X|Y
 |  1 |  0 |  1 |  1 | 1 |  0 | X-Y-1
 |  1 |  0 |  1 |  1 | 1 |  1 | Y-X
-| :- | :- | :- | :- | :-| :- | :----- |
-| EX | NX | EY | NY | F | NO | Result |
-| :- | :- | :- | :- | :-| :- | :----- |
+| _EX_ | _NX_ | _EY_ | _NY_ | _F_ | _NO_ | _Result_ |
 |  1 |  1 |  0 |  0 | 0 |  0 | 0
 |  1 |  1 |  0 |  0 | 0 |  1 | -1
 |  1 |  1 |  0 |  0 | 1 |  0 | ~X
@@ -136,5 +130,4 @@ Here is an exhaustive table of all possible inputs:
 |  1 |  1 |  1 |  1 | 0 |  1 | X|Y
 |  1 |  1 |  1 |  1 | 1 |  0 | -X-Y-2
 |  1 |  1 |  1 |  1 | 1 |  1 | X+Y+1
-| :- | :- | :- | :- | :-| :- | :----- |
-| EX | NX | EY | NY | F | NO | Result |
+| _EX_ | _NX_ | _EY_ | _NY_ | _F_ | _NO_ | _Result_ |
