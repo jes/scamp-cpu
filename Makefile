@@ -45,4 +45,4 @@ burn: ttlcpu.bin
 	iceFUNprog ttlcpu.bin
 
 clean:
-	rm -f *.asc *.bin *blif verilog/a.out verilog/ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex bootrom.hex bootrom-low.hex bootrom-high.hex *.tmp asm/instructions.json doc/table.html ttlcpu.json emulator/scamp
+	rm -f *.asc *.bin *blif verilog/a.out verilog/ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex bootrom.hex bootrom-low.hex bootrom-high.hex *.tmp asm/instructions.json ttlcpu.json emulator/scamp
