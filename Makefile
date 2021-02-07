@@ -9,11 +9,11 @@ ttlcpu.bin: ucode.hex bootrom.hex
 
 ucode.hex: ucode/ucode.s
 	./ucode/uasm < ucode/ucode.s > ucode.hex.tmp
-	./pad-lines 2048 0000 < ucode.hex.tmp > ucode.hex
+	util/pad-lines 2048 0000 < ucode.hex.tmp > ucode.hex
 
 bootrom.hex: bootrom.s asm/instructions.json
 	./asm/asm < bootrom.s > bootrom.hex.tmp
-	./pad-lines 256 0000 < bootrom.hex.tmp > bootrom.hex
+	util/pad-lines 256 0000 < bootrom.hex.tmp > bootrom.hex
 
 ucode-low.hex: ucode.hex
 	sed 's/^..//' ucode.hex > ucode-low.hex
