@@ -33,8 +33,6 @@ void load_hex(uint16_t *buf, int len, char *name) {
         exit(1);
     }
 
-    addr = 0;
-
     for (i = 0; i < len; i++) {
         if (!fscanf(fp, "%04hx", buf+i)) {
             fprintf(stderr, "can't read enough data from %s\n", name);
