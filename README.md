@@ -27,7 +27,7 @@ for small immediate values.
 
 Here is a diagram of the architecture I currently have in mind:
 
-![](architecture.png)
+![](doc/architecture.png)
 
 For more information, see [ucode/README.md](ucode/README.md) and [ISA.md](ISA.md).
 
