@@ -19,7 +19,7 @@ U 1 1 60205544
 P 5550 3650
 F 0 "U8" H 5550 4931 50  0000 C CNN
 F 1 "W24512A" H 5550 4840 50  0000 C CNN
-F 2 "Package_DIP:DIP-32_W15.24mm_Socket" H 5550 3650 50  0001 C CNN
+F 2 "Package_DIP:DIP-32_W7.62mm" H 5550 3650 50  0001 C CNN
 F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/doc0006.pdf" H 5550 3650 50  0001 C CNN
 	1    5550 3650
 	1    0    0    -1  
@@ -30,7 +30,7 @@ U 1 1 60205877
 P 5550 6400
 F 0 "U9" H 5550 7681 50  0000 C CNN
 F 1 "W24512A" H 5550 7590 50  0000 C CNN
-F 2 "Package_DIP:DIP-32_W15.24mm_Socket" H 5550 6400 50  0001 C CNN
+F 2 "Package_DIP:DIP-32_W7.62mm" H 5550 6400 50  0001 C CNN
 F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/doc0006.pdf" H 5550 6400 50  0001 C CNN
 	1    5550 6400
 	1    0    0    -1  
