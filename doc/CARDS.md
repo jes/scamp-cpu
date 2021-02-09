@@ -93,3 +93,21 @@ Use standoffs, M3 screws, and the 3d-printed front panel to connect the two card
 mounting holes at the front.
 
 Hopefully the card can now slide into the chassis and connect to the backplane.
+
+## Instruction
+
+The EO, PO, IOH, IOL, ... header for LEDs has polarity reversed. The last pin has VCC instead of
+ground, and the signals are active-low.
+
+Unused microcode decodings can be exposed on the backplane via jumpers. The available decodings are:
+
+| Label | Microcode | Backplane pin |
+| :---- | :-------- | :------------ |
+| i7    | bus_in==7 | 27 |
+| u8    | bit 8     | 37 |
+| o7    | bus_out==7 | 36 |
+| o5    | bus_out==5 | 35 |
+| o4    | bus_out==4 | 34 |
+| u1    | but 1      | 33 |
+
+Microcode bit 0 is exposed on backplane pin 32 without a jumper, even though it is currently unused.
