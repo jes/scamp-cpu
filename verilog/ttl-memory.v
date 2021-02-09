@@ -16,9 +16,6 @@ module Memory(clk, bus, load, en, address);
     input en;
     input [15:0] address;
 
-    wire [15:0] rom_value;
-    wire [15:0] ram_value;
-
     at28c16 #(.ROM_FILE("bootrom-low.hex"), .ROM_BYTES(256)) rom1 ({3'b0, address[7:0]}, bus[7:0], romen_bar, 1'b0);
     at28c16 #(.ROM_FILE("bootrom-high.hex"), .ROM_BYTES(256)) rom2 ({3'b0, address[7:0]}, bus[15:8], romen_bar, 1'b0);
 
