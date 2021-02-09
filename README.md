@@ -71,6 +71,8 @@ is, and without going through all the lectures, you can play https://nandgame.co
 Ben Eater's videos on 8-bit CPU design are excellent and heavily influenced
 the design of my CPU.
 
+I plan to go through the [YouTube playlist](https://www.youtube.com/playlist?list=PLOech0kWpH8-njQpmSNGSiQBPUvl8v3IM) for Nicolas Laurent's [compiler class](https://norswap.com/compilers/)
+
 ## Contact
 
 I can't imagine why it would, but if anything in this repo causes you to want to communicate with
