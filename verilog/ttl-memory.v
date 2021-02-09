@@ -2,7 +2,6 @@
 
    When "en" is 1, gives current value to the bus
    When "load" is 1 and clock edge rises, RAM takes in new value from the bus
-   Always gives current value to 'value'
 */
 
 `include "ttl/7400.v"
