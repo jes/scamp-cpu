@@ -23,7 +23,7 @@ that if step 4 needs to happen substantially more than once that it will never g
 
 I've finished writing Verilog and think I've settled on the overall CPU architecture (see diagram below).
 
-I'm quite happy with the instruction set, see doc/table.html, available online at https://incoherency.co.uk/interest/table.html - but the instruction set is implemented with microcode, so changes are relatively cheap.
+I'm quite happy with the instruction set, see [doc/table.html](doc/table.html), available online at https://incoherency.co.uk/interest/table.html - but the instruction set is implemented with microcode, so changes are relatively cheap.
 
 I have some blog posts here: https://incoherency.co.uk/blog/tags/cpu.html
 
