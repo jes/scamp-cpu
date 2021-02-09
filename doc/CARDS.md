@@ -108,6 +108,6 @@ Unused microcode decodings can be exposed on the backplane via jumpers. The avai
 | o7    | bus_out==7 | 36 |
 | o5    | bus_out==5 | 35 |
 | o4    | bus_out==4 | 34 |
-| u1    | but 1      | 33 |
+| u1    | bit 1      | 33 |
 
 Microcode bit 0 is exposed on backplane pin 32 without a jumper, even though it is currently unused.
