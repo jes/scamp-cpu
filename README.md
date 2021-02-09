@@ -19,6 +19,36 @@ It is likely that steps 1 to 3 will go through several iterations while I figure
 the CPU is actually going to work, but hopefully step 4 will only happen once. It is likely
 that if step 4 needs to happen substantially more than once that it will never get completed.
 
+## Current status
+
+I've finished writing Verilog and think I've settled on the overall CPU architecture (see diagram below).
+
+I'm quite happy with the instruction set, see doc/table.html, available online at https://incoherency.co.uk/interest/table.html
+ - but the instruction set is implemented with microcode, so changes are relatively cheap.
+
+I have some blog posts here: https://incoherency.co.uk/blog/tags/cpu.html
+
+I'm currently designing the PCBs:
+
+ - [x] ALU
+ - [x] Memory
+ - [x] Instruction/control
+ - [ ] Backplane
+ - [ ] Clock
+ - [ ] Serial port
+ - [ ] Storage
+
+Future work:
+
+ - [ ] get the PCBs manufactured
+ - [ ] assemble the computer inside a convenient case
+ - [ ] write the bootloader ROM
+ - [ ] write the "kernel"
+ - [ ] write a compiler
+ - [ ] write some applications
+ - [ ] write an editor
+ - [ ] make it self-host
+
 ## Architecture
 
 It is a 16-bit CPU. The bus is 16-bit, registers are 16-bit, addresses are 16-bit, and memory contents are
