@@ -44,6 +44,11 @@ a type. That gets us pointer arithmetic for free. We could imagine something lik
 (Although I'm not committing to using "*" as the pointer dereference operator, because of the obvious collision
 with multiplication).
 
+### Strings
+
+A string literal will evaluate to the address of the first character. I'm not sure if we'd want to support "packed strings" as well,
+which use memory a bit more efficiently? Probably best to keep it simple and just waste the upper byte.
+
 ### Functions
 
 Since we only support one type, we don't *really* need to know function signatures. Passing arguments to a function
