@@ -122,3 +122,55 @@ get the format string first, we'd need to use it like:
     printf(1, "hello", "%d. %s\n"); // "1. hello\n"
 
 which is annoying and unintuitive.
+
+## Grammar
+
+Something like (completely unimplemented and untested):
+
+    program           ::= statements
+    statements        ::= '' | (statement ';' statements)
+    statement         ::= block | declaration | assignment | expression | conditional | loop | return
+    block             ::= statement | ('{' statements '}')
+    declaration       ::= ('var' identifier) | ('var' identifier '=' expression)
+    assignment        ::= expression '=' expression
+    conditional       ::= ('if' expression block) | ('if' expression block 'else' block)
+    loop              ::= 'while' expression block
+    return            ::= 'return' expression
+    expression        ::= constant | function_call | unary_expression | binary_expression | ('(' expression ')')
+    function_call     ::= identifier '(' expressions ')'
+    expressions       ::= '' | (expression ',' expressions)
+    unary_expression  ::= unary_op expression
+    binary_expression ::= binary_op expression
+    unary_op          ::= '!' | '~' | '-' | '+' | '*' | '&'
+    binary_op         ::= '+' | '-' | '*' | '/' | '&' | '|'
+    constant          ::= num_literal | string_literal | function_decl
+    function_decl     ::= 'func' '(' arguments ')' block
+    arguments         ::= '' | (identifier ',' arguments)
+    identifier        ::= /^[a-z_][0-9a-z_]*$/
+    num_literal       ::= /^[0-9]+$/ | /^0x[0-9a-f]+$/ | /^0b[01]+$/
+    string_literal    ::= '"' characters '"'
+    characters        ::= '' | (character characters)
+    character         ::= [characters except backslash] | '\\' | '\"' | '\t' | '\r' | '\n' | '\[' | '\0' | ...
+
+But with the understanding that there can be optional whitespace between any pair of tokens, and comments that start with a '#'
+and run to the end of the line.
+
+Intended to allow programs like:
+
+    # Example program
+    var x = 0;
+    var y = 5;
+    var z;
+    var welcome = "Hello, world!\n";
+    
+    printf("%s", welcome);
+    
+    var i = 0;
+    while (i < 5) {
+        i = inc(i); # Increment i
+        printf("Loop number %d\n", i);
+    };
+    
+    var inc = func(x) {
+        return x + 1;
+    };
