@@ -227,9 +227,10 @@ print:
 
 # multiply 2 numbers from stack and return result in r0
 mul:
-    ld x, sp
-    ld r2, 1(x) # r2 = arg1
-    ld r1, 2(x) # r1 = arg2
+    pop x
+    ld r2, x # r2 = arg1
+    pop x
+    ld r1, x # r1 = arg2
     ld r0, 0 # result
     ld r3, 1 # (1 << i)
 
@@ -243,7 +244,7 @@ mul:
         shl r3 # i++
         jnz mul_loop # loop again if the mask has not overflowed
 
-    ret 2
+    ret
 
 str: .str "Hello, world!\n\0"
 
