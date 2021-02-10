@@ -166,6 +166,12 @@ ld (funcptr), x
 call (funcptr)
 out 0, r0
 
+# 24: 8 * 3
+push 8
+push 3
+call mul
+out 0, r0
+
 # print a string
 ld x, str
 push x
@@ -218,6 +224,26 @@ print:
         test (r0)
         jnz print_loop
     ret
+
+# multiply 2 numbers from stack and return result in r0
+mul:
+    ld x, sp
+    ld r2, 1(x) # r2 = arg1
+    ld r1, 2(x) # r1 = arg2
+    ld r0, 0 # result
+    ld r3, 1 # (1 << i)
+
+    mul_loop:
+        ld r4, r2 # r4 = arg1
+        and r4, r3 # r4 = arg1 & (1 << i)
+        jz mul_cont # skip the "add" if this bit is not set
+        add r0, r1 # result += resultn
+    mul_cont:
+        shl r1 # resultn += resultn
+        shl r3 # i++
+        jnz mul_loop # loop again if the mask has not overflowed
+
+    ret 2
 
 str: .str "Hello, world!\n\0"
 
