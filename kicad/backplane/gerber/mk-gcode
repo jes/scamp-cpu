@@ -1,5 +1,5 @@
 #!/bin/sh
 
-gbr2ngc --metric --zsafe 5 --feed 50 --seek 400 backplane-B_Cu.gbr > B_Cu.gcode
-gbr2ngc --metric --zsafe 5 --zcut -2 --feed 50 --seek 400 backplane-Edge_Cuts.gbr > Edge_Cuts.gcode
+gbr2ngc --metric --radius 0.1 --zsafe 5 --feed 50 --seek 400 backplane-B_Cu.gbr > B_Cu.gcode
+gbr2ngc --metric --radius 3 --zsafe 5 --zcut -2 --feed 50 --seek 400 backplane-Edge_Cuts.gbr > Edge_Cuts.gcode
 gbr2ngc --metric --zsafe 5 --feed 50 --seek 400 backplane-F_SilkS.gbr > F_SilkS.gcode
