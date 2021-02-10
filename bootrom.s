@@ -189,7 +189,7 @@ double:
 
 # >>8 1 arg from the stack and return the result in r0
 shr8:
-    ld x, 1(sp) # grab arg from stack
+    pop x
     ld r0, x
     ld r253, r254 # stash return address
     ld r254, 0
@@ -201,7 +201,7 @@ shr8:
         jnz shr8_loop
     ld r0, r254
     ld r254, r253 # restore return address
-    ret 1
+    ret
 
 # add 3 args from the stack and return the result in r0
 add3:
