@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int debug, show_help;
+int test, debug, show_help, test_fail;
 
 uint8_t DI, DO, AI, MI, MO, II, IOH, IOL, JMP, PO, PP, XI, EO, YI, RT;
 uint8_t EX, NX, EY, NY, F, NO;
@@ -75,7 +75,15 @@ uint16_t in(uint16_t addr) {
 }
 
 /* output a word to addr */
+int expect_output = 0;
 void out(uint16_t val, uint16_t addr) {
+    if (test && addr == 0) {
+        if (val != expect_output) {
+            printf("Out %d: got %d\n", expect_output, val);
+            test_fail = 1;
+        }
+        expect_output++;
+    }
     if (addr == 2) {
         printf("%c", val);
     }
@@ -202,20 +210,24 @@ void help(void) {
 }
 
 int main(int argc, char **argv) {
+    int steps = 0;
+
     /* parse options */
     while (1) {
         static struct option opts[] = {
             {"debug", no_argument, &debug,     1},
+            {"test",  no_argument, &test,      1},
             {"help",  no_argument, &show_help, 1},
             {0, 0, 0, 0},
         };
 
         int optidx = 0;
-        int c = getopt_long(argc, argv, "dh", opts, &optidx);
+        int c = getopt_long(argc, argv, "dht", opts, &optidx);
 
         if (c == -1) break;
         if (c == 'd') debug = 1;
         if (c == 'h') show_help = 1;
+        if (c == 't') test = 1;
     }
 
     if (show_help) help();
@@ -225,8 +237,10 @@ int main(int argc, char **argv) {
     load_bootrom();
 
     /* run the clock */
-    while (1) {
+    while (!test || (steps++ < 2000)) {
         negedge();
         posedge();
     }
+
+    return test_fail;
 }

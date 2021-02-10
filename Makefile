@@ -27,7 +27,8 @@ bootrom-low.hex: bootrom.hex
 bootrom-high.hex: bootrom.hex
 	sed 's/..$$//' bootrom.hex > bootrom-high.hex
 
-test: ucode-low.hex ucode-high.hex bootrom-low.hex bootrom-high.hex
+test: ucode-low.hex ucode-high.hex bootrom-low.hex bootrom-high.hex emulator/scamp
+	cd emulator/ && ./scamp -t
 	cd verilog && ./run-tests.sh
 
 asm/instructions.json: ucode/ucode.s
