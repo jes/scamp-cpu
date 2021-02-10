@@ -111,3 +111,28 @@ Unused microcode decodings can be exposed on the backplane via jumpers. The avai
 | u1    | bit 1      | 33 |
 
 Microcode bit 0 is exposed on backplane pin 32 without a jumper, even though it is currently unused.
+
+## Backplane
+
+I plan to (at least attempt to) make the backplane on the CNC machine.
+
+Traces are all on the back-side copper layer. There is also silkscreen labelling the pins on the top side. It's not the
+end of the world if I can't have the text. My vague plan is to spray-paint the non-copper side of the board black and then
+engrave the text into it, so the paint is removed where the text goes.
+
+The backplane board is 302.0 mm by 104.0 mm.
+
+The connectors are spaced 40 mm apart.
+
+There is a 3.2 mm mounting hole lined up with the centre of each connector, spaced apart horizontally by 92.0 mm.
+
+CNC order of operations:
+
+    1. drill mounting holes from back side, into bed by a couple of mm, to use for alignment later
+    2. cut out copper on back side
+    3. remove from machine and spray paint front side
+    4. put board back on machine, front-side-up, and pick up alignment holes
+    5. cut silkscreen text
+    6. cut edges
+
+If it doesn't work... there's always JLCPCB.
