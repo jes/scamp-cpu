@@ -171,17 +171,15 @@ $EndComp
 $Comp
 L 74xx:74LS04 U3
 U 1 1 608352E5
-P 2850 900
-F 0 "U3" H 2850 1217 50  0000 C CNN
-F 1 "74LS04" H 2850 1126 50  0000 C CNN
-F 2 "Package_DIP:DIP-14_W7.62mm_Socket" H 2850 900 50  0001 C CNN
-F 3 "http://www.ti.com/lit/gpn/sn74LS04" H 2850 900 50  0001 C CNN
-	1    2850 900 
+P 4800 4300
+F 0 "U3" H 4800 4617 50  0000 C CNN
+F 1 "74LS04" H 4800 4526 50  0000 C CNN
+F 2 "Package_DIP:DIP-14_W7.62mm_Socket" H 4800 4300 50  0001 C CNN
+F 3 "http://www.ti.com/lit/gpn/sn74LS04" H 4800 4300 50  0001 C CNN
+	1    4800 4300
 	1    0    0    -1  
 $EndComp
-Text GLabel 2550 900  0    50   Input ~ 0
-Z_LT
-Text GLabel 3150 900  2    50   Input ~ 0
+Text GLabel 5100 4300 2    50   Input ~ 0
 GT
 $Comp
 L 74xx:74LS04 U3
@@ -605,8 +603,6 @@ Text GLabel 3900 4400 0    50   Input ~ 0
 LT
 Text GLabel 3900 4950 0    50   Input ~ 0
 JGT_GT
-Text GLabel 4500 4300 2    50   Input ~ 0
-Z_LT
 Text GLabel 5100 4950 2    50   Input ~ 0
 JMP
 $Comp
@@ -1977,4 +1973,6 @@ Text GLabel 9550 2400 2    50   Input ~ 0
 GND
 Text GLabel 10600 6150 2    50   Input ~ 0
 spare0
+Text Notes 4950 2700 0    50   ~ 0
+bus_in==0 needs\nto be unused
 $EndSCHEMATC
