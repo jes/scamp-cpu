@@ -52,6 +52,40 @@ The instruction set is documented in table.html.
 
 It might be nice to add the hex representation of the microcode.
 
+## Function calls
+
+Function arguments are passed on the stack, in an order not yet determined. Return address is passed
+in r254. Nested function calls (which is almost all of them) need to save r254.
+
+There are 2 obvious ways to collect arguments:
+
+    func:
+        pop x        # 7 cycles, 1 word
+        ld r1, x     # 4 cycles, 1 word
+        pop x        # 7 cycles, 1 word
+        ld r2, x     # 4 cycles, 1 word
+        ...
+        ret          # 4 cycles, 1 word
+
+and
+
+    func:
+        ld x, sp     # 4 cycles, 1 word
+        ld r1, 1(sp) # 8 cycles, 2 words
+        ld r2, 2(sp) # 8 cycles, 2 words
+        ...
+        ret 2        # 8 cycles, 1 word
+
+So for *n* arguments:
+ - The `pop` method uses *11n+4* clock cycles and *2n+1* words.
+ - The `ld r, i16(x)` method uses *8n+12* clock cycles and *2n+2* words.
+
+Optimising for memory:
+ - Always use `pop`, it is always 1 word shorter
+
+Optimising for speed:
+ - Use `pop` for *n<=2* and `ld r, i16(x)` otherwise
+
 ## Assembly language
 
 Each line is 1 instruction or 1 assembler directive. Each line optionally begins
