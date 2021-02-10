@@ -32,7 +32,7 @@ I'm currently designing the PCBs:
  - [x] ALU
  - [x] Memory
  - [x] Instruction/control
- - [ ] Backplane
+ - [x] Backplane
  - [ ] Clock
  - [ ] Serial port
  - [ ] Storage
