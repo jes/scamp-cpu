@@ -235,8 +235,8 @@ mul:
     ld r3, 1 # (1 << i)
 
     mul_loop:
-        ld r4, r2 # r4 = arg1
-        and r4, r3 # r4 = arg1 & (1 << i)
+        ld x, r2 # x = arg1
+        and x, r3 # x = arg1 & (1 << i)
         jz mul_cont # skip the "add" if this bit is not set
         add r0, r1 # result += resultn
     mul_cont:
