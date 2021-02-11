@@ -502,7 +502,7 @@ sub parseArguments {
 
 sub parseUnaryExpression {
     my $op = $s[$pos];
-    return 0 if !matchChar(qr/[!~+-]/);
+    return 0 if !matchChar(qr/[!~*+-]/);
     skip();
     if (!parseExpression()) {
         die "unary operator $op must be followed by an expression";
@@ -531,9 +531,35 @@ sub parseUnaryExpression {
         print "pop x\n";
         print "neg x\n";
         print "push x\n";
+    } elsif ($op eq '*') {
+        # pop arg from stack, dereference it, put it back on stack
+        print "# pointer dereference:\n";
+        print "pop x\n";
+        print "ld x, (x)\n";
+        print "push x\n";
     }
 
     return 1;
+}
+
+sub parseAddressOf {
+    return 0 if !parseChar('&');
+    skip();
+    die "can't take address of anything other than an identifier" if !parseIdentifier();
+    skip();
+
+    my $id = pop @stack;
+    die "expected identifier" if $id->{type} ne 'identifier';
+
+    my $sym = symlookup($id->{name});
+    if ($sym->{type} eq 'global') {
+        print "# &$id->{name} (global)\n";
+        print "ld x, $id->{name}\n";
+        print "push x\n";
+    } else {
+        print "# &$id->{name} (local)\n";
+        die "todo: can't take address of a local\n";
+    }
 }
 
 sub label {
@@ -612,7 +638,7 @@ sub parseBinary4 {
 }
 
 sub parseBinary5 {
-    return 1 if parseConstant() || parseFunctionCall() || parseUnaryExpression() || parseParenExpression();
+    return 1 if parseConstant() || parseFunctionCall() || parseAddressOf() || parseUnaryExpression() || parseParenExpression();
 
     return 0 if !parseIdentifier();
     my $id = pop @stack;
@@ -626,6 +652,8 @@ sub parseBinary5 {
         print "ld x, ($id->{name})\n";
         print "push x\n";
     } else {
+        # TODO: when this is a local in a parent scope, we need to add all the
+        # intervening bp_rel values
         print "# local $id->{name}\n";
         print "ld x, r253\n";
         print "add x, $sym->{bp_rel}\n";
