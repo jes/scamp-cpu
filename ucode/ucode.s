@@ -917,6 +917,10 @@ ld (x), (i16): # Load the value in <tt>(i16)</tt> into <tt>(x)</tt>.
     MO AI
     MI YO
 
+ld x, (x): # Load the value in <tt>(x)</tt> into <tt>x</tt>.
+    XO AI
+    MO XI
+
 ld y, x: # Load <tt>x</tt> into <tt>y</tt>. Only useful for <tt>xor x, y</tt>.
     YI XO
 
@@ -928,7 +932,6 @@ ld y, i16: # Load <tt>i16</tt> into <tt>y</tt>. Only useful for <tt>xor x, y</tt
     PO AI
     MO YI P+
 
-nop:
 nop:
 
 jmp x: # Jump to <tt>x</tt>.
