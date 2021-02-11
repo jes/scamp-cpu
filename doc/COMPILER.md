@@ -136,7 +136,8 @@ Something like (completely unimplemented and untested):
     conditional       ::= ('if' expression block) | ('if' expression block 'else' block)
     loop              ::= 'while' expression block
     return            ::= 'return' expression
-    expression        ::= constant | function_call | unary_expression | binary_expression | ('(' expression ')')
+    expression        ::= constant | function_call | unary_expression | binary_expression | paren_expression
+    paren_expression  ::= '(' expression ')'
     function_call     ::= identifier '(' expressions ')'
     expressions       ::= '' | (expression ',' expressions)
     unary_expression  ::= unary_op expression

@@ -37,7 +37,6 @@ if (parseProgram()) {
 # TODO: order the disjunctions so that the most-specific ones come first (i.e. don't let keywords
 #       match as identifiers in expressions if we can unambiguously identify them as their actual
 #       keyword)
-# TODO: bounds-checking on $pos
 
 sub parseProgram {
     return parseStatements();
