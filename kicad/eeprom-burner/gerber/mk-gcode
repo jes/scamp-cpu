@@ -1,18 +1,22 @@
-#!/bin/sh
+#!/bin/bash
 
 echo "B_Cu:"
 gbr2ngc --metric --radius 0.1 --zsafe 5 --feed 50 --seek 400 eeprom-burner-B_Cu.gbr > B_Cu.gcode.tmp
-echo "0 -75" | gcodetile --show-bounds --invert-y B_Cu.gcode.tmp > B_Cu.gcode
+echo "-75 -75" | gcodetile --show-bounds --invert-y B_Cu.gcode.tmp > B_Cu.gcode
 rm B_Cu.gcode.tmp
 
 echo "Edge_Cuts:"
 gbr2ngc --metric --radius 3 --zsafe 5 --zcut -2 --feed 50 --seek 400 eeprom-burner-Edge_Cuts.gbr > Edge_Cuts.gcode.tmp
-echo "0 75" | gcodetile --show-bounds Edge_Cuts.gcode.tmp > Edge_Cuts.gcode
+# The sed command strips the second path so that we don't cut out the *inside* of the edge cuts
+echo "-75 75" | gcodetile --show-bounds Edge_Cuts.gcode.tmp | sed '/^( path 1/,$ d' > Edge_Cuts.gcode
 rm Edge_Cuts.gcode.tmp
 
 echo "F_SilkS:"
 gbr2ngc --metric --zsafe 5 --feed 50 --seek 400 eeprom-burner-F_SilkS.gbr > F_SilkS.gcode.tmp
-echo "0 75" | gcodetile --show-bounds F_SilkS.gcode.tmp > F_SilkS.gcode
+echo "-75 75" | gcodetile --show-bounds F_SilkS.gcode.tmp > F_SilkS.gcode
 rm F_SilkS.gcode.tmp
 
-/bin/echo -e " ***\n *** Please manually edit Edge_Cuts.gcode to remove the second path\n ***"
+echo "Drill:"
+drl2gcode --safe-height 5 eeprom-burner.drl
+echo "-75 75" | gcodetile --show-bounds <(cat eeprom-burner_T*.gcode) > Drill.gcode
+rm eeprom-burner_T*.gcode
