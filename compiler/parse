@@ -20,15 +20,9 @@ my $scope = {
 
 my @stack;
 
-if (parseProgram()) {
-    print "OK!\n";
-    if ($pos == @s) {
-        print "Parsed all input\n";
-    } else {
-        print "Ended at $pos (line $line, col $col): had " . (@s-$pos) . " chars left over\n";
-    }
-} else {
-    print "Bad!\n";
+parseProgram();
+if ($pos != @s) {
+    print "Ended at $pos (line $line, col $col): had " . (@s-$pos) . " chars left over\n";
 }
 
 # recursive descent parser based on https://www.youtube.com/watch?v=Ytq0GQdnChg
@@ -313,7 +307,7 @@ sub parseDecimalLiteral {
 sub genliteral {
     my ($val) = @_;
 
-    $val += 0x10000 if $val < 0;
+    $val += 0x10000 if $val < 0; # make everything positive
 
     die "numeric literal out of range: $val\n" if $val < 0 || $val > 0xffff;
 
@@ -326,12 +320,31 @@ sub genliteral {
 }
 
 # write a jump to endofstringlabel, write the string, write the endofstringlabel
-# future: add it to the table of string constants, and write these at the end of the program
 sub parseStringLiteral {
     return 0 if !parseChar('"');
+    my $startstring = label();
+    my $endstring = label();
+
+    # XXX: generate string in-line
+    # TODO: add it to a table of string constants and write them at the end of the program
+
+    print "jmp $endstring\n";
+    print "$startstring:\n";
     while ($pos < @s) {
-        $pos++ if parseChar('\\');
-        return 1 if parseChar('"');
+        if (parseChar('"')) {
+            skip();
+
+            print ".word 0\n"; # terminate
+            print "$endstring:\n";
+            print "ld x, $startstring\n";
+            print "push x\n";
+            return 1;
+        }
+        if (parseChar('\\')) {
+            # TODO: handle escaped chars
+        } else {
+            print ".word " . ord($s[$pos]) . "\n";
+        }
         $pos++;
     }
     die "un-terminated string literal (started at line ... col ...)\n";
