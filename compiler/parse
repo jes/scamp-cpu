@@ -516,7 +516,7 @@ sub parseUnaryExpression {
         print "push x\n";
     } elsif ($op eq '!') {
         # test arg from stack, if it's zero do nothing, otherwise overwrite it with a 1
-        print "unary not:\n";
+        print "# unary not:\n";
         my $endlabel = label();
         print "ld x, 1(sp)\n";
         print "test x\n";
