@@ -1,0 +1,405 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use List::Util qw(any);
+
+my @s = split //, join('',<>);
+my $pos = 0;
+my $line = 1;
+my $col = 1;
+
+if (parseProgram()) {
+    print "OK!\n";
+    if ($pos == @s) {
+        print "Parsed all input\n";
+    } else {
+        print "Ended at $pos (line $line, col $col): had " . (@s-$pos) . " chars left over\n";
+    }
+} else {
+    print "Bad!\n";
+}
+
+# recursive descent parser based on https://www.youtube.com/watch?v=Ytq0GQdnChg
+# each parseFoo() parses a rule from the grammar:
+#  - if it matches, return true and $pos points at the next character in the input
+#  - if it doesn't match, return false and leave $pos unchanged
+# TODO: get out of manually restoring $pos, make something do it for us
+# TODO: construct syntax tree, or at least a parse stack?
+# TODO: code generation
+# TODO: restore line/col when pos is restored
+# TODO: better error-checking ('e.g.' after 'var', there *must* be an identifier, seeing 'var'
+#       not immediately followed by an identifier is a fatal syntax error), some sort of "accept"
+#       vs "require" system
+# TODO: some tracing of call stack for debugging
+# TODO: only skip() after terminals
+# TODO: order the disjunctions so that the most-specific ones come first (i.e. don't let keywords
+#       match as identifiers in expressions if we can unambiguously identify them as their actual
+#       keyword)
+# TODO: bounds-checking on $pos
+
+sub parseProgram {
+    return parseStatements();
+}
+
+sub parseStatements {
+    while (1) {
+        skip();
+        return 1 if !parseStatement();
+        skip();
+        return 1 if !parseChar(';');
+    }
+}
+
+sub parseStatement {
+    return 1 if parseBlock() || parseExtern() || parseDeclaration() || parseConditional() || parseLoop() || parseReturn() || parseAssignment() || parseExpression();
+    return 0;
+}
+
+sub parseBlock {
+    my $pos0 = $pos;
+    return 1 if parseChar('{') && skip() &&
+        parseStatements() && skip()
+        && parseChar('}') && skip();
+    $pos = $pos0;
+    return 0;
+}
+
+sub parseDeclaration {
+    my $pos0 = $pos;
+    return 1 if
+        parseString('var') && skip()
+        && parseIdentifier() && skip()
+        && parseChar('=') && skip()
+        && parseExpression() && skip();
+    $pos = $pos0;
+    return 1 if 
+        parseString('var') && skip()
+        && parseIdentifier() && skip();
+    $pos = $pos0;
+    return 0;
+}
+
+sub parseExtern {
+    my $pos0 = $pos;
+    return 1 if parseString('extern') && skip()
+        && parseIdentifier() && skip();
+    $pos = $pos0;
+    return 0;
+}
+
+sub parseAssignment {
+    my $pos0 = $pos;
+    return 1 if
+        parseLValue() && skip()
+        && parseChar('=') && skip()
+        && parseExpression() && skip();
+    $pos = $pos0;
+    return 0;
+}
+
+sub parseLValue {
+    my $pos0 = $pos;
+    return 1 if parseIdentifier();
+    return 0 if !parseChar('*');
+    return 1 if parseExpression();
+    $pos = $pos0;
+    return;
+}
+
+sub parseConditional {
+    my $pos0 = $pos;
+    return 1 if parseString("if") && skip()
+        && parseChar('(') && skip()
+        && parseExpression() && skip()
+        && parseChar(')') && skip()
+        && parseStatement() && skip()
+        && parseString("else") && skip()
+        && parseStatement() && skip();
+    $pos = $pos0;
+    return 1 if parseString("if") && skip()
+        && parseChar('(') && skip()
+        && parseExpression() && skip()
+        && parseChar(')') && skip()
+        && parseStatement() && skip();
+    $pos = $pos0;
+    return 0;
+}
+
+sub parseLoop {
+    my $pos0 = $pos;
+    return 1 if parseString('while') && skip()
+        && parseChar('(') && skip()
+        && parseExpression() && skip()
+        && parseChar(')') && skip()
+        && parseStatement() && skip();
+    $pos = $pos0;
+    return 0;
+}
+
+sub parseReturn {
+    my $pos0 = $pos;
+    return 1 if parseString('return') && skip()
+        && parseExpression() && skip();
+    $pos = $pos0;
+    return 0;
+}
+
+sub parseConstant {
+    return parseNumericLiteral() || parseStringLiteral() || parseFunctionDeclaration();
+}
+
+sub parseNumericLiteral {
+    return parseHexLiteral() || parseBinaryLiteral() || parseCharacterLiteral() || parseDecimalLiteral();
+}
+
+sub parseHexLiteral {
+    my $pos0 = $pos;
+    return 0 if !parseString("0x");
+    if (!matchChar(qr/[0-9a-fA-F]/)) {
+        $pos = $pos0;
+        return 0;
+    }
+    while (matchChar(qr/[0-9a-fA-F]/)) { }
+    skip();
+    return 1;
+}
+
+sub parseBinaryLiteral {
+    my $pos0 = $pos;
+    return 0 if !parseString("0b");
+    if (!matchChar(qr/[01]/)) {
+        $pos = $pos0;
+        return 0;
+    }
+    while (matchChar(qr/[01]/)) { }
+    skip();
+    return 1;
+}
+
+sub parseCharacterLiteral {
+    my $pos0 = $pos;
+    return 0 if !parseChar("'");
+    my $c = $s[$pos++];
+    $pos++ if $c eq '\\';
+    return 1 if parseChar("'");
+    $pos = $pos0;
+    return 0;
+}
+
+sub parseDecimalLiteral {
+    return 0 if !matchChar(qr/\d/);
+    while (matchChar(qr/\d/)) {}
+    skip();
+    return 1;
+}
+
+sub parseStringLiteral {
+    return 0 if !parseChar('"');
+    while ($pos < @s) {
+        $pos++ if parseChar('\\');
+        return 1 if parseChar('"');
+        $pos++;
+    }
+    die "un-terminated string literal (started at line ... col ...)\n";
+}
+
+sub parseFunctionDeclaration {
+    my $pos0 = $pos;
+    return 1 if
+        parseString('func') && skip()
+        && parseChar('(') && skip()
+        && parseParameters() && skip()
+        && parseChar(')') && skip()
+        && parseStatement() && skip();
+    $pos = $pos0;
+    return 0;
+}
+
+sub parseParameters {
+    while (1) {
+        skip();
+        return 1 if !parseIdentifier();
+        skip();
+        return 1 if !parseChar(',');
+    }
+}
+
+sub parseFunctionCall {
+    my $pos0 = $pos;
+    return 1 if parseIdentifier() && skip()
+        && parseChar('(') && skip()
+        && parseArguments() && skip()
+        && parseChar(')') && skip();
+    $pos = $pos0;
+    return 0;
+}
+
+sub parseArguments {
+    while (1) {
+        skip();
+        return 1 if !parseExpression();
+        skip();
+        return 1 if !parseChar(',');
+    }
+}
+
+sub parseUnaryExpression {
+    my $pos0 = $pos;
+    return 0 if !matchChar(qr/[!~]/);
+    skip();
+    return 1 if parseExpression();
+    $pos = $pos0;
+    return 0;
+}
+
+sub parseBinaryExpression {
+    my $pos0 = $pos;
+    return 0 if !parseIdentifier() && skip(); # TODO: accept expression here
+
+    # TODO: precedence!
+    # http://www.engr.mun.ca/~theo/Misc/exp_parsing.htm
+    #
+    # The classic solution to recursive-descent parsing of expressions is to
+    # create a new nonterminal for each level of precedence as follows. G2:
+    #
+    # E --> T {( "+" | "-" ) T}
+    # T --> F {( "*" | "/" ) F}
+    # F --> P ["^" F]
+    # P --> v | "(" E ")" | "-" T
+
+    if (parseString('>=') || parseString('<=') || parseString('==') || parseString('!=') || matchChar(qr/[\+\-\*\/]/)) {
+        skip();
+        return 1 if parseExpression() && skip();
+    }
+    $pos = $pos0;
+    return 0;
+}
+
+sub parseExpression {
+    my $pos0 = $pos;
+    while (1) {
+        if (!parseBinary1()) {
+            $pos = $pos0;
+            return 0;
+        }
+        skip();
+        return 1 if !matchChar(qr/[\*\/%]/);
+        skip();
+    }
+}
+
+sub parseBinary1 {
+    my $pos0 = $pos;
+    while (1) {
+        if (!parseBinary2()) {
+            $pos = $pos0;
+            return 0;
+        }
+        skip();
+        return 1 if !matchChar(qr/[\+\-]/);
+        skip();
+    }
+}
+
+sub parseBinary2 {
+    my $pos0 = $pos;
+    while (1) {
+        if (!parseBinary3()) {
+            $pos = $pos0;
+            return 0;
+        }
+        skip();
+        return 1 if !matchChar(qr/[&|^]/);
+        skip();
+    }
+}
+
+sub parseBinary3 {
+    my $pos0 = $pos;
+    while (1) {
+        if (!parseBinary4()) {
+            $pos = $pos0;
+            return 0;
+        }
+        skip();
+        return 1 if !(parseString("==") || parseString("!=") || parseString(">=") || parseString("<=") || matchChar(qr/[<>]/));
+        skip();
+    }
+}
+
+sub parseBinary4 {
+    my $pos0 = $pos;
+    while (1) {
+        if (!parseBinary5()) {
+            $pos = $pos0;
+            return 0;
+        }
+        skip();
+        return 1 if !(parseString("&&") || parseString("||"));
+        skip();
+    }
+}
+
+sub parseBinary5 {
+    return parseConstant() || parseFunctionCall() || parseUnaryExpression() || parseParenExpression() || parseIdentifier();
+}
+
+sub parseParenExpression {
+    my $pos0 = $pos;
+    return 0 if !parseChar('(');
+    skip();
+    return 1 if parseExpression() && skip() && parseChar(')') && skip();
+    $pos = $pos0;
+    return 0;
+}
+
+sub parseIdentifier {
+    return 0 if !matchChar(qr/[a-zA-Z_]/);
+    while (matchChar(qr/[a-zA-Z0-9_]/)) {};
+    skip();
+    return 1;
+}
+
+sub parseString {
+    my ($s) = @_;
+    my $pos0 = $pos;
+    for my $c (split //, $s) {
+        if (!parseChar($c)) {
+            $pos = $pos0;
+            return 0;
+        }
+    }
+    return 1;
+}
+
+sub parseChar {
+    my ($c) = @_;
+    return matchChar(qr/\Q$c\E/);
+}
+
+sub matchChar {
+    my ($re) = @_;
+    return 0 if $pos >= @s;
+    return 0 if $s[$pos] !~ /$re/;
+    if ($s[$pos] eq "\n") {
+        $line++;
+        $col = 0;
+    }
+    $pos++;
+    $col++;
+    return 1;
+}
+
+# skip over whitespace and comments
+sub skip {
+    while (1) {
+        if (parseChar('#')) {
+            while (matchChar(qr/[^\n]/)) { } # skip everything until \n
+        } elsif (!matchChar(qr/[ \t\r\n]/)) {
+            return 1;
+        }
+    }
+}
+
