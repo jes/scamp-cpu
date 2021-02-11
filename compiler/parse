@@ -89,7 +89,7 @@ sub newscope {
     print "# newscope:\n";
     print "ld x, r253\n";
     print "push x\n";
-    print "ld r253, r255\n";
+    print "ld r253, sp\n";
 
     $scope = {
         symbols => {},
@@ -243,13 +243,39 @@ sub parseLoop {
     return 0;
 }
 
+# end however many scopes we're in
 # pop args off stack and 'ret'
 sub parseReturn {
-    my $pos0 = $pos;
-    return 1 if parseString('return') && skip()
-        && parseExpression() && skip();
-    $pos = $pos0;
-    return 0;
+    return 0 if !parseString("return");
+    skip();
+
+    die "must return something" if !parseExpression();
+    skip();
+
+    # we currently have the return value on the stack, we want to pop it to r0
+    print "# return\n";
+    print "pop x\n";
+    print "ld r0, x\n";
+
+    # then clean up however many scopes we've started since opening the function, leaving the
+    # stack pointer where it was when we were called
+    my $bp_add = 0;
+    my $s = $scope;
+    while (!$s->{funcdecl}) {
+        print "pop x\n";
+        print "ld r253, x\n";
+        $s = $s->{parent};
+    }
+    print "pop x\n";
+    print "ld r253, x\n";
+
+    # then pop off each of the args we were passed
+    # ???
+
+    # then return to the caller
+    print "ret\n";
+
+    return 1;
 }
 
 sub parseConstant {
@@ -385,6 +411,8 @@ sub parseFunctionDeclaration {
 
     newscope();
 
+    $scope->{funcdecl} = 1;
+
     while (@stack != $sp0) {
         my $id = pop @stack;
         die "expected identified" if $id->{type} ne 'identifier';
@@ -398,14 +426,25 @@ sub parseFunctionDeclaration {
     die "expected )" if !parseChar(')');
     skip();
 
+    my $functionlabel = label();
+    my $functionend = label();
+
+    print "jmp $functionend\n";
+    print "$functionlabel:\n";
+
     parseStatement();
     skip();
     endscope();
 
     # implicit "return 0"
+    # TODO: use the code for parseReturn() instead; this version is broken
     print "push 0\n";
     print "ret\n";
     print "# end function declaration\n\n";
+
+    print "$functionend:\n";
+    print "ld x, $functionlabel\n";
+    print "push x\n";
 
     return 1;
 }
@@ -436,7 +475,7 @@ sub parseFunctionCall {
             die "identifier type != identifier" if $identifier->{type} ne 'identifier';
 
             # call function
-            print "call $identifier->{name}\n";
+            print "call ($identifier->{name})\n";
 
             # restore r254
             print "pop x\n";
@@ -463,7 +502,7 @@ sub parseArguments {
 
 sub parseUnaryExpression {
     my $op = $s[$pos];
-    return 0 if !matchChar(qr/[!~]/);
+    return 0 if !matchChar(qr/[!~+-]/);
     skip();
     if (!parseExpression()) {
         die "unary operator $op must be followed by an expression";
@@ -484,6 +523,14 @@ sub parseUnaryExpression {
         print "jz $endlabel\n";
         print "ld 1(sp), 1\n";
         print "$endlabel:\n";
+    } elsif ($op eq '+') {
+        # unary + is a no-op
+    } elsif ($op eq '-') {
+        # pop arg from stack, negate it, put it back on stack
+        print "# unary arithmetic negation:\n";
+        print "pop x\n";
+        print "neg x\n";
+        print "push x\n";
     }
 
     return 1;
