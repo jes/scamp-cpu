@@ -887,6 +887,28 @@ ld ((i8h)), i16: # Load <tt>i16</tt> into the value in <tt>(r)</tt>.
     MO AI
     MI YO
 
+ld (x), i16: # Load <tt>i16</tt> into <tt>(x)</tt>.
+    PO AI
+    MO YI P+
+    XO AI
+    MO AI
+    MI YO
+
+ld (x), (i8h): # Load the value in <tt>r</tt> into <tt>(x)</tt>.
+    IOH AI
+    MO YI
+    XO AI
+    MO AI
+    MI YO
+
+ld (x), (i16): # Load the value in <tt>(i16)</tt> into <tt>(x)</tt>.
+    PO AI
+    MO AI P+
+    MO YI
+    XO AI
+    MO AI
+    MI YO
+
 ld y, x: # Load <tt>x</tt> into <tt>y</tt>. Only useful for <tt>xor x, y</tt>.
     YI XO
 
@@ -898,9 +920,6 @@ ld y, i16: # Load <tt>i16</tt> into <tt>y</tt>. Only useful for <tt>xor x, y</tt
     PO AI
     MO YI P+
 
-nop:
-nop:
-nop:
 nop:
 nop:
 nop:
