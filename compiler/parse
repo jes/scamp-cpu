@@ -5,10 +5,20 @@ use warnings;
 
 use List::Util qw(any);
 
-my @s = split //, join('',<>);
+my $s = join('',<>);
+my @s = split //, $s;
 my $pos = 0;
 my $line = 1;
 my $col = 1;
+my $labelnum = 0;
+
+my $scope = {
+    global => 1,
+    symbols => {},
+    parent => undef,
+};
+
+my @stack;
 
 if (parseProgram()) {
     print "OK!\n";
@@ -25,13 +35,10 @@ if (parseProgram()) {
 # each parseFoo() parses a rule from the grammar:
 #  - if it matches, return true and $pos points at the next character in the input
 #  - if it doesn't match, return false and leave $pos unchanged
+#
 # TODO: get out of manually restoring $pos, make something do it for us
-# TODO: construct syntax tree, or at least a parse stack?
 # TODO: code generation
 # TODO: restore line/col when pos is restored
-# TODO: better error-checking ('e.g.' after 'var', there *must* be an identifier, seeing 'var'
-#       not immediately followed by an identifier is a fatal syntax error), some sort of "accept"
-#       vs "require" system
 # TODO: some tracing of call stack for debugging
 # TODO: only skip() after terminals
 # TODO: order the disjunctions so that the most-specific ones come first (i.e. don't let keywords
@@ -39,7 +46,16 @@ if (parseProgram()) {
 #       keyword)
 
 sub parseProgram {
-    return parseStatements();
+    return 0 if !parseStatements();
+
+    die "expected to be left in global scope after program" if !$scope->{global};
+
+    # allocate space for globals
+    for my $global (keys %{ $scope->{symbols} }) {
+        print "$global: .word 0\n";
+    }
+
+    return 1;
 }
 
 sub parseStatements {
@@ -56,30 +72,96 @@ sub parseStatement {
     return 0;
 }
 
+# create new nested scope
 sub parseBlock {
-    my $pos0 = $pos;
-    return 1 if parseChar('{') && skip() &&
-        parseStatements() && skip()
-        && parseChar('}') && skip();
-    $pos = $pos0;
-    return 0;
+    return 0 if !parseChar('{');
+    skip();
+
+    newscope();
+
+    parseStatements() && skip();
+
+    die "block must end with }" if !parseChar('}');
+    skip();
+
+    endscope();
+
+    return 1;
 }
 
+sub newscope {
+    # save old base pointer, and put new base pointer in r253
+    print "ld x, r253\n";
+    print "push x\n";
+    print "ld r253, r255\n";
+
+    $scope = {
+        symbols => {},
+        parent => $scope,
+        bp_rel => 1,
+    };
+}
+
+sub endscope {
+    # restore old base pointer
+    print "pop x\n";
+    print "ld r253, x\n";
+
+    die "can't exit global scope" if $scope->{global};
+
+    $scope = $scope->{parent};
+}
+
+# add name to current scope (possibly global)
 sub parseDeclaration {
-    my $pos0 = $pos;
-    return 1 if
-        parseString('var') && skip()
-        && parseIdentifier() && skip()
-        && parseChar('=') && skip()
-        && parseExpression() && skip();
-    $pos = $pos0;
-    return 1 if 
-        parseString('var') && skip()
-        && parseIdentifier() && skip();
-    $pos = $pos0;
-    return 0;
+    return 0 if !parseString('var');
+    skip();
+    die "var declaration needs identifier" if !parseIdentifier();
+    skip();
+    my $id = pop @stack;
+    die "var declaration expected identifier" if $id->{type} ne 'identifier';
+
+    die "duplicate declaration in scope: $id->{name}" if $scope->{symbols}{$id->{name}};
+
+    # add name to scope
+    $scope->{symbols}{$id->{name}} = {
+        type => $scope->{global} ? 'global' : 'local',
+        bp_rel => $scope->{bp_rel}++,
+    };
+
+    return 1 if !parseChar('=');
+    skip();
+
+    # now an expression to initialise the variable
+    parseExpression();
+    skip();
+
+    storetovar($id->{name});
+    return 1;
 }
 
+sub storetovar {
+    my ($name) = @_;
+
+    if ($scope->{global}) {
+        # load into the global variable
+        print "pop x\n";
+        print "ld ($name), x\n";
+    } else {
+        my $bp_rel = $scope->{symbols}{$name}{bp_rel};
+        # pop into r0, then store into bp_rel relative to base pointer
+        print "pop x\n";
+        print "ld r0, x\n";
+
+        print "ld x, r253\n";
+        print "add x, $bp_rel\n";
+        print "ld (x), r0\n";
+    }
+
+    return 1;
+}
+
+# add name to global scope, but don't allocate any space for it
 sub parseExtern {
     my $pos0 = $pos;
     return 1 if parseString('extern') && skip()
@@ -88,6 +170,10 @@ sub parseExtern {
     return 0;
 }
 
+# stack will have rvalue at top and lvalue below.
+# pop lvalue into r0
+# pop rvalue into r1
+# generate: ld (r1), r0
 sub parseAssignment {
     my $pos0 = $pos;
     return 1 if
@@ -95,9 +181,14 @@ sub parseAssignment {
         && parseChar('=') && skip()
         && parseExpression() && skip();
     $pos = $pos0;
+    # TODO: use storetovar() if the l-value is an identifier
     return 0;
 }
 
+# push address of lvalue onto stack
+# globals: easy
+# locals: ???
+# maybe we say all declarations in a scope have to come before all statements
 sub parseLValue {
     my $pos0 = $pos;
     return 1 if parseIdentifier();
@@ -107,6 +198,9 @@ sub parseLValue {
     return;
 }
 
+# after parseExpression, branch to elselabel if false, then let parseStatement
+# generate its code followed by a jump to the endiflabel, then put the elselabel,
+# and if there's an "else" then let another parseStatement generate its code, then put the endiflabel
 sub parseConditional {
     my $pos0 = $pos;
     return 1 if parseString("if") && skip()
@@ -126,6 +220,8 @@ sub parseConditional {
     return 0;
 }
 
+# write a looplabel, then after parseExpression branch to endwhilelabel if false, then let
+# parseStatement write its code, then jump to looplabel
 sub parseLoop {
     my $pos0 = $pos;
     return 1 if parseString('while') && skip()
@@ -137,6 +233,7 @@ sub parseLoop {
     return 0;
 }
 
+# pop args off stack and 'ret'
 sub parseReturn {
     my $pos0 = $pos;
     return 1 if parseString('return') && skip()
@@ -154,25 +251,31 @@ sub parseNumericLiteral {
 }
 
 sub parseHexLiteral {
-    my $pos0 = $pos;
     return 0 if !parseString("0x");
+    my $pos0 = $pos;
     if (!matchChar(qr/[0-9a-fA-F]/)) {
-        $pos = $pos0;
-        return 0;
+        die "illegal hex literal\n";
     }
     while (matchChar(qr/[0-9a-fA-F]/)) { }
+
+    my $val = substr($s, $pos0, $pos-$pos0);
+    genliteral(hex($val));
+
     skip();
     return 1;
 }
 
 sub parseBinaryLiteral {
-    my $pos0 = $pos;
     return 0 if !parseString("0b");
+    my $pos0 = $pos;
     if (!matchChar(qr/[01]/)) {
-        $pos = $pos0;
-        return 0;
+        die "illegal binary literal\n";
     }
     while (matchChar(qr/[01]/)) { }
+
+    my $val = substr($s, $pos0, $pos-$pos0);
+    genliteral(oct("0b$val"));
+
     skip();
     return 1;
 }
@@ -181,19 +284,49 @@ sub parseCharacterLiteral {
     my $pos0 = $pos;
     return 0 if !parseChar("'");
     my $c = $s[$pos++];
-    $pos++ if $c eq '\\';
+    if ($c eq '\\') {
+        # TODO: special-case these
+        genliteral(ord($s[$pos]));
+        $pos++;
+    } else {
+        genliteral(ord($c));
+    }
+    
     return 1 if parseChar("'");
+    die "illegal character literal\n";
     $pos = $pos0;
     return 0;
 }
 
 sub parseDecimalLiteral {
-    return 0 if !matchChar(qr/\d/);
+    my $pos0 = $pos;
+    return 0 if !matchChar(qr/[-+0-9]/);
     while (matchChar(qr/\d/)) {}
+
+    my $val = substr($s, $pos0, $pos-$pos0);
+    genliteral($val);
+
     skip();
     return 1;
 }
 
+sub genliteral {
+    my ($val) = @_;
+
+    $val += 0x10000 if $val < 0;
+
+    die "numeric literal out of range: $val\n" if $val < 0 || $val > 0xffff;
+
+    if ($val <= 0x00ff || $val >= 0xff00) {
+        print "push $val\n";
+    } else {
+        print "ld x, $val\n";
+        print "push x\n";
+    }
+}
+
+# write a jump to endofstringlabel, write the string, write the endofstringlabel
+# future: add it to the table of string constants, and write these at the end of the program
 sub parseStringLiteral {
     return 0 if !parseChar('"');
     while ($pos < @s) {
@@ -205,17 +338,43 @@ sub parseStringLiteral {
 }
 
 sub parseFunctionDeclaration {
-    my $pos0 = $pos;
-    return 1 if
-        parseString('func') && skip()
-        && parseChar('(') && skip()
-        && parseParameters() && skip()
-        && parseChar(')') && skip()
-        && parseStatement() && skip();
-    $pos = $pos0;
-    return 0;
+    return 0 if !parseString('func');
+    skip();
+
+    die "expected (" if !parseChar('(');
+    skip();
+
+    my $sp0 = @stack;
+    parseParameters();
+    skip();
+
+    newscope();
+
+    while (@stack != $sp0) {
+        my $id = pop @stack;
+        die "expected identified" if $id->{type} ne 'identifier';
+        die "duplicate parameter name: $id->{name}" if $scope->{symbols}{$id->{name}};
+        $scope->{symbols}{$id->{name}} = {
+            type => 'local',
+            bp_rel => $scope->{bp_rel}++,
+        };
+    }
+
+    die "expected )" if !parseChar(')');
+    skip();
+
+    parseStatement();
+    skip();
+    endscope();
+
+    # implicit "return 0"
+    print "push 0\n";
+    print "ret\n";
+
+    return 1;
 }
 
+# somehow return a list of the parameter names to parseFunctionDeclaration()
 sub parseParameters {
     while (1) {
         skip();
@@ -227,10 +386,31 @@ sub parseParameters {
 
 sub parseFunctionCall {
     my $pos0 = $pos;
-    return 1 if parseIdentifier() && skip()
-        && parseChar('(') && skip()
-        && parseArguments() && skip()
-        && parseChar(')') && skip();
+    my $sp0 = @stack;
+    if (parseIdentifier() && skip() # TODO: allow "expression" instead of "identifier"
+        && parseChar('(') && skip()) {
+        # backup r254 before we push arguments
+        print "ld x, r254\n";
+        print "push x\n";
+
+        if (parseArguments() && skip()
+            && parseChar(')') && skip()) {
+            my $identifier = $stack[$sp0];
+            die "identifier type != identifier" if $identifier->{type} ne 'identifier';
+
+            # call function
+            print "call $identifier->{name}\n";
+
+            # restore r254
+            print "pop x\n";
+            print "ld r254, x\n";
+
+            pop @stack while @stack > $sp0;
+            return 1;
+        } else {
+            die "illegal function call\n";
+        }
+    }
     $pos = $pos0;
     return 0;
 }
@@ -245,37 +425,37 @@ sub parseArguments {
 }
 
 sub parseUnaryExpression {
-    my $pos0 = $pos;
+    my $op = $s[$pos];
     return 0 if !matchChar(qr/[!~]/);
     skip();
-    return 1 if parseExpression();
-    $pos = $pos0;
-    return 0;
-}
-
-sub parseBinaryExpression {
-    my $pos0 = $pos;
-    return 0 if !parseIdentifier() && skip(); # TODO: accept expression here
-
-    # TODO: precedence!
-    # http://www.engr.mun.ca/~theo/Misc/exp_parsing.htm
-    #
-    # The classic solution to recursive-descent parsing of expressions is to
-    # create a new nonterminal for each level of precedence as follows. G2:
-    #
-    # E --> T {( "+" | "-" ) T}
-    # T --> F {( "*" | "/" ) F}
-    # F --> P ["^" F]
-    # P --> v | "(" E ")" | "-" T
-
-    if (parseString('>=') || parseString('<=') || parseString('==') || parseString('!=') || matchChar(qr/[\+\-\*\/]/)) {
-        skip();
-        return 1 if parseExpression() && skip();
+    if (!parseExpression()) {
+        die "unary operator $op must be followed by an expression";
     }
-    $pos = $pos0;
-    return 0;
+
+    if ($op eq '~') {
+        # pop arg from stack, negate it, put it back on stack
+        print "pop x\n";
+        print "neg x\n";
+        print "push x\n";
+    } elsif ($op eq '!') {
+        # test arg from stack, if it's zero do nothing, otherwise overwrite it with a 1
+        my $endlabel = label();
+        print "ld x, 1(sp)\n";
+        print "test x\n";
+        print "jz $endlabel\n";
+        print "ld 1(sp), 1\n";
+        print "$endlabel:\n";
+    }
+
+    return 1;
 }
 
+sub label {
+    $labelnum++;
+    return "l__$labelnum";
+}
+
+# while loop: pop 2 args off stack and apply expression
 sub parseExpression {
     my $pos0 = $pos;
     while (1) {
@@ -289,6 +469,7 @@ sub parseExpression {
     }
 }
 
+# while loop: pop 2 args off stack and apply expression
 sub parseBinary1 {
     my $pos0 = $pos;
     while (1) {
@@ -302,6 +483,7 @@ sub parseBinary1 {
     }
 }
 
+# while loop: pop 2 args off stack and apply expression
 sub parseBinary2 {
     my $pos0 = $pos;
     while (1) {
@@ -315,6 +497,7 @@ sub parseBinary2 {
     }
 }
 
+# while loop: pop 2 args off stack and apply expression
 sub parseBinary3 {
     my $pos0 = $pos;
     while (1) {
@@ -328,6 +511,7 @@ sub parseBinary3 {
     }
 }
 
+# while loop: pop 2 args off stack and apply expression
 sub parseBinary4 {
     my $pos0 = $pos;
     while (1) {
@@ -342,7 +526,17 @@ sub parseBinary4 {
 }
 
 sub parseBinary5 {
-    return parseConstant() || parseFunctionCall() || parseUnaryExpression() || parseParenExpression() || parseIdentifier();
+    return 1 if parseConstant() || parseFunctionCall() || parseUnaryExpression() || parseParenExpression();
+
+    return 0 if !parseIdentifier();
+    my $id = pop @stack;
+    die "expected identifier" if $id->{type} ne 'identifier';
+
+    # look up the identifier and push it
+    print "ld x, ($id->{name})\n";
+    print "push x\n";
+
+    return 1;
 }
 
 sub parseParenExpression {
@@ -355,8 +549,13 @@ sub parseParenExpression {
 }
 
 sub parseIdentifier {
+    my $pos0 = $pos;
     return 0 if !matchChar(qr/[a-zA-Z_]/);
     while (matchChar(qr/[a-zA-Z0-9_]/)) {};
+    push @stack, {
+        type => 'identifier',
+        name => substr($s, $pos0, $pos-$pos0),
+    };
     skip();
     return 1;
 }
@@ -401,4 +600,3 @@ sub skip {
         }
     }
 }
-

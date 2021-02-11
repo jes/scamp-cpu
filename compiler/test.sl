@@ -38,8 +38,8 @@ var num2str = func(num) {
     return s;
 };
 
-var a = 42;
-var b = 100;
+var a = ~42;
+var b = !100;
 
 var result;
 
