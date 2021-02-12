@@ -63,7 +63,13 @@ sub parseStatements {
 }
 
 sub parseStatement {
-    return 1 if parseBlock() || parseExtern() || parseDeclaration() || parseConditional() || parseLoop() || parseReturn() || parseAssignment() || parseExpression();
+    return 1 if parseBlock() || parseExtern() || parseDeclaration() || parseConditional() || parseLoop() || parseReturn() || parseAssignment();
+    if (parseExpression()) {
+        # discard the value of the expression
+        print "# discard expression value\n";
+        print "pop x\n";
+        return 1;
+    }
     return 0;
 }
 
