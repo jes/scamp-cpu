@@ -51,6 +51,10 @@ void load_bootrom(void) {
     load_hex(rom, 256, "../bootrom.hex");
 }
 
+void load_ram(uint16_t addr, char *file) {
+    load_hex(ram+addr, 65536-addr, file);
+}
+
 /* compute ALU operation */
 uint16_t alu(uint16_t argx, uint16_t argy) {
     uint16_t val;
@@ -201,6 +205,8 @@ void help(void) {
 "\n"
 "Options:\n"
 "  -d,--debug    Print debug output after each clock cycle\n"
+"  -t,--test     Check whether the boot ROM passes the tests\n"
+"  -r,--run      Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
 "  -h,--help     Show this help text\n"
 "\n"
 "This emulator loads the microcode from ../ucode.hex and boot ROM from ../bootrom.hex.\n"
@@ -211,6 +217,7 @@ void help(void) {
 
 int main(int argc, char **argv) {
     int steps = 0;
+    int jmp0x100 = 0;
 
     setbuf(stdout, NULL);
 
@@ -220,23 +227,34 @@ int main(int argc, char **argv) {
             {"debug", no_argument, &debug,     1},
             {"test",  no_argument, &test,      1},
             {"help",  no_argument, &show_help, 1},
+            {"run",   required_argument,  0, 'r'},
             {0, 0, 0, 0},
         };
 
         int optidx = 0;
-        int c = getopt_long(argc, argv, "dht", opts, &optidx);
+        int c = getopt_long(argc, argv, "dhtr:", opts, &optidx);
 
         if (c == -1) break;
         if (c == 'd') debug = 1;
-        if (c == 'h') show_help = 1;
         if (c == 't') test = 1;
+        if (c == 'r') {
+            load_ram(0x100, optarg);
+            jmp0x100 = 1;
+        }
+
+        if (c == 'h') show_help = 1;
     }
 
     if (show_help) help();
 
     /* load ROMs */
     load_ucode();
-    load_bootrom();
+    if (!jmp0x100) {
+        load_bootrom();
+    } else {
+        rom[0] = 0xb000; /* jmp   */
+        rom[1] = 0x100;  /* 0x100 */
+    }
 
     /* run the clock */
     while (!test || (steps++ < 2000)) {
