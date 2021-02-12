@@ -39,6 +39,7 @@ if ($pos != @s) {
 #       match as identifiers in expressions if we can unambiguously identify them as their actual
 #       keyword)
 # TODO: annotate generated assembly code with the source code that generated it
+# TODO: emit code via a helper that performs peephole optimisation
 
 sub parseProgram {
     return 0 if !parseStatements();
