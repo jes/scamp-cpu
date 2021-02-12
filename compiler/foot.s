@@ -1,6 +1,7 @@
 
 # "halt"
-jr- 1
+ld x, 0
+out 3, x
 
 # take a pointer to a nul-terminated string, and print it
 fprint:

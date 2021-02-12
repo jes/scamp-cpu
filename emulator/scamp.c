@@ -91,6 +91,9 @@ void out(uint16_t val, uint16_t addr) {
     if (addr == 2) {
         printf("%c", val);
     }
+    if (addr == 3) {
+        exit(val);
+    }
 }
 
 /* negative edge of clock: update control lines and outputs to bus */
