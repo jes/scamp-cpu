@@ -39,6 +39,9 @@ if ($pos != @s) {
 #       match as identifiers in expressions if we can unambiguously identify them as their actual
 #       keyword)
 # TODO: annotate generated assembly code with the source code that generated it
+# TODO: reserve some words that will cause issues in the assembler? or prepend an underscore
+#       to all identifiers? including externs? and then the assembly language harness can make
+#       like "_func: .word func", which also handles the function pointer thing
 
 sub parseProgram {
     return 0 if !parseStatements();
@@ -689,13 +692,13 @@ sub pushvar {
     my $sym = symlookup($name);
     die "unrecognised identifier: $name\n" if !$sym;
     if ($sym->{type} eq 'global') {
-        print "# global $name\n";
+        print "# pushvar: global $name\n";
         print "ld x, ($name)\n";
         print "push x\n";
     } else {
         # TODO: when this is a local in a parent scope, we need to add all the
         # intervening bp_rel values
-        print "# local $name\n";
+        print "# pushvar: local $name\n";
         print "ld x, r253\n";
         print "add x, $sym->{bp_rel}\n";
         print "ld x, (x)\n";

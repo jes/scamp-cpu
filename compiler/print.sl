@@ -1,6 +1,8 @@
 extern print;
 extern printnum;
 
-print("sp="); printnum(*0xffff); print("\n");
+var _sp = 0xffff;
+
+print("sp="); printnum(*_sp); print("\n");
 print("Hello, world!\n");
-print("sp="); printnum(*0xffff); print("\n");
+print("sp="); printnum(*_sp); print("\n");

@@ -1,0 +1,6 @@
+#!/bin/sh
+# Run a source file in the emulator
+
+./parse < $1 > prog.s
+cat head.s prog.s foot.s | ../asm/asm > prog.hex
+../emulator/scamp -r prog.hex
