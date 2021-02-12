@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int test, debug, show_help, test_fail;
+int test, debug, show_help, test_fail, watch=-1;
 
 uint8_t DI, DO, AI, MI, MO, II, IOH, IOL, JMP, PO, PP, XI, EO, YI, RT;
 uint8_t EX, NX, EY, NY, F, NO;
@@ -164,7 +164,11 @@ void negedge(void) {
 void posedge(void) {
     if (AI)  addr = bus;
     if (II)  instr = bus;
-    if (MI)  ram[addr] = bus;
+    if (MI) {
+        if (watch == addr)
+            printf("pc=%04x: M[addr] was %04x, now %04x\n", PC, ram[addr], bus);
+        ram[addr] = bus;
+    }
     if (XI)  X = bus;
     if (YI)  Y = bus;
     if (DI)  out(bus, addr);
@@ -210,6 +214,7 @@ void help(void) {
 "  -d,--debug    Print debug output after each clock cycle\n"
 "  -t,--test     Check whether the boot ROM passes the tests\n"
 "  -r,--run      Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
+"  -w,--watch ADDR  Watch for changes to the given address and print them on stderr\n"
 "  -h,--help     Show this help text\n"
 "\n"
 "This emulator loads the microcode from ../ucode.hex and boot ROM from ../bootrom.hex.\n"
@@ -231,11 +236,12 @@ int main(int argc, char **argv) {
             {"test",  no_argument, &test,      1},
             {"help",  no_argument, &show_help, 1},
             {"run",   required_argument,  0, 'r'},
+            {"watch", required_argument,  0, 'w'},
             {0, 0, 0, 0},
         };
 
         int optidx = 0;
-        int c = getopt_long(argc, argv, "dhtr:", opts, &optidx);
+        int c = getopt_long(argc, argv, "dhtr:w:", opts, &optidx);
 
         if (c == -1) break;
         if (c == 'd') debug = 1;
@@ -243,6 +249,9 @@ int main(int argc, char **argv) {
         if (c == 'r') {
             load_ram(0x100, optarg);
             jmp0x100 = 1;
+        }
+        if (c == 'w') {
+            watch = atoi(optarg);
         }
 
         if (c == 'h') show_help = 1;
