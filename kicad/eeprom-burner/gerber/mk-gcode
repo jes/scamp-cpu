@@ -6,7 +6,7 @@ echo "-75 -75" | gcodetile --show-bounds --invert-y B_Cu.gcode.tmp > B_Cu.gcode
 rm B_Cu.gcode.tmp
 
 echo "Edge_Cuts:"
-gbr2ngc --metric --radius 3 --zsafe 5 --zcut -2 --feed 50 --seek 400 eeprom-burner-Edge_Cuts.gbr > Edge_Cuts.gcode.tmp
+gbr2ngc --metric --radius 2 --zsafe 5 --zcut -2 --feed 50 --seek 400 eeprom-burner-Edge_Cuts.gbr > Edge_Cuts.gcode.tmp
 # The sed command strips the second path so that we don't cut out the *inside* of the edge cuts
 echo "-75 75" | gcodetile --show-bounds Edge_Cuts.gcode.tmp | sed '/^( path 1/,$ d' > Edge_Cuts.gcode
 rm Edge_Cuts.gcode.tmp
