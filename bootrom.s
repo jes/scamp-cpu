@@ -188,6 +188,7 @@ double:
     ret
 
 # >>8 1 arg from the stack and return the result in r0
+# XXX: I think this function is actually broken for some inputs
 shr8:
     pop x
     ld r0, x
