@@ -212,6 +212,8 @@ void help(void) {
 int main(int argc, char **argv) {
     int steps = 0;
 
+    setbuf(stdout, NULL);
+
     /* parse options */
     while (1) {
         static struct option opts[] = {
