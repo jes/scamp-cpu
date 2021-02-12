@@ -200,8 +200,7 @@ shr8:
         shl r0
         jnz shr8_loop
     ld r0, r254
-    ld r254, r253 # restore return address
-    ret
+    jmp r253 # return
 
 # add 3 args from the stack and return the result in r0
 add3:
