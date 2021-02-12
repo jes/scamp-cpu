@@ -90,7 +90,11 @@ while (my $line = <>) {
         emit(0x0000) for (1 .. numarg($args[0]));
     } elsif ($op eq '.word') {
         params($op, 1, @args);
-        emit(numarg($args[0]));
+        if ($args[0] =~ /^([a-z_][a-z_0-9]*)$/) {
+            emit($args[0]);
+        } else {
+            emit(numarg($args[0]));
+        }
     } elsif ($op eq '.str') {
         my $str = $line;
         $str =~ s/^\s*.str\s*"//;
