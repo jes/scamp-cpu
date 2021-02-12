@@ -39,9 +39,6 @@ if ($pos != @s) {
 #       match as identifiers in expressions if we can unambiguously identify them as their actual
 #       keyword)
 # TODO: annotate generated assembly code with the source code that generated it
-# TODO: reserve some words that will cause issues in the assembler? or prepend an underscore
-#       to all identifiers? including externs? and then the assembly language harness can make
-#       like "_func: .word func", which also handles the function pointer thing
 
 sub parseProgram {
     return 0 if !parseStatements();
@@ -50,7 +47,7 @@ sub parseProgram {
 
     # allocate space for globals
     for my $global (keys %{ $scope->{symbols} }) {
-        print "$global: .word 0 # global\n" if !$scope->{symbols}{$global}{extern};
+        print "_$global: .word 0 # global\n" if !$scope->{symbols}{$global}{extern};
     }
 
     return 1;
@@ -148,9 +145,10 @@ sub storetovar {
     if ($scope->{global}) {
         # load into the global variable
         print "pop x\n";
-        print "ld ($name), x\n";
+        print "ld (_$name), x\n";
     } else {
         my $bp_rel = $scope->{symbols}{$name}{bp_rel};
+        # XXX: this is probably wrong
         # pop into r0, then store into bp_rel relative to base pointer
         print "pop x\n";
         print "ld r0, x\n";
@@ -590,7 +588,7 @@ sub parseAddressOf {
     my $sym = symlookup($id->{name});
     if ($sym->{type} eq 'global') {
         print "# &$id->{name} (global)\n";
-        print "ld x, $id->{name}\n";
+        print "ld x, _$id->{name}\n";
         print "push x\n";
     } else {
         print "# &$id->{name} (local)\n";
@@ -693,7 +691,7 @@ sub pushvar {
     die "unrecognised identifier: $name\n" if !$sym;
     if ($sym->{type} eq 'global') {
         print "# pushvar: global $name\n";
-        print "ld x, ($name)\n";
+        print "ld x, (_$name)\n";
         print "push x\n";
     } else {
         # TODO: when this is a local in a parent scope, we need to add all the

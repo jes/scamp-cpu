@@ -4,7 +4,7 @@ ld x, 0
 out 3, x
 
 # take a pointer to a nul-terminated string, and print it
-fprint:
+print:
     pop x
     ld r0, x
     print_loop:
@@ -16,7 +16,7 @@ fprint:
 
 # print a number (in hex, with digits reversed...)
 alphabet: .str "0123456789abcdef"
-fprintnum:
+printnum:
     pop x
     ld r0, x
 
@@ -96,5 +96,5 @@ shr8:
     ld r0, r254
     jmp r1 # return
 
-print: .word fprint
-printnum: .word fprintnum
+_print: .word print
+_printnum: .word printnum
