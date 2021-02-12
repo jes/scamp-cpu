@@ -270,7 +270,7 @@ sub parseReturn {
     print "ld r253, x\n";
 
     # then pop off each of the args we were passed
-    # ???
+    # TODO: ???
 
     # then return to the caller
     print "ret\n";
@@ -321,8 +321,7 @@ sub parseCharacterLiteral {
     return 0 if !parseChar("'");
     my $c = $s[$pos++];
     if ($c eq '\\') {
-        # TODO: special-case these
-        genliteral(ord($s[$pos]));
+        genliteral(ord(escapedchar($s[$pos])));
         $pos++;
     } else {
         genliteral(ord($c));
@@ -387,13 +386,28 @@ sub parseStringLiteral {
             return 1;
         }
         if (parseChar('\\')) {
-            # TODO: handle escaped chars
+            print ".word " . ord(escapedchar($s[$pos])) . "\n";
         } else {
             print ".word " . ord($s[$pos]) . "\n";
         }
         $pos++;
     }
     die "un-terminated string literal (started at line ... col ...)\n";
+}
+
+# n => "\n", r => "\r", etc.
+sub escapedchar {
+    my ($c) = @_;
+
+    my %map = (
+        n => "\n",
+        r => "\r",
+        t => "\r",
+        0 => "\0",
+        "]" => "\]",
+    );
+
+    return $map{$c}||$c;
 }
 
 sub parseFunctionDeclaration {
@@ -465,7 +479,7 @@ sub parseFunctionCall {
     if (parseIdentifier() && skip() # TODO: allow "expression" instead of "identifier"
         && parseChar('(') && skip()) {
         print "# parseFunctionCall:\n";
-        # backup r254 before we push arguments
+        # backup return address before we push arguments
         print "ld x, r254\n";
         print "push x\n";
 
@@ -477,9 +491,13 @@ sub parseFunctionCall {
             # call function
             print "call ($identifier->{name})\n";
 
-            # restore r254
+            # restore return address
             print "pop x\n";
             print "ld r254, x\n";
+
+            # push return value
+            print "ld x, r0\n";
+            print "push x\n";
 
             pop @stack while @stack > $sp0;
             return 1;
