@@ -18,5 +18,5 @@ rm F_SilkS.gcode.tmp
 
 echo "Drill:"
 drl2gcode --safe-height 5 eeprom-burner.drl
-echo "-75 75" | gcodetile --show-bounds <(cat eeprom-burner_T*.gcode) > Drill.gcode
+echo "-75 -75" | gcodetile --show-bounds --invert-y <(cat eeprom-burner_T*.gcode) > Drill.gcode
 rm eeprom-burner_T*.gcode
