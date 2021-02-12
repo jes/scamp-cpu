@@ -166,7 +166,7 @@ void posedge(void) {
     if (II)  instr = bus;
     if (MI) {
         if (watch == addr)
-            printf("pc=%04x: M[addr] was %04x, now %04x\n", PC, ram[addr], bus);
+            fprintf(stderr, "pc=%04x: M[addr] was %04x, now %04x\n", PC, ram[addr], bus);
         ram[addr] = bus;
     }
     if (XI)  X = bus;
