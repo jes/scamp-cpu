@@ -40,6 +40,7 @@ if ($pos != @s) {
 #       keyword)
 # TODO: annotate generated assembly code with the source code that generated it
 # TODO: emit code via a helper that performs peephole optimisation
+# TODO: warn if we know a function has been called with the wrong number of arguments
 
 sub parseProgram {
     return 0 if !parseStatements();
@@ -559,11 +560,13 @@ sub parseUnaryExpression {
         # test arg from stack, if it's zero do nothing, otherwise overwrite it with a 1
         print "# unary not:\n";
         my $endlabel = label();
-        print "ld x, 1(sp)\n";
+        print "pop x\n";
         print "test x\n";
-        print "jz $endlabel\n";
-        print "ld 1(sp), 1\n";
+        print "ld x, 0\n"; # doesn't clobber flags
+        print "jnz $endlabel\n"; # if the popped value is not 0, then we want 0
+        print "inc x\n"; # if the popped value was 0, then we want 1
         print "$endlabel:\n";
+        print "push x\n";
     } elsif ($op eq '+') {
         # unary + is a no-op
     } elsif ($op eq '-') {
