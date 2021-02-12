@@ -96,5 +96,27 @@ shr8:
     ld r0, r254
     jmp r1 # return
 
+# multiply 2 numbers from stack and return result in r0
+mul:
+    pop x
+    ld r2, x # r2 = arg1
+    pop x
+    ld r1, x # r1 = arg2
+    ld r0, 0 # result
+    ld r3, 1 # (1 << i)
+
+    mul_loop:
+        ld x, r2 # x = arg1
+        and x, r3 # x = arg1 & (1 << i)
+        jz mul_cont # skip the "add" if this bit is not set
+        add r0, r1 # result += resultn
+    mul_cont:
+        shl r1 # resultn += resultn
+        shl r3 # i++
+        jnz mul_loop # loop again if the mask has not overflowed
+
+    ret
+
 _print: .word print
 _printnum: .word printnum
+_mul: .word mul
