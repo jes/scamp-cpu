@@ -47,7 +47,7 @@ sub parseProgram {
 
     # allocate space for globals
     for my $global (keys %{ $scope->{symbols} }) {
-        print "$global: .word 0 # global\n";
+        print "$global: .word 0 # global\n" if !$scope->{symbols}{$global}{extern};
     }
 
     return 1;
@@ -173,11 +173,24 @@ sub symlookup {
 
 # add name to global scope, but don't allocate any space for it
 sub parseExtern {
-    my $pos0 = $pos;
-    return 1 if parseString('extern') && skip()
-        && parseIdentifier() && skip();
-    $pos = $pos0;
-    return 0;
+    return 0 if !parseString('extern');
+    skip();
+
+    if (!parseIdentifier()) {
+        die "extern expects identifier\n";
+    }
+    skip();
+
+    my $id = pop @stack;
+    die "expected identifier" if $id->{type} ne 'identifier';
+
+    die "can only add extern in global scope" if !$scope->{global};
+    $scope->{symbols}{$id->{name}} = {
+        type => 'global',
+        extern => 1,
+    };
+
+    return 1;
 }
 
 # stack will have rvalue at top and lvalue below.
@@ -485,11 +498,13 @@ sub parseFunctionCall {
 
         if (parseArguments() && skip()
             && parseChar(')') && skip()) {
-            my $identifier = $stack[$sp0];
-            die "identifier type != identifier" if $identifier->{type} ne 'identifier';
+            my $id = $stack[$sp0];
+            die "identifier type != identifier" if $id->{type} ne 'identifier';
 
             # call function
-            print "call ($identifier->{name})\n";
+            pushvar($id->{name}); # XXX: when we parseExpression() instead of parseIdentifier(), this push will happen automatically
+            print "pop x\n";
+            print "call x\n";
 
             # restore return address
             print "pop x\n";
@@ -662,24 +677,30 @@ sub parseBinary5 {
     my $id = pop @stack;
     die "expected identifier" if $id->{type} ne 'identifier';
 
+    pushvar($id->{name});
+
+    return 1;
+}
+
+sub pushvar {
+    my ($name) = @_;
+
     # look up the identifier and push it
-    my $sym = symlookup($id->{name});
-    die "unrecognised identifier: $id->{name}\n" if !$sym;
-    if ($sym->{global}) {
-        print "# global $id->{name}\n";
-        print "ld x, ($id->{name})\n";
+    my $sym = symlookup($name);
+    die "unrecognised identifier: $name\n" if !$sym;
+    if ($sym->{type} eq 'global') {
+        print "# global $name\n";
+        print "ld x, ($name)\n";
         print "push x\n";
     } else {
         # TODO: when this is a local in a parent scope, we need to add all the
         # intervening bp_rel values
-        print "# local $id->{name}\n";
+        print "# local $name\n";
         print "ld x, r253\n";
         print "add x, $sym->{bp_rel}\n";
         print "ld x, (x)\n";
         print "push x\n";
     }
-
-    return 1;
 }
 
 sub parseParenExpression {
