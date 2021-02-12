@@ -1182,10 +1182,25 @@ nop:
 nop:
 nop:
 nop:
+
+call x: # Set <tt>r254</tt> to the return address. Jump to <tt>x</tt>.
+    # clobbers: r254
+    -2 AI
+    PO YI
+    Y+1 MI
+    XO JMP
+
+call (x): # Set <tt>r254</tt> to the return address. Jump to <tt>(x)</tt>.
+    # clobbers: r254
+    -2 AI
+    PO YI
+    Y+1 MI
+    XO AI
+    MO JMP
+
 nop:
 nop:
-nop:
-nop:
+
 
 not x: # Bitwise complement <tt>x</tt>.
     XI ~X
