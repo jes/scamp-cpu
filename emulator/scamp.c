@@ -10,7 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-int test, debug, trace, show_help, test_fail, watch=-1;
+int test, debug, stacktrace, cyclecount, show_help, test_fail, watch=-1;
+int halt;
 
 uint8_t DI, DO, AI, MI, MO, II, IOH, IOL, JMP, PO, PP, XI, EO, YI, RT;
 uint8_t EX, NX, EY, NY, F, NO;
@@ -89,7 +90,7 @@ void out(uint16_t val, uint16_t addr) {
         printf("%c", val);
     }
     if (addr == 3) {
-        exit(val);
+        halt = 1;
     }
 }
 
@@ -129,7 +130,7 @@ void negedge(void) {
     if (T == 1 && debug)
         fprintf(stderr, "[trace] PC=%04x\n", PC);
 
-    if (T == 3 && trace) {
+    if (T == 3 && stacktrace) {
         if (opcode == 0xb7)
             fprintf(stderr, "[stack] PC=%04x: push x: %04x\n", PC, X);
         if (opcode == 0xb8)
@@ -179,7 +180,7 @@ void posedge(void) {
         if (watch == addr)
             fprintf(stderr, "[watch] PC=%04x: M[%04x] was %04x, now %04x\n", PC, addr, ram[addr], bus);
         ram[addr] = bus;
-        if (trace && addr == 0xffff)
+        if (stacktrace && addr == 0xffff)
             fprintf(stderr, "[stack] PC=%04x: sp=%04x: stack = %04x %04x %04x %04x %04x...\n", PC, ram[0xffff], ram[ram[0xffff]+1], ram[ram[0xffff]+2], ram[ram[0xffff]+3], ram[ram[0xffff]+4], ram[ram[0xffff]+5]);
     }
     if (XI)  X = bus;
@@ -224,6 +225,7 @@ void help(void) {
     printf("usage: scamp [-d]\n"
 "\n"
 "Options:\n"
+"  -c,--cycles   Print number of cycles taken\n"
 "  -d,--debug    Print debug output after each clock cycle\n"
 "  -s,--stack    Trace the stack\n"
 "  -t,--test     Check whether the boot ROM passes the tests\n"
@@ -246,8 +248,9 @@ int main(int argc, char **argv) {
     /* parse options */
     while (1) {
         static struct option opts[] = {
+            {"cycles",no_argument, &cyclecount,1},
             {"debug", no_argument, &debug,     1},
-            {"stack", no_argument, &trace,     1},
+            {"stack", no_argument, &stacktrace,1},
             {"test",  no_argument, &test,      1},
             {"help",  no_argument, &show_help, 1},
             {"run",   required_argument,  0, 'r'},
@@ -256,11 +259,12 @@ int main(int argc, char **argv) {
         };
 
         int optidx = 0;
-        int c = getopt_long(argc, argv, "dhstr:w:", opts, &optidx);
+        int c = getopt_long(argc, argv, "cdhstr:w:", opts, &optidx);
 
         if (c == -1) break;
+        if (c == 'c') cyclecount = 1;
         if (c == 'd') debug = 1;
-        if (c == 's') trace = 1;
+        if (c == 's') stacktrace = 1;
         if (c == 't') test = 1;
         if (c == 'r') {
             load_ram(0x100, optarg);
@@ -284,10 +288,16 @@ int main(int argc, char **argv) {
     }
 
     /* run the clock */
-    while (!test || (steps++ < 2000)) {
+    while (!halt) {
         negedge();
         posedge();
+        steps++;
+        if (test && steps > 2000)
+            halt = 1;
     }
+
+    if (cyclecount)
+        fprintf(stderr, "[cycles] Halted after %d cycles.\n", steps);
 
     return test_fail;
 }
