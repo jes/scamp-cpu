@@ -233,10 +233,6 @@ sub parseAssignment {
     return 1;
 }
 
-# push address of lvalue onto stack
-# globals: easy
-# locals: ???
-# maybe we say all declarations in a scope have to come before all statements
 sub parseLValue {
     my $pos0 = $pos;
     return 1 if parseIdentifier();
