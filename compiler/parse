@@ -681,7 +681,9 @@ sub parseAddressOf {
         print "push x\n";
     } else {
         print "# &$id->{name} (local)\n";
-        die "todo: can't take address of a local\n";
+        print "ld x, r253\n";
+        print "add x, ". (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
+        print "push x\n";
     }
 }
 

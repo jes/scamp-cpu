@@ -3,17 +3,7 @@
 extern print;
 extern mul;
 
-var mod = func(num, denom) {
-    var c = 0;
-
-    while (num >= denom) {
-        c = c + 1;
-        num = num - denom;
-    };
-    return num;
-};
-
-var div = func(num, denom) {
+var divmod = func(num, denom, div, mod) {
     var c = 0;
 
     while (num >= denom) {
@@ -21,11 +11,16 @@ var div = func(num, denom) {
         num = num - denom;
     };
 
-    return c;
+    *div = c;
+    *mod = num;
+
+    return 0;
 };
 
 var num2str = func(num) {
     var s = 0x4000;
+    var d;
+    var m;
 
     *s = 0;
 
@@ -37,8 +32,9 @@ var num2str = func(num) {
 
     while (num != 0) {
         s = s - 1;
-        *s = '0' + mod(num, 10);
-        num = div(num, 10);
+        divmod(num, 10, &d, &m);
+        *s = '0' + m;
+        num = d;
     };
 
     return s;
