@@ -619,77 +619,52 @@ sub label {
     return "l__$labelnum";
 }
 
-# while loop: pop 2 args off stack and apply expression
 sub parseExpression {
-    my $pos0 = $pos;
-    while (1) {
-        if (!parseBinary1()) {
-            $pos = $pos0;
-            return 0;
-        }
-        skip();
-        return 1 if !matchChar(qr/[\*\/%]/);
-        skip();
-    }
+    return parseExpressionLevel(0);
 }
 
 # while loop: pop 2 args off stack and apply expression
-sub parseBinary1 {
+sub parseExpressionLevel {
+    my ($level) = @_;
+
+    my @operators = (
+        ['*','/','%'],
+        ['+','-'],
+        ['&','|','^'],
+        ['==','!=','>=','<=','>','<'],
+        ['&&','||'],
+    );
+
+    return parseTerm() if $level == @operators;
+
     my $pos0 = $pos;
+    my $apply_op;
     while (1) {
-        if (!parseBinary2()) {
+        if (!parseExpressionLevel($level+1)) {
             $pos = $pos0;
             return 0;
         }
         skip();
-        return 1 if !matchChar(qr/[\+\-]/);
-        skip();
-    }
-}
 
-# while loop: pop 2 args off stack and apply expression
-sub parseBinary2 {
-    my $pos0 = $pos;
-    while (1) {
-        if (!parseBinary3()) {
-            $pos = $pos0;
-            return 0;
+        # TODO: if not first loop, generate code to pop 2 args and apply $last_op
+        if ($apply_op) {
+            print " # TODO: pop x, pop x, apply $apply_op, push x\n";
         }
-        skip();
-        return 1 if !matchChar(qr/[&|^]/);
-        skip();
-    }
-}
 
-# while loop: pop 2 args off stack and apply expression
-sub parseBinary3 {
-    my $pos0 = $pos;
-    while (1) {
-        if (!parseBinary4()) {
-            $pos = $pos0;
-            return 0;
+        my $ok = 0;
+        for my $op (@{ $operators[$level] }) {
+            if (parseString($op)) {
+                $apply_op = $op;
+                $ok = 1;
+                last;
+            }
         }
-        skip();
-        return 1 if !(parseString("==") || parseString("!=") || parseString(">=") || parseString("<=") || matchChar(qr/[<>]/));
-        skip();
-    }
-}
-
-# while loop: pop 2 args off stack and apply expression
-sub parseBinary4 {
-    my $pos0 = $pos;
-    while (1) {
-        if (!parseBinary5()) {
-            $pos = $pos0;
-            return 0;
-        }
-        skip();
-        return 1 if !(parseString("&&") || parseString("||"));
+        return 1 if !$ok;
         skip();
     }
 }
 
-sub parseBinary5 {
+sub parseTerm {
     return 1 if parseConstant() || parseFunctionCall() || parseAddressOf() || parseUnaryExpression() || parseParenExpression();
 
     return 0 if !parseIdentifier();
