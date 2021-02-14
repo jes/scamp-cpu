@@ -49,5 +49,3 @@ if (result == 4200)
     print(" - OK\n")
 else
     print(" - not OK\n");
-
-while (1) {};

@@ -254,21 +254,48 @@ sub parseLValue {
 # and if there's an "else" then let another parseStatement generate its code, then put the endiflabel
 sub parseConditional {
     my $pos0 = $pos;
-    return 1 if parseString("if") && skip()
-        && parseChar('(') && skip()
-        && parseExpression() && skip()
-        && parseChar(')') && skip()
-        && parseStatement() && skip()
-        && parseString("else") && skip()
-        && parseStatement() && skip();
-    $pos = $pos0;
-    return 1 if parseString("if") && skip()
-        && parseChar('(') && skip()
-        && parseExpression() && skip()
-        && parseChar(')') && skip()
-        && parseStatement() && skip();
-    $pos = $pos0;
-    return 0;
+    return 0 if !parseString("if");
+    skip();
+
+    my $falselabel = label();
+
+    die "if condition needs open paren" if !parseChar("(");
+    skip();
+
+    print "# if condition\n";
+    die "if condition needs expression" if !parseExpression();
+    skip();
+
+    # if top of stack is 0, jmp $falselabel
+    print "pop x\n";
+    print "test x\n";
+    print "jz $falselabel\n";
+
+    die "if condition needs close paren" if !parseChar(")");
+    skip();
+
+    print "# if body\n";
+    die "if needs body" if !parseStatement();
+    skip();
+
+    if (parseString("else")) {
+        skip();
+
+        my $endiflabel = label();
+        print "jmp $endiflabel\n";
+
+        print "# else body\n";
+        print "$falselabel:\n";
+
+        die "else needs body" if !parseStatement();
+        skip();
+
+        print "$endiflabel:\n";
+    } else {
+        print "$falselabel:\n";
+    }
+
+    return 1;
 }
 
 # write a looplabel, then after parseExpression branch to endwhilelabel if false, then let
@@ -675,8 +702,6 @@ sub parseExpressionLevel {
         '-' => 'sub',
         '&' => 'and',
         '|' => 'or',
-        '==' => 'jnz',
-        '!=' => 'jz',
     );
 
     return parseTerm() if $level == @operators;
@@ -700,12 +725,21 @@ sub parseExpressionLevel {
             if ($apply_op =~ /^[-+&|]$/) {
                 print "$mnemonic{$apply_op} x, r0\n";
 
-            } elsif ($apply_op =~ /^(==|!=)$/) {
+            } elsif ($apply_op eq '!=') {
                 my $end = label();
                 print "sub x, r0\n";
                 # now x == 0 if args are equal
-                print "$mnemonic{$apply_op} $end\n";
+                print "jz $end\n";
                 print "ld x, 1\n";
+                print "$end:\n";
+
+            } elsif ($apply_op eq '==') {
+                my $end = label();
+                print "sub x, r0\n";
+                # now x == 0 if args are equal
+                print "ld x, 0\n"; # doesn't clobber flags
+                print "jnz $end\n"; # if the operands are not equal, then we want 0
+                print "inc x\n";
                 print "$end:\n";
 
             } elsif ($apply_op eq '>=') {
