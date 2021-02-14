@@ -29,7 +29,8 @@ bootrom-high.hex: bootrom.hex
 
 test: ucode-low.hex ucode-high.hex bootrom-low.hex bootrom-high.hex emulator/scamp
 	cd emulator/ && ./scamp -t
-	cd verilog && ./run-tests.sh
+	cd compiler/ && ./run-test.sh
+	cd verilog/ && ./run-tests.sh
 
 asm/instructions.json: ucode/ucode.s
 	./ucode/mk-instructions-json < ucode/ucode.s > asm/instructions.json.tmp

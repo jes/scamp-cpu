@@ -60,19 +60,52 @@ var num2str = func(num) {
     return s;
 };
 
-var n = 0;
-var f1 = 1;
-var f2 = 0;
-var f3 = 0;
+var optest = func() {
+    var a = 0xaaaa;
+    var b = 0x55aa;
 
-while (n <= 20) {
-    f3 = f1 + f2;
-    f1 = f2;
-    f2 = f3;
-    n = n + 1;
+    print("Operators test:\n");
 
-    # TODO: printf()
-    print("fib("); print(num2str(n)); print(") = ");
-    print(num2str(f3));
+    print("a="); print(num2str(a)); print("\n");
+    print("b="); print(num2str(b)); print("\n");
+    print("a+b="); print(num2str(a+b)); print("\n");
+    print("a-b="); print(num2str(a-b)); print("\n");
+    print("a&b="); print(num2str(a&b)); print("\n");
+    print("a|b="); print(num2str(a|b)); print("\n");
+    print("a^b="); print(num2str(a^b)); print("\n");
+    print("a&&b="); print(num2str(a&&b)); print("\n");
+    print("a||b="); print(num2str(a||b)); print("\n");
+    print("a&&0="); print(num2str(a&&0)); print("\n");
+    print("a||0="); print(num2str(a||0)); print("\n");
+
     print("\n");
 };
+
+var fibtest = func() {
+    var n = 0;
+    var f1 = 1;
+    var f2 = 0;
+    var f3 = 0;
+
+    print("Fibonacci numbers:\n");
+
+    while (n <= 20) {
+        f3 = f1 + f2;
+        f1 = f2;
+        f2 = f3;
+        n = n + 1;
+
+        # TODO: printf()
+        print("fib("); print(num2str(n)); print(") = ");
+        print(num2str(f3));
+        print("\n");
+    };
+
+    print("\n");
+};
+
+var sp = 0xffff;
+print("Initial sp="); print(num2str(*sp)); print("\n");
+optest();
+fibtest();
+print("Final sp="); print(num2str(*sp)); print("\n");
