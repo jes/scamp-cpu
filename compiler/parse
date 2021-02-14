@@ -643,7 +643,7 @@ sub parseUnaryExpression {
         print "test x\n";
         print "ld x, 0\n"; # doesn't clobber flags
         print "jnz $endlabel\n"; # if the popped value is not 0, then we want 0
-        print "inc x\n"; # if the popped value was 0, then we want 1
+        print "ld x, 1\n"; # if the popped value was 0, then we want 1
         print "$endlabel:\n";
         print "push x\n";
     } elsif ($op eq '+') {
@@ -701,18 +701,11 @@ sub parseExpressionLevel {
     my ($level) = @_;
 
     my @operators = (
-        #['*','/','%'],
+        #['*','/','%'], # XXX: these will turn into function calls, if supported at all
         ['+','-'],
         ['&','|','^'],
         ['==','!=','>=','<=','>','<'],
         ['&&','||'],
-    );
-
-    my %mnemonic = (
-        '+' => 'add',
-        '-' => 'sub',
-        '&' => 'and',
-        '|' => 'or',
     );
 
     return parseTerm() if $level == @operators;
@@ -726,65 +719,8 @@ sub parseExpressionLevel {
         }
         skip();
 
-        # TODO: if not first loop, generate code to pop 2 args and apply $last_op
-        if ($apply_op) {
-            print "# $apply_op\n";
-            print "pop x\n";
-            print "ld r0, x\n";
-            print "pop x\n";
-
-            if ($apply_op =~ /^[-+&|]$/) {
-                print "$mnemonic{$apply_op} x, r0\n";
-
-            } elsif ($apply_op eq '!=') {
-                my $end = label();
-                print "sub x, r0\n";
-                # now x == 0 if args are equal
-                print "jz $end\n";
-                print "ld x, 1\n";
-                print "$end:\n";
-
-            } elsif ($apply_op eq '==') {
-                my $end = label();
-                print "sub x, r0\n";
-                # now x == 0 if args are equal
-                print "ld x, 0\n"; # doesn't clobber flags
-                print "jnz $end\n"; # if the operands are not equal, then we want 0
-                print "inc x\n";
-                print "$end:\n";
-
-            } elsif ($apply_op eq '>=') {
-                # subtract 2nd argument from first, if result is less than zero, then 2nd argument is bigger than first
-                # XXX: dubious? (what about integer overflow)
-                my $lt = label();
-                my $end = label();
-                print "sub x, r0\n";
-                print "jlt $lt\n";
-                print "ld x, 1\n";
-                print "jmp $end\n";
-                print "$lt: ld x, 0\n";
-                print "$end:\n"
-
-            } elsif ($apply_op eq '<=') {
-                # subtract first argument from 2nd, if result is less than zero, then first argument is bigger than second
-                # XXX: dubious? (what about integer overflow)
-                my $lt = label();
-                my $end = label();
-                print "sub r0, x\n";
-                print "ld x, r0\n";
-                print "jlt $lt\n";
-                print "ld x, 1\n";
-                print "jmp $end\n";
-                print "$lt: ld x, 0\n";
-                print "$end:\n"
-
-
-            } else {
-                print " # TODO: apply $apply_op to x and r0\n";
-            }
-
-            print "push x\n";
-        }
+        # if not first loop, generate code
+        genop($apply_op) if $apply_op;
 
         my $ok = 0;
         for my $op (@{ $operators[$level] }) {
@@ -797,6 +733,123 @@ sub parseExpressionLevel {
         return 1 if !$ok;
         skip();
     }
+}
+
+# pop 2 elements off the stack, apply $op, and push the result
+sub genop {
+    my ($op) = @_;
+
+    my %mnemonic = (
+        '+' => 'add',
+        '-' => 'sub',
+        '&' => 'and',
+        '|' => 'or',
+    );
+
+    print "# operator: $op\n";
+    print "pop x\n";
+    print "ld r0, x\n";
+    print "pop x\n";
+
+    if ($op =~ /^[-+&|]$/) {
+        print "$mnemonic{$op} x, r0\n";
+
+    } elsif ($op eq '^') {
+        print "ld y, r0\n"; # TODO: refactor to load this to y in the first place instead of going via r0
+        print "xor x, y\n";
+
+    } elsif ($op eq '!=') {
+        my $end = label();
+        print "sub x, r0\n";
+        # now x == 0 if args are equal
+        print "jz $end\n";
+        print "ld x, 1\n";
+        print "$end:\n";
+
+    } elsif ($op eq '==') {
+        my $end = label();
+        print "sub x, r0\n";
+        # now x == 0 if args are equal
+        print "ld x, 0\n"; # doesn't clobber flags
+        print "jnz $end\n"; # if the operands are not equal, then we want 0
+        print "ld x, 1\n";
+        print "$end:\n";
+
+    } elsif ($op eq '>=') {
+        # subtract 2nd argument from first, if result is less than zero, then 2nd argument is bigger than first
+        # XXX: dubious? (what about integer overflow)
+        my $lt = label();
+        my $end = label();
+        print "sub x, r0\n";
+        print "jlt $lt\n";
+        print "ld x, 1\n";
+        print "jmp $end\n";
+        print "$lt: ld x, 0\n";
+        print "$end:\n";
+
+    } elsif ($op eq '<=') {
+        # subtract first argument from 2nd, if result is less than zero, then first argument is bigger than second
+        # XXX: dubious? (what about integer overflow)
+        my $lt = label();
+        my $end = label();
+        print "sub r0, x\n";
+        print "ld x, r0\n";
+        print "jlt $lt\n";
+        print "ld x, 1\n";
+        print "jmp $end\n";
+        print "$lt: ld x, 0\n";
+        print "$end:\n";
+
+    } elsif ($op eq '<') {
+        # (this is just the opposite of >=)
+        # XXX: dubious? (what about integer overflow)
+        my $lt = label();
+        my $end = label();
+        print "sub x, r0\n";
+        print "jlt $lt\n";
+        print "ld x, 0\n";
+        print "jmp $end\n";
+        print "$lt: ld x, 1\n";
+        print "$end:\n";
+
+    } elsif ($op eq '<=') {
+        # (this is just the opposite of <=)
+        # XXX: dubious? (what about integer overflow)
+        my $lt = label();
+        my $end = label();
+        print "sub r0, x\n";
+        print "ld x, r0\n";
+        print "jlt $lt\n";
+        print "ld x, 0\n";
+        print "jmp $end\n";
+        print "$lt: ld x, 1\n";
+        print "$end:\n";
+
+    } elsif ($op eq '&&') {
+        my $false = label();
+        print "test x\n";
+        print "ld x, 0\n"; # doesn't clobber flags
+        print "jz $false\n";
+        print "test r0\n";
+        print "jz $false\n";
+        print "ld x, 1\n"; # both args true: x=1
+        print "$false:\n";
+
+    } elsif ($op eq '||') {
+        my $true = label();
+        print "test x\n";
+        print "ld x, 1\n"; # doesn't clobber flags
+        print "jnz $true\n";
+        print "test r0\n";
+        print "jnz $true\n";
+        print "ld x, 0\n"; # both args false: x=0
+        print "$true:\n";
+
+    } else {
+        print " # TODO: apply $op to x and r0\n";
+    }
+
+    print "push x\n";
 }
 
 sub parseTerm {

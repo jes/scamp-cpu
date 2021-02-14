@@ -1,4 +1,4 @@
-# Test program for scamplang
+# Test program for SLANG
 
 extern print;
 extern mul;
