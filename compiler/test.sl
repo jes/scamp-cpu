@@ -29,6 +29,12 @@ var num2str = func(num) {
 
     *s = 0;
 
+    if (num == 0) {
+        s = s - 1;
+        *s = '0';
+        return s;
+    };
+
     while (num != 0) {
         s = s - 1;
         *s = '0' + mod(num, 10);
@@ -38,14 +44,16 @@ var num2str = func(num) {
     return s;
 };
 
-var a = 42;
-var b = 100;
-
-var result;
-
-print(num2str(mul(a,b)));
-result = mul(a,b);
-if (result == 4200)
-    print(" - OK\n")
-else
-    print(" - not OK\n");
+var n = 0;
+var f1 = 1;
+var f2 = 0;
+var f3 = 0;
+while (20 >= n) {
+    f3 = f1 + f2;
+    print("fib("); print(num2str(n)); print(") = ");
+    print(num2str(f3));
+    print("\n");
+    f1 = f2;
+    f2 = f3;
+    n = n + 1;
+};
