@@ -31,7 +31,6 @@ if ($pos != @s) {
 #  - if it doesn't match, return false and leave $pos unchanged
 #
 # TODO: get out of manually restoring $pos, make something do it for us
-# TODO: code generation
 # TODO: restore line/col when pos is restored
 # TODO: some tracing of call stack for debugging
 # TODO: only skip() after terminals
@@ -80,14 +79,15 @@ sub parseBlock {
     return 0 if !parseChar('{');
     skip();
 
-    newscope();
+    # TODO: make blocks start/end scopes, alternatively disallow variable declarations inside nested blocks
+    #newscope();
 
     parseStatements() && skip();
 
     die "block must end with }" if !parseChar('}');
     skip();
 
-    endscope();
+    #endscope();
 
     return 1;
 }
@@ -103,7 +103,6 @@ sub newscope {
         symbols => {},
         parent => $scope,
         bp_rel => 0,
-        height => 1, # scope already contains the old base pointer
         params => 0,
     };
 }
@@ -141,6 +140,11 @@ sub parseDeclaration {
         bp_rel => $scope->{bp_rel}--,
     };
 
+    if (!$scope->{global}) {
+        print "# allocate space for $id->{name}\n";
+        print "dec sp\n";
+    }
+
     return 1 if !parseChar('=');
     skip();
 
@@ -148,31 +152,7 @@ sub parseDeclaration {
     parseExpression();
     skip();
 
-    storetovar($id->{name});
-    return 1;
-}
-
-sub storetovar {
-    my ($name) = @_;
-
-    print "# storetovar $name:\n";
-
-    if ($scope->{global}) {
-        # load into the global variable
-        print "pop x\n";
-        print "ld (_$name), x\n";
-    } else {
-        my $bp_rel = $scope->{symbols}{$name}{bp_rel};
-        # XXX: this is probably wrong
-        # pop into r0, then store into bp_rel relative to base pointer
-        print "pop x\n";
-        print "ld r0, x\n";
-
-        print "ld x, r253\n";
-        print "add x, $bp_rel\n";
-        print "ld (x), r0\n";
-    }
-
+    poptovar($id->{name});
     return 1;
 }
 
@@ -180,11 +160,9 @@ sub symlookup {
     my ($name) = @_;
 
     my $s = $scope;
-    my $height = 0;
 
     while ($s) {
-        return ($s->{symbols}{$name}, $height) if $s->{symbols}{$name};
-        $height += $s->{height} if !$s->{global};
+        return $s->{symbols}{$name} if $s->{symbols}{$name};
         $s = $s->{parent};
     }
 }
@@ -217,13 +195,37 @@ sub parseExtern {
 # generate: ld (r1), r0
 sub parseAssignment {
     my $pos0 = $pos;
-    return 1 if
-        parseLValue() && skip()
-        && parseChar('=') && skip()
-        && parseExpression() && skip();
-    $pos = $pos0;
-    # TODO: use storetovar() if the l-value is an identifier
-    return 0;
+    if (!(parseLValue() && skip() && parseChar('='))) {
+        $pos = $pos0;
+        return 0;
+    }
+
+    my $lval = pop @stack;
+
+    if ($lval->{type} eq 'pointer') {
+        # store the pointer in r252
+        print "# store pointer for assignment\n";
+        print "pop x\n";
+        print "ld r252, x\n";
+    } elsif ($lval->{type} ne 'identifier') {
+        die "unexpected lvalue type: $lval->{type}";
+    }
+
+    skip();
+    die "assignment needs rvalue" if !parseExpression();
+    skip();
+
+    if ($lval->{type} eq 'pointer') {
+        print "# store to pointer:\n";
+        print "pop x\n";
+        print "ld (r252), x\n";
+    } elsif ($lval->{type} eq 'identifier') {
+        poptovar($lval->{name});
+    } else {
+        die "unexpected lvalue type: $lval->{type}";
+    }
+
+    return 1;
 }
 
 # push address of lvalue onto stack
@@ -233,10 +235,18 @@ sub parseAssignment {
 sub parseLValue {
     my $pos0 = $pos;
     return 1 if parseIdentifier();
-    return 0 if !parseChar('*');
-    return 1 if parseExpression();
+    if (!parseChar('*')) {
+        $pos = $pos0;
+        return 0;
+    }
+    if (parseExpression()) {
+        push @stack, {
+            type => 'pointer',
+        };
+        return 1;
+    }
     $pos = $pos0;
-    return;
+    return 0;
 }
 
 # after parseExpression, branch to elselabel if false, then let parseStatement
@@ -264,14 +274,35 @@ sub parseConditional {
 # write a looplabel, then after parseExpression branch to endwhilelabel if false, then let
 # parseStatement write its code, then jump to looplabel
 sub parseLoop {
-    my $pos0 = $pos;
-    return 1 if parseString('while') && skip()
-        && parseChar('(') && skip()
-        && parseExpression() && skip()
-        && parseChar(')') && skip()
-        && parseStatement() && skip();
-    $pos = $pos0;
-    return 0;
+    return 0 if !parseString('while');
+    skip();
+
+    die "while condition needs to start with paren" if !parseChar('(');
+    skip();
+
+    my $loop = label();
+    my $endloop = label();
+
+    print "# while loop\n";
+    print "$loop:\n";
+    die "while loop needs expression" if !parseExpression();
+    skip();
+
+    # if top of stack is 0, jmp $endloop
+    print "pop x\n";
+    print "test x\n";
+    print "jz $endloop\n";
+
+    die "while condition needs to end with paren" if !parseChar(')');
+    skip();
+
+    die "while loop needs body" if !parseStatement();
+    skip();
+
+    print "jmp $loop\n";
+    print "$endloop:\n";
+
+    return 1;
 }
 
 # end however many scopes we're in
@@ -607,7 +638,7 @@ sub parseAddressOf {
     my $id = pop @stack;
     die "expected identifier" if $id->{type} ne 'identifier';
 
-    my ($sym,$height) = symlookup($id->{name});
+    my $sym = symlookup($id->{name});
     if ($sym->{type} eq 'global') {
         print "# &$id->{name} (global)\n";
         print "ld x, _$id->{name}\n";
@@ -721,22 +752,38 @@ sub parseTerm {
     return 1;
 }
 
+sub poptovar {
+    my ($name) = @_;
+
+    my $sym = symlookup($name);
+    die "unrecognised identifier: $name\n" if !$sym;
+    if ($sym->{type} eq 'global') {
+        print "# poptovar: global $name\n";
+        print "pop x\n";
+        print "ld (_$name), x\n";
+    } else {
+        print "# poptovar: local $name ($sym->{bp_rel})\n";
+        print "ld r252, r253\n";
+        print "add r252, " . (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
+        print "pop x\n";
+        print "ld (r252), x\n";
+    }
+}
+
 sub pushvar {
     my ($name) = @_;
 
     # look up the identifier and push it
-    my ($sym,$height) = symlookup($name);
+    my $sym = symlookup($name);
     die "unrecognised identifier: $name\n" if !$sym;
     if ($sym->{type} eq 'global') {
         print "# pushvar: global $name\n";
         print "ld x, (_$name)\n";
         print "push x\n";
     } else {
-        # TODO: when this is a local in a parent scope, we need to add all the
-        # intervening bp_rel values
-        print "# pushvar: local $name ($height+$sym->{bp_rel})\n";
+        print "# pushvar: local $name ($sym->{bp_rel})\n";
         print "ld x, r253\n";
-        print "add x, " . ($height+$sym->{bp_rel}) . "\n";
+        print "add x, " . (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
         print "ld x, (x)\n";
         print "push x\n";
     }
