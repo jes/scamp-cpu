@@ -102,7 +102,7 @@ sub newscope {
     $scope = {
         symbols => {},
         parent => $scope,
-        bp_rel => 1,
+        bp_rel => 2, # (bp+1) is the stashed old base pointer, so first arg is at (bp+2)
     };
 }
 
@@ -445,6 +445,12 @@ sub parseFunctionDeclaration {
     parseParameters();
     skip();
 
+    my $functionlabel = label();
+    my $functionend = label();
+
+    print "jmp $functionend\n";
+    print "$functionlabel:\n";
+
     newscope();
 
     $scope->{funcdecl} = 1;
@@ -461,12 +467,6 @@ sub parseFunctionDeclaration {
 
     die "expected )" if !parseChar(')');
     skip();
-
-    my $functionlabel = label();
-    my $functionend = label();
-
-    print "jmp $functionend\n";
-    print "$functionlabel:\n";
 
     parseStatement();
     skip();
