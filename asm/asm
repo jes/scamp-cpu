@@ -129,6 +129,7 @@ while (my $line = <>) {
         # sort the matches by cycle count, so we choose the fastest match;
         # we can get multiple matches in cases like "ld r0, r1" where
         # both "ld (i16), (i8h)" and "ld (i8h), (i16)" match
+        # (we sort twice so that the ordering is always the same)
         @match = sort { $instructions->{$a}{cycles} <=> $instructions->{$b}{cycles} } sort @match;
 
         # generate code:
