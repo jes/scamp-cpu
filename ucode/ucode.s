@@ -898,7 +898,6 @@ ld (x), (i8h): # Load <tt>r</tt> into <tt>(x)</tt>.
     IOH AI
     MO YI
     XO AI
-    MO AI
     MI YO
 
 ld (x), ((i8h)): # Load the value in <tt>(r)</tt> into <tt>(x)</tt>.
@@ -906,7 +905,6 @@ ld (x), ((i8h)): # Load the value in <tt>(r)</tt> into <tt>(x)</tt>.
     MO AI
     MO YI
     XO AI
-    MO AI
     MI YO
 
 ld (x), (i16): # Load the value in <tt>(i16)</tt> into <tt>(x)</tt>.
@@ -914,7 +912,6 @@ ld (x), (i16): # Load the value in <tt>(i16)</tt> into <tt>(x)</tt>.
     MO AI P+
     MO YI
     XO AI
-    MO AI
     MI YO
 
 ld x, (x): # Load the value in <tt>(x)</tt> into <tt>x</tt>.
