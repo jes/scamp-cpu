@@ -71,7 +71,7 @@ sub parseStatement {
     if (parseExpression()) {
         # discard the value of the expression
         print "# discard expression value\n";
-        print "pop x\n";
+        print "inc sp\n";
         return 1;
     }
     return 0;
