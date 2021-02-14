@@ -8,7 +8,7 @@ var mod = func(num, denom) {
 
     while (num >= denom) {
         c = c + 1;
-        num = num - 1;
+        num = num - denom;
     };
     return num;
 };
@@ -25,7 +25,7 @@ var div = func(num, denom) {
 };
 
 var num2str = func(num) {
-    var s = 0x8000;
+    var s = 0x4000;
 
     *s = 0;
 
@@ -38,8 +38,8 @@ var num2str = func(num) {
     return s;
 };
 
-var a = ~42;
-var b = !100;
+var a = 42;
+var b = 100;
 
 var result;
 

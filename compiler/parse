@@ -203,10 +203,12 @@ sub parseAssignment {
     my $lval = pop @stack;
 
     if ($lval->{type} eq 'pointer') {
-        # store the pointer in r252
+        # store the pointer in r251
+        # TODO: should put this on the stack instead of r251 in case the Expression
+        # includes a function call that also uses r251
         print "# store pointer for assignment\n";
         print "pop x\n";
-        print "ld r252, x\n";
+        print "ld r251, x\n";
     } elsif ($lval->{type} ne 'identifier') {
         die "unexpected lvalue type: $lval->{type}";
     }
@@ -218,7 +220,7 @@ sub parseAssignment {
     if ($lval->{type} eq 'pointer') {
         print "# store to pointer:\n";
         print "pop x\n";
-        print "ld (r252), x\n";
+        print "ld (r251), x\n";
     } elsif ($lval->{type} eq 'identifier') {
         poptovar($lval->{name});
     } else {
