@@ -50,7 +50,7 @@ sub parseProgram {
     die "expected to be left in global scope after program" if !$scope->{global};
 
     # allocate space for globals
-    for my $global (keys %{ $scope->{symbols} }) {
+    for my $global (sort keys %{ $scope->{symbols} }) {
         print "_$global: .word 0 # global\n" if !$scope->{symbols}{$global}{extern};
     }
 
