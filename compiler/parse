@@ -102,19 +102,25 @@ sub newscope {
     $scope = {
         symbols => {},
         parent => $scope,
-        bp_rel => 2, # (bp+1) is the stashed old base pointer, so first arg is at (bp+2)
+        bp_rel => 0,
+        height => 1, # already contains the old base pointer
     };
 }
 
 sub endscope {
-    # restore old base pointer
-    print "# endscope: \n";
-    print "pop x\n";
-    print "ld r253, x\n";
-
     die "can't exit global scope" if $scope->{global};
 
+    runtime_endscope();
+
     $scope = $scope->{parent};
+}
+
+sub runtime_endscope {
+    # restore old sp and bp
+    print "# endscope: \n";
+    print "ld sp, r253\n";
+    print "pop x\n";
+    print "ld r253, x\n";
 }
 
 # add name to current scope (possibly global)
@@ -131,7 +137,7 @@ sub parseDeclaration {
     # add name to scope
     $scope->{symbols}{$id->{name}} = {
         type => $scope->{global} ? 'global' : 'local',
-        bp_rel => $scope->{bp_rel}++,
+        bp_rel => $scope->{bp_rel}--,
     };
 
     return 1 if !parseChar('=');
@@ -173,9 +179,11 @@ sub symlookup {
     my ($name) = @_;
 
     my $s = $scope;
+    my $height = 0;
 
     while ($s) {
-        return $s->{symbols}{$name} if $s->{symbols}{$name};
+        return ($s->{symbols}{$name}, $height) if $s->{symbols}{$name};
+        $height += $s->{height};
         $s = $s->{parent};
     }
 }
@@ -281,18 +289,14 @@ sub parseReturn {
 
     # then clean up however many scopes we've started since opening the function, leaving the
     # stack pointer where it was when we were called
-    my $bp_add = 0;
     my $s = $scope;
+    runtime_endscope();
     while (!$s->{funcdecl}) {
-        print "pop x\n";
-        print "ld r253, x\n";
+        runtime_endscope();
         $s = $s->{parent};
     }
     print "pop x\n";
     print "ld r253, x\n";
-
-    # then pop off each of the args we were passed
-    # TODO: ???
 
     # then return to the caller
     print "ret\n";
@@ -436,6 +440,8 @@ sub parseFunctionDeclaration {
     return 0 if !parseString('func');
     skip();
 
+    die "can only declare functions in global scope" if !$scope->{global};
+
     print "\n# parseFunctionDeclaration:\n";
 
     die "expected (" if !parseChar('(');
@@ -455,13 +461,15 @@ sub parseFunctionDeclaration {
 
     $scope->{funcdecl} = 1;
 
+    my $bp_rel = 2;
+
     while (@stack != $sp0) {
         my $id = pop @stack;
         die "expected identified" if $id->{type} ne 'identifier';
         die "duplicate parameter name: $id->{name}" if $scope->{symbols}{$id->{name}};
         $scope->{symbols}{$id->{name}} = {
             type => 'local',
-            bp_rel => $scope->{bp_rel}++,
+            bp_rel => $bp_rel++, # parameters are above the base pointer, locals are below the base pointer
         };
     }
 
@@ -595,7 +603,7 @@ sub parseAddressOf {
     my $id = pop @stack;
     die "expected identifier" if $id->{type} ne 'identifier';
 
-    my $sym = symlookup($id->{name});
+    my ($sym,$height) = symlookup($id->{name});
     if ($sym->{type} eq 'global') {
         print "# &$id->{name} (global)\n";
         print "ld x, _$id->{name}\n";
@@ -697,7 +705,7 @@ sub pushvar {
     my ($name) = @_;
 
     # look up the identifier and push it
-    my $sym = symlookup($name);
+    my ($sym,$height) = symlookup($name);
     die "unrecognised identifier: $name\n" if !$sym;
     if ($sym->{type} eq 'global') {
         print "# pushvar: global $name\n";
@@ -706,9 +714,9 @@ sub pushvar {
     } else {
         # TODO: when this is a local in a parent scope, we need to add all the
         # intervening bp_rel values
-        print "# pushvar: local $name\n";
+        print "# pushvar: local $name ($height+$sym->{bp_rel})\n";
         print "ld x, r253\n";
-        print "add x, $sym->{bp_rel}\n";
+        print "add x, " . ($height+$sym->{bp_rel}) . "\n";
         print "ld x, (x)\n";
         print "push x\n";
     }
