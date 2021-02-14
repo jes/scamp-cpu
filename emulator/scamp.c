@@ -9,8 +9,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
+#include <unistd.h>
 
-int test, debug, stacktrace, cyclecount, show_help, test_fail, watch=-1;
+int test, debug, stacktrace, cyclecount, show_help, test_fail, freq, watch=-1;
 int halt;
 
 uint8_t DI, DO, AI, MI, MO, II, IOH, IOL, JMP, PO, PP, XI, EO, YI, RT;
@@ -227,9 +229,10 @@ void help(void) {
 "Options:\n"
 "  -c,--cycles   Print number of cycles taken\n"
 "  -d,--debug    Print debug output after each clock cycle\n"
+"  -f,--freq HZ  Aim to emulate a clock of the given frequency\n"
 "  -s,--stack    Trace the stack\n"
 "  -t,--test     Check whether the boot ROM passes the tests\n"
-"  -r,--run      Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
+"  -r,--run FILE    Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
 "  -w,--watch ADDR  Watch for changes to the given address and print them on stderr\n"
 "  -h,--help     Show this help text\n"
 "\n"
@@ -242,6 +245,8 @@ void help(void) {
 int main(int argc, char **argv) {
     int steps = 0;
     int jmp0x100 = 0;
+    struct timeval prevtime, curtime;
+    unsigned long long elapsed_us, target_us;
 
     setbuf(stdout, NULL);
 
@@ -250,6 +255,7 @@ int main(int argc, char **argv) {
         static struct option opts[] = {
             {"cycles",no_argument, &cyclecount,1},
             {"debug", no_argument, &debug,     1},
+            {"freq",  required_argument,  0, 'f'},
             {"stack", no_argument, &stacktrace,1},
             {"test",  no_argument, &test,      1},
             {"help",  no_argument, &show_help, 1},
@@ -259,20 +265,19 @@ int main(int argc, char **argv) {
         };
 
         int optidx = 0;
-        int c = getopt_long(argc, argv, "cdhstr:w:", opts, &optidx);
+        int c = getopt_long(argc, argv, "cdf:hstr:w:", opts, &optidx);
 
         if (c == -1) break;
         if (c == 'c') cyclecount = 1;
         if (c == 'd') debug = 1;
+        if (c == 'f') freq = atoi(optarg);
         if (c == 's') stacktrace = 1;
         if (c == 't') test = 1;
         if (c == 'r') {
             load_ram(0x100, optarg);
             jmp0x100 = 1;
         }
-        if (c == 'w') {
-            watch = atoi(optarg);
-        }
+        if (c == 'w') watch = atoi(optarg);
 
         if (c == 'h') show_help = 1;
     }
@@ -287,6 +292,11 @@ int main(int argc, char **argv) {
         PC = 0x100;
     }
 
+    gettimeofday(&prevtime, NULL);
+
+    if (freq)
+        target_us = 1000000 / freq;
+
     /* run the clock */
     while (!halt) {
         negedge();
@@ -294,6 +304,14 @@ int main(int argc, char **argv) {
         steps++;
         if (test && steps > 2000)
             halt = 1;
+
+        if (freq) {
+            gettimeofday(&curtime, NULL);
+            elapsed_us = ((curtime.tv_sec * 1000000) + curtime.tv_usec) - ((prevtime.tv_sec * 1000000) + prevtime.tv_usec);
+            if (elapsed_us < target_us)
+                usleep(target_us - elapsed_us);
+            prevtime = curtime;
+        }
     }
 
     if (cyclecount)
