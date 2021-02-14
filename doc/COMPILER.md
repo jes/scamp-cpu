@@ -1,6 +1,9 @@
 # Compiler
 
-At some point I'll want a compiler that targets SCAMP and runs on SCAMP.
+The `compiler/` directory contains a primitive compiler. The code it generates is trash and it probably has lots of
+bugs, but it can successfully compile at least *some* programs.
+
+## Design goals
 
 It should either be self-hosting or implemented in assembly language, so that the compiler can (at least
 in principle) be developed completely inside SCAMP.
@@ -175,3 +178,23 @@ Intended to allow programs like:
     var inc = func(x) {
         return x + 1;
     };
+
+## Optimisation
+
+### Peephole
+
+Empirically, the current `test.sl` program runs in about 25% fewer cycles after manual peephole optimisation
+consisting *only* of removing "push x; pop x;" and "push x; inc sp".
+
+We could probably get more improvements:
+ - turn "push 1; pop x; ld r0, x; pop x; add x, r0" into "pop x; add x, 1"
+ - turn "push 1; pop x; ld r0, x" into "ld r0, 1"
+ - turn "push 1; pop x" into "ld x, 1"
+
+### String/function locations
+
+Instead of generating strings and functions inline and jumping over them, we should stick them at the end with the other globals.
+
+### Function calls
+
+Is there a more efficient way to go about the whole business of backing up r254 (return address) and r253 (base pointer)?
