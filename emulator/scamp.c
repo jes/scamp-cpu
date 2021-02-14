@@ -229,7 +229,7 @@ void help(void) {
 "Options:\n"
 "  -c,--cycles   Print number of cycles taken\n"
 "  -d,--debug    Print debug output after each clock cycle\n"
-"  -f,--freq HZ  Aim to emulate a clock of the given frequency\n"
+"  -f,--freq HZ  Aim to emulate a clock of the given frequency (XXX: only has usec precision; frequencies above 1 million are infinite)\n"
 "  -s,--stack    Trace the stack\n"
 "  -t,--test     Check whether the boot ROM passes the tests\n"
 "  -r,--run FILE    Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
