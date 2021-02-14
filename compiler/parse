@@ -40,6 +40,9 @@ if ($pos != @s) {
 # TODO: annotate generated assembly code with the source code that generated it
 # TODO: emit code via a helper that performs peephole optimisation
 # TODO: warn if we know a function has been called with the wrong number of arguments
+# TODO: "ifx>0" should treat "ifx" as an identifier: parseString() needs to not accept strings that
+#       don't end at word boundaries
+# TODO: what happens if you declare a variable inside a loop? or a conditional?
 
 sub parseProgram {
     return 0 if !parseStatements();
@@ -108,10 +111,12 @@ sub newscope {
 }
 
 sub endscope {
-    die "can't exit global scope" if $scope->{global};
-
     runtime_endscope();
+    compiletime_endscope();
+}
 
+sub compiletime_endscope {
+    die "can't exit global scope" if $scope->{global};
     $scope = $scope->{parent};
 }
 
@@ -346,7 +351,13 @@ sub parseReturn {
     print "pop x\n";
     print "ld r0, x\n";
 
-    # then clean up however many scopes we've started since opening the function, leaving the
+    funcreturn();
+
+    return 1;
+}
+
+sub funcreturn {
+    # clean up however many scopes we've started since opening the function, leaving the
     # stack pointer where it was when we were called
     my $s = $scope;
     runtime_endscope();
@@ -361,8 +372,6 @@ sub parseReturn {
 
     # then return to the caller
     print "ret\n";
-
-    return 1;
 }
 
 sub parseConstant {
@@ -540,12 +549,12 @@ sub parseFunctionDeclaration {
 
     parseStatement();
     skip();
-    endscope();
 
-    # implicit "return 0"
-    # TODO: use the code for parseReturn() instead; this version is broken
-    print "push 0\n";
-    print "ret\n";
+    # implicit return
+    funcreturn();
+
+    compiletime_endscope();
+
     print "# end function declaration\n\n";
 
     print "$functionend:\n";
