@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int test, debug, show_help, test_fail, watch=-1;
+int test, debug, trace, show_help, test_fail, watch=-1;
 
 uint8_t DI, DO, AI, MI, MO, II, IOH, IOL, JMP, PO, PP, XI, EO, YI, RT;
 uint8_t EX, NX, EY, NY, F, NO;
@@ -24,7 +24,7 @@ uint16_t X, Y, PC, instr, uinstr, addr;
 uint8_t JZ, JLT, JGT;
 uint8_t T, Z, LT;
 
-void load_hex(uint16_t *buf, int len, char *name) {
+void load_hex(uint16_t *buf, int maxlen, char *name) {
     FILE *fp;
     int i = 0;
 
@@ -33,12 +33,9 @@ void load_hex(uint16_t *buf, int len, char *name) {
         exit(1);
     }
 
-    for (i = 0; i < len; i++) {
-        if (!fscanf(fp, "%04hx", buf+i)) {
-            fprintf(stderr, "can't read enough data from %s\n", name);
-            exit(1);
-        }
-    }
+    for (i = 0; i < maxlen; i++)
+        if (fscanf(fp, "%04hx", buf+i) != 1)
+            break;
 
     fclose(fp);
 }
@@ -129,6 +126,20 @@ void negedge(void) {
         else    T = (T+1) % 8;
     } while (RT); /* loop until !RT because RT resets T-state immediately */
 
+    if (T == 1 && debug)
+        fprintf(stderr, "[trace] PC=%04x\n", PC);
+
+    if (T == 3 && trace) {
+        if (opcode == 0xb7)
+            fprintf(stderr, "[stack] PC=%04x: push x: %04x\n", PC, X);
+        if (opcode == 0xb8)
+            fprintf(stderr, "[stack] PC=%04x: push i8l: %02x\n", PC, instr&0xff);
+        if (opcode == 0xb9)
+            fprintf(stderr, "[stack] PC=%04x: push i8h: %02x\n", PC, 0xff00|(instr&0xff));
+        if (opcode == 0xba)
+            fprintf(stderr, "[stack] PC=%04x: pop x: %04x\n", PC, ram[ram[0xffff]+1]);
+    }
+
     /* calculate JMP */
     JMP = (JZ&Z) | (JLT&LT) | (JGT&!Z&!LT);
 
@@ -166,8 +177,10 @@ void posedge(void) {
     if (II)  instr = bus;
     if (MI) {
         if (watch == addr)
-            fprintf(stderr, "pc=%04x: M[%04x] was %04x, now %04x\n", PC, addr, ram[addr], bus);
+            fprintf(stderr, "[watch] PC=%04x: M[%04x] was %04x, now %04x\n", PC, addr, ram[addr], bus);
         ram[addr] = bus;
+        if (trace && addr == 0xffff)
+            fprintf(stderr, "[stack] PC=%04x: sp=%04x: stack = %04x %04x %04x %04x %04x...\n", PC, ram[0xffff], ram[ram[0xffff]+1], ram[ram[0xffff]+2], ram[ram[0xffff]+3], ram[ram[0xffff]+4], ram[ram[0xffff]+5]);
     }
     if (XI)  X = bus;
     if (YI)  Y = bus;
@@ -212,6 +225,7 @@ void help(void) {
 "\n"
 "Options:\n"
 "  -d,--debug    Print debug output after each clock cycle\n"
+"  -s,--stack    Trace the stack\n"
 "  -t,--test     Check whether the boot ROM passes the tests\n"
 "  -r,--run      Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
 "  -w,--watch ADDR  Watch for changes to the given address and print them on stderr\n"
@@ -233,6 +247,7 @@ int main(int argc, char **argv) {
     while (1) {
         static struct option opts[] = {
             {"debug", no_argument, &debug,     1},
+            {"stack", no_argument, &trace,     1},
             {"test",  no_argument, &test,      1},
             {"help",  no_argument, &show_help, 1},
             {"run",   required_argument,  0, 'r'},
@@ -241,10 +256,11 @@ int main(int argc, char **argv) {
         };
 
         int optidx = 0;
-        int c = getopt_long(argc, argv, "dhtr:w:", opts, &optidx);
+        int c = getopt_long(argc, argv, "dhstr:w:", opts, &optidx);
 
         if (c == -1) break;
         if (c == 'd') debug = 1;
+        if (c == 's') trace = 1;
         if (c == 't') test = 1;
         if (c == 'r') {
             load_ram(0x100, optarg);
@@ -264,8 +280,7 @@ int main(int argc, char **argv) {
     if (!jmp0x100) {
         load_bootrom();
     } else {
-        rom[0] = 0xb000; /* jmp   */
-        rom[1] = 0x100;  /* 0x100 */
+        PC = 0x100;
     }
 
     /* run the clock */
