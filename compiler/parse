@@ -765,6 +765,20 @@ sub parseExpressionLevel {
                 print "$lt: ld x, 0\n";
                 print "$end:\n"
 
+            } elsif ($apply_op eq '<=') {
+                # subtract first argument from 2nd, if result is less than zero, then first argument is bigger than second
+                # XXX: dubious? (what about integer overflow)
+                my $lt = label();
+                my $end = label();
+                print "sub r0, x\n";
+                print "ld x, r0\n";
+                print "jlt $lt\n";
+                print "ld x, 1\n";
+                print "jmp $end\n";
+                print "$lt: ld x, 0\n";
+                print "$end:\n"
+
+
             } else {
                 print " # TODO: apply $apply_op to x and r0\n";
             }
