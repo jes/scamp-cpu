@@ -117,6 +117,63 @@ mul:
 
     ret
 
+# compute "i << n", return it in r0
+shl:
+    pop x
+    ld r1, 15
+    sub r1, x # r0 = 15 - n
+
+    pop x
+    ld r0, x # r1 = i
+
+    # kind of "Duff's device" way to get a variable
+    # number of left shifts
+    jr+ r1
+
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+
+    ret
+
+powers_of_2:
+.word 0x0001
+.word 0x0002
+.word 0x0004
+.word 0x0008
+.word 0x0010
+.word 0x0020
+.word 0x0040
+.word 0x0080
+.word 0x0100
+.word 0x0200
+.word 0x0400
+.word 0x0800
+.word 0x1000
+.word 0x2000
+.word 0x4000
+.word 0x8000
+pwr2:
+    pop x
+    add x, powers_of_2
+    ld r0, (x)
+    ret
+
 _print: .word print
 _printnum: .word printnum
 _mul: .word mul
+_shl: .word shl
+_pwr2: .word pwr2
+_powers_of_2: .word powers_of_2

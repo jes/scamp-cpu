@@ -2,21 +2,36 @@
 
 extern print;
 extern mul;
+extern pwr2;
+extern powers_of_2;
 
 # compute:
 #   *pdiv = num / denom
 #   *pmod = num % denom
 # Pass a null pointer if you want to discard one of the results
+# https://en.wikipedia.org/wiki/Division_algorithm#Integer_division_(unsigned)_with_remainder
 var divmod = func(num, denom, pdiv, pmod) {
-    var c = 0;
+    var Q = 0;
+    var R = 0;
+    var i = 15;
 
-    while (num >= denom) {
-        c = c + 1;
-        num = num - denom;
+    if (denom == 0)
+        return 0;
+
+    while (i >= 0) {
+        R = R+R;
+        if (num & *(powers_of_2+i)) {
+            R = R + 1;
+        };
+        if (R >= denom) {
+            R = R - denom;
+            Q = Q | *(powers_of_2+i);
+        };
+        i = i - 1;
     };
 
-    *pdiv = c;
-    *pmod = num;
+    *pdiv = Q;
+    *pmod = R;
 
     return 0;
 };
