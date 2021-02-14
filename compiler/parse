@@ -103,7 +103,8 @@ sub newscope {
         symbols => {},
         parent => $scope,
         bp_rel => 0,
-        height => 1, # already contains the old base pointer
+        height => 1, # scope already contains the old base pointer
+        params => 0,
     };
 }
 
@@ -183,7 +184,7 @@ sub symlookup {
 
     while ($s) {
         return ($s->{symbols}{$name}, $height) if $s->{symbols}{$name};
-        $height += $s->{height};
+        $height += $s->{height} if !$s->{global};
         $s = $s->{parent};
     }
 }
@@ -295,8 +296,10 @@ sub parseReturn {
         runtime_endscope();
         $s = $s->{parent};
     }
-    print "pop x\n";
-    print "ld r253, x\n";
+
+    # then clean up the function parameters
+    print "# function had $s->{params} parameters:\n";
+    print "add sp, $s->{params}\n";
 
     # then return to the caller
     print "ret\n";
@@ -471,6 +474,7 @@ sub parseFunctionDeclaration {
             type => 'local',
             bp_rel => $bp_rel++, # parameters are above the base pointer, locals are below the base pointer
         };
+        $scope->{params}++;
     }
 
     die "expected )" if !parseChar(')');
@@ -628,11 +632,20 @@ sub parseExpressionLevel {
     my ($level) = @_;
 
     my @operators = (
-        ['*','/','%'],
+        #['*','/','%'],
         ['+','-'],
         ['&','|','^'],
         ['==','!=','>=','<=','>','<'],
         ['&&','||'],
+    );
+
+    my %mnemonic = (
+        '+' => 'add',
+        '-' => 'sub',
+        '&' => 'and',
+        '|' => 'or',
+        '==' => 'jnz',
+        '!=' => 'jz',
     );
 
     return parseTerm() if $level == @operators;
@@ -648,7 +661,39 @@ sub parseExpressionLevel {
 
         # TODO: if not first loop, generate code to pop 2 args and apply $last_op
         if ($apply_op) {
-            print " # TODO: pop x, pop x, apply $apply_op, push x\n";
+            print "# $apply_op\n";
+            print "pop x\n";
+            print "ld r0, x\n";
+            print "pop x\n";
+
+            if ($apply_op =~ /^[-+&|]$/) {
+                print "$mnemonic{$apply_op} x, r0\n";
+
+            } elsif ($apply_op =~ /^(==|!=)$/) {
+                my $end = label();
+                print "sub x, r0\n";
+                # now x == 0 if args are equal
+                print "$mnemonic{$apply_op} $end\n";
+                print "ld x, 1\n";
+                print "$end:\n";
+
+            } elsif ($apply_op eq '>=') {
+                # subtract 2nd argument from first, if result is less than zero, then 2nd argument is bigger than first
+                # XXX: dubious? (what about integer overflow)
+                my $lt = label();
+                my $end = label();
+                print "sub x, r0\n";
+                print "jlt $lt\n";
+                print "ld x, 1\n";
+                print "jmp $end\n";
+                print "$lt: ld x, 0\n";
+                print "$end:\n"
+
+            } else {
+                print " # TODO: apply $apply_op to x and r0\n";
+            }
+
+            print "push x\n";
         }
 
         my $ok = 0;
