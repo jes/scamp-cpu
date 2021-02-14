@@ -15,6 +15,9 @@ var divmod = func(num, denom, pdiv, pmod) {
         num = num - denom;
     };
 
+    *pdiv = c;
+    *pmod = num;
+
     return 0;
 };
 
