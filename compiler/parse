@@ -230,20 +230,13 @@ sub parseAssignment {
 }
 
 sub parseLValue {
-    my $pos0 = $pos;
     return 1 if parseIdentifier();
-    if (!parseChar('*')) {
-        $pos = $pos0;
-        return 0;
-    }
-    if (parseExpression()) {
-        push @stack, {
-            type => 'pointer',
-        };
-        return 1;
-    }
-    $pos = $pos0;
-    return 0;
+    return 0 if !parseChar('*');
+    die "can't dereference non-expression" if !parseExpression();
+    push @stack, {
+        type => 'pointer',
+    };
+    return 1;
 }
 
 # after parseExpression, branch to elselabel if false, then let parseStatement
