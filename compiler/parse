@@ -19,6 +19,8 @@ my $scope = {
 };
 my $globalscope = $scope;
 
+my $IDENTIFIER;
+
 eval {
     parse(\&Program);
     die "Ended at $pos (line $line, col $col): had " . (@s-$pos) . " chars left over\n" if $pos != @s;
@@ -52,13 +54,7 @@ sub parse {
     my $col0 = $col;
 
     # TODO: catch error, restore pos/line/col, rethrow error
-    if (wantarray) {
-        my @r = $f->(@args);
-        return @r if @r;
-    } else {
-        my $r = $f->(@args);
-        return $r if $r;
-    }
+    return 1 if $f->(@args);
 
     $pos = $pos0;
     $line = $line0;
@@ -99,21 +95,16 @@ sub Statement {
     return 0;
 }
 
-# create new nested scope
+# TODO: create new nested scope
 sub Block {
     return 0 if !parse(\&Char,'{');
     skip();
-
-    # TODO: make blocks start/end scopes, alternatively disallow variable declarations inside nested blocks
-    #newscope();
 
     parse(\&Statements);
     skip();
 
     die "block must end with }" if !parse(\&Char,'}');
     skip();
-
-    #endscope();
 
     return 1;
 }
@@ -151,8 +142,8 @@ sub runtime_endscope {
 sub Declaration {
     return 0 if !parse(\&Keyword,'var');
     skip();
-    my $id = parse(\&Identifier);
-    die "var declaration needs identifier" if !$id;
+    die "var declaration needs identifier" if !parse(\&Identifier);
+    my $id = $IDENTIFIER;
     skip();
 
     die "duplicate declaration in scope: $id" if $scope->{symbols}{$id};
@@ -172,7 +163,7 @@ sub Declaration {
     skip();
 
     # now an expression to initialise the variable
-    parse(\&Expression);
+    die "initialisation needs expression" if !parse(\&Expression);
     skip();
 
     poptovar($id);
@@ -195,8 +186,8 @@ sub Extern {
     return 0 if !parse(\&Keyword,'extern');
     skip();
 
-    my $id = parse(\&Identifier);
-    die "extern expects identifier\n" if !$id;
+    die "extern expects identifier\n" if !parse(\&Identifier);
+    my $id = $IDENTIFIER;
     skip();
 
     die "can only add extern in global scope" if !$scope->{global};
@@ -209,8 +200,10 @@ sub Extern {
 }
 
 sub Assignment {
-    my $id = parse(\&Identifier);
-    if (!$id) {
+    my $id;
+    if (parse(\&Identifier)) {
+        $id = $IDENTIFIER;
+    } else {
         return 0 if !parse(\&Char,'*');
         die "can't dereference non-expression" if !parse(\&Expression);
     }
@@ -541,14 +534,12 @@ sub FunctionDeclaration {
     return 1;
 }
 
-# somehow return a list of the parameter names to parseFunctionDeclaration()
 sub Parameters {
     my @params;
     while (1) {
         skip();
-        my $id = parse(\&Identifier);
-        return @params if !$id;
-        push @params, $id;
+        return @params if !parse(\&Identifier);
+        push @params, $IDENTIFIER;
 
         skip();
         return @params if !parse(\&Char,',');
@@ -557,8 +548,8 @@ sub Parameters {
 
 sub FunctionCall {
     # TODO: allow "expression" instead of "identifier"
-    my $id = parse(\&Identifier);
-    return 0 if !($id && skip() && parse(\&Char,'('));
+    return 0 if !(parse(\&Identifier) && skip() && parse(\&Char,'('));
+    my $id = $IDENTIFIER;
     skip();
 
     print "# parseFunctionCall:\n";
@@ -641,8 +632,8 @@ sub UnaryExpression {
 sub AddressOf {
     return 0 if !parse(\&Char,'&');
     skip();
-    my $id = parse(\&Identifier);
-    die "can't take address of anything other than an identifier" if !$id;
+    die "can't take address of anything other than an identifier" if !parse(\&Identifier);
+    my $id = $IDENTIFIER;
     skip();
 
     my $sym = symlookup($id);
@@ -821,12 +812,8 @@ sub genop {
 
 sub Term {
     return 1 if parse(\&Constant) || parse(\&FunctionCall) || parse(\&AddressOf) || parse(\&UnaryExpression) || parse(\&ParenExpression);
-
-    my $id = parse(\&Identifier);
-    return 0 if !$id;
-
-    pushvar($id);
-
+    return 0 if !parse(\&Identifier);
+    pushvar($IDENTIFIER);
     return 1;
 }
 
@@ -878,9 +865,9 @@ sub Identifier {
     my $pos0 = $pos;
     return 0 if !matchChar(qr/[a-zA-Z_]/);
     while (matchChar(qr/[a-zA-Z0-9_]/)) {};
-    my $name = substr($s, $pos0, $pos-$pos0),
+    $IDENTIFIER = substr($s, $pos0, $pos-$pos0),
     skip();
-    return $name;
+    return 1;
 }
 
 # parse string followed by word boundary
