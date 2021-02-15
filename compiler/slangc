@@ -26,8 +26,8 @@ parse(\&Program);
 # parse() calls the Foo() and restores $pos,$line,$col if it didn't match
 #
 # rather than turning the source code into an abstract syntax tree and then turning
-# the AST into code, we treat the call graph as an implicit AST and generate code
-# as we walk the call graph
+# the AST into code, we treat the compiler's call graph as an implicit AST and generate code
+# as we "walk the call graph", i.e. as the compiler parses the source
 #
 # TODO: annotate generated assembly code with the source code that generated it
 # TODO: emit code via a helper that performs peephole optimisation
