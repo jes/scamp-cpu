@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+
+# read in a 16-bit hex file and output a corresponding 8-bit
+# disk image that the bootrom can load into 0x100
+
+use strict;
+use warnings;
+
+# initialise magic number (0x5343), start address (0x0100), and placeholder length (0x0000)
+my @d = (0x53,0x43, 0x01,0x00, 0x00,0x00);
+
+while (<>) {
+    chomp;
+    my $v = hex($_);
+    push @d, ($v>>8)&0xff;
+    push @d, $v&0xff;
+}
+
+my $nwords = (@d-4)/2;
+$d[4] = ($nwords>>8)&0xff;
+$d[5] = $nwords&0xff;
+
+print sprintf("%02x\n", $_) for @d;
