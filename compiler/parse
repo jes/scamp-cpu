@@ -18,11 +18,9 @@ my $scope = {
     parent => undef,
 };
 
-my @stack;
-
 parseProgram();
 if ($pos != @s) {
-    print "Ended at $pos (line $line, col $col): had " . (@s-$pos) . " chars left over\n";
+    print STDERR "Ended at $pos (line $line, col $col): had " . (@s-$pos) . " chars left over\n";
 }
 
 # recursive descent parser based on https://www.youtube.com/watch?v=Ytq0GQdnChg
@@ -43,6 +41,8 @@ if ($pos != @s) {
 # TODO: "ifx>0" should treat "ifx" as an identifier: parseString() needs to not accept strings that
 #       don't end at word boundaries
 # TODO: what happens if you declare a variable inside a loop? or a conditional?
+# TODO: allow anonymous functions to be passed as parameters (just hack them into global scope, and
+#       don't let them access parent funciton vars?)
 
 sub parseProgram {
     return 0 if !parseStatements();
@@ -132,21 +132,20 @@ sub runtime_endscope {
 sub parseDeclaration {
     return 0 if !parseString('var');
     skip();
-    die "var declaration needs identifier" if !parseIdentifier();
+    my $id = parseIdentifier();
+    die "var declaration needs identifier" if !$id;
     skip();
-    my $id = pop @stack;
-    die "var declaration expected identifier" if $id->{type} ne 'identifier';
 
-    die "duplicate declaration in scope: $id->{name}" if $scope->{symbols}{$id->{name}};
+    die "duplicate declaration in scope: $id" if $scope->{symbols}{$id};
 
     # add name to scope
-    $scope->{symbols}{$id->{name}} = {
+    $scope->{symbols}{$id} = {
         type => $scope->{global} ? 'global' : 'local',
         bp_rel => $scope->{bp_rel}--,
     };
 
     if (!$scope->{global}) {
-        print "# allocate space for $id->{name}\n";
+        print "# allocate space for $id\n";
         print "dec sp\n";
     }
 
@@ -157,7 +156,7 @@ sub parseDeclaration {
     parseExpression();
     skip();
 
-    poptovar($id->{name});
+    poptovar($id);
     return 1;
 }
 
@@ -177,16 +176,12 @@ sub parseExtern {
     return 0 if !parseString('extern');
     skip();
 
-    if (!parseIdentifier()) {
-        die "extern expects identifier\n";
-    }
+    my $id = parseIdentifier();
+    die "extern expects identifier\n" if !$id;
     skip();
 
-    my $id = pop @stack;
-    die "expected identifier" if $id->{type} ne 'identifier';
-
     die "can only add extern in global scope" if !$scope->{global};
-    $scope->{symbols}{$id->{name}} = {
+    $scope->{symbols}{$id} = {
         type => 'global',
         extern => 1,
     };
@@ -196,46 +191,33 @@ sub parseExtern {
 
 sub parseAssignment {
     my $pos0 = $pos;
-    if (!(parseLValue() && skip() && parseChar('='))) {
-        $pos = $pos0;
-        return 0;
+    my $id = parseIdentifier();
+    if (!$id) {
+        return 0 if !parseChar('*');
+        die "can't dereference non-expression" if !parseExpression();
     }
 
-    my $lval = pop @stack;
+    skip();
 
-    if ($lval->{type} eq 'pointer') {
-        # leave the pointer on the stack
-        print "# ... leave pointer on stack ...\n";
-    } elsif ($lval->{type} ne 'identifier') {
-        die "unexpected lvalue type: $lval->{type}";
+    if (!parseChar('=')) {
+        $pos = $pos0;
+        return 0;
     }
 
     skip();
     die "assignment needs rvalue" if !parseExpression();
     skip();
 
-    if ($lval->{type} eq 'pointer') {
+    if ($id) {
+        poptovar($id);
+    } else {
         print "# store to pointer:\n";
         print "pop x # value\n";
         print "ld r0, x\n";
         print "pop x # pointer\n";
         print "ld (x), r0\n";
-    } elsif ($lval->{type} eq 'identifier') {
-        poptovar($lval->{name});
-    } else {
-        die "unexpected lvalue type: $lval->{type}";
     }
 
-    return 1;
-}
-
-sub parseLValue {
-    return 1 if parseIdentifier();
-    return 0 if !parseChar('*');
-    die "can't dereference non-expression" if !parseExpression();
-    push @stack, {
-        type => 'pointer',
-    };
     return 1;
 }
 
@@ -243,7 +225,6 @@ sub parseLValue {
 # generate its code followed by a jump to the endiflabel, then put the elselabel,
 # and if there's an "else" then let another parseStatement generate its code, then put the endiflabel
 sub parseConditional {
-    my $pos0 = $pos;
     return 0 if !parseString("if");
     skip();
 
@@ -398,20 +379,16 @@ sub parseBinaryLiteral {
 }
 
 sub parseCharacterLiteral {
-    my $pos0 = $pos;
     return 0 if !parseChar("'");
     my $c = $s[$pos++];
     if ($c eq '\\') {
-        genliteral(ord(escapedchar($s[$pos])));
-        $pos++;
+        genliteral(ord(escapedchar($s[$pos++])));
     } else {
         genliteral(ord($c));
     }
     
     return 1 if parseChar("'");
     die "illegal character literal\n";
-    $pos = $pos0;
-    return 0;
 }
 
 sub parseDecimalLiteral {
@@ -502,8 +479,7 @@ sub parseFunctionDeclaration {
     die "expected (" if !parseChar('(');
     skip();
 
-    my $sp0 = @stack;
-    parseParameters();
+    my @params = parseParameters();
     skip();
 
     my $functionlabel = label();
@@ -518,11 +494,9 @@ sub parseFunctionDeclaration {
 
     my $bp_rel = 2;
 
-    while (@stack != $sp0) {
-        my $id = pop @stack;
-        die "expected identified" if $id->{type} ne 'identifier';
-        die "duplicate parameter name: $id->{name}" if $scope->{symbols}{$id->{name}};
-        $scope->{symbols}{$id->{name}} = {
+    for my $p (reverse @params) {
+        die "duplicate parameter name: $p" if $scope->{symbols}{$p};
+        $scope->{symbols}{$p} = {
             type => 'local',
             bp_rel => $bp_rel++, # parameters are above the base pointer, locals are below the base pointer
         };
@@ -551,18 +525,22 @@ sub parseFunctionDeclaration {
 
 # somehow return a list of the parameter names to parseFunctionDeclaration()
 sub parseParameters {
+    my @params;
     while (1) {
         skip();
-        return 1 if !parseIdentifier();
+        my $id = parseIdentifier();
+        return @params if !$id;
+        push @params, $id;
+
         skip();
-        return 1 if !parseChar(',');
+        return @params if !parseChar(',');
     }
 }
 
 sub parseFunctionCall {
     my $pos0 = $pos;
-    my $sp0 = @stack;
-    if (parseIdentifier() && skip() # TODO: allow "expression" instead of "identifier"
+    my $id = parseIdentifier();
+    if ($id && skip() # TODO: allow "expression" instead of "identifier"
         && parseChar('(') && skip()) {
         print "# parseFunctionCall:\n";
         # backup return address before we push arguments
@@ -571,11 +549,9 @@ sub parseFunctionCall {
 
         if (parseArguments() && skip()
             && parseChar(')') && skip()) {
-            my $id = $stack[$sp0];
-            die "identifier type != identifier" if $id->{type} ne 'identifier';
 
             # call function
-            pushvar($id->{name}); # XXX: when we parseExpression() instead of parseIdentifier(), this push will happen automatically
+            pushvar($id); # XXX: when we parseExpression() instead of parseIdentifier(), this push will happen automatically
             print "pop x\n";
             print "call x\n";
 
@@ -587,7 +563,6 @@ sub parseFunctionCall {
             print "ld x, r0\n";
             print "push x\n";
 
-            pop @stack while @stack > $sp0;
             return 1;
         } else {
             die "illegal function call\n";
@@ -653,19 +628,17 @@ sub parseUnaryExpression {
 sub parseAddressOf {
     return 0 if !parseChar('&');
     skip();
-    die "can't take address of anything other than an identifier" if !parseIdentifier();
+    my $id = parseIdentifier();
+    die "can't take address of anything other than an identifier" if !$id;
     skip();
 
-    my $id = pop @stack;
-    die "expected identifier" if $id->{type} ne 'identifier';
-
-    my $sym = symlookup($id->{name});
+    my $sym = symlookup($id);
     if ($sym->{type} eq 'global') {
-        print "# &$id->{name} (global)\n";
-        print "ld x, _$id->{name}\n";
+        print "# &$id (global)\n";
+        print "ld x, _$id\n";
         print "push x\n";
     } else {
-        print "# &$id->{name} (local)\n";
+        print "# &$id (local)\n";
         print "ld x, r253\n";
         print "add x, ". (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
         print "push x\n";
@@ -840,11 +813,10 @@ sub genop {
 sub parseTerm {
     return 1 if parseConstant() || parseFunctionCall() || parseAddressOf() || parseUnaryExpression() || parseParenExpression();
 
-    return 0 if !parseIdentifier();
-    my $id = pop @stack;
-    die "expected identifier" if $id->{type} ne 'identifier';
+    my $id = parseIdentifier();
+    return 0 if !$id;
 
-    pushvar($id->{name});
+    pushvar($id);
 
     return 1;
 }
@@ -899,12 +871,9 @@ sub parseIdentifier {
     my $pos0 = $pos;
     return 0 if !matchChar(qr/[a-zA-Z_]/);
     while (matchChar(qr/[a-zA-Z0-9_]/)) {};
-    push @stack, {
-        type => 'identifier',
-        name => substr($s, $pos0, $pos-$pos0),
-    };
+    my $name = substr($s, $pos0, $pos-$pos0),
     skip();
-    return 1;
+    return $name;
 }
 
 sub parseString {
