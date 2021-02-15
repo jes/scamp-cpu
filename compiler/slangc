@@ -767,7 +767,6 @@ sub genop {
         my $lt = label();
         my $end = label();
         print "sub r0, x\n";
-        print "ld x, r0\n";
         print "jlt $lt\n";
         print "ld x, 1\n";
         print "jmp $end\n";
@@ -792,7 +791,6 @@ sub genop {
         my $lt = label();
         my $end = label();
         print "sub r0, x\n";
-        print "ld x, r0\n";
         print "jlt $lt\n";
         print "ld x, 0\n";
         print "jmp $end\n";
