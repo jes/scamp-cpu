@@ -746,44 +746,17 @@ sub genop {
         print "ld x, 1\n";
         print "$end:\n";
 
-    } elsif ($op eq '>=') {
+    } elsif ($op =~ /^(>=|<=|>|<)$/) {
+        my $xr0 = ($op =~ /^(>=|<)$/) ? "x, r0" : "r0, x";
+        my $match = $op =~ /=/ ? 0 : 1;
+        my $nomatch = $match ? 0 : 1;
         # subtract 2nd argument from first, if result is less than zero, then 2nd argument is bigger than first
         # XXX: dubious? (what about integer overflow)
         my $lt = label();
-        print "sub x, r0\n";
-        print "ld x, 0\n"; # doesn't clobber flags
+        print "sub $xr0\n";
+        print "ld x, $match\n"; # doesn't clobber flags
         print "jlt $lt\n";
-        print "ld x, 1\n";
-        print "$lt:\n";
-
-    } elsif ($op eq '<=') {
-        # subtract first argument from 2nd, if result is less than zero, then first argument is bigger than second
-        # XXX: dubious? (what about integer overflow)
-        my $lt = label();
-        print "sub r0, x\n";
-        print "ld x, 0\n"; # doesn't clobber flags
-        print "jlt $lt\n";
-        print "ld x, 1\n";
-        print "$lt:\n";
-
-    } elsif ($op eq '<') {
-        # (this is just the opposite of >=)
-        # XXX: dubious? (what about integer overflow)
-        my $lt = label();
-        print "sub x, r0\n";
-        print "ld x, 1\n"; # doesn't clobber flags
-        print "jlt $lt\n";
-        print "ld x, 0\n";
-        print "$lt:\n";
-
-    } elsif ($op eq '>') {
-        # (this is just the opposite of <=)
-        # XXX: dubious? (what about integer overflow)
-        my $lt = label();
-        print "sub r0, x\n";
-        print "ld x, 1\n"; # doesn't clobber flags
-        print "jlt $lt\n";
-        print "ld x, 0\n";
+        print "ld x, $nomatch\n";
         print "$lt:\n";
 
     } elsif ($op eq '&&') {
