@@ -86,9 +86,8 @@ sub Statements {
 sub Statement {
     return 1 if parse(\&Block) || parse(\&Extern) || parse(\&Declaration) || parse(\&Conditional) || parse(\&Loop) || parse(\&Return) || parse(\&Assignment);
     if (parse(\&Expression)) {
-        # discard the value of the expression
         print "# discard expression value\n";
-        print "inc sp\n";
+        print "pop x\n";
         return 1;
     }
     return 0;
