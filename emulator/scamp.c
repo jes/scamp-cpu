@@ -229,7 +229,7 @@ void help(void) {
 "Options:\n"
 "  -c,--cycles   Print number of cycles taken\n"
 "  -d,--debug    Print debug output after each clock cycle\n"
-"  -f,--freq HZ  Aim to emulate a clock of the given frequency (XXX: only has usec precision; frequencies above 1 million are infinite)\n"
+"  -f,--freq HZ  Aim to emulate a clock of the given frequency\n";
 "  -s,--stack    Trace the stack\n"
 "  -t,--test     Check whether the boot ROM passes the tests\n"
 "  -r,--run FILE    Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
@@ -245,7 +245,7 @@ void help(void) {
 int main(int argc, char **argv) {
     int steps = 0;
     int jmp0x100 = 0;
-    struct timeval prevtime, curtime;
+    struct timeval starttime, curtime;
     unsigned long long elapsed_us, target_us;
 
     setbuf(stdout, NULL);
@@ -292,10 +292,7 @@ int main(int argc, char **argv) {
         PC = 0x100;
     }
 
-    gettimeofday(&prevtime, NULL);
-
-    if (freq)
-        target_us = 1000000 / freq;
+    gettimeofday(&starttime, NULL);
 
     /* run the clock */
     while (!halt) {
@@ -307,10 +304,10 @@ int main(int argc, char **argv) {
 
         if (freq) {
             gettimeofday(&curtime, NULL);
-            elapsed_us = ((curtime.tv_sec * 1000000) + curtime.tv_usec) - ((prevtime.tv_sec * 1000000) + prevtime.tv_usec);
+            elapsed_us = ((curtime.tv_sec * 1000000) + curtime.tv_usec) - ((starttime.tv_sec * 1000000) + starttime.tv_usec);
+            target_us = (steps * 1000000ull) / freq;
             if (elapsed_us < target_us)
                 usleep(target_us - elapsed_us);
-            prevtime = curtime;
         }
     }
 
