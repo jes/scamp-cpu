@@ -668,14 +668,9 @@ sub pushvar {
 }
 
 sub funcreturn {
-    # clean up however many scopes we've started since opening the function, leaving the
-    # stack pointer where it was when we were called
+    # cleanup the local scope
     my $s = $scope;
     runtime_endscope();
-    while (!$s->{funcdecl}) {
-        runtime_endscope();
-        $s = $s->{parent};
-    }
 
     # then clean up the function parameters
     print "# function had $s->{params} parameters:\n";
@@ -688,12 +683,10 @@ sub funcreturn {
 sub genliteral {
     my ($val) = @_;
 
-    print "# genliteral:\n";
-
     $val += 0x10000 if $val < 0; # make everything positive
-
     die "numeric literal out of range: $val\n" if $val < 0 || $val > 0xffff;
 
+    print "# genliteral:\n";
     if ($val <= 0x00ff || $val >= 0xff00) {
         print "push $val\n";
     } else {
