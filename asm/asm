@@ -79,10 +79,12 @@ while (my $line = <>) {
         $macro{$name} = $line;
     } elsif ($op eq '.at') {
         params($op, 1, @args);
+        my $at = numarg($args[0]);
         if ($pc == 0) {
-            $start = numarg($args[0]);
+            $start = $at;
         } else {
-            emit(0x0000) for ($pc+1 .. numarg($args[0]));
+            die "error: line $.: .at $at but we're already at $pc\n" if $at < $pc;
+            emit(0x0000) for ($pc+1 .. $at);
         }
         $pc = numarg($args[0]);
     } elsif ($op eq '.gap') {
