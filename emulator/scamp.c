@@ -27,8 +27,8 @@ uint16_t X, Y, PC, instr, uinstr, addr;
 uint8_t JZ, JLT, JGT;
 uint8_t T, Z, LT;
 
-int inputnum = 0;
-char input[8] = {0x53, 0x43, 0x01, 0x00, 0x01, 0x00, 0xa8, 0x01};
+uint16_t diskptr = 0;
+uint16_t disk[65536];
 
 void load_hex(uint16_t *buf, int maxlen, char *name) {
     FILE *fp;
@@ -61,6 +61,10 @@ void load_ram(uint16_t addr, char *file) {
     load_hex(ram+addr, 65536-addr, file);
 }
 
+void load_disk(char *file) {
+    load_hex(disk, 65536, file);
+}
+
 /* compute ALU operation */
 uint16_t alu(uint16_t argx, uint16_t argy) {
     uint16_t val;
@@ -82,9 +86,8 @@ uint16_t alu(uint16_t argx, uint16_t argy) {
 /* input a word from addr */
 uint16_t in(uint16_t addr) {
     int val;
-    if (addr == 1) {
-        val = input[inputnum];
-        inputnum = (inputnum+1)%8;
+    if (addr == 1 && disk) {
+        val = disk[diskptr++];
         return val;
     }
     return 0;
@@ -239,14 +242,15 @@ void help(void) {
     printf("usage: scamp [-d]\n"
 "\n"
 "Options:\n"
-"  -c,--cycles   Print number of cycles taken\n"
-"  -d,--debug    Print debug output after each clock cycle\n"
-"  -f,--freq HZ  Aim to emulate a clock of the given frequency\n"
-"  -s,--stack    Trace the stack\n"
-"  -t,--test     Check whether the test ROM passes the tests\n"
+"  -c,--cycles      Print number of cycles taken\n"
+"  -d,--debug       Print debug output after each clock cycle\n"
+"  -f,--freq HZ     Aim to emulate a clock of the given frequency\n"
+"  -i,--image FILE  Load disk image from given hex file\n"
+"  -s,--stack       Trace the stack\n"
+"  -t,--test        Check whether the test ROM passes the tests\n"
 "  -r,--run FILE    Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
 "  -w,--watch ADDR  Watch for changes to the given address and print them on stderr\n"
-"  -h,--help     Show this help text\n"
+"  -h,--help        Show this help text\n"
 "\n"
 "This emulator loads the microcode from ../ucode.hex and boot ROM from ../bootrom.hex.\n"
 "If --test, boot ROM is replaced with a test ROM from ../testrom.hex.\n"
@@ -269,6 +273,7 @@ int main(int argc, char **argv) {
             {"cycles",no_argument, &cyclecount,1},
             {"debug", no_argument, &debug,     1},
             {"freq",  required_argument,  0, 'f'},
+            {"image", required_argument,  0, 'i'},
             {"stack", no_argument, &stacktrace,1},
             {"test",  no_argument, &test,      1},
             {"help",  no_argument, &show_help, 1},
@@ -278,12 +283,13 @@ int main(int argc, char **argv) {
         };
 
         int optidx = 0;
-        int c = getopt_long(argc, argv, "cdf:hstr:w:", opts, &optidx);
+        int c = getopt_long(argc, argv, "cdf:i:hstr:w:", opts, &optidx);
 
         if (c == -1) break;
         if (c == 'c') cyclecount = 1;
         if (c == 'd') debug = 1;
         if (c == 'f') freq = atoi(optarg);
+        if (c == 'i') load_disk(optarg);
         if (c == 's') stacktrace = 1;
         if (c == 't') test = 1;
         if (c == 'r') {
