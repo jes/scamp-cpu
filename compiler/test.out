@@ -60,4 +60,7 @@ rfib(22) = 17711
 fib(23) = 28657
 rfib(23) = 28657
 
+string: Hello, world!
+reversed: !dlrow ,olleH
+re-reversed: Hello, world!
 Final sp=0x7ffe

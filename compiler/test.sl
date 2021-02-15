@@ -72,6 +72,28 @@ var rfib = func(n) {
         return rfib(n-1)+rfib(n-2);
 };
 
+# reverse the given string in-place
+var strrev = func(s) {
+    var ss = s;
+    var p = s;
+
+    while (*(p+1)) {
+        p = p + 1;
+    };
+
+    var ch;
+
+    while (s < p) {
+        ch = *p;
+        *p = *s;
+        *s = ch;
+        p = p-1;
+        s = s+1;
+    };
+
+    return ss;
+};
+
 var optest = func() {
     var a = 0xaaaa;
     var b = 0x55aa;
@@ -120,8 +142,17 @@ var fibtest = func() {
     print("\n");
 };
 
+var strtest = func() {
+    var s1 = "Hello, world!";
+
+    print("string: "); print(s1); print("\n");
+    print("reversed: "); print(strrev(s1)); print("\n");
+    print("re-reversed: "); print(strrev(s1)); print("\n");
+};
+
 var sp = 0xffff;
 print("Initial sp=0x"); print(itoabase(*sp, 16)); print("\n");
 optest();
 fibtest();
+strtest();
 print("Final sp=0x"); print(itoabase(*sp, 16)); print("\n");
