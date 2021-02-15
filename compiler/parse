@@ -39,8 +39,6 @@ if ($pos != @s) {
 # TODO: annotate generated assembly code with the source code that generated it
 # TODO: emit code via a helper that performs peephole optimisation
 # TODO: warn if we know a function has been called with the wrong number of arguments
-# TODO: "ifx>0" should treat "ifx" as an identifier: parseString() needs to not accept strings that
-#       don't end at word boundaries
 # TODO: what happens if you declare a variable inside a loop? or a conditional?
 
 sub parseProgram {
@@ -125,7 +123,7 @@ sub runtime_endscope {
 
 # add name to current scope (possibly global)
 sub parseDeclaration {
-    return 0 if !parseString('var');
+    return 0 if !parseKeyword('var');
     skip();
     my $id = parseIdentifier();
     die "var declaration needs identifier" if !$id;
@@ -168,7 +166,7 @@ sub symlookup {
 
 # add name to global scope, but don't allocate any space for it
 sub parseExtern {
-    return 0 if !parseString('extern');
+    return 0 if !parseKeyword('extern');
     skip();
 
     my $id = parseIdentifier();
@@ -220,7 +218,7 @@ sub parseAssignment {
 # generate its code followed by a jump to the endiflabel, then put the elselabel,
 # and if there's an "else" then let another parseStatement generate its code, then put the endiflabel
 sub parseConditional {
-    return 0 if !parseString("if");
+    return 0 if !parseKeyword("if");
     skip();
 
     my $falselabel = label();
@@ -244,7 +242,7 @@ sub parseConditional {
     die "if needs body" if !parseStatement();
     skip();
 
-    if (parseString("else")) {
+    if (parseKeyword("else")) {
         skip();
 
         my $endiflabel = label();
@@ -267,7 +265,7 @@ sub parseConditional {
 # write a looplabel, then after parseExpression branch to endwhilelabel if false, then let
 # parseStatement write its code, then jump to looplabel
 sub parseLoop {
-    return 0 if !parseString('while');
+    return 0 if !parseKeyword('while');
     skip();
 
     die "while condition needs to start with paren" if !parseChar('(');
@@ -301,7 +299,7 @@ sub parseLoop {
 # end however many scopes we're in
 # pop args off stack and 'ret'
 sub parseReturn {
-    return 0 if !parseString("return");
+    return 0 if !parseKeyword("return");
     skip();
 
     die "must return something" if !parseExpression();
@@ -464,7 +462,7 @@ sub escapedchar {
 }
 
 sub parseFunctionDeclaration {
-    return 0 if !parseString('func');
+    return 0 if !parseKeyword('func');
     skip();
 
     print "\n# parseFunctionDeclaration:\n";
@@ -872,6 +870,16 @@ sub parseIdentifier {
     my $name = substr($s, $pos0, $pos-$pos0),
     skip();
     return $name;
+}
+
+# parse string followed by word boundary
+sub parseKeyword {
+    my ($s) = @_;
+    my $pos0 = $pos;
+    return 0 if !parseString($s);
+    return 1 if $pos == @s || $s[$pos] !~ /^([a-zA-Z0-9_])$/;
+    $pos = $pos0;
+    return 0;
 }
 
 sub parseString {

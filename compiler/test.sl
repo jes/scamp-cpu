@@ -156,7 +156,7 @@ var callprint = func(f) {
 
 var globule = 1;
 
-var fnctest = func() {
+var functest = func() {
     print("Nested function calls/declarations:\n");
 
     callprint(func() { return "1. Hello, world\n" });
@@ -177,5 +177,5 @@ print("Initial sp=0x"); print(itoabase(*sp, 16)); print("\n");
 optest();
 fibtest();
 strtest();
-fnctest();
+functest();
 print("Final sp=0x"); print(itoabase(*sp, 16)); print("\n");
