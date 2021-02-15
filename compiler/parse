@@ -44,7 +44,7 @@ sub parse {
 
     local $SIG{__DIE__} = sub {
         my ($err) = @_;
-        die "line $line0: col $col0: $err";
+        die "error: line $line0: col $col0: $err";
     };
     return 1 if $f->(@args);
 
@@ -58,7 +58,7 @@ sub Program {
     return 0 if !parse(\&Statements);
 
     die "garbage after end of program\n" if $pos != @s;
-    die "expected to be left in global scope after program\n" if !$scope->{global};
+    die "expected to be left in global scope after program (probably a compiler bug)\n" if !$scope->{global};
 
     # allocate space for globals
     for my $global (sort keys %{ $scope->{symbols} }) {
@@ -96,7 +96,7 @@ sub Block {
     parse(\&Statements);
     skip();
 
-    die "block must end with }\n" if !parse(\&Char,'}');
+    die "block needs closing brace\n" if !parse(\&Char,'}');
     skip();
 
     return 1;
@@ -119,7 +119,7 @@ sub newscope {
 
 sub endscope {
     runtime_endscope();
-    die "can't exit global scope\n" if $scope->{global};
+    die "can't exit global scope (probably a compiler bug)\n" if $scope->{global};
     $scope = $scope->{parent};
 }
 
@@ -135,7 +135,7 @@ sub runtime_endscope {
 sub Declaration {
     return 0 if !parse(\&Keyword,'var');
     skip();
-    die "var declaration needs identifier\n" if !parse(\&Identifier);
+    die "var needs identifier\n" if !parse(\&Identifier);
     my $id = $IDENTIFIER;
     skip();
 
@@ -183,7 +183,7 @@ sub Extern {
     my $id = $IDENTIFIER;
     skip();
 
-    die "can only add extern in global scope\n" if !$scope->{global};
+    die "can only use extern in global scope\n" if !$scope->{global};
     $scope->{symbols}{$id} = {
         type => 'global',
         extern => 1,
@@ -276,7 +276,7 @@ sub Loop {
     return 0 if !parse(\&Keyword,'while');
     skip();
 
-    die "while condition needs to start with paren\n" if !parse(\&Char,'(');
+    die "while condition needs open paren\n" if !parse(\&Char,'(');
     skip();
 
     my $loop = label();
@@ -292,7 +292,7 @@ sub Loop {
     print "test x\n";
     print "jz $endloop\n";
 
-    die "while condition needs to end with paren\n" if !parse(\&Char,')');
+    die "while loop needs close paren\n" if !parse(\&Char,')');
     skip();
 
     die "while loop needs body\n" if !parse(\&Statement);
@@ -310,7 +310,7 @@ sub Return {
     return 0 if !parse(\&Keyword,"return");
     skip();
 
-    die "must return something\n" if !parse(\&Expression);
+    die "return needs expression\n" if !parse(\&Expression);
     skip();
 
     # we currently have the return value on the stack, we want to pop it to r0
@@ -346,7 +346,7 @@ sub Constant {
 }
 
 sub NumericLiteral {
-    return parse(\&HexLiteral) || parse(\&BinaryLiteral) || parse(\&CharacterLiteral) || parse(\&DecimalLiteral);
+    return parse(\&HexLiteral) || parse(\&CharacterLiteral) || parse(\&DecimalLiteral);
 }
 
 sub HexLiteral {
@@ -359,21 +359,6 @@ sub HexLiteral {
 
     my $val = substr($s, $pos0, $pos-$pos0);
     genliteral(hex($val));
-
-    skip();
-    return 1;
-}
-
-sub BinaryLiteral {
-    return 0 if !parse(\&String,"0b");
-    my $pos0 = $pos;
-    if (!matchChar(qr/[01]/)) {
-        die "illegal binary literal\n";
-    }
-    while (matchChar(qr/[01]/)) { }
-
-    my $val = substr($s, $pos0, $pos-$pos0);
-    genliteral(oct("0b$val"));
 
     skip();
     return 1;
@@ -451,7 +436,7 @@ sub StringLiteral {
         }
         $pos++;
     }
-    die "un-terminated string literal\n";
+    die "unterminated string literal\n";
 }
 
 # n => "\n", r => "\r", etc.
@@ -475,7 +460,7 @@ sub FunctionDeclaration {
 
     print "\n# parseFunctionDeclaration:\n";
 
-    die "expected (\n" if !parse(\&Char,'(');
+    die "func needs open parenn" if !parse(\&Char,'(');
     skip();
 
     my @params = Parameters();
@@ -506,7 +491,7 @@ sub FunctionDeclaration {
         $scope->{params}++;
     }
 
-    die "expected )\n" if !parse(\&Char,')');
+    die "func needs close paren\n" if !parse(\&Char,')');
     skip();
 
     parse(\&Statement);
@@ -550,7 +535,7 @@ sub FunctionCall {
     print "ld x, r254\n";
     print "push x\n";
 
-    die "illegal function call\n" if !(parse(\&Arguments) && skip() && parse(\&Char, ')'));
+    die "argument list needs closing paren\n" if !(parse(\&Arguments) && skip() && parse(\&Char, ')'));
     skip();
 
     # call function
@@ -583,7 +568,7 @@ sub UnaryExpression {
     return 0 if !matchChar(qr/[!~*+-]/);
     skip();
     if (!parse(\&Term)) {
-        die "unary operator $op must be followed by an expression\n";
+        die "unary operator $op needs operand\n";
     }
 
     if ($op eq '~') {
@@ -625,7 +610,7 @@ sub UnaryExpression {
 sub AddressOf {
     return 0 if !parse(\&Char,'&');
     skip();
-    die "can't take address of anything other than an identifier\n" if !parse(\&Identifier);
+    die "address-of (&) needs identifier\n" if !parse(\&Identifier);
     my $id = $IDENTIFIER;
     skip();
 
