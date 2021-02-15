@@ -1,253 +1,99 @@
-# 0
-ld x, 0
-out 0, x
+# SCAMP bootloader
+# The first 3 words from the disk device should be:
+#  1. magic number (0x5343)
+#  2. start address
+#  3. length
+# Once the given number of words have been loaded into memory at the
+# given address, the address will be jumped to.
+# Apart from the loaded code and the program counter, all machine state is
+# undefined, including flags, contents of X, and all pseudo-registers including sp
 
-# 1
-ld x, 1
-out 0, x
+.at 0
 
-# 2
-ld x, 2
-out 0, x
+.def DISKDEV   1
+.def SERIALDEV 2
+.def STARTREG  r1
+.def POINTREG  r2
+.def LENGTHREG r3
 
-# 3
-ld x, 3
-out 0, x
+# TODO: initialise serial device...
 
-# 4: add 1+3
-ld x, 1
-add x, 3
-out 0, x
-
-# 5: sub 100-95
-ld x, 100
-sub x, 95
-out 0, x
-
-# 6: inc 5+1
-ld x, 5
-inc x
-out 0, x
-
-# 7: dec 8-1
-ld x, 8
-dec x
-out 0, x
-
-# 8: shl 4
-ld x, 4
-shl x
-out 0, x
-
-# 9: 1001 == 1000 | 0001
-ld x, 8
-or x, 1
-out 0, x
-
-# 10: 1010 == 1110 & 1011
-ld x, 14
-and x, 11
-out 0, x
-
-# 11: 1011 == 11101 ^ 10110
-ld x, 29
-ld y, 22
-xor x, y
-out 0, x
-
-# 12,13: push 13, push 12, pop, out, pop, out
-ld sp, 512
-push 13
-push 12
-ld x, 42
-pop x
-out 0, x
-pop x
-out 0, x
-
-# 14: unconditional jump
-ld x, 14
-jmp L
-ld x, 42
-L: out 0, x
-
-# 15: conditional jump
-ld r0, 0
-ld x, 15
-L2:
-inc r0
-dec x
-jnz L2
-out 0, r0
-
-# 16: shift-right by 8
-ld r0, 0x1000
-ld r254, 0
-tbsz r0, 0x8000
-sb r254, 0x80
-tbsz r0, 0x4000
-sb r254, 0x40
-tbsz r0, 0x2000
-sb r254, 0x20
-tbsz r0, 0x1000
-sb r254, 0x10
-tbsz r0, 0x0800
-sb r254, 0x08
-tbsz r0, 0x0400
-sb r254, 0x04
-tbsz r0, 0x0200
-sb r254, 0x02
-tbsz r0, 0x0100
-sb r254, 0x01
-# if we're lucky, r254 now has 0x1000 >> 8
-out 0, r254
-
-# 17: xor x, y
-# 17 = 0x0011 = 0b0000000000010001
-#            a: 0b0110100101010010 = 0x6952
-#            b: 0b0110100101000011 = 0x6943
-ld x, 0x6952
-ld y, x
-ld x, 0x6943
-xor x, y
-out 0, x
-
-# 18: relative jump
-ld r0, 18
-jr+ 1
-ld r0, 0
-out 0, r0
-
-# 19: summing numbers in a list, using auto-increment
-ld r0, 10
-ld r1, 1
-ld r2, 2
-ld r3, 5
-ld r4, 0
-ld r5, 0
-ld r6, 3
-ld r7, 3
-ld r8, 4
-ld r9, 0
-ld r10, 1
-.def ptr r12
-ld ptr, 0xff01
-ld x, 0
-L3:
-    add x, (ptr++)
-    dec r0
-    jnz L3
-out 0, x
-
-# 20: subroutine call
-push 10
-ld x, 42
-call double
-out 0, r0
-
-# 21: xor subroutine call
-ld x, 0x1500 # (21 << 8)
-push x
-call shr8
-out 0, r0
-
-# 22: stack-relative
-push 22
-push 40
-ld x, 2(sp)
-out 0, x
-
-# 23: indirect call
-push 10
-push 5
-push 8
-ld x, add3
-ld (funcptr), x
-call (funcptr)
-out 0, r0
-
-# 24: 8 * 3
-push 8
-push 3
-call mul
-out 0, r0
-
-# print a string
-ld x, str
-push x
+# 1. print hello
+ld r0, welcome_s
 call print
 
-# infinite loop
+# 2. read magic from disk
+.def MAGIC 0x5343
+call inword
+sub r0, MAGIC
+jz read_startaddr
+
+ld r0, wrongmagic_s
+call print
 jr- 1
 
-# double 1 arg from the stack and return the result in r0
-double:
-    pop x
-    ld r0, x
-    shl r0
-    ret
+# 3. read start address from disk
+read_startaddr:
+    call inword
+    ld STARTREG, r0
+    ld POINTREG, r0
+    ld x, r0
+    and x, 0xff00
+    jnz read_length
 
-# >>8 1 arg from the stack and return the result in r0
-# XXX: I think this function is actually broken for some inputs
-shr8:
-    pop x
-    ld r0, x
-    ld r253, r254 # stash return address
-    ld r254, 0
-    shr8_loop:
-        shl r254
-        tbsz r0, 0x8000
-        sb r254, 0x01
-        shl r0
-        jnz shr8_loop
-    ld r0, r254
-    jmp r253 # return
+    ld r0, startinrom_s
+    call print
+    jr- 1
 
-# add 3 args from the stack and return the result in r0
-add3:
-    ld r0, 0
-    ld x, 1(sp)
-    add r0, x
-    ld x, 2(sp)
-    add r0, x
-    ld x, 3(sp)
-    add r0, x
-    ret 3
+# 4. read length from disk
+read_length:
+    call inword
+    ld LENGTHREG, r0
+    jnz read_data
 
-# take a pointer to a nul-terminated string, and print it
+    ld r0, zerolength_s
+    call print
+    jr- 1
+
+# 5. read data from disk
+read_data:
+    call inword
+    ld x, r0
+    ld (POINTREG++), x
+    dec LENGTHREG
+    jnz read_data
+
+ld r0, ok_s
+call print
+
+# 6. jump to the loaded code
+jmp STARTREG
+
+# print the nul-terminated string pointed to by r0
 print:
-    pop x
-    ld r0, x
-    print_loop:
-        out 2, (r0)
-        inc r0
-        test (r0)
-        jnz print_loop
+    ld x, (r0++)
+    test x
+    jz printdone
+    out SERIALDEV, x
+    jmp print
+    printdone:
     ret
 
-# multiply 2 numbers from stack and return result in r0
-mul:
-    pop x
-    ld r2, x # r2 = arg1
-    pop x
-    ld r1, x # r1 = arg2
-    ld r0, 0 # result
-    ld r3, 1 # (1 << i)
-
-    mul_loop:
-        ld x, r2 # x = arg1
-        and x, r3 # x = arg1 & (1 << i)
-        jz mul_cont # skip the "add" if this bit is not set
-        add r0, r1 # result += resultn
-    mul_cont:
-        shl r1 # resultn += resultn
-        shl r3 # i++
-        jnz mul_loop # loop again if the mask has not overflowed
-
+# read the next 1 word from the disk device and return it in r0
+# TODO: support a real disk device
+inword:
+    # high byte
+    in x, DISKDEV
+    shl3 x
+    shl3 x
+    shl2 x
+    # low byte
+    in r0, DISKDEV
+    or r0, x
     ret
 
-str: .str "Hello, world!\n\0"
-
-# XXX: ".at 0x100" so that funcptr is writable (first 256 bytes are rom)
-.at 0x100
-funcptr:
+welcome_s:    .str "SCAMP boot...\r\n\0"
+ok_s:         .str "OK\r\n\0"
+wrongmagic_s: .str "Disk error: wrong magic\r\n\0"
+startinrom_s: .str "Disk error: start address points to ROM\r\n\0"
+zerolength_s: .str "Disk error: length is 0\r\n\0"

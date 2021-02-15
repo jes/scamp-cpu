@@ -27,6 +27,9 @@ uint16_t X, Y, PC, instr, uinstr, addr;
 uint8_t JZ, JLT, JGT;
 uint8_t T, Z, LT;
 
+int inputnum = 0;
+char input[8] = {0x53, 0x43, 0x01, 0x00, 0x01, 0x00, 0xa8, 0x01};
+
 void load_hex(uint16_t *buf, int maxlen, char *name) {
     FILE *fp;
     int i = 0;
@@ -75,6 +78,12 @@ uint16_t alu(uint16_t argx, uint16_t argy) {
 
 /* input a word from addr */
 uint16_t in(uint16_t addr) {
+    int val;
+    if (addr == 1) {
+        val = input[inputnum];
+        inputnum = (inputnum+1)%8;
+        return val;
+    }
     return 0;
 }
 
@@ -229,7 +238,7 @@ void help(void) {
 "Options:\n"
 "  -c,--cycles   Print number of cycles taken\n"
 "  -d,--debug    Print debug output after each clock cycle\n"
-"  -f,--freq HZ  Aim to emulate a clock of the given frequency\n";
+"  -f,--freq HZ  Aim to emulate a clock of the given frequency\n"
 "  -s,--stack    Trace the stack\n"
 "  -t,--test     Check whether the boot ROM passes the tests\n"
 "  -r,--run FILE    Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
