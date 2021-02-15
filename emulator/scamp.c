@@ -86,7 +86,7 @@ uint16_t alu(uint16_t argx, uint16_t argy) {
 /* input a word from addr */
 uint16_t in(uint16_t addr) {
     int val;
-    if (addr == 1 && disk) {
+    if (addr == 1) {
         val = disk[diskptr++];
         return val;
     }
