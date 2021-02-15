@@ -144,20 +144,17 @@ sub Declaration {
 sub Conditional {
     return 0 if !parse(\&Keyword,"if");
 
-    my $falselabel = label();
-
     die "if condition needs open paren\n" if !parse(\&CharSkip,"(");
-
     print "# if condition\n";
     die "if condition needs expression\n" if !parse(\&Expression);
 
     # if top of stack is 0, jmp $falselabel
+    my $falselabel = label();
     print "pop x\n";
     print "test x\n";
     print "jz $falselabel\n";
 
     die "if condition needs close paren\n" if !parse(\&CharSkip,")");
-
     print "# if body\n";
     die "if needs body\n" if !parse(\&Statement);
 
@@ -182,7 +179,6 @@ sub Loop {
 
     my $loop = label();
     my $endloop = label();
-
     print "# while loop\n";
     print "$loop:\n";
     die "while loop needs expression\n" if !parse(\&Expression);
@@ -286,13 +282,8 @@ sub Term {
     return 1;
 }
 
-sub Constant {
-    return parse(\&NumericLiteral) || parse(\&StringLiteral) || parse(\&FunctionDeclaration);
-}
-
-sub NumericLiteral {
-    return parse(\&HexLiteral) || parse(\&CharacterLiteral) || parse(\&DecimalLiteral);
-}
+sub Constant { return parse(\&NumericLiteral) || parse(\&StringLiteral) || parse(\&FunctionDeclaration); }
+sub NumericLiteral { return parse(\&HexLiteral) || parse(\&CharacterLiteral) || parse(\&DecimalLiteral); }
 
 sub HexLiteral {
     return 0 if !parse(\&String,"0x");
@@ -311,7 +302,8 @@ sub HexLiteral {
 
 sub DecimalLiteral {
     my $pos0 = $pos;
-    return 0 if !matchChar(qr/[-+0-9]/);
+    matchChar(qr/[-+]/);
+    return 0 if !matchChar(qr/[0-9]/);
     while (matchChar(qr/\d/)) {}
 
     my $val = substr($s, $pos0, $pos-$pos0);
@@ -336,13 +328,7 @@ sub CharacterLiteral {
 
 sub escapedchar {
     my ($c) = @_;
-    my %map = (
-        n => "\n",
-        r => "\r",
-        t => "\r",
-        0 => "\0",
-        "]" => "\]",
-    );
+    my %map = (n => "\n", r => "\r", t => "\r", 0 => "\0", "]" => "\]");
     return $map{$c}||$c;
 }
 
@@ -487,15 +473,19 @@ sub UnaryExpression {
     skip();
     die "unary operator $op needs operand\n" if !parse(\&Term);
 
-    if ($op eq '~') {
+    my %mnemonic = (
+        '~' => 'not',
+        '-' => 'neg',
+    );
+
+    print "# unary $op\n";
+    if ($mnemonic{$op}) {
         # pop arg from stack, negate it, put it back on stack
-        print "# unary bitwise complement:\n";
         print "pop x\n";
-        print "not x\n";
+        print "$mnemonic{$op} x\n";
         print "push x\n";
     } elsif ($op eq '!') {
         # test arg from stack, if it's zero do nothing, otherwise overwrite it with a 1
-        print "# unary not:\n";
         my $endlabel = label();
         print "pop x\n";
         print "test x\n";
@@ -506,12 +496,6 @@ sub UnaryExpression {
         print "push x\n";
     } elsif ($op eq '+') {
         # unary + is a no-op
-    } elsif ($op eq '-') {
-        # pop arg from stack, negate it, put it back on stack
-        print "# unary arithmetic negation:\n";
-        print "pop x\n";
-        print "neg x\n";
-        print "push x\n";
     } elsif ($op eq '*') {
         # pop arg from stack, dereference it, put it back on stack
         print "# pointer dereference:\n";

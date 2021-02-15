@@ -102,6 +102,10 @@ var optest = func() {
 
     print("a="); print(itoa(a)); print("\n");
     print("b="); print(itoa(b)); print("\n");
+    print("~a="); print(itoa(~a)); print("\n");
+    print("-b="); print(itoa(-b)); print("\n");
+    print("+a="); print(itoa(+a)); print("\n");
+    print("&a="); print(itoa(&a)); print("\n");
     print("a+b="); print(itoa(a+b)); print("\n");
     print("a-b="); print(itoa(a-b)); print("\n");
     print("a&b="); print(itoa(a&b)); print("\n");

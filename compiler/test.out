@@ -2,6 +2,10 @@ Initial sp=0x7ffe
 Operators test:
 a=43690
 b=21930
+~a=21845
+-b=43606
++a=43690
+&a=32766
 a+b=84
 a-b=21760
 a&b=170
