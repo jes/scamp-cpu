@@ -209,7 +209,6 @@ sub Extern {
 }
 
 sub Assignment {
-    my $pos0 = $pos;
     my $id = parse(\&Identifier);
     if (!$id) {
         return 0 if !parse(\&Char,'*');
@@ -218,10 +217,7 @@ sub Assignment {
 
     skip();
 
-    if (!parse(\&Char,'=')) {
-        $pos = $pos0;
-        return 0;
-    }
+    return 0 if !parse(\&Char,'=');
 
     skip();
     die "assignment needs rvalue" if !parse(\&Expression);
@@ -560,38 +556,33 @@ sub Parameters {
 }
 
 sub FunctionCall {
-    my $pos0 = $pos;
+    # TODO: allow "expression" instead of "identifier"
     my $id = parse(\&Identifier);
-    if ($id && skip() # TODO: allow "expression" instead of "identifier"
-        && parse(\&Char,'(') && skip()) {
-        print "# parseFunctionCall:\n";
-        # backup return address before we push arguments
-        print "ld x, r254\n";
-        print "push x\n";
+    return 0 if !($id && skip() && parse(\&Char,'('));
+    skip();
 
-        if (parse(\&Arguments) && skip()
-            && parse(\&Char,')') && skip()) {
+    print "# parseFunctionCall:\n";
+    # backup return address before we push arguments
+    print "ld x, r254\n";
+    print "push x\n";
 
-            # call function
-            pushvar($id); # XXX: when we parseExpression() instead of parseIdentifier(), this push will happen automatically
-            print "pop x\n";
-            print "call x\n";
+    die "illegal function call\n" if !(parse(\&Arguments) && skip() && parse(\&Char, ')'));
+    skip();
 
-            # restore return address
-            print "pop x\n";
-            print "ld r254, x\n";
+    # call function
+    pushvar($id); # XXX: when we parseExpression() instead of parseIdentifier(), this push will happen automatically
+    print "pop x\n";
+    print "call x\n";
 
-            # push return value
-            print "ld x, r0\n";
-            print "push x\n";
+    # restore return address
+    print "pop x\n";
+    print "ld r254, x\n";
 
-            return 1;
-        } else {
-            die "illegal function call\n";
-        }
-    }
-    $pos = $pos0;
-    return 0;
+    # push return value
+    print "ld x, r0\n";
+    print "push x\n";
+
+    return 1;
 }
 
 sub Arguments {
@@ -690,13 +681,9 @@ sub ExpressionLevel {
 
     return parse(\&Term) if $level == @operators;
 
-    my $pos0 = $pos;
     my $apply_op;
     while (1) {
-        if (!parse(\&ExpressionLevel,$level+1)) {
-            $pos = $pos0;
-            return 0;
-        }
+        return 0 if !parse(\&ExpressionLevel,$level+1);
         skip();
 
         # if not first loop, generate code
@@ -881,11 +868,9 @@ sub pushvar {
 }
 
 sub ParenExpression {
-    my $pos0 = $pos;
     return 0 if !parse(\&Char,'(');
     skip();
     return 1 if parse(\&Expression) && skip() && parse(\&Char,')') && skip();
-    $pos = $pos0;
     return 0;
 }
 
@@ -901,21 +886,15 @@ sub Identifier {
 # parse string followed by word boundary
 sub Keyword {
     my ($s) = @_;
-    my $pos0 = $pos;
     return 0 if !parse(\&String,$s);
     return 1 if $pos == @s || $s[$pos] !~ /^([a-zA-Z0-9_])$/;
-    $pos = $pos0;
     return 0;
 }
 
 sub String {
     my ($s) = @_;
-    my $pos0 = $pos;
     for my $c (split //, $s) {
-        if (!parse(\&Char,$c)) {
-            $pos = $pos0;
-            return 0;
-        }
+        return 0 if !parse(\&Char,$c);
     }
     return 1;
 }
