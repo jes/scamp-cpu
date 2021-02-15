@@ -1,4 +1,4 @@
-Initial sp=32766
+Initial sp=0x7ffe
 Operators test:
 a=43690
 b=21930
@@ -60,4 +60,4 @@ rfib(22) = 17711
 fib(23) = 28657
 rfib(23) = 28657
 
-Final sp=32766
+Final sp=0x7ffe
