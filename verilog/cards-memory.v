@@ -18,8 +18,8 @@ module Memory(clk, bus, MI, MO, AI_bar, AR_val);
     wire [15:0] rom_value;
     wire [15:0] ram_value;
 
-    at28c16 #(.ROM_FILE("bootrom-low.hex"), .ROM_BYTES(256)) rom1 ({3'b0, AR_val[7:0]}, bus[7:0], romen_bar, 1'b0);
-    at28c16 #(.ROM_FILE("bootrom-high.hex"), .ROM_BYTES(256)) rom2 ({3'b0, AR_val[7:0]}, bus[15:8], romen_bar, 1'b0);
+    at28c16 #(.ROM_FILE("testrom-low.hex"), .ROM_BYTES(256)) rom1 ({3'b0, AR_val[7:0]}, bus[7:0], romen_bar, 1'b0);
+    at28c16 #(.ROM_FILE("testrom-high.hex"), .ROM_BYTES(256)) rom2 ({3'b0, AR_val[7:0]}, bus[15:8], romen_bar, 1'b0);
 
     w24512a ram1 (AR_val, bus[7:0], 1'b0, 1'b1, load_clk_bar, ramen_bar);
     w24512a ram2 (AR_val, bus[15:8], 1'b0, 1'b1, load_clk_bar, ramen_bar);

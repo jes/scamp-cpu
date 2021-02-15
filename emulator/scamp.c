@@ -51,7 +51,10 @@ void load_ucode(void) {
 }
 
 void load_bootrom(void) {
-    load_hex(rom, 256, "../bootrom.hex");
+    if (test)
+        load_hex(rom, 256, "../testrom.hex");
+    else
+        load_hex(rom, 256, "../bootrom.hex");
 }
 
 void load_ram(uint16_t addr, char *file) {
@@ -240,12 +243,13 @@ void help(void) {
 "  -d,--debug    Print debug output after each clock cycle\n"
 "  -f,--freq HZ  Aim to emulate a clock of the given frequency\n"
 "  -s,--stack    Trace the stack\n"
-"  -t,--test     Check whether the boot ROM passes the tests\n"
+"  -t,--test     Check whether the test ROM passes the tests\n"
 "  -r,--run FILE    Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
 "  -w,--watch ADDR  Watch for changes to the given address and print them on stderr\n"
 "  -h,--help     Show this help text\n"
 "\n"
 "This emulator loads the microcode from ../ucode.hex and boot ROM from ../bootrom.hex.\n"
+"If --test, boot ROM is replaced with a test ROM from ../testrom.hex.\n"
 "\n"
 "By James Stanley <james@incoherency.co.uk>\n");
     exit(1);
@@ -308,7 +312,7 @@ int main(int argc, char **argv) {
         negedge();
         posedge();
         steps++;
-        if (test && steps > 2000)
+        if (test && steps > 3000)
             halt = 1;
 
         if (freq) {

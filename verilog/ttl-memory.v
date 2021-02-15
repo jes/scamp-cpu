@@ -16,8 +16,8 @@ module Memory(clk, bus, load, en, address);
     input en;
     input [15:0] address;
 
-    at28c16 #(.ROM_FILE("bootrom-low.hex"), .ROM_BYTES(256)) rom1 ({3'b0, address[7:0]}, bus[7:0], romen_bar, 1'b0);
-    at28c16 #(.ROM_FILE("bootrom-high.hex"), .ROM_BYTES(256)) rom2 ({3'b0, address[7:0]}, bus[15:8], romen_bar, 1'b0);
+    at28c16 #(.ROM_FILE("testrom-low.hex"), .ROM_BYTES(256)) rom1 ({3'b0, address[7:0]}, bus[7:0], romen_bar, 1'b0);
+    at28c16 #(.ROM_FILE("testrom-high.hex"), .ROM_BYTES(256)) rom2 ({3'b0, address[7:0]}, bus[15:8], romen_bar, 1'b0);
 
     w24512a ram1 (address, bus[7:0], 1'b0, 1'b1, load_clk_bar, ramen_bar);
     w24512a ram2 (address, bus[15:8], 1'b0, 1'b1, load_clk_bar, ramen_bar);

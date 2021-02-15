@@ -7,7 +7,7 @@ module ROM(address, value);
     reg [15:0] rom [0:255];
 
     initial begin
-        $readmemh("bootrom.hex", rom);
+        $readmemh("testrom.hex", rom);
     end
 
     assign value = rom[address];
