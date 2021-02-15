@@ -60,6 +60,14 @@ var num2str = func(num) {
     return s;
 };
 
+# recursive fibonacci
+var rfib = func(n) {
+    if (n <= 2)
+        return 1
+    else
+        return rfib(n-1)+rfib(n-2);
+};
+
 var optest = func() {
     var a = 0xaaaa;
     var b = 0x55aa;
@@ -89,7 +97,7 @@ var fibtest = func() {
 
     print("Fibonacci numbers:\n");
 
-    while (n <= 20) {
+    while (n <= 22) {
         f3 = f1 + f2;
         f1 = f2;
         f2 = f3;
@@ -98,6 +106,10 @@ var fibtest = func() {
         # TODO: printf()
         print("fib("); print(num2str(n)); print(") = ");
         print(num2str(f3));
+        print("\n");
+
+        print("rfib("); print(num2str(n)); print(") = ");
+        print(num2str(rfib(n)));
         print("\n");
     };
 
