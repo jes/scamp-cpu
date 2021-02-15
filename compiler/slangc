@@ -20,6 +20,8 @@
 # TODO: emit code via a helper that performs peephole optimisation
 # TODO: warn if we know a function has been called with the wrong number of arguments
 # TODO: what happens if you declare a variable inside a loop? or a conditional?
+# TODO: fix all of the magnitude-comparison operators, and provide both signed
+#       and unsigned versions?
 
 use strict;
 use warnings;
@@ -784,7 +786,7 @@ sub genop {
         print "$lt: ld x, 1\n";
         print "$end:\n";
 
-    } elsif ($op eq '<=') {
+    } elsif ($op eq '>') {
         # (this is just the opposite of <=)
         # XXX: dubious? (what about integer overflow)
         my $lt = label();

@@ -111,6 +111,18 @@ var optest = func() {
     print("a||b="); print(itoa(a||b)); print("\n");
     print("a&&0="); print(itoa(a&&0)); print("\n");
     print("a||0="); print(itoa(a||0)); print("\n");
+    print("(-1 > 0)="); print(itoa(-1>0)); print("\n");
+    print("(-1 >= 0)="); print(itoa(-1>=0)); print("\n");
+    print("(-1 < 0)="); print(itoa(-1<0)); print("\n");
+    print("(-1 <= 0)="); print(itoa(-1<=0)); print("\n");
+    print("(32767>0)="); print(itoa(32767>0)); print("\n");
+    print("(32767>=0)="); print(itoa(32767>=0)); print("\n");
+    print("(32767<0)="); print(itoa(32767<0)); print("\n");
+    print("(32767<=0)="); print(itoa(32767<=0)); print("\n");
+    print("(32767>-2)="); print(itoa(32767>-2)); print("\n");
+    print("(32767>=-2)="); print(itoa(32767>=-2)); print("\n");
+    print("(32767<-2)="); print(itoa(32767<-2)); print("\n");
+    print("(32767<=-2)="); print(itoa(32767<=-2)); print("\n");
 
     print("\n");
 };
