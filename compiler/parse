@@ -194,10 +194,6 @@ sub parseExtern {
     return 1;
 }
 
-# stack will have rvalue at top and lvalue below.
-# pop lvalue into r0
-# pop rvalue into r1
-# generate: ld (r1), r0
 sub parseAssignment {
     my $pos0 = $pos;
     if (!(parseLValue() && skip() && parseChar('='))) {
