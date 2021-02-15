@@ -63,4 +63,7 @@ rfib(23) = 28657
 string: Hello, world!
 reversed: !dlrow ,olleH
 re-reversed: Hello, world!
+Nested function calls/declarations:
+1. Hello, world
+2. 5 = 5
 Final sp=0x7ffe

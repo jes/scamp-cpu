@@ -150,9 +150,32 @@ var strtest = func() {
     print("re-reversed: "); print(strrev(s1)); print("\n");
 };
 
+var callprint = func(f) {
+    print(f());
+};
+
+var globule = 1;
+
+var fnctest = func() {
+    print("Nested function calls/declarations:\n");
+
+    callprint(func() { return "1. Hello, world\n" });
+
+    var f = func(x) {
+        return x() + x();
+    };
+
+    print("2. 5 = "); print(itoa(f(func() {
+        globule = globule + 1;
+        return globule;
+    })));
+    print("\n");
+};
+
 var sp = 0xffff;
 print("Initial sp=0x"); print(itoabase(*sp, 16)); print("\n");
 optest();
 fibtest();
 strtest();
+fnctest();
 print("Final sp=0x"); print(itoabase(*sp, 16)); print("\n");

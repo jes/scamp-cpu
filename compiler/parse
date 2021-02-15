@@ -17,6 +17,7 @@ my $scope = {
     symbols => {},
     parent => undef,
 };
+my $globalscope = $scope;
 
 parseProgram();
 if ($pos != @s) {
@@ -41,8 +42,6 @@ if ($pos != @s) {
 # TODO: "ifx>0" should treat "ifx" as an identifier: parseString() needs to not accept strings that
 #       don't end at word boundaries
 # TODO: what happens if you declare a variable inside a loop? or a conditional?
-# TODO: allow anonymous functions to be passed as parameters (just hack them into global scope, and
-#       don't let them access parent funciton vars?)
 
 sub parseProgram {
     return 0 if !parseStatements();
@@ -112,10 +111,6 @@ sub newscope {
 
 sub endscope {
     runtime_endscope();
-    compiletime_endscope();
-}
-
-sub compiletime_endscope {
     die "can't exit global scope" if $scope->{global};
     $scope = $scope->{parent};
 }
@@ -472,8 +467,6 @@ sub parseFunctionDeclaration {
     return 0 if !parseString('func');
     skip();
 
-    die "can only declare functions in global scope" if !$scope->{global};
-
     print "\n# parseFunctionDeclaration:\n";
 
     die "expected (" if !parseChar('(');
@@ -488,7 +481,11 @@ sub parseFunctionDeclaration {
     print "jmp $functionend\n";
     print "$functionlabel:\n";
 
+    # back up the enclosing scope, because we hack functions into the global scope
+    # to make life easy
+    my $parentscope = $scope;
     newscope();
+    $scope->{parent} = $globalscope;
 
     $scope->{funcdecl} = 1;
 
@@ -512,7 +509,8 @@ sub parseFunctionDeclaration {
     # implicit return
     funcreturn();
 
-    compiletime_endscope();
+    # endscope()-ish
+    $scope = $parentscope;
 
     print "# end function declaration\n\n";
 
