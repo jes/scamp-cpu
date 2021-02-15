@@ -1,18 +1,20 @@
 #!/usr/bin/perl
 
-# SLANG compiler
+# SLANG Compiler by jes
 #
-# expects SLANG source on stdin, produces SCAMP assembly code on stdout
-# in the event of a compiler error, there'll be a message on stderr and a
-# non-zero exit status, and the code on stdout should be ignored
+# Reads SLANG source from stdin, produces SCAMP assembly code on stdout. In the
+# event of a compile error, there'll be a message on stderr and a non-zero exit
+# status, and the code on stdout should be ignored.
 #
-# recursive descent parser based on https://www.youtube.com/watch?v=Ytq0GQdnChg
-# each Foo() parses a rule from the grammar;  if the rule matches return 1, else return 0
-# parse() calls the Foo() and restores $pos,$line,$col if it didn't match
+# Recursive descent parser based on https://www.youtube.com/watch?v=Ytq0GQdnChg
+# Each Foo() parses a rule from the grammar; if the rule matches it returns 1,
+# else it returns 0 parse() calls the Foo() and restores $pos,$line,$col if it
+# didn't match.
 #
-# rather than turning the source code into an abstract syntax tree and then turning
-# the AST into code, we treat the compiler's call graph as an implicit AST and generate code
-# as we "walk the call graph", i.e. as the compiler parses the source
+# Rather than turning the source code into an abstract syntax tree and then
+# turning the AST into code, we treat the compiler's call graph as an implicit
+# AST and generate code as we "walk the call graph", i.e. as the compiler parses
+# the source.
 #
 # TODO: annotate generated assembly code with the source code that generated it
 # TODO: emit code via a helper that performs peephole optimisation
