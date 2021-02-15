@@ -6,7 +6,7 @@ if [ "$1" = "" ]; then
     exit 1
 fi
 
-./parse < $1 > prog.s
+./slangc < $1 > prog.s
 shift
 cat head.s prog.s foot.s | ../asm/asm > prog.hex
 ../emulator/scamp -r prog.hex $@

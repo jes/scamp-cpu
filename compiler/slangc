@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+# SLANG compiler
+
 use strict;
 use warnings;
 
