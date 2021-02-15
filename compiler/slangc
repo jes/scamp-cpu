@@ -1,6 +1,23 @@
 #!/usr/bin/perl
 
 # SLANG compiler
+#
+# expects SLANG source on stdin, produces SCAMP assembly code on stdout
+# in the event of a compiler error, there'll be a message on stderr and a
+# non-zero exit status, and the code on stdout should be ignored
+#
+# recursive descent parser based on https://www.youtube.com/watch?v=Ytq0GQdnChg
+# each Foo() parses a rule from the grammar;  if the rule matches return 1, else return 0
+# parse() calls the Foo() and restores $pos,$line,$col if it didn't match
+#
+# rather than turning the source code into an abstract syntax tree and then turning
+# the AST into code, we treat the compiler's call graph as an implicit AST and generate code
+# as we "walk the call graph", i.e. as the compiler parses the source
+#
+# TODO: annotate generated assembly code with the source code that generated it
+# TODO: emit code via a helper that performs peephole optimisation
+# TODO: warn if we know a function has been called with the wrong number of arguments
+# TODO: what happens if you declare a variable inside a loop? or a conditional?
 
 use strict;
 use warnings;
@@ -20,19 +37,6 @@ my $globalscope = $scope;
 my $IDENTIFIER;
 
 parse(\&Program);
-
-# recursive descent parser based on https://www.youtube.com/watch?v=Ytq0GQdnChg
-# each Foo() parses a rule from the grammar;  if the rule matches return 1, else return 0
-# parse() calls the Foo() and restores $pos,$line,$col if it didn't match
-#
-# rather than turning the source code into an abstract syntax tree and then turning
-# the AST into code, we treat the compiler's call graph as an implicit AST and generate code
-# as we "walk the call graph", i.e. as the compiler parses the source
-#
-# TODO: annotate generated assembly code with the source code that generated it
-# TODO: emit code via a helper that performs peephole optimisation
-# TODO: warn if we know a function has been called with the wrong number of arguments
-# TODO: what happens if you declare a variable inside a loop? or a conditional?
 
 sub parse {
     my ($f, @args) = @_;
