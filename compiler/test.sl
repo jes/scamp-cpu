@@ -36,7 +36,9 @@ var divmod = func(num, denom, pdiv, pmod) {
     return 0;
 };
 
-var itoa = func(num) {
+var itoa_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+var itoabase = func(num, base) {
     var s = 0x4000; # TODO: malloc()?
     var d;
     var m;
@@ -52,13 +54,15 @@ var itoa = func(num) {
 
     while (num != 0) {
         s = s - 1;
-        divmod(num, 10, &d, &m);
-        *s = '0' + m;
+        divmod(num, base, &d, &m);
+        *s = *(itoa_alphabet + m);
         num = d;
     };
 
     return s;
 };
+
+var itoa = func(num) return itoabase(num, 10);
 
 # recursive fibonacci
 var rfib = func(n) {
@@ -117,7 +121,7 @@ var fibtest = func() {
 };
 
 var sp = 0xffff;
-print("Initial sp="); print(itoa(*sp)); print("\n");
+print("Initial sp=0x"); print(itoabase(*sp, 16)); print("\n");
 optest();
 fibtest();
-print("Final sp="); print(itoa(*sp)); print("\n");
+print("Final sp=0x"); print(itoabase(*sp, 16)); print("\n");
