@@ -36,7 +36,7 @@ var divmod = func(num, denom, pdiv, pmod) {
     return 0;
 };
 
-var num2str = func(num) {
+var itoa = func(num) {
     var s = 0x4000; # TODO: malloc()?
     var d;
     var m;
@@ -74,17 +74,17 @@ var optest = func() {
 
     print("Operators test:\n");
 
-    print("a="); print(num2str(a)); print("\n");
-    print("b="); print(num2str(b)); print("\n");
-    print("a+b="); print(num2str(a+b)); print("\n");
-    print("a-b="); print(num2str(a-b)); print("\n");
-    print("a&b="); print(num2str(a&b)); print("\n");
-    print("a|b="); print(num2str(a|b)); print("\n");
-    print("a^b="); print(num2str(a^b)); print("\n");
-    print("a&&b="); print(num2str(a&&b)); print("\n");
-    print("a||b="); print(num2str(a||b)); print("\n");
-    print("a&&0="); print(num2str(a&&0)); print("\n");
-    print("a||0="); print(num2str(a||0)); print("\n");
+    print("a="); print(itoa(a)); print("\n");
+    print("b="); print(itoa(b)); print("\n");
+    print("a+b="); print(itoa(a+b)); print("\n");
+    print("a-b="); print(itoa(a-b)); print("\n");
+    print("a&b="); print(itoa(a&b)); print("\n");
+    print("a|b="); print(itoa(a|b)); print("\n");
+    print("a^b="); print(itoa(a^b)); print("\n");
+    print("a&&b="); print(itoa(a&&b)); print("\n");
+    print("a||b="); print(itoa(a||b)); print("\n");
+    print("a&&0="); print(itoa(a&&0)); print("\n");
+    print("a||0="); print(itoa(a||0)); print("\n");
 
     print("\n");
 };
@@ -104,12 +104,12 @@ var fibtest = func() {
         n = n + 1;
 
         # TODO: printf()
-        print("fib("); print(num2str(n)); print(") = ");
-        print(num2str(f3));
+        print("fib("); print(itoa(n)); print(") = ");
+        print(itoa(f3));
         print("\n");
 
-        print("rfib("); print(num2str(n)); print(") = ");
-        print(num2str(rfib(n)));
+        print("rfib("); print(itoa(n)); print(") = ");
+        print(itoa(rfib(n)));
         print("\n");
     };
 
@@ -117,7 +117,7 @@ var fibtest = func() {
 };
 
 var sp = 0xffff;
-print("Initial sp="); print(num2str(*sp)); print("\n");
+print("Initial sp="); print(itoa(*sp)); print("\n");
 optest();
 fibtest();
-print("Final sp="); print(num2str(*sp)); print("\n");
+print("Final sp="); print(itoa(*sp)); print("\n");
