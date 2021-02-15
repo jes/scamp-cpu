@@ -28,3 +28,12 @@ Once the kernel is loaded, its job is:
 
 Init's job is probably just to execute the shell, at which point the system is booted and ready
 to use.
+
+The program in `util/hex2disk` can take in a machine code program and turn it into a disk image
+that will load it into address 0x100.
+
+Example usage:
+
+    $ asm/asm < prog.s > prog.hex
+    $ util/hex2disk < prog.hex > prog.disk
+    $ cd emulator/; ./scamp -i ../prog.disk
