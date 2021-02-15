@@ -3,12 +3,12 @@
 ( union path size 2 )
 G21
 G90
-F50
-G0 F400
+F10
+G0 F1000
 G1 Z2
 
 
-( feed 50 seek 400 zsafe 2.000000, zcut -2.000000 )
+( feed 10 seek 1000 zsafe 2.000000, zcut -2.000000 )
 
 
 ( path 0 )

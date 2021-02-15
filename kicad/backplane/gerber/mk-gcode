@@ -4,18 +4,18 @@ xoff=175
 yoff=58
 
 echo "B_Cu:"
-gbr2ngc --metric --radius 0.1 --zsafe 2 --feed 50 --seek 400 backplane-B_Cu.gbr > B_Cu.gcode.tmp
+gbr2ngc --metric --radius 0.1 --zsafe 2 --feed 50 --seek 1000 backplane-B_Cu.gbr > B_Cu.gcode.tmp
 echo "$xoff -$yoff" | gcodetile --swap-xy --show-bounds B_Cu.gcode.tmp > B_Cu.gcode
 rm B_Cu.gcode.tmp
 
 echo "Edge_Cuts:"
-gbr2ngc --metric --radius 1 --zsafe 2 --zcut -2 --feed 50 --seek 400 backplane-Edge_Cuts.gbr > Edge_Cuts.gcode.tmp
+gbr2ngc --metric --radius 1 --zsafe 2 --zcut -2 --feed 10 --seek 1000 backplane-Edge_Cuts.gbr > Edge_Cuts.gcode.tmp
 # The sed command strips the second path so that we don't cut out the *inside* of the edge cuts
 echo "$xoff $yoff" | gcodetile --swap-xy --invert-y --show-bounds Edge_Cuts.gcode.tmp | sed '/^( path 1/,$ d' > Edge_Cuts.gcode
 rm Edge_Cuts.gcode.tmp
 
 echo "F_SilkS:"
-gbr2ngc --metric --zsafe 2 --feed 50 --seek 400 backplane-F_SilkS.gbr > F_SilkS.gcode.tmp
+gbr2ngc --metric --zsafe 2 --feed 50 --seek 1000 backplane-F_SilkS.gbr > F_SilkS.gcode.tmp
 echo "$xoff $yoff" | gcodetile --swap-xy --invert-y --show-bounds F_SilkS.gcode.tmp > F_SilkS.gcode
 rm F_SilkS.gcode.tmp
 
