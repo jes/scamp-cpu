@@ -735,7 +735,6 @@ sub genop {
     } elsif ($op eq '!=') {
         my $end = label();
         print "sub x, r0\n";
-        # now x == 0 if args are equal
         print "jz $end\n";
         print "ld x, 1\n";
         print "$end:\n";
@@ -743,9 +742,8 @@ sub genop {
     } elsif ($op eq '==') {
         my $end = label();
         print "sub x, r0\n";
-        # now x == 0 if args are equal
         print "ld x, 0\n"; # doesn't clobber flags
-        print "jnz $end\n"; # if the operands are not equal, then we want 0
+        print "jnz $end\n";
         print "ld x, 1\n";
         print "$end:\n";
 
@@ -753,49 +751,41 @@ sub genop {
         # subtract 2nd argument from first, if result is less than zero, then 2nd argument is bigger than first
         # XXX: dubious? (what about integer overflow)
         my $lt = label();
-        my $end = label();
         print "sub x, r0\n";
+        print "ld x, 0\n"; # doesn't clobber flags
         print "jlt $lt\n";
         print "ld x, 1\n";
-        print "jmp $end\n";
-        print "$lt: ld x, 0\n";
-        print "$end:\n";
+        print "$lt:\n";
 
     } elsif ($op eq '<=') {
         # subtract first argument from 2nd, if result is less than zero, then first argument is bigger than second
         # XXX: dubious? (what about integer overflow)
         my $lt = label();
-        my $end = label();
         print "sub r0, x\n";
+        print "ld x, 0\n"; # doesn't clobber flags
         print "jlt $lt\n";
         print "ld x, 1\n";
-        print "jmp $end\n";
-        print "$lt: ld x, 0\n";
-        print "$end:\n";
+        print "$lt:\n";
 
     } elsif ($op eq '<') {
         # (this is just the opposite of >=)
         # XXX: dubious? (what about integer overflow)
         my $lt = label();
-        my $end = label();
         print "sub x, r0\n";
+        print "ld x, 1\n"; # doesn't clobber flags
         print "jlt $lt\n";
         print "ld x, 0\n";
-        print "jmp $end\n";
-        print "$lt: ld x, 1\n";
-        print "$end:\n";
+        print "$lt:\n";
 
     } elsif ($op eq '>') {
         # (this is just the opposite of <=)
         # XXX: dubious? (what about integer overflow)
         my $lt = label();
-        my $end = label();
         print "sub r0, x\n";
+        print "ld x, 1\n"; # doesn't clobber flags
         print "jlt $lt\n";
         print "ld x, 0\n";
-        print "jmp $end\n";
-        print "$lt: ld x, 1\n";
-        print "$end:\n";
+        print "$lt:\n";
 
     } elsif ($op eq '&&') {
         my $false = label();
