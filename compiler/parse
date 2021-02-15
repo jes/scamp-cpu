@@ -19,18 +19,21 @@ my $scope = {
 };
 my $globalscope = $scope;
 
-parseProgram();
-if ($pos != @s) {
-    print STDERR "Ended at $pos (line $line, col $col): had " . (@s-$pos) . " chars left over\n";
-}
+eval {
+    parse(\&Program);
+    die "Ended at $pos (line $line, col $col): had " . (@s-$pos) . " chars left over\n" if $pos != @s;
+};
+if ($@) {
+    print STDERR "line $line: col $col: $@\n";
+    exit 1;
+};
+
 
 # recursive descent parser based on https://www.youtube.com/watch?v=Ytq0GQdnChg
 # each parseFoo() parses a rule from the grammar:
 #  - if it matches, return true and $pos points at the next character in the input
 #  - if it doesn't match, return false and leave $pos unchanged
 #
-# TODO: get out of manually restoring $pos, make something do it for us
-# TODO: restore line/col when pos is restored
 # TODO: some tracing of call stack for debugging
 # TODO: only skip() after terminals
 # TODO: order the disjunctions so that the most-specific ones come first (i.e. don't let keywords
@@ -41,8 +44,30 @@ if ($pos != @s) {
 # TODO: warn if we know a function has been called with the wrong number of arguments
 # TODO: what happens if you declare a variable inside a loop? or a conditional?
 
-sub parseProgram {
-    return 0 if !parseStatements();
+sub parse {
+    my ($f, @args) = @_;
+
+    my $pos0 = $pos;
+    my $line0 = $line;
+    my $col0 = $col;
+
+    # TODO: catch error, restore pos/line/col, rethrow error
+    if (wantarray) {
+        my @r = $f->(@args);
+        return @r if @r;
+    } else {
+        my $r = $f->(@args);
+        return $r if $r;
+    }
+
+    $pos = $pos0;
+    $line = $line0;
+    $col = $col0;
+    return 0;
+}
+
+sub Program {
+    return 0 if !parse(\&Statements);
 
     die "expected to be left in global scope after program" if !$scope->{global};
 
@@ -54,18 +79,18 @@ sub parseProgram {
     return 1;
 }
 
-sub parseStatements {
+sub Statements {
     while (1) {
         skip();
-        return 1 if !parseStatement();
+        return 1 if !parse(\&Statement);
         skip();
-        return 1 if !parseChar(';');
+        return 1 if !parse(\&Char,';');
     }
 }
 
-sub parseStatement {
-    return 1 if parseBlock() || parseExtern() || parseDeclaration() || parseConditional() || parseLoop() || parseReturn() || parseAssignment();
-    if (parseExpression()) {
+sub Statement {
+    return 1 if parse(\&Block) || parse(\&Extern) || parse(\&Declaration) || parse(\&Conditional) || parse(\&Loop) || parse(\&Return) || parse(\&Assignment);
+    if (parse(\&Expression)) {
         # discard the value of the expression
         print "# discard expression value\n";
         print "inc sp\n";
@@ -75,16 +100,17 @@ sub parseStatement {
 }
 
 # create new nested scope
-sub parseBlock {
-    return 0 if !parseChar('{');
+sub Block {
+    return 0 if !parse(\&Char,'{');
     skip();
 
     # TODO: make blocks start/end scopes, alternatively disallow variable declarations inside nested blocks
     #newscope();
 
-    parseStatements() && skip();
+    parse(\&Statements);
+    skip();
 
-    die "block must end with }" if !parseChar('}');
+    die "block must end with }" if !parse(\&Char,'}');
     skip();
 
     #endscope();
@@ -122,10 +148,10 @@ sub runtime_endscope {
 }
 
 # add name to current scope (possibly global)
-sub parseDeclaration {
-    return 0 if !parseKeyword('var');
+sub Declaration {
+    return 0 if !parse(\&Keyword,'var');
     skip();
-    my $id = parseIdentifier();
+    my $id = parse(\&Identifier);
     die "var declaration needs identifier" if !$id;
     skip();
 
@@ -142,11 +168,11 @@ sub parseDeclaration {
         print "dec sp\n";
     }
 
-    return 1 if !parseChar('=');
+    return 1 if !parse(\&Char,'=');
     skip();
 
     # now an expression to initialise the variable
-    parseExpression();
+    parse(\&Expression);
     skip();
 
     poptovar($id);
@@ -165,11 +191,11 @@ sub symlookup {
 }
 
 # add name to global scope, but don't allocate any space for it
-sub parseExtern {
-    return 0 if !parseKeyword('extern');
+sub Extern {
+    return 0 if !parse(\&Keyword,'extern');
     skip();
 
-    my $id = parseIdentifier();
+    my $id = parse(\&Identifier);
     die "extern expects identifier\n" if !$id;
     skip();
 
@@ -182,23 +208,23 @@ sub parseExtern {
     return 1;
 }
 
-sub parseAssignment {
+sub Assignment {
     my $pos0 = $pos;
-    my $id = parseIdentifier();
+    my $id = parse(\&Identifier);
     if (!$id) {
-        return 0 if !parseChar('*');
-        die "can't dereference non-expression" if !parseExpression();
+        return 0 if !parse(\&Char,'*');
+        die "can't dereference non-expression" if !parse(\&Expression);
     }
 
     skip();
 
-    if (!parseChar('=')) {
+    if (!parse(\&Char,'=')) {
         $pos = $pos0;
         return 0;
     }
 
     skip();
-    die "assignment needs rvalue" if !parseExpression();
+    die "assignment needs rvalue" if !parse(\&Expression);
     skip();
 
     if ($id) {
@@ -217,17 +243,17 @@ sub parseAssignment {
 # after parseExpression, branch to elselabel if false, then let parseStatement
 # generate its code followed by a jump to the endiflabel, then put the elselabel,
 # and if there's an "else" then let another parseStatement generate its code, then put the endiflabel
-sub parseConditional {
-    return 0 if !parseKeyword("if");
+sub Conditional {
+    return 0 if !parse(\&Keyword,"if");
     skip();
 
     my $falselabel = label();
 
-    die "if condition needs open paren" if !parseChar("(");
+    die "if condition needs open paren" if !parse(\&Char,"(");
     skip();
 
     print "# if condition\n";
-    die "if condition needs expression" if !parseExpression();
+    die "if condition needs expression" if !parse(\&Expression);
     skip();
 
     # if top of stack is 0, jmp $falselabel
@@ -235,14 +261,14 @@ sub parseConditional {
     print "test x\n";
     print "jz $falselabel\n";
 
-    die "if condition needs close paren" if !parseChar(")");
+    die "if condition needs close paren" if !parse(\&Char,")");
     skip();
 
     print "# if body\n";
-    die "if needs body" if !parseStatement();
+    die "if needs body" if !parse(\&Statement);
     skip();
 
-    if (parseKeyword("else")) {
+    if (parse(\&Keyword,"else")) {
         skip();
 
         my $endiflabel = label();
@@ -251,7 +277,7 @@ sub parseConditional {
         print "# else body\n";
         print "$falselabel:\n";
 
-        die "else needs body" if !parseStatement();
+        die "else needs body" if !parse(\&Statement);
         skip();
 
         print "$endiflabel:\n";
@@ -264,11 +290,11 @@ sub parseConditional {
 
 # write a looplabel, then after parseExpression branch to endwhilelabel if false, then let
 # parseStatement write its code, then jump to looplabel
-sub parseLoop {
-    return 0 if !parseKeyword('while');
+sub Loop {
+    return 0 if !parse(\&Keyword,'while');
     skip();
 
-    die "while condition needs to start with paren" if !parseChar('(');
+    die "while condition needs to start with paren" if !parse(\&Char,'(');
     skip();
 
     my $loop = label();
@@ -276,7 +302,7 @@ sub parseLoop {
 
     print "# while loop\n";
     print "$loop:\n";
-    die "while loop needs expression" if !parseExpression();
+    die "while loop needs expression" if !parse(\&Expression);
     skip();
 
     # if top of stack is 0, jmp $endloop
@@ -284,10 +310,10 @@ sub parseLoop {
     print "test x\n";
     print "jz $endloop\n";
 
-    die "while condition needs to end with paren" if !parseChar(')');
+    die "while condition needs to end with paren" if !parse(\&Char,')');
     skip();
 
-    die "while loop needs body" if !parseStatement();
+    die "while loop needs body" if !parse(\&Statement);
     skip();
 
     print "jmp $loop\n";
@@ -298,11 +324,11 @@ sub parseLoop {
 
 # end however many scopes we're in
 # pop args off stack and 'ret'
-sub parseReturn {
-    return 0 if !parseKeyword("return");
+sub Return {
+    return 0 if !parse(\&Keyword,"return");
     skip();
 
-    die "must return something" if !parseExpression();
+    die "must return something" if !parse(\&Expression);
     skip();
 
     # we currently have the return value on the stack, we want to pop it to r0
@@ -333,16 +359,16 @@ sub funcreturn {
     print "ret\n";
 }
 
-sub parseConstant {
-    return parseNumericLiteral() || parseStringLiteral() || parseFunctionDeclaration();
+sub Constant {
+    return parse(\&NumericLiteral) || parse(\&StringLiteral) || parse(\&FunctionDeclaration);
 }
 
-sub parseNumericLiteral {
-    return parseHexLiteral() || parseBinaryLiteral() || parseCharacterLiteral() || parseDecimalLiteral();
+sub NumericLiteral {
+    return parse(\&HexLiteral) || parse(\&BinaryLiteral) || parse(\&CharacterLiteral) || parse(\&DecimalLiteral);
 }
 
-sub parseHexLiteral {
-    return 0 if !parseString("0x");
+sub HexLiteral {
+    return 0 if !parse(\&String,"0x");
     my $pos0 = $pos;
     if (!matchChar(qr/[0-9a-fA-F]/)) {
         die "illegal hex literal\n";
@@ -356,8 +382,8 @@ sub parseHexLiteral {
     return 1;
 }
 
-sub parseBinaryLiteral {
-    return 0 if !parseString("0b");
+sub BinaryLiteral {
+    return 0 if !parse(\&String,"0b");
     my $pos0 = $pos;
     if (!matchChar(qr/[01]/)) {
         die "illegal binary literal\n";
@@ -371,8 +397,8 @@ sub parseBinaryLiteral {
     return 1;
 }
 
-sub parseCharacterLiteral {
-    return 0 if !parseChar("'");
+sub CharacterLiteral {
+    return 0 if !parse(\&Char,"'");
     my $c = $s[$pos++];
     if ($c eq '\\') {
         genliteral(ord(escapedchar($s[$pos++])));
@@ -380,11 +406,11 @@ sub parseCharacterLiteral {
         genliteral(ord($c));
     }
     
-    return 1 if parseChar("'");
+    return 1 if parse(\&Char,"'");
     die "illegal character literal\n";
 }
 
-sub parseDecimalLiteral {
+sub DecimalLiteral {
     my $pos0 = $pos;
     return 0 if !matchChar(qr/[-+0-9]/);
     while (matchChar(qr/\d/)) {}
@@ -414,8 +440,8 @@ sub genliteral {
 }
 
 # write a jump to endofstringlabel, write the string, write the endofstringlabel
-sub parseStringLiteral {
-    return 0 if !parseChar('"');
+sub StringLiteral {
+    return 0 if !parse(\&Char,'"');
     my $startstring = label();
     my $endstring = label();
 
@@ -427,7 +453,7 @@ sub parseStringLiteral {
     print "jmp $endstring\n";
     print "$startstring:\n";
     while ($pos < @s) {
-        if (parseChar('"')) {
+        if (parse(\&Char,'"')) {
             skip();
 
             print ".word 0\n"; # terminate
@@ -436,7 +462,7 @@ sub parseStringLiteral {
             print "push x\n";
             return 1;
         }
-        if (parseChar('\\')) {
+        if (parse(\&Char,'\\')) {
             print ".word " . ord(escapedchar($s[$pos])) . "\n";
         } else {
             print ".word " . ord($s[$pos]) . "\n";
@@ -461,16 +487,16 @@ sub escapedchar {
     return $map{$c}||$c;
 }
 
-sub parseFunctionDeclaration {
-    return 0 if !parseKeyword('func');
+sub FunctionDeclaration {
+    return 0 if !parse(\&Keyword,'func');
     skip();
 
     print "\n# parseFunctionDeclaration:\n";
 
-    die "expected (" if !parseChar('(');
+    die "expected (" if !parse(\&Char,'(');
     skip();
 
-    my @params = parseParameters();
+    my @params = Parameters();
     skip();
 
     my $functionlabel = label();
@@ -498,10 +524,10 @@ sub parseFunctionDeclaration {
         $scope->{params}++;
     }
 
-    die "expected )" if !parseChar(')');
+    die "expected )" if !parse(\&Char,')');
     skip();
 
-    parseStatement();
+    parse(\&Statement);
     skip();
 
     # implicit return
@@ -520,31 +546,31 @@ sub parseFunctionDeclaration {
 }
 
 # somehow return a list of the parameter names to parseFunctionDeclaration()
-sub parseParameters {
+sub Parameters {
     my @params;
     while (1) {
         skip();
-        my $id = parseIdentifier();
+        my $id = parse(\&Identifier);
         return @params if !$id;
         push @params, $id;
 
         skip();
-        return @params if !parseChar(',');
+        return @params if !parse(\&Char,',');
     }
 }
 
-sub parseFunctionCall {
+sub FunctionCall {
     my $pos0 = $pos;
-    my $id = parseIdentifier();
+    my $id = parse(\&Identifier);
     if ($id && skip() # TODO: allow "expression" instead of "identifier"
-        && parseChar('(') && skip()) {
+        && parse(\&Char,'(') && skip()) {
         print "# parseFunctionCall:\n";
         # backup return address before we push arguments
         print "ld x, r254\n";
         print "push x\n";
 
-        if (parseArguments() && skip()
-            && parseChar(')') && skip()) {
+        if (parse(\&Arguments) && skip()
+            && parse(\&Char,')') && skip()) {
 
             # call function
             pushvar($id); # XXX: when we parseExpression() instead of parseIdentifier(), this push will happen automatically
@@ -568,20 +594,20 @@ sub parseFunctionCall {
     return 0;
 }
 
-sub parseArguments {
+sub Arguments {
     while (1) {
         skip();
-        return 1 if !parseExpression();
+        return 1 if !parse(\&Expression);
         skip();
-        return 1 if !parseChar(',');
+        return 1 if !parse(\&Char,',');
     }
 }
 
-sub parseUnaryExpression {
+sub UnaryExpression {
     my $op = $s[$pos];
     return 0 if !matchChar(qr/[!~*+-]/);
     skip();
-    if (!parseTerm()) {
+    if (!parse(\&Term)) {
         die "unary operator $op must be followed by an expression";
     }
 
@@ -621,10 +647,10 @@ sub parseUnaryExpression {
     return 1;
 }
 
-sub parseAddressOf {
-    return 0 if !parseChar('&');
+sub AddressOf {
+    return 0 if !parse(\&Char,'&');
     skip();
-    my $id = parseIdentifier();
+    my $id = parse(\&Identifier);
     die "can't take address of anything other than an identifier" if !$id;
     skip();
 
@@ -646,12 +672,12 @@ sub label {
     return "l__$labelnum";
 }
 
-sub parseExpression {
-    return parseExpressionLevel(0);
+sub Expression {
+    return parse(\&ExpressionLevel,0);
 }
 
 # while loop: pop 2 args off stack and apply expression
-sub parseExpressionLevel {
+sub ExpressionLevel {
     my ($level) = @_;
 
     my @operators = (
@@ -662,12 +688,12 @@ sub parseExpressionLevel {
         ['&&','||'],
     );
 
-    return parseTerm() if $level == @operators;
+    return parse(\&Term) if $level == @operators;
 
     my $pos0 = $pos;
     my $apply_op;
     while (1) {
-        if (!parseExpressionLevel($level+1)) {
+        if (!parse(\&ExpressionLevel,$level+1)) {
             $pos = $pos0;
             return 0;
         }
@@ -678,7 +704,7 @@ sub parseExpressionLevel {
 
         my $ok = 0;
         for my $op (@{ $operators[$level] }) {
-            if (parseString($op)) {
+            if (parse(\&String,$op)) {
                 $apply_op = $op;
                 $ok = 1;
                 last;
@@ -806,10 +832,10 @@ sub genop {
     print "push x\n";
 }
 
-sub parseTerm {
-    return 1 if parseConstant() || parseFunctionCall() || parseAddressOf() || parseUnaryExpression() || parseParenExpression();
+sub Term {
+    return 1 if parse(\&Constant) || parse(\&FunctionCall) || parse(\&AddressOf) || parse(\&UnaryExpression) || parse(\&ParenExpression);
 
-    my $id = parseIdentifier();
+    my $id = parse(\&Identifier);
     return 0 if !$id;
 
     pushvar($id);
@@ -854,16 +880,16 @@ sub pushvar {
     }
 }
 
-sub parseParenExpression {
+sub ParenExpression {
     my $pos0 = $pos;
-    return 0 if !parseChar('(');
+    return 0 if !parse(\&Char,'(');
     skip();
-    return 1 if parseExpression() && skip() && parseChar(')') && skip();
+    return 1 if parse(\&Expression) && skip() && parse(\&Char,')') && skip();
     $pos = $pos0;
     return 0;
 }
 
-sub parseIdentifier {
+sub Identifier {
     my $pos0 = $pos;
     return 0 if !matchChar(qr/[a-zA-Z_]/);
     while (matchChar(qr/[a-zA-Z0-9_]/)) {};
@@ -873,20 +899,20 @@ sub parseIdentifier {
 }
 
 # parse string followed by word boundary
-sub parseKeyword {
+sub Keyword {
     my ($s) = @_;
     my $pos0 = $pos;
-    return 0 if !parseString($s);
+    return 0 if !parse(\&String,$s);
     return 1 if $pos == @s || $s[$pos] !~ /^([a-zA-Z0-9_])$/;
     $pos = $pos0;
     return 0;
 }
 
-sub parseString {
+sub String {
     my ($s) = @_;
     my $pos0 = $pos;
     for my $c (split //, $s) {
-        if (!parseChar($c)) {
+        if (!parse(\&Char,$c)) {
             $pos = $pos0;
             return 0;
         }
@@ -894,7 +920,7 @@ sub parseString {
     return 1;
 }
 
-sub parseChar {
+sub Char {
     my ($c) = @_;
     return matchChar(qr/\Q$c\E/);
 }
@@ -915,7 +941,7 @@ sub matchChar {
 # skip over whitespace and comments
 sub skip {
     while (1) {
-        if (parseChar('#')) {
+        if (parse(\&Char,'#')) {
             while (matchChar(qr/[^\n]/)) { } # skip everything until \n
         } elsif (!matchChar(qr/[ \t\r\n]/)) {
             return 1;

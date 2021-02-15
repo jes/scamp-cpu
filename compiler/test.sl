@@ -18,6 +18,7 @@ var divmod = func(num, denom, pdiv, pmod) {
     if (denom == 0)
         return 0;
 
+fsa
     while (i >= 0) {
         R = R+R;
         if (num & *(powers_of_2+i)) {
