@@ -93,33 +93,19 @@ sub Block {
     return 1;
 }
 
-sub newscope {
-    # save old base pointer, and put new base pointer in r253
-    print "# newscope:\n";
-    print "ld x, r253\n";
-    print "push x\n";
-    print "ld r253, sp\n";
+sub Extern {
+    return 0 if !parse(\&Keyword,'extern');
 
-    $scope = {
-        symbols => {},
-        parent => $scope,
-        bp_rel => 0,
-        params => 0,
+    die "extern expects identifier\n" if !parse(\&Identifier);
+    my $id = $IDENTIFIER;
+
+    die "can only use extern in global scope\n" if !$scope->{global};
+    $scope->{symbols}{$id} = {
+        type => 'global',
+        extern => 1,
     };
-}
 
-sub endscope {
-    runtime_endscope();
-    die "can't exit global scope (probably a compiler bug)\n" if $scope->{global};
-    $scope = $scope->{parent};
-}
-
-sub runtime_endscope {
-    # restore old sp and bp
-    print "# endscope: \n";
-    print "ld sp, r253\n";
-    print "pop x\n";
-    print "ld r253, x\n";
+    return 1;
 }
 
 sub Declaration {
@@ -142,55 +128,6 @@ sub Declaration {
     # now an expression to initialise the variable
     die "initialisation needs expression\n" if !parse(\&Expression);
     poptovar($id);
-    return 1;
-}
-
-sub symlookup {
-    my ($name) = @_;
-    my $s = $scope;
-    while ($s) {
-        return $s->{symbols}{$name} if $s->{symbols}{$name};
-        $s = $s->{parent};
-    }
-}
-
-sub Extern {
-    return 0 if !parse(\&Keyword,'extern');
-
-    die "extern expects identifier\n" if !parse(\&Identifier);
-    my $id = $IDENTIFIER;
-
-    die "can only use extern in global scope\n" if !$scope->{global};
-    $scope->{symbols}{$id} = {
-        type => 'global',
-        extern => 1,
-    };
-
-    return 1;
-}
-
-sub Assignment {
-    my $id;
-    if (parse(\&Identifier)) {
-        $id = $IDENTIFIER;
-    } else {
-        return 0 if !parse(\&CharSkip,'*');
-        die "can't dereference non-expression\n" if !parse(\&Expression);
-    }
-
-    return 0 if !parse(\&CharSkip,'=');
-    die "assignment needs rvalue\n" if !parse(\&Expression);
-
-    if ($id) {
-        poptovar($id);
-    } else {
-        print "# store to pointer:\n";
-        print "pop x # value\n";
-        print "ld r0, x\n";
-        print "pop x # pointer\n";
-        print "ld (x), r0\n";
-    }
-
     return 1;
 }
 
@@ -269,22 +206,74 @@ sub Return {
     return 1;
 }
 
-sub funcreturn {
-    # clean up however many scopes we've started since opening the function, leaving the
-    # stack pointer where it was when we were called
-    my $s = $scope;
-    runtime_endscope();
-    while (!$s->{funcdecl}) {
-        runtime_endscope();
-        $s = $s->{parent};
+sub Assignment {
+    my $id;
+    if (parse(\&Identifier)) {
+        $id = $IDENTIFIER;
+    } else {
+        return 0 if !parse(\&CharSkip,'*');
+        die "can't dereference non-expression\n" if !parse(\&Expression);
     }
 
-    # then clean up the function parameters
-    print "# function had $s->{params} parameters:\n";
-    print "add sp, $s->{params}\n";
+    return 0 if !parse(\&CharSkip,'=');
+    die "assignment needs rvalue\n" if !parse(\&Expression);
 
-    # then return to the caller
-    print "ret\n";
+    if ($id) {
+        poptovar($id);
+    } else {
+        print "# store to pointer:\n";
+        print "pop x # value\n";
+        print "ld r0, x\n";
+        print "pop x # pointer\n";
+        print "ld (x), r0\n";
+    }
+
+    return 1;
+}
+
+sub Expression {
+    return parse(\&ExpressionLevel,0);
+}
+
+# while loop: pop 2 args off stack and apply expression
+sub ExpressionLevel {
+    my ($level) = @_;
+
+    my @operators = (
+        #['*','/','%'], # XXX: these will turn into function calls, if supported at all
+        ['+','-'],
+        ['&','|','^'],
+        ['==','!=','>=','<=','>','<'],
+        ['&&','||'],
+    );
+
+    return parse(\&Term) if $level == @operators;
+
+    my $apply_op;
+    while (1) {
+        return 0 if !parse(\&ExpressionLevel,$level+1);
+
+        # if not first loop, generate code
+        genop($apply_op) if $apply_op;
+
+        my $ok = 0;
+        for my $op (@{ $operators[$level] }) {
+            if (parse(\&String,$op)) {
+                $apply_op = $op;
+                $ok = 1;
+                last;
+            }
+        }
+        return 1 if !$ok;
+        skip();
+    }
+}
+
+sub Term {
+    return 1 if parse(\&Constant) || parse(\&FunctionCall) || parse(\&AddressOf) || parse(\&UnaryExpression) || parse(\&ParenExpression);
+    return 0 if !parse(\&Identifier);
+    pushvar($IDENTIFIER);
+    return 1;
 }
 
 sub Constant {
@@ -310,6 +299,18 @@ sub HexLiteral {
     return 1;
 }
 
+sub DecimalLiteral {
+    my $pos0 = $pos;
+    return 0 if !matchChar(qr/[-+0-9]/);
+    while (matchChar(qr/\d/)) {}
+
+    my $val = substr($s, $pos0, $pos-$pos0);
+    genliteral($val);
+
+    skip();
+    return 1;
+}
+
 sub CharacterLiteral {
     return 0 if !parse(\&Char,"'");
     my $c = $s[$pos++];
@@ -323,33 +324,16 @@ sub CharacterLiteral {
     die "illegal character literal\n";
 }
 
-sub DecimalLiteral {
-    my $pos0 = $pos;
-    return 0 if !matchChar(qr/[-+0-9]/);
-    while (matchChar(qr/\d/)) {}
-
-    my $val = substr($s, $pos0, $pos-$pos0);
-    genliteral($val);
-
-    skip();
-    return 1;
-}
-
-sub genliteral {
-    my ($val) = @_;
-
-    print "# genliteral:\n";
-
-    $val += 0x10000 if $val < 0; # make everything positive
-
-    die "numeric literal out of range: $val\n" if $val < 0 || $val > 0xffff;
-
-    if ($val <= 0x00ff || $val >= 0xff00) {
-        print "push $val\n";
-    } else {
-        print "ld x, $val\n";
-        print "push x\n";
-    }
+sub escapedchar {
+    my ($c) = @_;
+    my %map = (
+        n => "\n",
+        r => "\r",
+        t => "\r",
+        0 => "\0",
+        "]" => "\]",
+    );
+    return $map{$c}||$c;
 }
 
 sub StringLiteral {
@@ -380,20 +364,6 @@ sub StringLiteral {
         $pos++;
     }
     die "unterminated string literal\n";
-}
-
-sub escapedchar {
-    my ($c) = @_;
-
-    my %map = (
-        n => "\n",
-        r => "\r",
-        t => "\r",
-        0 => "\0",
-        "]" => "\]",
-    );
-
-    return $map{$c}||$c;
 }
 
 sub FunctionDeclaration {
@@ -483,6 +453,24 @@ sub Arguments {
     }
 }
 
+sub AddressOf {
+    return 0 if !parse(\&CharSkip,'&');
+    die "address-of (&) needs identifier\n" if !parse(\&Identifier);
+    my $id = $IDENTIFIER;
+
+    my $sym = symlookup($id);
+    if ($sym->{type} eq 'global') {
+        print "# &$id (global)\n";
+        print "ld x, _$id\n";
+        print "push x\n";
+    } else {
+        print "# &$id (local)\n";
+        print "ld x, r253\n";
+        print "add x, ". (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
+        print "push x\n";
+    }
+}
+
 sub UnaryExpression {
     my $op = $s[$pos];
     return 0 if !matchChar(qr/[!~*+-]/);
@@ -527,20 +515,189 @@ sub UnaryExpression {
     return 1;
 }
 
-sub AddressOf {
-    return 0 if !parse(\&CharSkip,'&');
-    die "address-of (&) needs identifier\n" if !parse(\&Identifier);
-    my $id = $IDENTIFIER;
+sub ParenExpression {
+    return 0 if !parse(\&CharSkip,'(');
+    return 1 if parse(\&Expression) && parse(\&CharSkip,')');
+    return 0;
+}
 
-    my $sym = symlookup($id);
+sub Identifier {
+    my $pos0 = $pos;
+    return 0 if !matchChar(qr/[a-zA-Z_]/);
+    while (matchChar(qr/[a-zA-Z0-9_]/)) {};
+    $IDENTIFIER = substr($s, $pos0, $pos-$pos0),
+    skip();
+    return 1;
+}
+
+### tokeniser-ish functions
+
+# parse string followed by word boundary
+sub Keyword {
+    my ($s) = @_;
+    return 0 if !parse(\&String,$s);
+    if ($pos == @s || $s[$pos] !~ /^([a-zA-Z0-9_])$/) {
+        skip();
+        return 1;
+    }
+    return 0;
+}
+
+sub String {
+    my ($s) = @_;
+    for my $c (split //, $s) {
+        return 0 if !parse(\&Char,$c);
+    }
+    return 1;
+}
+
+sub Char {
+    my ($c) = @_;
+    return matchChar(qr/\Q$c\E/);
+}
+
+# parse a char, and skip() if it matched
+sub CharSkip {
+    my ($c) = @_;
+    return 0 if !matchChar(qr/\Q$c\E/);
+    skip();
+    return 1;
+}
+
+# skip over whitespace and comments
+sub skip {
+    while (1) {
+        if (parse(\&Char,'#')) {
+            while (matchChar(qr/[^\n]/)) { } # skip everything until \n
+        } elsif (!matchChar(qr/[ \t\r\n]/)) {
+            return 1;
+        }
+    }
+}
+
+sub matchChar {
+    my ($re) = @_;
+    return 0 if $pos >= @s;
+    return 0 if $s[$pos] !~ /$re/;
+    if ($s[$pos] eq "\n") {
+        $line++;
+        $col = 0;
+    }
+    $pos++;
+    $col++;
+    return 1;
+}
+
+### scopes
+
+sub newscope {
+    # save old base pointer, and put new base pointer in r253
+    print "# newscope:\n";
+    print "ld x, r253\n";
+    print "push x\n";
+    print "ld r253, sp\n";
+
+    $scope = {
+        symbols => {},
+        parent => $scope,
+        bp_rel => 0,
+        params => 0,
+    };
+}
+
+sub endscope {
+    runtime_endscope();
+    die "can't exit global scope (probably a compiler bug)\n" if $scope->{global};
+    $scope = $scope->{parent};
+}
+
+sub runtime_endscope {
+    # restore old sp and bp
+    print "# endscope: \n";
+    print "ld sp, r253\n";
+    print "pop x\n";
+    print "ld r253, x\n";
+}
+
+sub symlookup {
+    my ($name) = @_;
+    my $s = $scope;
+    while ($s) {
+        return $s->{symbols}{$name} if $s->{symbols}{$name};
+        $s = $s->{parent};
+    }
+}
+
+### code generation utilities
+
+sub poptovar {
+    my ($name) = @_;
+
+    my $sym = symlookup($name);
+    die "unrecognised identifier: $name\n" if !$sym;
     if ($sym->{type} eq 'global') {
-        print "# &$id (global)\n";
-        print "ld x, _$id\n";
+        print "# poptovar: global $name\n";
+        print "pop x\n";
+        print "ld (_$name), x\n";
+    } else {
+        print "# poptovar: local $name ($sym->{bp_rel})\n";
+        print "ld r252, r253\n";
+        print "add r252, " . (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
+        print "pop x\n";
+        print "ld (r252), x\n";
+    }
+}
+
+sub pushvar {
+    my ($name) = @_;
+
+    # look up the identifier and push it
+    my $sym = symlookup($name);
+    die "unrecognised identifier: $name\n" if !$sym;
+    if ($sym->{type} eq 'global') {
+        print "# pushvar: global $name\n";
+        print "ld x, (_$name)\n";
         print "push x\n";
     } else {
-        print "# &$id (local)\n";
+        print "# pushvar: local $name ($sym->{bp_rel})\n";
         print "ld x, r253\n";
-        print "add x, ". (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
+        print "add x, " . (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
+        print "ld x, (x)\n";
+        print "push x\n";
+    }
+}
+
+sub funcreturn {
+    # clean up however many scopes we've started since opening the function, leaving the
+    # stack pointer where it was when we were called
+    my $s = $scope;
+    runtime_endscope();
+    while (!$s->{funcdecl}) {
+        runtime_endscope();
+        $s = $s->{parent};
+    }
+
+    # then clean up the function parameters
+    print "# function had $s->{params} parameters:\n";
+    print "add sp, $s->{params}\n";
+
+    # then return to the caller
+    print "ret\n";
+}
+
+sub genliteral {
+    my ($val) = @_;
+
+    print "# genliteral:\n";
+
+    $val += 0x10000 if $val < 0; # make everything positive
+
+    die "numeric literal out of range: $val\n" if $val < 0 || $val > 0xffff;
+
+    if ($val <= 0x00ff || $val >= 0xff00) {
+        print "push $val\n";
+    } else {
+        print "ld x, $val\n";
         print "push x\n";
     }
 }
@@ -548,44 +705,6 @@ sub AddressOf {
 sub label {
     $labelnum++;
     return "l__$labelnum";
-}
-
-sub Expression {
-    return parse(\&ExpressionLevel,0);
-}
-
-# while loop: pop 2 args off stack and apply expression
-sub ExpressionLevel {
-    my ($level) = @_;
-
-    my @operators = (
-        #['*','/','%'], # XXX: these will turn into function calls, if supported at all
-        ['+','-'],
-        ['&','|','^'],
-        ['==','!=','>=','<=','>','<'],
-        ['&&','||'],
-    );
-
-    return parse(\&Term) if $level == @operators;
-
-    my $apply_op;
-    while (1) {
-        return 0 if !parse(\&ExpressionLevel,$level+1);
-
-        # if not first loop, generate code
-        genop($apply_op) if $apply_op;
-
-        my $ok = 0;
-        for my $op (@{ $operators[$level] }) {
-            if (parse(\&String,$op)) {
-                $apply_op = $op;
-                $ok = 1;
-                last;
-            }
-        }
-        return 1 if !$ok;
-        skip();
-    }
 }
 
 # pop 2 elements off the stack, apply $op, and push the result
@@ -604,7 +723,7 @@ sub genop {
     print "ld r0, x\n";
     print "pop x\n";
 
-    if ($op =~ /^[-+&|]$/) {
+    if ($mnemonic{$op}) {
         print "$mnemonic{$op} x, r0\n";
 
     } elsif ($op eq '^') {
@@ -699,123 +818,8 @@ sub genop {
         print "$true:\n";
 
     } else {
-        print " # TODO: apply $op to x and r0\n";
+        die "unrecognised binary operator $op (probably a compiler bug)\n";
     }
 
     print "push x\n";
-}
-
-sub Term {
-    return 1 if parse(\&Constant) || parse(\&FunctionCall) || parse(\&AddressOf) || parse(\&UnaryExpression) || parse(\&ParenExpression);
-    return 0 if !parse(\&Identifier);
-    pushvar($IDENTIFIER);
-    return 1;
-}
-
-sub poptovar {
-    my ($name) = @_;
-
-    my $sym = symlookup($name);
-    die "unrecognised identifier: $name\n" if !$sym;
-    if ($sym->{type} eq 'global') {
-        print "# poptovar: global $name\n";
-        print "pop x\n";
-        print "ld (_$name), x\n";
-    } else {
-        print "# poptovar: local $name ($sym->{bp_rel})\n";
-        print "ld r252, r253\n";
-        print "add r252, " . (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
-        print "pop x\n";
-        print "ld (r252), x\n";
-    }
-}
-
-sub pushvar {
-    my ($name) = @_;
-
-    # look up the identifier and push it
-    my $sym = symlookup($name);
-    die "unrecognised identifier: $name\n" if !$sym;
-    if ($sym->{type} eq 'global') {
-        print "# pushvar: global $name\n";
-        print "ld x, (_$name)\n";
-        print "push x\n";
-    } else {
-        print "# pushvar: local $name ($sym->{bp_rel})\n";
-        print "ld x, r253\n";
-        print "add x, " . (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
-        print "ld x, (x)\n";
-        print "push x\n";
-    }
-}
-
-sub ParenExpression {
-    return 0 if !parse(\&CharSkip,'(');
-    return 1 if parse(\&Expression) && parse(\&CharSkip,')');
-    return 0;
-}
-
-sub Identifier {
-    my $pos0 = $pos;
-    return 0 if !matchChar(qr/[a-zA-Z_]/);
-    while (matchChar(qr/[a-zA-Z0-9_]/)) {};
-    $IDENTIFIER = substr($s, $pos0, $pos-$pos0),
-    skip();
-    return 1;
-}
-
-# parse string followed by word boundary
-sub Keyword {
-    my ($s) = @_;
-    return 0 if !parse(\&String,$s);
-    if ($pos == @s || $s[$pos] !~ /^([a-zA-Z0-9_])$/) {
-        skip();
-        return 1;
-    }
-    return 0;
-}
-
-sub String {
-    my ($s) = @_;
-    for my $c (split //, $s) {
-        return 0 if !parse(\&Char,$c);
-    }
-    return 1;
-}
-
-sub Char {
-    my ($c) = @_;
-    return matchChar(qr/\Q$c\E/);
-}
-
-# parse a char, and skip() if it matched
-sub CharSkip {
-    my ($c) = @_;
-    return 0 if !matchChar(qr/\Q$c\E/);
-    skip();
-    return 1;
-}
-
-sub matchChar {
-    my ($re) = @_;
-    return 0 if $pos >= @s;
-    return 0 if $s[$pos] !~ /$re/;
-    if ($s[$pos] eq "\n") {
-        $line++;
-        $col = 0;
-    }
-    $pos++;
-    $col++;
-    return 1;
-}
-
-# skip over whitespace and comments
-sub skip {
-    while (1) {
-        if (parse(\&Char,'#')) {
-            while (matchChar(qr/[^\n]/)) { } # skip everything until \n
-        } elsif (!matchChar(qr/[ \t\r\n]/)) {
-            return 1;
-        }
-    }
 }
