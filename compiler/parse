@@ -21,20 +21,11 @@ my $globalscope = $scope;
 
 my $IDENTIFIER;
 
-eval {
-    parse(\&Program);
-    die "Ended at $pos (line $line, col $col): had " . (@s-$pos) . " chars left over\n" if $pos != @s;
-};
-if ($@) {
-    print STDERR "line $line: col $col: $@\n";
-    exit 1;
-};
-
+parse(\&Program);
 
 # recursive descent parser based on https://www.youtube.com/watch?v=Ytq0GQdnChg
-# each parseFoo() parses a rule from the grammar:
-#  - if it matches, return true and $pos points at the next character in the input
-#  - if it doesn't match, return false and leave $pos unchanged
+# each Foo() parses a rule from the grammar;  if the rule matches return 1, else return 0
+# parse() calls the Foo() and restores $pos,$line,$col if it didn't match
 #
 # TODO: some tracing of call stack for debugging
 # TODO: only skip() after terminals
@@ -53,7 +44,10 @@ sub parse {
     my $line0 = $line;
     my $col0 = $col;
 
-    # TODO: catch error, restore pos/line/col, rethrow error
+    local $SIG{__DIE__} = sub {
+        my ($err) = @_;
+        die "line $line0: col $col0: $err";
+    };
     return 1 if $f->(@args);
 
     $pos = $pos0;
@@ -65,7 +59,8 @@ sub parse {
 sub Program {
     return 0 if !parse(\&Statements);
 
-    die "expected to be left in global scope after program" if !$scope->{global};
+    die "garbage after end of program\n" if $pos != @s;
+    die "expected to be left in global scope after program\n" if !$scope->{global};
 
     # allocate space for globals
     for my $global (sort keys %{ $scope->{symbols} }) {
@@ -103,7 +98,7 @@ sub Block {
     parse(\&Statements);
     skip();
 
-    die "block must end with }" if !parse(\&Char,'}');
+    die "block must end with }\n" if !parse(\&Char,'}');
     skip();
 
     return 1;
@@ -126,7 +121,7 @@ sub newscope {
 
 sub endscope {
     runtime_endscope();
-    die "can't exit global scope" if $scope->{global};
+    die "can't exit global scope\n" if $scope->{global};
     $scope = $scope->{parent};
 }
 
@@ -142,11 +137,11 @@ sub runtime_endscope {
 sub Declaration {
     return 0 if !parse(\&Keyword,'var');
     skip();
-    die "var declaration needs identifier" if !parse(\&Identifier);
+    die "var declaration needs identifier\n" if !parse(\&Identifier);
     my $id = $IDENTIFIER;
     skip();
 
-    die "duplicate declaration in scope: $id" if $scope->{symbols}{$id};
+    die "duplicate declaration in scope: $id\n" if $scope->{symbols}{$id};
 
     # add name to scope
     $scope->{symbols}{$id} = {
@@ -163,7 +158,7 @@ sub Declaration {
     skip();
 
     # now an expression to initialise the variable
-    die "initialisation needs expression" if !parse(\&Expression);
+    die "initialisation needs expression\n" if !parse(\&Expression);
     skip();
 
     poptovar($id);
@@ -190,7 +185,7 @@ sub Extern {
     my $id = $IDENTIFIER;
     skip();
 
-    die "can only add extern in global scope" if !$scope->{global};
+    die "can only add extern in global scope\n" if !$scope->{global};
     $scope->{symbols}{$id} = {
         type => 'global',
         extern => 1,
@@ -205,7 +200,7 @@ sub Assignment {
         $id = $IDENTIFIER;
     } else {
         return 0 if !parse(\&Char,'*');
-        die "can't dereference non-expression" if !parse(\&Expression);
+        die "can't dereference non-expression\n" if !parse(\&Expression);
     }
 
     skip();
@@ -213,7 +208,7 @@ sub Assignment {
     return 0 if !parse(\&Char,'=');
 
     skip();
-    die "assignment needs rvalue" if !parse(\&Expression);
+    die "assignment needs rvalue\n" if !parse(\&Expression);
     skip();
 
     if ($id) {
@@ -238,11 +233,11 @@ sub Conditional {
 
     my $falselabel = label();
 
-    die "if condition needs open paren" if !parse(\&Char,"(");
+    die "if condition needs open paren\n" if !parse(\&Char,"(");
     skip();
 
     print "# if condition\n";
-    die "if condition needs expression" if !parse(\&Expression);
+    die "if condition needs expression\n" if !parse(\&Expression);
     skip();
 
     # if top of stack is 0, jmp $falselabel
@@ -250,11 +245,11 @@ sub Conditional {
     print "test x\n";
     print "jz $falselabel\n";
 
-    die "if condition needs close paren" if !parse(\&Char,")");
+    die "if condition needs close paren\n" if !parse(\&Char,")");
     skip();
 
     print "# if body\n";
-    die "if needs body" if !parse(\&Statement);
+    die "if needs body\n" if !parse(\&Statement);
     skip();
 
     if (parse(\&Keyword,"else")) {
@@ -266,7 +261,7 @@ sub Conditional {
         print "# else body\n";
         print "$falselabel:\n";
 
-        die "else needs body" if !parse(\&Statement);
+        die "else needs body\n" if !parse(\&Statement);
         skip();
 
         print "$endiflabel:\n";
@@ -283,7 +278,7 @@ sub Loop {
     return 0 if !parse(\&Keyword,'while');
     skip();
 
-    die "while condition needs to start with paren" if !parse(\&Char,'(');
+    die "while condition needs to start with paren\n" if !parse(\&Char,'(');
     skip();
 
     my $loop = label();
@@ -291,7 +286,7 @@ sub Loop {
 
     print "# while loop\n";
     print "$loop:\n";
-    die "while loop needs expression" if !parse(\&Expression);
+    die "while loop needs expression\n" if !parse(\&Expression);
     skip();
 
     # if top of stack is 0, jmp $endloop
@@ -299,10 +294,10 @@ sub Loop {
     print "test x\n";
     print "jz $endloop\n";
 
-    die "while condition needs to end with paren" if !parse(\&Char,')');
+    die "while condition needs to end with paren\n" if !parse(\&Char,')');
     skip();
 
-    die "while loop needs body" if !parse(\&Statement);
+    die "while loop needs body\n" if !parse(\&Statement);
     skip();
 
     print "jmp $loop\n";
@@ -317,7 +312,7 @@ sub Return {
     return 0 if !parse(\&Keyword,"return");
     skip();
 
-    die "must return something" if !parse(\&Expression);
+    die "must return something\n" if !parse(\&Expression);
     skip();
 
     # we currently have the return value on the stack, we want to pop it to r0
@@ -458,7 +453,7 @@ sub StringLiteral {
         }
         $pos++;
     }
-    die "un-terminated string literal (started at line ... col ...)\n";
+    die "un-terminated string literal\n";
 }
 
 # n => "\n", r => "\r", etc.
@@ -482,7 +477,7 @@ sub FunctionDeclaration {
 
     print "\n# parseFunctionDeclaration:\n";
 
-    die "expected (" if !parse(\&Char,'(');
+    die "expected (\n" if !parse(\&Char,'(');
     skip();
 
     my @params = Parameters();
@@ -505,7 +500,7 @@ sub FunctionDeclaration {
     my $bp_rel = 2;
 
     for my $p (reverse @params) {
-        die "duplicate parameter name: $p" if $scope->{symbols}{$p};
+        die "duplicate parameter name: $p\n" if $scope->{symbols}{$p};
         $scope->{symbols}{$p} = {
             type => 'local',
             bp_rel => $bp_rel++, # parameters are above the base pointer, locals are below the base pointer
@@ -513,7 +508,7 @@ sub FunctionDeclaration {
         $scope->{params}++;
     }
 
-    die "expected )" if !parse(\&Char,')');
+    die "expected )\n" if !parse(\&Char,')');
     skip();
 
     parse(\&Statement);
@@ -590,7 +585,7 @@ sub UnaryExpression {
     return 0 if !matchChar(qr/[!~*+-]/);
     skip();
     if (!parse(\&Term)) {
-        die "unary operator $op must be followed by an expression";
+        die "unary operator $op must be followed by an expression\n";
     }
 
     if ($op eq '~') {
@@ -632,7 +627,7 @@ sub UnaryExpression {
 sub AddressOf {
     return 0 if !parse(\&Char,'&');
     skip();
-    die "can't take address of anything other than an identifier" if !parse(\&Identifier);
+    die "can't take address of anything other than an identifier\n" if !parse(\&Identifier);
     my $id = $IDENTIFIER;
     skip();
 
