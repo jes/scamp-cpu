@@ -218,8 +218,8 @@ sub arg2num {
 sub arg2pattern {
     my ($arg) = @_;
 
-    # escape (, ), +
-    $arg =~ s/([\(\)\+])/\\$1/g;
+    # escape \, (, ), +
+    $arg =~ s/([\\\(\)\+])/\\$1/g;
 
     my $subst = sub {
         my ($v) = @_;
