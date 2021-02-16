@@ -183,17 +183,28 @@ Intended to allow programs like:
 
 ### Peephole
 
-Empirically, the current `test.sl` program runs in about 25% fewer cycles after manual peephole optimisation
-consisting *only* of removing "push x; pop x;" and "push x; inc sp".
+There is a peephole optimiser in `compiler/peepopt`. It works by reading in assembly code and passing it through
+several "levels" of optimisation, which each pass through code unchanged if they don't recognise it, and optimise
+the bits they are responsible for if they do.
 
-We could probably get more improvements:
- - turn "push 1; pop x; ld r0, x; pop x; add x, r0" into "pop x; add x, 1"
- - turn "push 1; pop x; ld r0, x" into "ld r0, 1"
- - turn "push 1; pop x" into "ld x, 1"
+Here are some benchmarks for `test.sl`, the compiler test program, showing how the code size
+and runtime are improved by `peepopt`.
 
-### String/function locations
+| Optimisation   | Time (cycles)     | Size (words) |
+| :------------- | :------------     | :----------- |
+| None           | 47,297,088        | 5,456        |
+| 1 pass peepopt | 33,078,854 (-30%) | 4,346 (-20%) |
+| 2 pass peepopt | 30,656,774 (-35%) | 4,304 (-21%) |
 
-Instead of generating strings and functions inline and jumping over them, we should stick them at the end with the other globals.
+After the first pass of `peepopt` there are some new `push x; pop x;` instances that can be
+optimised out, hence the second pass is slightly better.
+
+Applying more than 2 passes doesn't yield any further improvement on this particular
+program, but I haven't proven that it can't do on other programs.
+
+### Function locations
+
+Instead of generating functions inline and jumping over them, we should stick them at the end with the other globals.
 
 ### Function calls
 
