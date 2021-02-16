@@ -315,9 +315,9 @@ sub DecimalLiteral {
 
 sub CharacterLiteral {
     return 0 if !parse(\&Char,"'");
-    my $c = $s[$pos++];
+    my $c = nextchar();
     if ($c eq '\\') {
-        genliteral(ord(escapedchar($s[$pos++])));
+        genliteral(ord(escapedchar(nextchar())));
     } else {
         genliteral(ord($c));
     }
@@ -353,11 +353,10 @@ sub StringLiteral {
             return 1;
         }
         if (parse(\&Char,'\\')) {
-            print ".word " . ord(escapedchar($s[$pos])) . "\n";
+            print ".word " . ord(escapedchar(nextchar())) . "\n";
         } else {
-            print ".word " . ord($s[$pos]) . "\n";
+            print ".word " . ord(nextchar()) . "\n";
         }
-        $pos++;
     }
     die "unterminated string literal\n";
 }
@@ -573,13 +572,19 @@ sub matchChar {
     my ($re) = @_;
     return 0 if $pos >= @s;
     return 0 if $s[$pos] !~ /$re/;
+    nextchar();
+    return 1;
+}
+
+sub nextchar {
+    my $ch = $s[$pos];
     if ($s[$pos] eq "\n") {
         $line++;
         $col = 0;
     }
     $pos++;
     $col++;
-    return 1;
+    return $ch;
 }
 
 ### scopes
