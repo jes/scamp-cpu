@@ -146,7 +146,9 @@ sub level6 {
     }
 }
 
-# collapse "ld x, r0; ld r0, x"
+# collapse "ld x, r0; ld r0, x"; this occurs when a function returns the
+# return value of another function, e.g.
+#   var f = func(x) { return g(x); };
 sub level7 {
     my ($line) = @_;
 
