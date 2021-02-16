@@ -142,10 +142,10 @@ The implemented grammar is something like:
     assignment        ::= lvalue '=' expression
     lvalue            ::= identifier | ('*' term)
     expression        ::= expr0
-    expr0             ::= expr1 ([+-] expr1)*
-    expr1             ::= expr2 ([&|^] expr2)*
+    expr0             ::= expr2 ([&|^] expr2)*
+    expr1             ::= term (('&&'|'||') term)*
     expr2             ::= expr3 (('=='|'!='|'>='|'<='|'>'|'<') expr3)*
-    expr3             ::= term (('&&'|'||') term)*
+    expr3             ::= expr1 ([+-] expr1)*
     term              ::= constant | func_call | address_of | unary_expr | paren_expr | identifier
     constant          ::= num_literal | str_literal | func_decl
     num_literal       ::= hex_literal | char_literal | dec_literal
