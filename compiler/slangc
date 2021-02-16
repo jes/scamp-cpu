@@ -25,6 +25,7 @@ use warnings;
 
 my $s = join('',<>);
 my @s = split //, $s;
+my $filename = 'stdin';
 my $pos = 0;
 my $line = 1;
 my $col = 1;
@@ -41,6 +42,18 @@ my $BLOCKLEVEL = 0;
 
 parse(\&Program);
 
+# allocate space for globals
+for my $global (sort keys %{ $scope->{symbols} }) {
+    print "_$global: .word 0\n" if !$scope->{symbols}{$global}{extern};
+}
+
+# store string constants
+for my $s (@STRINGS) {
+    print "$s->{label}:\n";
+    print ".word $_\n" for map { ord($_) } split //, $s->{string};
+    print ".word 0\n";
+}
+
 # parse() is a wrapper around the parser functions:
 # call $f->(@args) and return whether it matched; if it did not match, then
 # restore $pos,$line,$col
@@ -52,7 +65,7 @@ sub parse {
 
     local $SIG{__DIE__} = sub {
         my ($err) = @_;
-        die "error: line $line0: col $col0: $err";
+        die "error: $filename: line $line0: col $col0: $err";
     };
     return 1 if $f->(@args);
 
@@ -70,17 +83,6 @@ sub Program {
     die "expected to be left in global scope after program (probably a compiler bug)\n" if !$scope->{global};
     die "expected to be left at block level 0 (probably a compiler bug)\n" if $BLOCKLEVEL != 0;
 
-    # allocate space for globals
-    for my $global (sort keys %{ $scope->{symbols} }) {
-        print "_$global: .word 0\n" if !$scope->{symbols}{$global}{extern};
-    }
-
-    # store string constants
-    for my $s (@STRINGS) {
-        print "$s->{label}:\n";
-        print ".word $_\n" for map { ord($_) } split //, $s->{string};
-        print ".word 0\n";
-    }
     return 1;
 }
 
@@ -92,13 +94,39 @@ sub Statements {
 }
 
 sub Statement {
-    return 1 if parse(\&Block) || parse(\&Extern) || parse(\&Declaration) || parse(\&Conditional) || parse(\&Loop) || parse(\&Return) || parse(\&Assignment);
+    return 1 if parse(\&Include) || parse(\&Block) || parse(\&Extern) || parse(\&Declaration) || parse(\&Conditional) || parse(\&Loop) || parse(\&Return) || parse(\&Assignment);
     if (parse(\&Expression)) {
         print "# discard expression value\n";
         print "pop x\n";
         return 1;
     }
     return 0;
+}
+
+sub Include {
+    return 0 if !parse(\&Keyword,'include');
+    return 0 if !parse(\&Char,'"');
+    my $file = StringLiteralText();
+
+    my @was = ($s,$filename,$pos,$line,$col);
+
+    open(my $fh, '<', $file);
+    $s = join('', <$fh>);
+    close $fh;
+
+    @s = split //, $s;
+
+    $filename = $file;
+    $pos = 0;
+    $line = 1;
+    $col = 1;
+
+    die "expected statements\n" if !parse(\&Program);
+
+    ($s,$filename,$pos,$line,$col) = @was;
+    @s = split //, $s;
+
+    return 1;
 }
 
 sub Block {
@@ -335,19 +363,22 @@ sub escapedchar {
 
 sub StringLiteral {
     return 0 if !parse(\&Char,'"');
+    my $string = StringLiteralText();
     my $label = label();
     print "ld x, $label\n";
     print "push x\n";
+    push @STRINGS, {
+        label => $label,
+        string => $string,
+    };
+    return 1;
+}
 
+# expects you to have already parsed the opening quote; consumes the closing quote
+sub StringLiteralText {
     my $string = '';
     while ($pos < @s) {
-        if (parse(\&CharSkip,'"')) {
-            push @STRINGS, {
-                label => $label,
-                string => $string,
-            };
-            return 1;
-        }
+        return $string if parse(\&CharSkip,'"');
         if (parse(\&Char,'\\')) {
             $string .= escapedchar(nextchar());
         } else {
