@@ -35,6 +35,7 @@ my $scope = {
     symbols => {},
     parent => undef,
 };
+my @STRINGS;
 my $globalscope = $scope;
 my $IDENTIFIER;
 my $BLOCKLEVEL = 0;
@@ -76,6 +77,13 @@ sub Program {
         print "_$global: .word 0 # global\n" if !$scope->{symbols}{$global}{extern};
     }
 
+    # store string constants
+    for my $s (@STRINGS) {
+        print "$s->{label}:\n";
+        print ".word $_\n" for map { ord($_) } split //, $s->{string};
+        print ".word 0\n";
+    }
+
     return 1;
 }
 
@@ -96,7 +104,6 @@ sub Statement {
     return 0;
 }
 
-# TODO: create new nested scope
 sub Block {
     return 0 if !parse(\&CharSkip,'{');
     parse(\&Statements);
@@ -340,28 +347,23 @@ sub escapedchar {
 
 sub StringLiteral {
     return 0 if !parse(\&Char,'"');
-    my $startstring = label();
-    my $endstring = label();
+    my $label = label();
+    print "ld x, $label\n";
+    print "push x\n";
 
-    # XXX: generate string in-line
-    # TODO: add it to a table of string constants and write them at the end of the program
-
-    print "# parseStringLiteral:\n";
-
-    print "jmp $endstring\n";
-    print "$startstring:\n";
+    my $string = '';
     while ($pos < @s) {
         if (parse(\&CharSkip,'"')) {
-            print ".word 0\n"; # terminate
-            print "$endstring:\n";
-            print "ld x, $startstring\n";
-            print "push x\n";
+            push @STRINGS, {
+                label => $label,
+                string => $string,
+            };
             return 1;
         }
         if (parse(\&Char,'\\')) {
-            print ".word " . ord(escapedchar(nextchar())) . "\n";
+            $string .= escapedchar(nextchar());
         } else {
-            print ".word " . ord(nextchar()) . "\n";
+            $string .= nextchar();
         }
     }
     die "unterminated string literal\n";
