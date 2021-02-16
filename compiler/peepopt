@@ -17,6 +17,7 @@ my $l4constant;
 my $l4state = 0;
 my $l6ldx;
 my $l7ldxr0;
+my $l8remove;
 
 while (<>) {
     chomp;
@@ -155,8 +156,17 @@ sub level7 {
         # no-op
         $l7ldxr0 = 0;
     } else {
-        print "ld x, r0\n" if $l7ldxr0;
+        level8("ld x, r0") if $l7ldxr0;
         $l7ldxr0 = 0;
-        print "$line\n";
+        level8("$line");
     }
+}
+
+# dead code removal: remove everything between "ret" and the next label
+sub level8 {
+    my ($line) = @_;
+
+    $l8remove = 0 if $line =~ /:/;
+    print "$line\n" if !$l8remove;
+    $l8remove = 1 if $line eq 'ret';
 }
