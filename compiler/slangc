@@ -47,7 +47,6 @@ parse(\&Program);
 # restore $pos,$line,$col
 sub parse {
     my ($f, @args) = @_;
-
     my $pos0 = $pos;
     my $line0 = $line;
     my $col0 = $col;
@@ -250,7 +249,6 @@ sub Expression { return parse(\&ExpressionLevel,0); }
 # while loop: pop 2 args off stack and apply expression
 sub ExpressionLevel {
     my ($level) = @_;
-
     my @operators = (
         #['*','/','%'], # XXX: these will turn into function calls, if supported at all
         ['+','-'],
@@ -292,9 +290,7 @@ sub NumericLiteral { return parse(\&HexLiteral) || parse(\&CharacterLiteral) || 
 sub HexLiteral {
     return 0 if !parse(\&String,"0x");
     my $pos0 = $pos;
-    if (!matchChar(qr/[0-9a-fA-F]/)) {
-        die "illegal hex literal\n";
-    }
+    die "illegal hex literal\n" if !matchChar(qr/[0-9a-fA-F]/);
     while (matchChar(qr/[0-9a-fA-F]/)) { }
 
     my $val = substr($s, $pos0, $pos-$pos0);
@@ -625,7 +621,6 @@ sub symlookup {
 
 sub poptovar {
     my ($name) = @_;
-
     my $sym = symlookup($name);
     die "unrecognised identifier: $name\n" if !$sym;
     if ($sym->{type} eq 'global') {
@@ -643,8 +638,6 @@ sub poptovar {
 
 sub pushvar {
     my ($name) = @_;
-
-    # look up the identifier and push it
     my $sym = symlookup($name);
     die "unrecognised identifier: $name\n" if !$sym;
     if ($sym->{type} eq 'global') {
@@ -675,7 +668,6 @@ sub funcreturn {
 
 sub genliteral {
     my ($val) = @_;
-
     $val += 0x10000 if $val < 0; # make everything positive
     die "numeric literal out of range: $val\n" if $val < 0 || $val > 0xffff;
 
@@ -696,7 +688,6 @@ sub label {
 # pop 2 elements off the stack, apply $op, and push the result
 sub genop {
     my ($op) = @_;
-
     my %mnemonic = (
         '+' => 'add',
         '-' => 'sub',
@@ -711,18 +702,15 @@ sub genop {
 
     if ($mnemonic{$op}) {
         print "$mnemonic{$op} x, r0\n";
-
     } elsif ($op eq '^') {
         print "ld y, r0\n"; # TODO: refactor to load this to y in the first place instead of going via r0
         print "xor x, y\n";
-
     } elsif ($op eq '!=') {
         my $end = label();
         print "sub x, r0\n";
         print "jz $end\n";
         print "ld x, 1\n";
         print "$end:\n";
-
     } elsif ($op eq '==') {
         my $end = label();
         print "sub x, r0\n";
@@ -730,7 +718,6 @@ sub genop {
         print "jnz $end\n";
         print "ld x, 1\n";
         print "$end:\n";
-
     } elsif ($op =~ /^(>=|<=|>|<)$/) {
         my $xr0 = ($op =~ /^(>=|<)$/) ? "x, r0" : "r0, x";
         my $match = $op =~ /=/ ? 0 : 1;
@@ -743,7 +730,6 @@ sub genop {
         print "jlt $lt\n";
         print "ld x, $nomatch\n";
         print "$lt:\n";
-
     } elsif ($op eq '&&') {
         my $false = label();
         print "test x\n";
@@ -753,7 +739,6 @@ sub genop {
         print "jz $false\n";
         print "ld x, 1\n"; # both args true: x=1
         print "$false:\n";
-
     } elsif ($op eq '||') {
         my $true = label();
         print "test x\n";
@@ -763,7 +748,6 @@ sub genop {
         print "jnz $true\n";
         print "ld x, 0\n"; # both args false: x=0
         print "$true:\n";
-
     } else {
         die "unrecognised binary operator $op (probably a compiler bug)\n";
     }
