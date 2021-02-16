@@ -1,6 +1,7 @@
 # Test program for SLANG
 
-extern print;
+include "stdio.sl";
+
 extern mul;
 extern pwr2;
 extern powers_of_2;
@@ -98,43 +99,43 @@ var optest = func() {
     var a = 0xaaaa;
     var b = 0x55aa;
 
-    print("Operators test:\n");
+    puts("Operators test:\n");
 
-    print("a="); print(itoa(a)); print("\n");
-    print("b="); print(itoa(b)); print("\n");
-    print("~a="); print(itoa(~a)); print("\n");
-    print("-b="); print(itoa(-b)); print("\n");
-    print("+a="); print(itoa(+a)); print("\n");
-    print("&a="); print(itoa(&a)); print("\n");
-    print("a+b="); print(itoa(a+b)); print("\n");
-    print("a-b="); print(itoa(a-b)); print("\n");
-    print("a&b="); print(itoa(a&b)); print("\n");
-    print("a|b="); print(itoa(a|b)); print("\n");
-    print("a^b="); print(itoa(a^b)); print("\n");
-    print("a&&b="); print(itoa(a&&b)); print("\n");
-    print("a||b="); print(itoa(a||b)); print("\n");
-    print("a&&0="); print(itoa(a&&0)); print("\n");
-    print("a||0="); print(itoa(a||0)); print("\n");
-    print("(-1 > 0)="); print(itoa(-1>0)); print("\n");
-    print("(-1 >= 0)="); print(itoa(-1>=0)); print("\n");
-    print("(-1 < 0)="); print(itoa(-1<0)); print("\n");
-    print("(-1 <= 0)="); print(itoa(-1<=0)); print("\n");
-    print("(32767>0)="); print(itoa(32767>0)); print("\n");
-    print("(32767>=0)="); print(itoa(32767>=0)); print("\n");
-    print("(32767<0)="); print(itoa(32767<0)); print("\n");
-    print("(32767<=0)="); print(itoa(32767<=0)); print("\n");
-    print("(32767>-2)="); print(itoa(32767>-2)); print("\n");
-    print("(32767>=-2)="); print(itoa(32767>=-2)); print("\n");
-    print("(32767<-2)="); print(itoa(32767<-2)); print("\n");
-    print("(32767<=-2)="); print(itoa(32767<=-2)); print("\n");
+    puts("a="); puts(itoa(a)); puts("\n");
+    puts("b="); puts(itoa(b)); puts("\n");
+    puts("~a="); puts(itoa(~a)); puts("\n");
+    puts("-b="); puts(itoa(-b)); puts("\n");
+    puts("+a="); puts(itoa(+a)); puts("\n");
+    puts("&a="); puts(itoa(&a)); puts("\n");
+    puts("a+b="); puts(itoa(a+b)); puts("\n");
+    puts("a-b="); puts(itoa(a-b)); puts("\n");
+    puts("a&b="); puts(itoa(a&b)); puts("\n");
+    puts("a|b="); puts(itoa(a|b)); puts("\n");
+    puts("a^b="); puts(itoa(a^b)); puts("\n");
+    puts("a&&b="); puts(itoa(a&&b)); puts("\n");
+    puts("a||b="); puts(itoa(a||b)); puts("\n");
+    puts("a&&0="); puts(itoa(a&&0)); puts("\n");
+    puts("a||0="); puts(itoa(a||0)); puts("\n");
+    puts("(-1 > 0)="); puts(itoa(-1>0)); puts("\n");
+    puts("(-1 >= 0)="); puts(itoa(-1>=0)); puts("\n");
+    puts("(-1 < 0)="); puts(itoa(-1<0)); puts("\n");
+    puts("(-1 <= 0)="); puts(itoa(-1<=0)); puts("\n");
+    puts("(32767>0)="); puts(itoa(32767>0)); puts("\n");
+    puts("(32767>=0)="); puts(itoa(32767>=0)); puts("\n");
+    puts("(32767<0)="); puts(itoa(32767<0)); puts("\n");
+    puts("(32767<=0)="); puts(itoa(32767<=0)); puts("\n");
+    puts("(32767>-2)="); puts(itoa(32767>-2)); puts("\n");
+    puts("(32767>=-2)="); puts(itoa(32767>=-2)); puts("\n");
+    puts("(32767<-2)="); puts(itoa(32767<-2)); puts("\n");
+    puts("(32767<=-2)="); puts(itoa(32767<=-2)); puts("\n");
 
     var x = 5;
     var y = 10;
-    print("x="); print(itoa(x)); print("\n");
-    print("y="); print(itoa(y)); print("\n");
-    print("x>y-6="); print(itoa(x>y-6)); print("\n");
+    puts("x="); puts(itoa(x)); puts("\n");
+    puts("y="); puts(itoa(y)); puts("\n");
+    puts("x>y-6="); puts(itoa(x>y-6)); puts("\n");
 
-    print("\n");
+    puts("\n");
 };
 
 var fibtest = func() {
@@ -143,7 +144,7 @@ var fibtest = func() {
     var f2 = 0;
     var f3 = 0;
 
-    print("Fibonacci numbers:\n");
+    puts("Fibonacci numbers:\n");
 
     while (n <= 22) {
         f3 = f1 + f2;
@@ -151,47 +152,47 @@ var fibtest = func() {
         f2 = f3;
         n = n + 1;
 
-        # TODO: printf()
-        print("fib("); print(itoa(n)); print(") = ");
-        print(itoa(f3));
-        print("\n");
+        # TODO: putsf()
+        puts("fib("); puts(itoa(n)); puts(") = ");
+        puts(itoa(f3));
+        puts("\n");
 
-        print("rfib("); print(itoa(n)); print(") = ");
-        print(itoa(rfib(n)));
-        print("\n");
+        puts("rfib("); puts(itoa(n)); puts(") = ");
+        puts(itoa(rfib(n)));
+        puts("\n");
     };
 
-    print("\n");
+    puts("\n");
 };
 
 var strtest = func() {
     var s1 = "Hello, world!";
 
-    print("string: "); print(s1); print("\n");
-    print("reversed: "); print(strrev(s1)); print("\n");
-    print("re-reversed: "); print(strrev(s1)); print("\n");
+    puts("string: "); puts(s1); puts("\n");
+    puts("reversed: "); puts(strrev(s1)); puts("\n");
+    puts("re-reversed: "); puts(strrev(s1)); puts("\n");
 };
 
-var callprint = func(f) {
-    print(f());
+var callputs = func(f) {
+    puts(f());
 };
 
 var globule = 1;
 
 var functest = func() {
-    print("Nested function calls/declarations:\n");
+    puts("Nested function calls/declarations:\n");
 
-    callprint(func() { return "1. Hello, world\n" });
+    callputs(func() { return "1. Hello, world\n" });
 
     var f = func(x) {
         return x() + x();
     };
 
-    print("2. 5 = "); print(itoa(f(func() {
+    puts("2. 5 = "); puts(itoa(f(func() {
         globule = globule + 1;
         return globule;
     })));
-    print("\n");
+    puts("\n");
 
     # this function produces no output, but will leave the sp incorrect if
     # vars inside the function body interact poorly with early returns
@@ -215,30 +216,30 @@ var ptrtest = func() {
     var p = &x;
     var y = 10;
 
-    print("Pointers to locals:\n");
+    puts("Pointers to locals:\n");
 
-    print("1. x = "); print(itoa(x)); print("\n");
-    print("1. y = "); print(itoa(y)); print("\n");
-    print("1. *p = "); print(itoa(*p)); print("\n");
+    puts("1. x = "); puts(itoa(x)); puts("\n");
+    puts("1. y = "); puts(itoa(y)); puts("\n");
+    puts("1. *p = "); puts(itoa(*p)); puts("\n");
     *p = 7;
-    print("2. x = "); print(itoa(x)); print("\n");
-    print("2. y = "); print(itoa(y)); print("\n");
-    print("2. *p = "); print(itoa(*p)); print("\n");
+    puts("2. x = "); puts(itoa(x)); puts("\n");
+    puts("2. y = "); puts(itoa(y)); puts("\n");
+    puts("2. *p = "); puts(itoa(*p)); puts("\n");
     p = &y;
-    print("3. x = "); print(itoa(x)); print("\n");
-    print("3. y = "); print(itoa(y)); print("\n");
-    print("3. *p = "); print(itoa(*p)); print("\n");
+    puts("3. x = "); puts(itoa(x)); puts("\n");
+    puts("3. y = "); puts(itoa(y)); puts("\n");
+    puts("3. *p = "); puts(itoa(*p)); puts("\n");
     *p = 11;
-    print("4. x = "); print(itoa(x)); print("\n");
-    print("4. y = "); print(itoa(y)); print("\n");
-    print("4. *p = "); print(itoa(*p)); print("\n");
+    puts("4. x = "); puts(itoa(x)); puts("\n");
+    puts("4. y = "); puts(itoa(y)); puts("\n");
+    puts("4. *p = "); puts(itoa(*p)); puts("\n");
 };
 
 var sp = 0xffff;
-print("Initial sp=0x"); print(itoabase(*sp, 16)); print("\n");
+puts("Initial sp=0x"); puts(itoabase(*sp, 16)); puts("\n");
 optest();
 fibtest();
 strtest();
 functest();
 ptrtest();
-print("Final sp=0x"); print(itoabase(*sp, 16)); print("\n");
+puts("Final sp=0x"); puts(itoabase(*sp, 16)); puts("\n");
