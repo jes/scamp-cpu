@@ -2,6 +2,7 @@
 
 include "stdio.sl";
 include "stdlib.sl";
+include "string.sl";
 
 # recursive fibonacci
 var rfib = func(n) {
@@ -109,6 +110,14 @@ var strtest = func() {
     puts("string: "); puts(s1); puts("\n");
     puts("reversed: "); puts(strrev(s1)); puts("\n");
     puts("re-reversed: "); puts(strrev(s1)); puts("\n");
+
+    puts("cmp self: "); puts(itoa(strcmp(s1,s1))); puts("\n");
+    puts("cmp hello world: "); puts(itoa(strcmp(s1,"Hello, world!"))); puts("\n");
+    puts("cmp foo: "); puts(itoa(strcmp(s1,"foo"))); puts("\n");
+
+    puts("length: "); puts(itoa(strlen(s1))); puts("\n");
+
+    puts("\n");
 };
 
 var callputs = func(f) {
@@ -147,6 +156,8 @@ var functest = func() {
     inlinevars(97);
     inlinevars(99);
     inlinevars(101);
+
+    puts("\n");
 };
 
 var ptrtest = func() {
@@ -171,6 +182,8 @@ var ptrtest = func() {
     puts("4. x = "); puts(itoa(x)); puts("\n");
     puts("4. y = "); puts(itoa(y)); puts("\n");
     puts("4. *p = "); puts(itoa(*p)); puts("\n");
+
+    puts("\n");
 };
 
 var sp = 0xffff;

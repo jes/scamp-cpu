@@ -82,9 +82,15 @@ rfib(23) = 28657
 string: Hello, world!
 reversed: !dlrow ,olleH
 re-reversed: Hello, world!
+cmp self: 0
+cmp hello world: 0
+cmp foo: 65506
+length: 13
+
 Nested function calls/declarations:
 1. Hello, world
 2. 5 = 5
+
 Pointers to locals:
 1. x = 5
 1. y = 10
@@ -98,4 +104,5 @@ Pointers to locals:
 4. x = 7
 4. y = 11
 4. *p = 11
+
 Final sp=0x7ffe

@@ -14,3 +14,10 @@ var strcmp = func(s1, s2) {
         return *s1-*s2;
     return 0;
 };
+
+var strlen = func(s) {
+    var ss = s;
+    while (*ss)
+        ss = ss + 1;
+    return ss - s;
+};

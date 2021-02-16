@@ -32,6 +32,7 @@ var divmod = func(num, denom, pdiv, pmod) {
 
 var itoa_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
 
+# returns pointer to static buffer
 var itoabase = func(num, base) {
     var s = "storage space here";
     var d;
@@ -56,4 +57,5 @@ var itoabase = func(num, base) {
     return s;
 };
 
+# returns pointer to static buffer
 var itoa = func(num) return itoabase(num, 10);
