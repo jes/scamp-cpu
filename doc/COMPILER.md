@@ -1,7 +1,10 @@
 # Compiler
 
-The `compiler/` directory contains a primitive compiler. The code it generates is trash and it probably has lots of
-bugs, but it can successfully compile at least *some* programs.
+The language is called SLANG but I haven't quite worked out what it stands for yet, other
+than "SCAMP Language".
+
+`compiler/slangc` contains a Perl implementation of a SLANG compiler.
+The code it generates is not great, but `peepopt` cleans it up quite a lot.
 
 ## Design goals
 
@@ -11,7 +14,7 @@ in principle) be developed completely inside SCAMP.
 I'm not really picky about the syntax, but I definitely want pointers, pointer arithmetic, function pointers, and
 inline assembly code.
 
-Potential sources of inspiration include:
+Sources of inspiration include:
 
  - [Small-C](https://en.wikipedia.org/wiki/Small-C)
  - [Cowgol](http://cowlark.com/cowgol/)
@@ -43,9 +46,6 @@ a type. That gets us pointer arithmetic for free. We could imagine something lik
 
     x = 5;
     z = *y + 10; // z == 15, because *y==x
-
-(Although I'm not committing to using "*" as the pointer dereference operator, because of the obvious collision
-with multiplication).
 
 ### Strings
 
@@ -128,33 +128,39 @@ which is annoying and unintuitive.
 
 ## Grammar
 
-Something like (completely unimplemented and untested):
+The implemented grammar is something like:
 
     program           ::= statements
-    statements        ::= '' | (statement ';' statements)
-    statement         ::= block | declaration | assignment | expression | conditional | loop | return
-    block             ::= statement | ('{' statements '}')
+    statements        ::= '' | (statement (';' statement)* ';'?)
+    statement         ::= block | extern | declaration | conditional | loop | return | assignment | expression
+    block             ::= '{' statements '}'
+    extern            ::= 'extern' identifier
     declaration       ::= ('var' identifier) | ('var' identifier '=' expression)
-    assignment        ::= expression '=' expression
-    conditional       ::= ('if' expression block) | ('if' expression block 'else' block)
-    loop              ::= 'while' expression block
+    conditional       ::= 'if' '(' expression ')' statement ('else' statement)?
+    loop              ::= 'while' expression statement
     return            ::= 'return' expression
-    expression        ::= constant | function_call | unary_expression | binary_expression | paren_expression
-    paren_expression  ::= '(' expression ')'
-    function_call     ::= identifier '(' expressions ')'
-    expressions       ::= '' | (expression ',' expressions)
-    unary_expression  ::= unary_op expression
-    binary_expression ::= binary_op expression
-    unary_op          ::= '!' | '~' | '-' | '+' | '*' | '&'
-    binary_op         ::= '+' | '-' | '*' | '/' | '&' | '|'
-    constant          ::= num_literal | string_literal | function_decl
-    function_decl     ::= 'func' '(' arguments ')' block
-    arguments         ::= '' | (identifier ',' arguments)
-    identifier        ::= /^[a-z_][0-9a-z_]*$/
-    num_literal       ::= /^[0-9]+$/ | /^0x[0-9a-f]+$/ | /^0b[01]+$/
-    string_literal    ::= '"' characters '"'
-    characters        ::= '' | (character characters)
-    character         ::= [characters except backslash] | '\\' | '\"' | '\t' | '\r' | '\n' | '\[' | '\0' | ...
+    assignment        ::= lvalue '=' expression
+    lvalue            ::= identifier | ('*' term)
+    expression        ::= expr0
+    expr0             ::= expr1 ([+-] expr1)*
+    expr1             ::= expr2 ([&|^] expr2)*
+    expr2             ::= expr3 (('=='|'!='|'>='|'<='|'>'|'<') expr3)*
+    expr3             ::= term (('&&'|'||') term)*
+    term              ::= constant | func_call | address_of | unary_expr | paren_expr | identifier
+    constant          ::= num_literal | str_literal | func_decl
+    num_literal       ::= hex_literal | char_literal | dec_literal
+    hex_literal       ::= '0x' [0-9a-fA-F]+
+    dec_literal       ::= [-+]? [0-9]+
+    char_literal      ::= ("'" '\' <char> "'") | ("'" <char> "'")
+    str_literal       ::= '"' <string> '"'
+    func_decl         ::= 'func' '(' paramaters ')' statement
+    parameters        ::= '' | (identifier (',' identifier)* ','?)
+    func_call         ::= identifier '(' arguments ')'
+    arguments         ::= '' | (expression (',' expression)* ','?)
+    address_of        ::= '&' identifier
+    unary_expr        ::= [!~*+-] term
+    paren_expr        ::= '(' expression ')'
+    identifier        ::= [a-zA-Z_] [a-zA-Z0-9_]*
 
 But with the understanding that there can be optional whitespace between any pair of tokens, and comments that start with a '#'
 and run to the end of the line.
