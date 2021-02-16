@@ -264,7 +264,7 @@ sub ExpressionLevel {
         my $match = parse(\&ExpressionLevel,$level+1);
         if ($apply_op) {
             die "operator $apply_op needs a second operand\n" if !$match;
-            genop($apply_op) if $apply_op;
+            genop($apply_op);
         } else {
             return 0 if !$match;
         }
