@@ -69,6 +69,7 @@ sub Program {
 
     die "garbage after end of program\n" if $pos != @s;
     die "expected to be left in global scope after program (probably a compiler bug)\n" if !$scope->{global};
+    die "expected to be left at block level 0 (probably a compiler bug)\n" if $BLOCKLEVEL != 0;
 
     # allocate space for globals
     for my $global (sort keys %{ $scope->{symbols} }) {
