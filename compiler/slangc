@@ -334,7 +334,7 @@ sub ExpressionLevel {
 }
 
 sub Term {
-    return 1 if parse(\&Constant) || parse(\&FunctionCall) || parse(\&AddressOf) || parse(\&UnaryExpression) || parse(\&ParenExpression) || parse(\&PostOp);
+    return 1 if parse(\&Constant) || parse(\&FunctionCall) || parse(\&AddressOf) || parse(\&PreOp) || parse(\&PostOp) || parse(\&UnaryExpression) || parse(\&ParenExpression);
     return 0 if !parse(\&Identifier);
     pushvar($IDENTIFIER);
     return 1;
@@ -376,7 +376,7 @@ sub CharacterLiteral {
         genliteral(ord($c));
     }
     
-    return 1 if parse(\&Char,"'");
+    return 1 if (parse(\&Char,"'") && skip());
     die "illegal character literal\n";
 }
 
@@ -497,6 +497,49 @@ sub Arguments {
     }
 }
 
+sub PreOp {
+    my $op;
+    if (parse(\&String,"++")) {
+        $op = 'inc';
+    } elsif (parse(\&String,"--")) {
+        $op = 'dec';
+    } else {
+        return 0;
+    }
+    skip();
+    return 0 if !parse(\&Identifier);
+    skip();
+    print "# pre-$op\n";
+    pushvar($IDENTIFIER);
+    print "pop x\n";
+    print "$op x\n";
+    print "push x\n"; # for poptovar
+    poptovar($IDENTIFIER);
+    print "push x\n"; # for the expression that the pre-op appeared in
+}
+
+sub PostOp {
+    return 0 if !parse(\&Identifier);
+    skip();
+    my $id = $IDENTIFIER;
+    my $op;
+    if (parse(\&String,"++")) {
+        $op = 'inc';
+    } elsif (parse(\&String,"--")) {
+        $op = 'dec';
+    } else {
+        return 0;
+    }
+    skip();
+    print "# post-$op\n";
+    pushvar($IDENTIFIER);
+    print "pop x\n";
+    print "push x\n"; # for the expression that the post-op appeared in
+    print "$op x\n";
+    print "push x\n"; # for poptovar
+    poptovar($IDENTIFIER);
+}
+
 sub AddressOf {
     return 0 if !parse(\&CharSkip,'&');
     die "address-of (&) needs identifier\n" if !parse(\&Identifier);
@@ -561,28 +604,6 @@ sub ParenExpression {
     return 0 if !parse(\&CharSkip,'(');
     return 1 if parse(\&Expression) && parse(\&CharSkip,')');
     return 0;
-}
-
-sub PostOp {
-    return 0 if !parse(\&Identifier);
-    skip();
-    my $id = $IDENTIFIER;
-    my $op;
-    if (parse(\&String,"++")) {
-        $op = 'inc';
-    } elsif (parse(\&String,"--")) {
-        $op = 'dec';
-    } else {
-        return 0;
-    }
-    skip();
-    print "# post-$op\n";
-    pushvar($IDENTIFIER);
-    print "pop x\n";
-    print "push x\n"; # for the expression that the post-op appeared in
-    print "$op x\n";
-    print "push x\n"; # for poptovar
-    poptovar($IDENTIFIER);
 }
 
 sub Identifier {

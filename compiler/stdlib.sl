@@ -42,15 +42,13 @@ var itoabase = func(num, base) {
 
     # special case when num == 0
     if (num == 0) {
-        s--;
-        *s = '0';
+        *--s = '0';
         return s;
     };
 
     while (num != 0) {
-        s--;
         divmod(num, base, &d, &m);
-        *s = *(itoa_alphabet + m);
+        *--s = *(itoa_alphabet + m);
         num = d;
     };
 

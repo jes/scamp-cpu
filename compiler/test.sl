@@ -17,9 +17,8 @@ var strrev = func(s) {
     var ss = s;
     var p = s;
 
-    while (*(p+1)) {
+    while (*(p+1))
         p++;
-    };
 
     var ch;
 
@@ -27,8 +26,8 @@ var strrev = func(s) {
         ch = *p;
         *p = *s;
         *s = ch;
-        p--;
-        s++;
+        --p;
+        ++s;
     };
 
     return ss;
@@ -214,7 +213,7 @@ var fizzbuzz = func() {
 
     puts("fizzbuzz:\n");
 
-    while (i++ < 99) {
+    while (++i < 100) {
         if (count3==0 && count5==0)
             puts("fizzbuzz")
         else if (count3==0)
