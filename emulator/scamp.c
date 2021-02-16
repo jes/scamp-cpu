@@ -85,10 +85,11 @@ uint16_t alu(uint16_t argx, uint16_t argy) {
 
 /* input a word from addr */
 uint16_t in(uint16_t addr) {
-    int val;
     if (addr == 1) {
-        val = disk[diskptr++];
-        return val;
+        return disk[diskptr++];
+    }
+    if (addr == 2) {
+        return getchar();
     }
     return 0;
 }
@@ -104,7 +105,7 @@ void out(uint16_t val, uint16_t addr) {
         expect_output++;
     }
     if (addr == 2) {
-        printf("%c", val);
+        putchar(val);
     }
     if (addr == 3) {
         halt = 1;
