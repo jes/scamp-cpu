@@ -710,13 +710,13 @@ sub genop {
         print "xor x, y\n";
     } elsif ($op eq '!=') {
         my $end = label();
-        print "sub x, r0\n";
+        print "sub x, r0 #peepopt:test\n";
         print "jz $end\n";
         print "ld x, 1\n";
         print "$end:\n";
     } elsif ($op eq '==') {
         my $end = label();
-        print "sub x, r0\n";
+        print "sub x, r0 #peepopt:test\n";
         print "ld x, 0\n"; # doesn't clobber flags
         print "jnz $end\n";
         print "ld x, 1\n";
@@ -728,7 +728,7 @@ sub genop {
         # subtract 2nd argument from first, if result is less than zero, then 2nd argument is bigger than first
         # XXX: dubious? (what about integer overflow)
         my $lt = label();
-        print "sub $xr0\n";
+        print "sub $xr0 #peepopt:test\n";
         print "ld x, $match\n"; # doesn't clobber flags
         print "jlt $lt\n";
         print "ld x, $nomatch\n";

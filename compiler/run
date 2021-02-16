@@ -9,5 +9,5 @@ fi
 ./slangc < $1 > prog.s
 shift
 # only peepopt prog.s because it's unsound on hand-written assembly code
-cat head.s <(./peepopt prog.s) foot.s | ../asm/asm > prog.hex
+cat head.s <(./peepopt prog.s | ./peepopt) foot.s | ../asm/asm > prog.hex
 ../emulator/scamp -r prog.hex $@

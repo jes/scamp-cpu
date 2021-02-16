@@ -1,6 +1,9 @@
 #!/usr/bin/perl
 
 # Peephole optimiser for slangc
+#
+# TODO: apply all push/pop optimisation in a single pass of peepopt (currently
+#       there is more it can do in a 2nd pass)
 
 use strict;
 use warnings;
@@ -61,6 +64,7 @@ sub level2 {
 }
 
 # turn "ld x, CONSTANT; ld REG, x" into "ld REG, CONSTANT"
+# turn "ld x, CONSTANT; ld (REG), x" into "ld (REG), CONSTANT"
 sub level3 {
     my ($line) = @_;
 
@@ -68,6 +72,9 @@ sub level3 {
         $l3ldx = $1;
     } elsif (defined $l3ldx && $line =~ /^ld r(\d+), x$/) {
         level4("ld r$1, $l3ldx");
+        $l3ldx = undef;
+    } elsif (defined $l3ldx && $line =~ /^ld \(r(\d+)\), x$/) {
+        level4("ld \(r$1\), $l3ldx");
         $l3ldx = undef;
     } else {
         level4("ld x, $l3ldx") if defined $l3ldx;
@@ -88,16 +95,33 @@ sub level4 {
         $l4state = 1;
     } elsif ($l4state == 1 && $line eq 'pop x') {
         $l4state = 2;
-    } elsif ($l4state == 2 && $line =~ /^(add|sub|and|or) x, r$l4reg$/) {
-        # TODO: level5: "add/sub ..., 1" becomes "inc/dec ...", etc.
-        # TODO: level5: turn another layer of "push x/pop x" into a no-op again
-        print "pop x\n";
-        print "$1 x, $l4constant\n";
+    } elsif ($l4state == 2 && $line =~ /^(add|sub|and|or) x, r$l4reg( #peepopt:test)?$/) {
+        my $comment = $2||'';
+        level5("pop x");
+        level5("$1 x, $l4constant$comment");
         $l4state = 0;
     } else {
-        print "ld r$l4reg, $l4constant\n" if $l4state >= 1;
-        print "pop x\n" if $l4state >= 2;
-        print "$line\n";
+        level5("ld r$l4reg, $l4constant") if $l4state >= 1;
+        level5("pop x") if $l4state >= 2;
+        level5("$line");
         $l4state = 0;
+    }
+}
+
+# collapse "add foo, 0", "sub foo, 0", "or foo, 0", "and foo, 65535"
+# turn "add/sub foo, 1" into "inc/dec foo"
+sub level5 {
+    my ($line) = @_;
+
+    if ($line =~ /^(add|sub|or) (x|sp|r\d+), 0$/ || $line =~ /^and (x|sp|r\d+), 65535$/) {
+        # collapse to no-op (but note we don't set flags the same way we would have done)
+    } elsif ($line =~ /^(add|sub|or) (x|sp|r\d+), 0 #peepopt:test$/ || $line =~ /^and (x|sp|r\d+), 65535 #peepopt:test$/) {
+        print "test $2\n";
+    } elsif ($line =~ /^add (x|sp|r\d+), 1$/ || $line =~ /^sub (x|sp|r\d+), 65535$/) {
+        print "inc $1\n";
+    } elsif ($line =~ /^sub (x|sp|r\d+), 1$/ || $line =~ /^add (x|sp|r\d+), 65535$/) {
+        print "dec $1\n";
+    } else {
+        print "$line\n";
     }
 }
