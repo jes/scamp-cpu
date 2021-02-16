@@ -188,10 +188,35 @@ var functest = func() {
     print("\n");
 };
 
+var ptrtest = func() {
+    var x = 5;
+    var p = &x;
+    var y = 10;
+
+    print("Pointers to locals:\n");
+
+    print("1. x = "); print(itoa(x)); print("\n");
+    print("1. y = "); print(itoa(y)); print("\n");
+    print("1. *p = "); print(itoa(*p)); print("\n");
+    *p = 7;
+    print("2. x = "); print(itoa(x)); print("\n");
+    print("2. y = "); print(itoa(y)); print("\n");
+    print("2. *p = "); print(itoa(*p)); print("\n");
+    p = &y;
+    print("3. x = "); print(itoa(x)); print("\n");
+    print("3. y = "); print(itoa(y)); print("\n");
+    print("3. *p = "); print(itoa(*p)); print("\n");
+    *p = 11;
+    print("4. x = "); print(itoa(x)); print("\n");
+    print("4. y = "); print(itoa(y)); print("\n");
+    print("4. *p = "); print(itoa(*p)); print("\n");
+};
+
 var sp = 0xffff;
 print("Initial sp=0x"); print(itoabase(*sp, 16)); print("\n");
 optest();
 fibtest();
 strtest();
 functest();
+ptrtest();
 print("Final sp=0x"); print(itoabase(*sp, 16)); print("\n");

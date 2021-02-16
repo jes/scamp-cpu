@@ -82,4 +82,17 @@ re-reversed: Hello, world!
 Nested function calls/declarations:
 1. Hello, world
 2. 5 = 5
+Pointers to locals:
+1. x = 5
+1. y = 10
+1. *p = 5
+2. x = 7
+2. y = 10
+2. *p = 7
+3. x = 7
+3. y = 10
+3. *p = 10
+4. x = 7
+4. y = 11
+4. *p = 11
 Final sp=0x7ffe
