@@ -200,9 +200,9 @@ and runtime are improved by `peepopt`.
 
 | Optimisation   | Time (cycles)     | Size (words) |
 | :------------- | :------------     | :----------- |
-| None           | 47,297,088        | 5,456        |
-| 1 pass peepopt | 33,078,854 (-30%) | 4,346 (-20%) |
-| 2 pass peepopt | 30,656,774 (-35%) | 4,304 (-21%) |
+| None           | 49,687,474        | 7,495        |
+| 1 pass peepopt | 33,806,242 (-32%) | 5,555 (-26%) |
+| 2 pass peepopt | 31,414,357 (-37%) | 5,503 (-27%) |
 
 After the first pass of `peepopt` there are some new `push x; pop x;` instances that can be
 optimised out, hence the second pass is slightly better.
