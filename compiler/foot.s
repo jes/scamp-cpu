@@ -171,9 +171,23 @@ pwr2:
     ld r0, (x)
     ret
 
+inp:
+    pop x
+    in r0, x
+    ret
+
+outp:
+    pop x
+    ld r0, x
+    pop x
+    out x, r0
+    ret
+
 _print: .word print
 _printnum: .word printnum
 _mul: .word mul
 _shl: .word shl
 _pwr2: .word pwr2
 _powers_of_2: .word powers_of_2
+_inp: .word inp
+_outp: .word outp
