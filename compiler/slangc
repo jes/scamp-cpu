@@ -39,6 +39,8 @@ my @STRINGS;
 my $globalscope = $scope;
 my $IDENTIFIER;
 my $BLOCKLEVEL = 0;
+my $BREAKLABEL;
+my $CONTLABEL;
 
 parse(\&Program);
 
@@ -94,7 +96,7 @@ sub Statements {
 }
 
 sub Statement {
-    return 1 if parse(\&Include) || parse(\&Block) || parse(\&Extern) || parse(\&Declaration) || parse(\&Conditional) || parse(\&Loop) || parse(\&Return) || parse(\&Assignment);
+    return 1 if parse(\&Include) || parse(\&Block) || parse(\&Extern) || parse(\&Declaration) || parse(\&Conditional) || parse(\&Loop) || parse(\&Break) || parse(\&Continue) || parse(\&Return) || parse(\&Assignment);
     if (parse(\&Expression)) {
         print "# discard expression value\n";
         print "pop x\n";
@@ -213,8 +215,14 @@ sub Loop {
 
     die "while condition needs open paren\n" if !parse(\&CharSkip,'(');
 
+    my $oldbreaklabel = $BREAKLABEL;
+    my $oldcontlabel = $CONTLABEL;
     my $loop = label();
     my $endloop = label();
+
+    $BREAKLABEL = $endloop;
+    $CONTLABEL = $loop;
+
     print "# while loop\n";
     print "$loop:\n";
     die "while loop needs expression\n" if !parse(\&Expression);
@@ -230,8 +238,25 @@ sub Loop {
     print "jmp $loop\n";
     print "$endloop:\n";
 
+    $BREAKLABEL = $oldbreaklabel;
+    $CONTLABEL = $oldcontlabel;
+
     $BLOCKLEVEL--;
     return 1;
+}
+
+sub Break {
+    return 0 if !parse(\&Keyword,"break");
+    die "can't break here\n" if !$BREAKLABEL;
+    print "# break\n";
+    print "jmp $BREAKLABEL\n";
+}
+
+sub Continue {
+    return 0 if !parse(\&Keyword,"continue");
+    die "can't continue here\n" if !$CONTLABEL;
+    print "# continue\n";
+    print "jmp $CONTLABEL\n";
 }
 
 sub Return {

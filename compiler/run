@@ -1,6 +1,8 @@
 #!/bin/bash
 # Run a source file in the emulator
 
+set -e
+
 if [ "$1" = "" ]; then
     echo "usage: run foo.sl"
     exit 1

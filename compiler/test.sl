@@ -91,7 +91,7 @@ var fibtest = func() {
         f2 = f3;
         n = n + 1;
 
-        # TODO: putsf()
+        # TODO: printf()
         puts("fib("); puts(itoa(n)); puts(") = ");
         puts(itoa(f3));
         puts("\n");
@@ -186,6 +186,60 @@ var ptrtest = func() {
     puts("\n");
 };
 
+var looptest = func() {
+    var i = 0;
+
+    puts("loop break/continue:\n");
+
+    while (i < 100) {
+        i = i + 1;
+        puts(itoa(i));
+        puts(": ");
+        if (i >= 20) {
+            puts("i >= 20\n");
+            break;
+        };
+        if (i >= 10) {
+            puts("i >= 10\n");
+            continue;
+        };
+        puts("i < 10\n");
+    };
+
+    puts("\n");
+};
+
+var fizzbuzz = func() {
+    var count3 = 1;
+    var count5 = 1;
+    var i = 1;
+
+    puts("fizzbuzz:\n");
+
+    while (i < 100) {
+        if (count3==0 && count5==0)
+            puts("fizzbuzz")
+        else if (count3==0)
+            puts("fizz")
+        else if (count5==0)
+            puts("buzz")
+        else
+            puts(itoa(i));
+        puts(" ");
+
+        count3 = count3+1;
+        if (count3 == 3)
+            count3 = 0;
+        count5 = count5+1;
+        if (count5 == 5)
+            count5 = 0;
+        i = i+1;
+    };
+
+    puts("\n");
+    puts("\n");
+};
+
 var sp = 0xffff;
 puts("Initial sp=0x"); puts(itoabase(*sp, 16)); puts("\n");
 optest();
@@ -193,4 +247,6 @@ fibtest();
 strtest();
 functest();
 ptrtest();
+looptest();
+fizzbuzz();
 puts("Final sp=0x"); puts(itoabase(*sp, 16)); puts("\n");
