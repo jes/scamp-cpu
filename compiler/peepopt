@@ -1,0 +1,103 @@
+#!/usr/bin/perl
+
+# Peephole optimiser for slangc
+
+use strict;
+use warnings;
+
+my $l1level = 0;
+my @l2;
+my $l2ldx;
+my $l3ldx;
+my $l4reg;
+my $l4constant;
+my $l4state = 0;
+
+while (<>) {
+    chomp;
+
+    next if $_ =~ /^#/;
+
+    level1($_);
+}
+
+level1('');
+
+# collapse "push x; pop x"
+sub level1 {
+    my ($line) = @_;
+
+    if ($line eq 'push x') {
+        $l1level++;
+    } elsif ($line eq 'pop x' && $l1level > 0) {
+        $l1level--;
+    } else {
+        level2("push x") for 1..$l1level;
+        level2($line);
+        $l1level = 0;
+    }
+}
+
+# turn "push CONSTANT; pop x" into "ld x, CONSTANT"
+sub level2 {
+    my ($line) = @_;
+
+    if ($line =~ /^push (\d+)$/) {
+        push @l2, $1;
+    } elsif ($line eq 'pop x' && @l2) {
+        $l2ldx = pop @l2;
+    } elsif ($line =~ /x|sp|r255|push|pop/) { # XXX: writes to (0xffff) won't trigger this
+        if (defined $l2ldx) {
+            level3("ld x, $l2ldx");
+            $l2ldx = undef;
+        }
+        while (defined (my $v = pop @l2)) {
+            level3("push $v");
+        }
+        level3("$line");
+    } else {
+        level3("$line");
+    }
+}
+
+# turn "ld x, CONSTANT; ld REG, x" into "ld REG, CONSTANT"
+sub level3 {
+    my ($line) = @_;
+
+    if ($line =~ /^ld x, (\d+)$/) {
+        $l3ldx = $1;
+    } elsif (defined $l3ldx && $line =~ /^ld r(\d+), x$/) {
+        level4("ld r$1, $l3ldx");
+        $l3ldx = undef;
+    } else {
+        level4("ld x, $l3ldx") if defined $l3ldx;
+        $l3ldx = undef;
+        level4("$line");
+    }
+}
+
+# turn "ld REG, CONSTANT; pop x; (add|sub|and|or) x, REG" into "pop x; (add|sub|and|or) x, CONSTANT"
+# XXX: potentially dubious because we leave the REG contents undefined, but I think
+# it's fine for the type of code that slangc generates in practice
+sub level4 {
+    my ($line) = @_;
+
+    if ($l4state == 0 && $line =~ /^ld r(\d+), (\d+)$/) {
+        $l4reg = $1;
+        $l4constant = $2;
+        $l4state = 1;
+    } elsif ($l4state == 1 && $line eq 'pop x') {
+        $l4state = 2;
+    } elsif ($l4state == 2 && $line =~ /^(add|sub|and|or) x, r$l4reg$/) {
+        # TODO: level5: "add/sub ..., 1" becomes "inc/dec ...", etc.
+        # TODO: level5: turn another layer of "push x/pop x" into a no-op again
+        print "pop x\n";
+        print "$1 x, $l4constant\n";
+        $l4state = 0;
+    } else {
+        print "ld r$l4reg, $l4constant\n" if $l4state >= 1;
+        print "pop x\n" if $l4state >= 2;
+        print "$line\n";
+        $l4state = 0;
+    }
+}

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Run a source file in the emulator
 
 if [ "$1" = "" ]; then
@@ -8,5 +8,6 @@ fi
 
 ./slangc < $1 > prog.s
 shift
-cat head.s prog.s foot.s | ../asm/asm > prog.hex
+# only peepopt prog.s because it's unsound on hand-written assembly code
+cat head.s <(./peepopt prog.s) foot.s | ../asm/asm > prog.hex
 ../emulator/scamp -r prog.hex $@
