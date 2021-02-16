@@ -186,6 +186,22 @@ var functest = func() {
         return globule;
     })));
     print("\n");
+
+    # this function produces no output, but will leave the sp incorrect if
+    # vars inside the function body interact poorly with early returns
+    var inlinevars = func(x) {
+        var y = x;
+        if (y > 100)
+            return 1;
+        var z = x+2;
+        if (z > 100)
+            return 1;
+        return 0;
+    };
+
+    inlinevars(97);
+    inlinevars(99);
+    inlinevars(101);
 };
 
 var ptrtest = func() {
