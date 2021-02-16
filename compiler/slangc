@@ -414,7 +414,6 @@ sub Parameters {
 }
 
 sub FunctionCall {
-    # TODO: allow "expression" instead of "identifier"
     return 0 if !(parse(\&Identifier) && parse(\&CharSkip,'('));
     my $id = $IDENTIFIER;
 
@@ -426,7 +425,7 @@ sub FunctionCall {
     die "argument list needs closing paren\n" if !(parse(\&Arguments) && parse(\&CharSkip, ')'));
 
     # call function
-    pushvar($id); # XXX: when we parseExpression() instead of parseIdentifier(), this push will happen automatically
+    pushvar($id);
     print "pop x\n";
     print "call x\n";
 
