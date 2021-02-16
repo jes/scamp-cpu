@@ -15,6 +15,7 @@ my $l3ldx;
 my $l4reg;
 my $l4constant;
 my $l4state = 0;
+my $l6ldx;
 
 while (<>) {
     chomp;
@@ -49,7 +50,7 @@ sub level2 {
         push @l2, $1;
     } elsif ($line eq 'pop x' && @l2) {
         $l2ldx = pop @l2;
-    } elsif ($line =~ /x|sp|r255|push|pop/) { # XXX: writes to (0xffff) won't trigger this
+    } elsif ($line =~ /call|x|sp|r255|push|pop/) { # XXX: writes to (0xffff) won't trigger this
         if (defined $l2ldx) {
             level3("ld x, $l2ldx");
             $l2ldx = undef;
@@ -116,12 +117,28 @@ sub level5 {
     if ($line =~ /^(add|sub|or) (x|sp|r\d+), 0$/ || $line =~ /^and (x|sp|r\d+), 65535$/) {
         # collapse to no-op (but note we don't set flags the same way we would have done)
     } elsif ($line =~ /^(add|sub|or) (x|sp|r\d+), 0 #peepopt:test$/ || $line =~ /^and (x|sp|r\d+), 65535 #peepopt:test$/) {
-        print "test $2\n";
+        level6("test $2");
     } elsif ($line =~ /^add (x|sp|r\d+), 1$/ || $line =~ /^sub (x|sp|r\d+), 65535$/) {
-        print "inc $1\n";
+        level6("inc $1");
     } elsif ($line =~ /^sub (x|sp|r\d+), 1$/ || $line =~ /^add (x|sp|r\d+), 65535$/) {
-        print "dec $1\n";
+        level6("dec $1");
     } else {
+        level6("$line");
+    }
+}
+
+# turn "ld x, (_foo); call x" into "call (_foo)"
+sub level6 {
+    my ($line) = @_;
+
+    if ($line =~ /^ld x, (\([a-zA-Z0-9_]+\))$/ && !defined $l6ldx) {
+        $l6ldx = $1;
+    } elsif ($line eq 'call x' && defined $l6ldx) {
+        print "call $l6ldx\n";
+        $l6ldx = undef;
+    } else {
+        print "ld x, $l6ldx\n" if defined $l6ldx;
+        $l6ldx = undef;
         print "$line\n";
     }
 }
