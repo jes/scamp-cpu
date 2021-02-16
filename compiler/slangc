@@ -261,9 +261,13 @@ sub ExpressionLevel {
 
     my $apply_op;
     while (1) {
-        return 0 if !parse(\&ExpressionLevel,$level+1);
-
-        genop($apply_op) if $apply_op;
+        my $match = parse(\&ExpressionLevel,$level+1);
+        if ($apply_op) {
+            die "operator $apply_op needs a second operand\n" if !$match;
+            genop($apply_op) if $apply_op;
+        } else {
+            return 0 if !$match;
+        }
 
         $apply_op = undef;
         for my $op (@{ $operators[$level] }) {
