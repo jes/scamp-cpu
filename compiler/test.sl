@@ -128,6 +128,12 @@ var optest = func() {
     print("(32767<-2)="); print(itoa(32767<-2)); print("\n");
     print("(32767<=-2)="); print(itoa(32767<=-2)); print("\n");
 
+    var x = 5;
+    var y = 10;
+    print("x="); print(itoa(x)); print("\n");
+    print("y="); print(itoa(y)); print("\n");
+    print("x>y-6="); print(itoa(x>y-6)); print("\n");
+
     print("\n");
 };
 

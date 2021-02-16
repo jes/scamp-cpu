@@ -249,11 +249,11 @@ sub Expression { return parse(\&ExpressionLevel,0); }
 sub ExpressionLevel {
     my ($level) = @_;
     my @operators = (
-        #['*','/','%'], # XXX: these will turn into function calls, if supported at all
-        ['+','-'],
-        ['&','|','^'],
-        ['==','!=','>=','<=','>','<'],
+        ['&','|','^'], # XXX: these should be precedence between == and +, but parsing forbids it for now due to collision with &&
         ['&&','||'],
+        ['==','!=','>=','<=','>','<'],
+        ['+','-'],
+        #['*','/','%'], # XXX: these will turn into function calls, if supported at all
     );
 
     return parse(\&Term) if $level == @operators;
