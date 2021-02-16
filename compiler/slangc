@@ -73,7 +73,7 @@ sub Program {
 
     # allocate space for globals
     for my $global (sort keys %{ $scope->{symbols} }) {
-        print "_$global: .word 0 # global\n" if !$scope->{symbols}{$global}{extern};
+        print "_$global: .word 0\n" if !$scope->{symbols}{$global}{extern};
     }
 
     # store string constants
@@ -236,9 +236,9 @@ sub Assignment {
         poptovar($id);
     } else {
         print "# store to pointer:\n";
-        print "pop x # value\n";
+        print "pop x\n";
         print "ld r0, x\n";
-        print "pop x # pointer\n";
+        print "pop x\n";
         print "ld (x), r0\n";
     }
     return 1;
