@@ -132,7 +132,7 @@ The implemented grammar is something like:
 
     program           ::= statements
     statements        ::= '' | (statement (';' statement)* ';'?)
-    statement         ::= block | extern | declaration | conditional | loop | return | assignment | expression
+    statement         ::= block | extern | declaration | conditional | loop | 'break' | 'continue' | return | assignment | expression
     block             ::= '{' statements '}'
     extern            ::= 'extern' identifier
     declaration       ::= ('var' identifier) | ('var' identifier '=' expression)
@@ -146,7 +146,7 @@ The implemented grammar is something like:
     expr1             ::= term (('&&'|'||') term)*
     expr2             ::= expr3 (('=='|'!='|'>='|'<='|'>'|'<') expr3)*
     expr3             ::= expr1 ([+-] expr1)*
-    term              ::= constant | func_call | address_of | unary_expr | paren_expr | identifier
+    term              ::= constant | func_call | address_of | preop | postop | unary_expr | paren_expr | identifier
     constant          ::= num_literal | str_literal | func_decl
     num_literal       ::= hex_literal | char_literal | dec_literal
     hex_literal       ::= '0x' [0-9a-fA-F]+
@@ -158,6 +158,8 @@ The implemented grammar is something like:
     func_call         ::= identifier '(' arguments ')'
     arguments         ::= '' | (expression (',' expression)* ','?)
     address_of        ::= '&' identifier
+    preop             ::= ('++' identifier) | ('--' identifier)
+    postop             ::= (identifier '++') | (identifier '--')
     unary_expr        ::= [!~*+-] term
     paren_expr        ::= '(' expression ')'
     identifier        ::= [a-zA-Z_] [a-zA-Z0-9_]*
