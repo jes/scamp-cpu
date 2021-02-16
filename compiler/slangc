@@ -18,7 +18,6 @@
 # TODO: annotate generated assembly code with the source code that generated it
 # TODO: emit code via a helper that performs peephole optimisation
 # TODO: warn if we know a function has been called with the wrong number of arguments
-# TODO: what happens if you declare a variable inside a loop? or a conditional?
 # TODO: fix all of the magnitude-comparison operators, and provide both signed
 #       and unsigned versions?
 
@@ -38,6 +37,7 @@ my $scope = {
 };
 my $globalscope = $scope;
 my $IDENTIFIER;
+my $BLOCKLEVEL = 0;
 
 parse(\&Program);
 
@@ -120,6 +120,7 @@ sub Extern {
 
 sub Declaration {
     return 0 if !parse(\&Keyword,'var');
+    die "var not allowed here\n" if $BLOCKLEVEL != 0;
     die "var needs identifier\n" if !parse(\&Identifier);
     my $id = $IDENTIFIER;
     die "duplicate declaration in scope: $id\n" if $scope->{symbols}{$id};
@@ -143,6 +144,7 @@ sub Declaration {
 
 sub Conditional {
     return 0 if !parse(\&Keyword,"if");
+    $BLOCKLEVEL++;
 
     die "if condition needs open paren\n" if !parse(\&CharSkip,"(");
     print "# if condition\n";
@@ -169,11 +171,13 @@ sub Conditional {
         print "$falselabel:\n";
     }
 
+    $BLOCKLEVEL--;
     return 1;
 }
 
 sub Loop {
     return 0 if !parse(\&Keyword,'while');
+    $BLOCKLEVEL++;
 
     die "while condition needs open paren\n" if !parse(\&CharSkip,'(');
 
@@ -194,6 +198,7 @@ sub Loop {
     print "jmp $loop\n";
     print "$endloop:\n";
 
+    $BLOCKLEVEL--;
     return 1;
 }
 
