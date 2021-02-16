@@ -225,7 +225,7 @@ sub Assignment {
         $id = $IDENTIFIER;
     } else {
         return 0 if !parse(\&CharSkip,'*');
-        die "can't dereference non-expression\n" if !parse(\&Expression);
+        die "can't dereference non-expression\n" if !parse(\&Term);
     }
 
     return 0 if !parse(\&CharSkip,'=');
@@ -305,7 +305,7 @@ sub HexLiteral {
 sub DecimalLiteral {
     my $pos0 = $pos;
     matchChar(qr/[-+]/);
-    return 0 if !matchChar(qr/[0-9]/);
+    return 0 if !matchChar(qr/\d/);
     while (matchChar(qr/\d/)) {}
 
     my $val = substr($s, $pos0, $pos-$pos0);
