@@ -15,9 +15,9 @@
 # AST and generate code as we "walk the call graph", i.e. as the compiler parses
 # the source.
 #
-# TODO: annotate generated assembly code with the source code that generated it
+# TODO: optionally annotate generated assembly code with the source code that
+#       generated it
 # TODO: emit code via a helper that performs peephole optimisation
-# TODO: warn if we know a function has been called with the wrong number of arguments
 # TODO: fix all of the magnitude-comparison operators, and provide both signed
 #       and unsigned versions?
 
