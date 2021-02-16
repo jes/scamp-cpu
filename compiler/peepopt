@@ -16,11 +16,13 @@ my $l4reg;
 my $l4constant;
 my $l4state = 0;
 my $l6ldx;
+my $l7ldxr0;
 
 while (<>) {
     chomp;
 
     next if $_ =~ /^#/;
+    next if $_ eq '';
 
     level1($_);
 }
@@ -134,11 +136,27 @@ sub level6 {
     if ($line =~ /^ld x, (\([a-zA-Z0-9_]+\))$/ && !defined $l6ldx) {
         $l6ldx = $1;
     } elsif ($line eq 'call x' && defined $l6ldx) {
-        print "call $l6ldx\n";
+        level7("call $l6ldx");
         $l6ldx = undef;
     } else {
-        print "ld x, $l6ldx\n" if defined $l6ldx;
+        level7("ld x, $l6ldx") if defined $l6ldx;
         $l6ldx = undef;
+        level7("$line");
+    }
+}
+
+# collapse "ld x, r0; ld r0, x"
+sub level7 {
+    my ($line) = @_;
+
+    if ($line eq 'ld x, r0') {
+        $l7ldxr0 = 1;
+    } elsif ($line eq 'ld r0, x' && $l7ldxr0) {
+        # no-op
+        $l7ldxr0 = 0;
+    } else {
+        print "ld x, r0\n" if $l7ldxr0;
+        $l7ldxr0 = 0;
         print "$line\n";
     }
 }
