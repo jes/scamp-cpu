@@ -19,6 +19,7 @@ my $l6ldx;
 my $l7ldxr0;
 my $l8remove;
 my $l9ldxx = 0;
+my $l10reg;
 
 while (<>) {
     chomp;
@@ -181,11 +182,24 @@ sub level9 {
     if (!$l9ldxx && $line eq "ld x, (x)") {
         $l9ldxx = 1;
     } elsif ($l9ldxx && $line =~ /^ld r(\d+), x$/) {
-        print "ld r$1, (x)\n";
+        level10("ld r$1, (x)");
         $l9ldxx = 0;
     } else {
-        print "ld x, (x)\n" if $l9ldxx;
+        level10("ld x, (x)") if $l9ldxx;
         $l9ldxx = 0;
+        level10("$line");
+    }
+}
+
+# collapse "ld x, REG; ld x, REG; ld x, REG" into just 1 load
+sub level10 {
+    my ($line) = @_;
+
+    if ($line =~ /^ld x, (r\d+)$/) {
+        $l10reg = $1;
+    } else {
+        print "ld x, $l10reg\n" if defined $l10reg;
+        $l10reg = undef;
         print "$line\n";
     }
 }
