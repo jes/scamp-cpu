@@ -17,7 +17,6 @@
 #
 # TODO: optionally annotate generated assembly code with the source code that
 #       generated it
-# TODO: emit code via a helper that performs peephole optimisation
 # TODO: fix all of the magnitude-comparison operators, and provide both signed
 #       and unsigned versions?
 
