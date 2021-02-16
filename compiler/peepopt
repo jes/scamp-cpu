@@ -18,6 +18,7 @@ my $l4state = 0;
 my $l6ldx;
 my $l7ldxr0;
 my $l8remove;
+my $l9ldxx = 0;
 
 while (<>) {
     chomp;
@@ -169,6 +170,22 @@ sub level8 {
     my ($line) = @_;
 
     $l8remove = 0 if $line =~ /:/;
-    print "$line\n" if !$l8remove;
+    level9("$line") if !$l8remove;
     $l8remove = 1 if $line eq 'ret';
+}
+
+# turn "ld x, (x); ld REG, x" into "ld REG, (x)"
+sub level9 {
+    my ($line) = @_;
+
+    if (!$l9ldxx && $line eq "ld x, (x)") {
+        $l9ldxx = 1;
+    } elsif ($l9ldxx && $line =~ /^ld r(\d+), x$/) {
+        print "ld r$1, (x)\n";
+        $l9ldxx = 0;
+    } else {
+        print "ld x, (x)\n" if $l9ldxx;
+        $l9ldxx = 0;
+        print "$line\n";
+    }
 }
