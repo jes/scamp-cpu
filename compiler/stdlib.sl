@@ -15,13 +15,13 @@ var divmod = func(num, denom, pdiv, pmod) {
     while (i >= 0) {
         R = R+R;
         if (num & *(powers_of_2+i)) {
-            R = R + 1;
+            R++;
         };
         if (R >= denom) {
             R = R - denom;
             Q = Q | *(powers_of_2+i);
         };
-        i = i - 1;
+        i--;
     };
 
     *pdiv = Q;
@@ -42,13 +42,13 @@ var itoabase = func(num, base) {
 
     # special case when num == 0
     if (num == 0) {
-        s = s - 1;
+        s--;
         *s = '0';
         return s;
     };
 
     while (num != 0) {
-        s = s - 1;
+        s--;
         divmod(num, base, &d, &m);
         *s = *(itoa_alphabet + m);
         num = d;

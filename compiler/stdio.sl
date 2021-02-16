@@ -32,7 +32,6 @@ var gets = func(s, size) {
 
 var puts = func(s) {
     while (*s) {
-        putchar(*s);
-        s = s + 1;
+        putchar(*(s++));
     }
 };

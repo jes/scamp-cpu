@@ -18,7 +18,7 @@ var strrev = func(s) {
     var p = s;
 
     while (*(p+1)) {
-        p = p + 1;
+        p++;
     };
 
     var ch;
@@ -27,8 +27,8 @@ var strrev = func(s) {
         ch = *p;
         *p = *s;
         *s = ch;
-        p = p-1;
-        s = s+1;
+        p--;
+        s++;
     };
 
     return ss;
@@ -85,11 +85,10 @@ var fibtest = func() {
 
     puts("Fibonacci numbers:\n");
 
-    while (n <= 22) {
+    while (n++ <= 22) {
         f3 = f1 + f2;
         f1 = f2;
         f2 = f3;
-        n = n + 1;
 
         # TODO: printf()
         puts("fib("); puts(itoa(n)); puts(") = ");
@@ -136,7 +135,7 @@ var functest = func() {
     };
 
     puts("2. 5 = "); puts(itoa(f(func() {
-        globule = globule + 1;
+        globule++;
         return globule;
     })));
     puts("\n");
@@ -191,8 +190,7 @@ var looptest = func() {
 
     puts("loop break/continue:\n");
 
-    while (i < 100) {
-        i = i + 1;
+    while (i++ < 100) {
         puts(itoa(i));
         puts(": ");
         if (i >= 20) {
@@ -212,11 +210,11 @@ var looptest = func() {
 var fizzbuzz = func() {
     var count3 = 1;
     var count5 = 1;
-    var i = 1;
+    var i = 0;
 
     puts("fizzbuzz:\n");
 
-    while (i < 100) {
+    while (i++ < 99) {
         if (count3==0 && count5==0)
             puts("fizzbuzz")
         else if (count3==0)
@@ -233,7 +231,6 @@ var fizzbuzz = func() {
         count5 = count5+1;
         if (count5 == 5)
             count5 = 0;
-        i = i+1;
     };
 
     puts("\n");

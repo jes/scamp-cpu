@@ -334,7 +334,7 @@ sub ExpressionLevel {
 }
 
 sub Term {
-    return 1 if parse(\&Constant) || parse(\&FunctionCall) || parse(\&AddressOf) || parse(\&UnaryExpression) || parse(\&ParenExpression);
+    return 1 if parse(\&Constant) || parse(\&FunctionCall) || parse(\&AddressOf) || parse(\&UnaryExpression) || parse(\&ParenExpression) || parse(\&PostOp);
     return 0 if !parse(\&Identifier);
     pushvar($IDENTIFIER);
     return 1;
@@ -561,6 +561,28 @@ sub ParenExpression {
     return 0 if !parse(\&CharSkip,'(');
     return 1 if parse(\&Expression) && parse(\&CharSkip,')');
     return 0;
+}
+
+sub PostOp {
+    return 0 if !parse(\&Identifier);
+    skip();
+    my $id = $IDENTIFIER;
+    my $op;
+    if (parse(\&String,"++")) {
+        $op = 'inc';
+    } elsif (parse(\&String,"--")) {
+        $op = 'dec';
+    } else {
+        return 0;
+    }
+    skip();
+    print "# post-$op\n";
+    pushvar($IDENTIFIER);
+    print "pop x\n";
+    print "push x\n"; # for the expression that the post-op appeared in
+    print "$op x\n";
+    print "push x\n"; # for poptovar
+    poptovar($IDENTIFIER);
 }
 
 sub Identifier {
