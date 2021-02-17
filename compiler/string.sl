@@ -20,3 +20,11 @@ var strlen = func(s) {
     while (*ss) ss++;
     return ss - s;
 };
+
+var memset = func(s, val, len) {
+    var ss = s;
+    while (len--) {
+        *(s++) = val;
+    };
+    return ss;
+};

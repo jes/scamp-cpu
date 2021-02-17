@@ -191,9 +191,11 @@ _pwr2: .word pwr2
 _powers_of_2: .word powers_of_2
 _inp: .word inp
 _outp: .word outp
-_INITIAL_SP: .word INITIAL_SP
 _TOP: .word TOP
 
+# leave a gap for the stack to live in
 .gap STACKSZ
 INITIAL_SP: .word 0
+
+# top of program address
 TOP:

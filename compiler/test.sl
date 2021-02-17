@@ -4,6 +4,8 @@ include "stdio.sl";
 include "stdlib.sl";
 include "string.sl";
 
+extern mul;
+
 # recursive fibonacci
 var rfib = func(n) {
     if (n <= 2)
@@ -236,6 +238,51 @@ var fizzbuzz = func() {
     puts("\n");
 };
 
+var primestest = func() {
+    var maxprime = 1000;
+    var prime = malloc(maxprime);
+    memset(prime, 1, maxprime);
+
+    # output the difference between "prime" and the next malloc, to highlight any changes
+    var x = malloc(1);
+    puts("x-prime="); puts(itoa(x-prime)); puts("\n\n");
+
+    puts("primes:\n");
+
+    *(prime+0) = 0;
+    *(prime+1) = 0;
+    *(prime+2) = 1;
+
+    var i = 1;
+    var isqr;
+    var j;
+    while (i < maxprime) {
+        if (*(prime+i)) {
+            j = i+i;
+            while (j < maxprime) {
+                *(prime+j) = 0;
+                j = j + i;
+            };
+        };
+        i = i + 2;
+    };
+
+    puts("2");
+    i = 3;
+    while (i < maxprime) {
+        if (*(prime+i)) {
+            puts(" ");
+            puts(itoa(i));
+        };
+        i = i + 2;
+    };
+
+    puts("\n");
+    puts("\n");
+
+    free(prime);
+};
+
 var sp = 0xffff;
 var initial_sp = *sp;
 optest();
@@ -245,5 +292,6 @@ functest();
 ptrtest();
 looptest();
 fizzbuzz();
+primestest();
 var new_sp = *sp;
 puts("sp change="); puts(itoa(new_sp-initial_sp)); puts("\n");

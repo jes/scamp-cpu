@@ -33,6 +33,7 @@ var divmod = func(num, denom, pdiv, pmod) {
 var itoa_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 # returns pointer to static buffer
+# "base" should range from 2 to 36
 var itoabase = func(num, base) {
     var s = "storage space here";
     var d;
@@ -57,3 +58,15 @@ var itoabase = func(num, base) {
 
 # returns pointer to static buffer
 var itoa = func(num) return itoabase(num, 10);
+
+extern TOP;
+
+var malloc = func(sz) {
+    var oldtop = TOP;
+    TOP = TOP + sz;
+    return oldtop;
+};
+
+var free = func(p) {
+    # TODO: free
+};
