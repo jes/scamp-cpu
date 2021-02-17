@@ -507,7 +507,7 @@ sub PreOp {
         return 0;
     }
     skip();
-    return 0 if !parse(\&Identifier);
+    return 0 if !parse(\&Identifier); # TODO: accept any l-value
     skip();
     print "# pre-$op\n";
     pushvar($IDENTIFIER);
@@ -519,7 +519,7 @@ sub PreOp {
 }
 
 sub PostOp {
-    return 0 if !parse(\&Identifier);
+    return 0 if !parse(\&Identifier); # TODO: accept any l-value
     skip();
     my $id = $IDENTIFIER;
     my $op;
