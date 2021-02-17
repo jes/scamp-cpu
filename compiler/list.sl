@@ -2,6 +2,11 @@
 #
 # A list consists of a head element pointer and a tail element pointer.
 # An element consists of a value and a next element pointer.
+#
+# TODO: make it doubly-linked so that lstpop() is O(1)?
+# TODO: insert element at given index
+# TODO: retrieve element at given index
+# TODO: delete element at given index
 
 # return a pointer to the empty list
 var lstnew = func() {
