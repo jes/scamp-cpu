@@ -237,7 +237,7 @@ var fizzbuzz = func() {
 };
 
 var sp = 0xffff;
-puts("Initial sp=0x"); puts(itoabase(*sp, 16)); puts("\n");
+var initial_sp = *sp;
 optest();
 fibtest();
 strtest();
@@ -245,4 +245,5 @@ functest();
 ptrtest();
 looptest();
 fizzbuzz();
-puts("Final sp=0x"); puts(itoabase(*sp, 16)); puts("\n");
+var new_sp = *sp;
+puts("sp change="); puts(itoa(new_sp-initial_sp)); puts("\n");
