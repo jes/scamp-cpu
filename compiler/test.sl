@@ -3,6 +3,7 @@
 include "stdio.sl";
 include "stdlib.sl";
 include "string.sl";
+include "list.sl";
 
 extern mul;
 
@@ -46,7 +47,6 @@ var optest = func() {
     puts("~a="); puts(itoa(~a)); puts("\n");
     puts("-b="); puts(itoa(-b)); puts("\n");
     puts("+a="); puts(itoa(+a)); puts("\n");
-    puts("&a="); puts(itoa(&a)); puts("\n");
     puts("a+b="); puts(itoa(a+b)); puts("\n");
     puts("a-b="); puts(itoa(a-b)); puts("\n");
     puts("a&b="); puts(itoa(a&b)); puts("\n");
@@ -283,6 +283,40 @@ var primestest = func() {
     free(prime);
 };
 
+var l2;
+var listtest = func() {
+    var l = lstnew();
+
+    puts("list:\n");
+
+    lstpush(l, 3);
+    lstpush(l, 4);
+    lstunshift(l, 2);
+    lstunshift(l, 1);
+
+    lstwalk(l, func(v) { puts(itoa(v)); puts(" "); });
+    puts("\nlength = "); puts(itoa(lstlen(l)));
+    puts("\npop "); puts(itoa(lstpop(l)));
+    puts("\nlength = "); puts(itoa(lstlen(l))); puts("\n");
+
+    # reverse l into l2 (l2 has to be a global because the callback can't access
+    # the local stack frame)
+    l2 = lstnew();
+    lstwalk(l, func(v) {
+        lstunshift(l2, v);
+    });
+
+    lstwalk(l2, func(v) { puts(itoa(v)); puts(" "); });
+    puts("\nlength = "); puts(itoa(lstlen(l2)));
+    puts("\nshift "); puts(itoa(lstshift(l2)));
+    puts("\nlength = "); puts(itoa(lstlen(l2))); puts("\n");
+
+    puts("\n");
+
+    lstfree(l);
+    lstfree(l2);
+};
+
 var sp = 0xffff;
 var initial_sp = *sp;
 optest();
@@ -293,5 +327,6 @@ ptrtest();
 looptest();
 fizzbuzz();
 primestest();
+listtest();
 var new_sp = *sp;
 puts("sp change="); puts(itoa(new_sp-initial_sp)); puts("\n");
