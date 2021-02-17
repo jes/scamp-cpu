@@ -19,6 +19,9 @@
 #       generated it
 # TODO: fix all of the magnitude-comparison operators, and provide both signed
 #       and unsigned versions?
+# TODO: some way to include assembly code
+# TODO: some way to include files only the first time (maybe *only* work that way? how
+#       often is it actually useful to be able to include a file multiple times?)
 
 use strict;
 use warnings;
@@ -233,7 +236,8 @@ sub Loop {
     print "jz $endloop\n";
 
     die "while loop needs close paren\n" if !parse(\&CharSkip,')');
-    die "while loop needs body\n" if !parse(\&Statement);
+
+    parse(\&Statement); # optional
 
     print "jmp $loop\n";
     print "$endloop:\n";

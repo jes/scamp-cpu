@@ -28,3 +28,16 @@ var memset = func(s, val, len) {
     };
     return ss;
 };
+
+var strcpy = func(dest, src) {
+    var dd = dest;
+    while (*src)
+        *(dest++) = *(src++);
+    return dd;
+};
+
+var strdup = func(s) {
+    var ss = malloc(strlen(s)+1);
+    strcpy(ss, s);
+    return ss;
+};

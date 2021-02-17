@@ -63,6 +63,7 @@ extern TOP;
 
 var malloc = func(sz) {
     var oldtop = TOP;
+    # TODO: die if this is going to exceed TPA
     TOP = TOP + sz;
     return oldtop;
 };
