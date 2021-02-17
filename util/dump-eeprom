@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Time::HiRes qw(usleep);
+
+my $dev = shift or die "usage: dump-eeprom DEVICE\ne.g. \$ dump-eeprom /dev/ttyACM0\n";
+
+# configure serial port
+# no idea what the hex numbers mean, I got them from "stty -g" after getting the port into a workable state using Arduino serial monitor
+system("stty -F \Q$dev\E 0:0:18b2:0:3:1c:7f:15:4:0:0:0:11:13:1a:0:12:f:17:16:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0");
+open(my $fh, '+<', $dev)
+    or die "can't open $dev: $!\n";
+
+print STDERR "Please close the jumper and hit ENTER...\n";
+<>;
+dump_eeprom();
+
+print STDERR "Please open the jumper and hit ENTER...\n";
+<>;
+dump_eeprom();
+
+sub dump_eeprom {
+    for my $addr (0 .. 1023) {
+        print $fh "read $addr\n";
+        usleep(10000);
+        my $l = <$fh>;
+        $l =~ s/[\0\r\n]//g;
+        die "read $addr: ($l)\n" if $l !~ /^\d+$/;
+        print sprintf("%02x\n", $l);
+        my $pct = $addr / 1023;
+        print STDERR sprintf("   \r%d%%", 100*$pct);
+    }
+    print STDERR "\n";
+}
