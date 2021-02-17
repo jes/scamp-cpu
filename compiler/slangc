@@ -376,7 +376,7 @@ sub CharacterLiteral {
         genliteral(ord($c));
     }
     
-    return 1 if (parse(\&Char,"'") && skip());
+    return 1 if parse(\&CharSkip,"'");
     die "illegal character literal\n";
 }
 
