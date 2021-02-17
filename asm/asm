@@ -92,7 +92,7 @@ while (my $line = <>) {
         emit(0x0000) for (1 .. numarg($args[0]));
     } elsif ($op eq '.word') {
         params($op, 1, @args);
-        if ($args[0] =~ /^([a-z_][a-z_0-9]*)$/) {
+        if ($args[0] =~ /^([a-z_][a-z_0-9]*)$/i) {
             emit($args[0]);
         } else {
             emit(numarg($args[0]));
