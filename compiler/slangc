@@ -48,6 +48,10 @@ my $CONTLABEL;
 
 parse(\&Program);
 
+my $end = label();
+# jump over the globals and strings
+print "jmp $end\n";
+
 # allocate space for globals
 for my $global (sort keys %{ $scope->{symbols} }) {
     print "_$global: .word 0\n" if !$scope->{symbols}{$global}{extern};
@@ -59,6 +63,7 @@ for my $s (@STRINGS) {
     print ".word $_\n" for map { ord($_) } split //, $s->{string};
     print ".word 0\n";
 }
+print "$end:\n";
 
 # parse() is a wrapper around the parser functions:
 # call $f->(@args) and return whether it matched; if it did not match, then
