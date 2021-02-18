@@ -33,6 +33,7 @@ uint16_t diskptr = 0;
 uint16_t disk[65536];
 
 uint64_t pc_cycles[65536];
+uint16_t last_instr[65536];
 uint64_t opcode_cycles[256];
 FILE *profile_fp;
 
@@ -81,8 +82,6 @@ void open_profile(char *file) {
 void write_profile(int argc, char **argv, int cycles, uint64_t elapsed_us) {
     int i;
 
-    printf("WRITE PROFILE\n");
-
     fprintf(profile_fp, "scamp-profile\n");
     fprintf(profile_fp, "endtime: %ld\n", time(0));
     fprintf(profile_fp, "cmdline: %s", argv[0]);
@@ -94,6 +93,9 @@ void write_profile(int argc, char **argv, int cycles, uint64_t elapsed_us) {
     fprintf(profile_fp, "pc_cycles:\n");
     for (i = 0; i < 65536; i++)
         fprintf(profile_fp, "%lu\n", pc_cycles[i]);
+    fprintf(profile_fp, "last_instr:\n");
+    for (i = 0; i < 65536; i++)
+        fprintf(profile_fp, "%d\n", last_instr[i]);
     fprintf(profile_fp, "opcode_cycles:\n");
     for (i = 0; i < 256; i++)
         fprintf(profile_fp, "%lu\n", opcode_cycles[i]);
@@ -181,6 +183,7 @@ void negedge(void) {
     } while (RT); /* loop until !RT because RT resets T-state immediately */
 
     pc_cycles[PC]++;
+    last_instr[PC] = instr;
     opcode_cycles[opcode]++;
 
     if (T == 1 && debug)
