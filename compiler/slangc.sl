@@ -504,7 +504,7 @@ DecimalLiteral = func(x) {
     while (parse(AnyChar,"0123456789"));
     var was = *(input+pos);
     *(input+pos) = 0;
-    var v = atoibase(input+pos0, 16);
+    var v = atoibase(input+pos0, 10);
     if (*(input+pos0-1) == '-') genliteral(-v)
     else genliteral(v);
     *(input+pos) = was;
