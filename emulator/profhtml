@@ -39,7 +39,7 @@ table {
 table.pc td {
     padding: 0;
     margin: 0;
-    min-width: 4px;
+    min-width: 4.5px;
     border: none;
 }
 table.pc th {
@@ -58,6 +58,9 @@ td:hover div.popup {
 td div.popup {
     display: none;
 }
+td:hover {
+    outline: solid 1px black !important;
+}
 div.popup {
     font-family: monospace;
     pointer-events: none;
@@ -65,7 +68,6 @@ div.popup {
     border: none;
     margin: none;
     padding: none;
-    background: #eee;
     width: 200px;
 }
 </style>
@@ -90,7 +92,7 @@ sub pc_cycles {
             $popuphtml .= "Cycles: <b>$pc_cycles[$addr] " . sprintf("(%.01f%% max)", 100*$pc_cycles[$addr]/$max_cycles) . "</b><br>";
             $popuphtml .= "Instruction: <b>" . ($pc_cycles[$addr] ? sprintf("%04x",$last_instr[$addr]) : "-") . "</b><br>";
 
-            print "<td style=\"background-color:" . heatcolour($pc_cycles[$addr], $max_cycles) . "\"><div class=\"popup\">$popuphtml</div></td>";
+            print "<td style=\"background-color:" . heatcolour($pc_cycles[$addr], $max_cycles, 1.0) . "\"><div class=\"popup\" style=\"background-color:" . heatcolour($pc_cycles[$addr], $max_cycles, 0.4) . "\">$popuphtml</div></td>";
         }
         print "</tr>\n";
     }
@@ -112,7 +114,7 @@ sub opcode_cycles {
             my $popuphtml = "<br>Opcode: ".sprintf("<b>%02x</b>",$op)."<br>";
             $popuphtml .= "Cycles: <b>$opcode_cycles[$op] " . sprintf("(%.01f%% max)", 100*$opcode_cycles[$op]/$max_cycles) . "</b><br>";
 
-            print "<td style=\"background-color:" . heatcolour($opcode_cycles[$op], $max_cycles) . "\"><div class=\"popup\">$popuphtml</div></td>";
+            print "<td style=\"background-color:" . heatcolour($opcode_cycles[$op], $max_cycles, 1.0) . "\"><div class=\"popup\" style=\"background-color:" . heatcolour($opcode_cycles[$op], $max_cycles, 0.4) . "\">$popuphtml</div></td>";
         }
         print "</tr>\n";
     }
@@ -127,9 +129,9 @@ sub footer {
 }
 
 sub heatcolour {
-    my ($v, $max) = @_;
+    my ($v, $max, $opacity) = @_;
 
-    return "rgb(255,255,255)" if $v == 0;
+    return "rgba(255,255,255,$opacity)" if $v == 0;
 
     my @cold = (227,231,239);
     my @hot = (255,0,0);
@@ -137,7 +139,7 @@ sub heatcolour {
     my $k = $v / $max;
 
     my @col = map { $cold[$_]+($hot[$_]-$cold[$_])*$k } 0..2;
-    return 'rgb(' . join(',',@col) . ')';
+    return 'rgba(' . join(',',@col,$opacity) . ')';
 }
 
 sub readval {
