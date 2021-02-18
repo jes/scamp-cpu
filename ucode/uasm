@@ -103,6 +103,7 @@ my %alu = (
 );
 
 my $opcode = -1;
+my $mnemonic;
 
 my @ucode;
 
@@ -116,6 +117,7 @@ while (<>) {
     next if $_ eq '';
 
     if (/^([a-z_0-9, \(\)\+-]+): ?([0-9a-f]*)$/i) { # new instruction starts
+        $mnemonic = $1;
         $opcode++;
         die "line $.: too many opcodes: >$MAX_OPCODE\n" if $opcode > $MAX_OPCODE;
 
@@ -191,7 +193,7 @@ sub encode {
     die "line $.: RT with ALU not allowed: $uinstr\n" if $have_alu && $uinstr =~ /\bRT\b/;
     die "line $.: P+ with ALU not allowed: $uinstr\n" if $have_alu && $uinstr =~ /\bP\+/;
 
-    warn "line $.: busout with no busin probably makes no sense: $uinstr\n" if ($have_busout && !$have_busin && !$have_jmp);
+    warn "line $.: busout with no busin probably makes no sense: $uinstr\n" if ($have_busout && !$have_busin && !$have_jmp && $mnemonic ne 'slownop');
     warn "line $.: busin with no busout probably makes no sense (will get PC on bus, please specify 'PO'): $uinstr\n" if ($have_busin && !$have_busout && !$have_alu);
 
     # the "EO" bit is active-low, so needs toggling:
