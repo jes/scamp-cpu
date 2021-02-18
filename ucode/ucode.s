@@ -871,8 +871,8 @@ ld (i16), (i8h): # Load <tt>r</tt> into the value in <tt>(i16)</tt>.
     IOH AI
     MO YI
     PO AI
-    MO AI
-    MI YO P+
+    MO AI P+
+    MI YO
 
 ld (i8h), i16: # Load <tt>i16</tt> into <tt>r</tt>.
     PO AI
