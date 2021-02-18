@@ -691,8 +691,14 @@ Identifier = func(x) {
 };
 
 var buf = malloc(16384);
-*buf = 0;
-while (gets(buf+strlen(buf), 16384)); # XXX: bad
+var p = buf;
+var ch = 0;
+while (1) {
+    ch = getchar();
+    if (ch == EOF) break;
+    *(p++) = ch;
+};
+*p = 0;
 
 parse_init(buf);
 parse(Program,0);

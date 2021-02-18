@@ -71,7 +71,7 @@ sub parse {
 
     local $SIG{__DIE__} = sub {
         my ($err) = @_;
-        die "error: $filename: line $line0: col $col0: $err";
+        die "error: $filename: line $line: col $col: $err";
     };
     return 1 if $f->(@args);
 
