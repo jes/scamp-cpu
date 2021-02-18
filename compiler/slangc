@@ -229,14 +229,14 @@ sub Loop {
 
     print "# while loop\n";
     print "$loop:\n";
-    die "while loop needs expression\n" if !parse(\&Expression);
+    die "while condition needs expression\n" if !parse(\&Expression);
 
     # if top of stack is 0, jmp $endloop
     print "pop x\n";
     print "test x\n";
     print "jz $endloop\n";
 
-    die "while loop needs close paren\n" if !parse(\&CharSkip,')');
+    die "while condition needs close paren\n" if !parse(\&CharSkip,')');
 
     parse(\&Statement); # optional
 
@@ -422,7 +422,7 @@ sub StringLiteralText {
 
 sub FunctionDeclaration {
     return 0 if !parse(\&Keyword,'func');
-    die "func needs open parenn" if !parse(\&CharSkip,'(');
+    die "func needs open paren" if !parse(\&CharSkip,'(');
 
     my @params = Parameters();
     my $functionlabel = label();
