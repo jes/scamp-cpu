@@ -8,8 +8,10 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <string.h>
 #include <sys/time.h>
+#include <time.h>
 #include <unistd.h>
 
 int test, debug, stacktrace, cyclecount, show_help, test_fail, freq, watch=-1;
@@ -29,6 +31,10 @@ uint8_t T, Z, LT;
 
 uint16_t diskptr = 0;
 uint16_t disk[65536];
+
+uint64_t pc_cycles[65536];
+uint64_t opcode_cycles[256];
+FILE *profile_fp;
 
 void load_hex(uint16_t *buf, int maxlen, char *name) {
     FILE *fp;
@@ -63,6 +69,35 @@ void load_ram(uint16_t addr, char *file) {
 
 void load_disk(char *file) {
     load_hex(disk, 65536, file);
+}
+
+void open_profile(char *file) {
+    if (!(profile_fp = fopen(file, "w"))) {
+        fprintf(stderr, "can't write %s: %s\n", file, strerror(errno));
+        exit(1);
+    }
+}
+
+void write_profile(int argc, char **argv, int cycles, uint64_t elapsed_us) {
+    int i;
+
+    printf("WRITE PROFILE\n");
+
+    fprintf(profile_fp, "scamp-profile\n");
+    fprintf(profile_fp, "endtime: %ld\n", time(0));
+    fprintf(profile_fp, "cmdline: %s", argv[0]);
+    for (i = 1; i < argc; i++)
+        fprintf(profile_fp, " %s", argv[i]);
+    fprintf(profile_fp, "\n");
+    fprintf(profile_fp, "cycles: %d\n", cycles);
+    fprintf(profile_fp, "elapsed_us: %lu\n", elapsed_us);
+    fprintf(profile_fp, "pc_cycles:\n");
+    for (i = 0; i < 65536; i++)
+        fprintf(profile_fp, "%lu\n", pc_cycles[i]);
+    fprintf(profile_fp, "opcode_cycles:\n");
+    for (i = 0; i < 256; i++)
+        fprintf(profile_fp, "%lu\n", opcode_cycles[i]);
+    fclose(profile_fp);
 }
 
 /* compute ALU operation */
@@ -144,6 +179,9 @@ void negedge(void) {
         if (RT) T = 0;
         else    T = (T+1) % 8;
     } while (RT); /* loop until !RT because RT resets T-state immediately */
+
+    pc_cycles[PC]++;
+    opcode_cycles[opcode]++;
 
     if (T == 1 && debug)
         fprintf(stderr, "[trace] PC=%04x\n", PC);
@@ -243,15 +281,16 @@ void help(void) {
     printf("usage: scamp [-d]\n"
 "\n"
 "Options:\n"
-"  -c,--cycles      Print number of cycles taken\n"
-"  -d,--debug       Print debug output after each clock cycle\n"
-"  -f,--freq HZ     Aim to emulate a clock of the given frequency\n"
-"  -i,--image FILE  Load disk image from given hex file\n"
-"  -s,--stack       Trace the stack\n"
-"  -t,--test        Check whether the test ROM passes the tests\n"
-"  -r,--run FILE    Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
-"  -w,--watch ADDR  Watch for changes to the given address and print them on stderr\n"
-"  -h,--help        Show this help text\n"
+"  -c,--cycles        Print number of cycles taken\n"
+"  -d,--debug         Print debug output after each clock cycle\n"
+"  -f,--freq HZ       Aim to emulate a clock of the given frequency\n"
+"  -i,--image FILE    Load disk image from given hex file\n"
+"  -p,--profile FILE  Write profiling data to FILE\n"
+"  -r,--run FILE      Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
+"  -s,--stack         Trace the stack\n"
+"  -t,--test          Check whether the test ROM passes the tests\n"
+"  -w,--watch ADDR    Watch for changes to the given address and print them on stderr\n"
+"  -h,--help          Show this help text\n"
 "\n"
 "This emulator loads the microcode from ../ucode.hex and boot ROM from ../bootrom.hex.\n"
 "If --test, boot ROM is replaced with a test ROM from ../testrom.hex.\n"
@@ -260,11 +299,15 @@ void help(void) {
     exit(1);
 }
 
+void sighandler(int sig) {
+    halt = 1;
+}
+
 int main(int argc, char **argv) {
     int steps = 0;
     int jmp0x100 = 0;
     struct timeval starttime, curtime;
-    unsigned long long elapsed_us, target_us;
+    uint64_t elapsed_us, target_us;
 
     setbuf(stdout, NULL);
 
@@ -275,28 +318,30 @@ int main(int argc, char **argv) {
             {"debug", no_argument, &debug,     1},
             {"freq",  required_argument,  0, 'f'},
             {"image", required_argument,  0, 'i'},
+            {"profile",required_argument, 0, 'p'},
+            {"run",   required_argument,  0, 'r'},
             {"stack", no_argument, &stacktrace,1},
             {"test",  no_argument, &test,      1},
-            {"help",  no_argument, &show_help, 1},
-            {"run",   required_argument,  0, 'r'},
             {"watch", required_argument,  0, 'w'},
+            {"help",  no_argument, &show_help, 1},
             {0, 0, 0, 0},
         };
 
         int optidx = 0;
-        int c = getopt_long(argc, argv, "cdf:i:hstr:w:", opts, &optidx);
+        int c = getopt_long(argc, argv, "cdf:i:hp:r:stw:", opts, &optidx);
 
         if (c == -1) break;
         if (c == 'c') cyclecount = 1;
         if (c == 'd') debug = 1;
         if (c == 'f') freq = atoi(optarg);
         if (c == 'i') load_disk(optarg);
-        if (c == 's') stacktrace = 1;
-        if (c == 't') test = 1;
+        if (c == 'p') open_profile(optarg);
         if (c == 'r') {
             load_ram(0x100, optarg);
             jmp0x100 = 1;
         }
+        if (c == 's') stacktrace = 1;
+        if (c == 't') test = 1;
         if (c == 'w') watch = atoi(optarg);
 
         if (c == 'h') show_help = 1;
@@ -311,6 +356,8 @@ int main(int argc, char **argv) {
     } else {
         PC = 0x100;
     }
+
+    signal(SIGINT, sighandler);
 
     gettimeofday(&starttime, NULL);
 
@@ -333,6 +380,9 @@ int main(int argc, char **argv) {
 
     if (cyclecount)
         fprintf(stderr, "[cycles] Halted after %d cycles.\n", steps);
+
+    if (profile_fp)
+        write_profile(argc, argv, steps, elapsed_us);
 
     return test_fail;
 }
