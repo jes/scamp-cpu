@@ -29,6 +29,13 @@ var memset = func(s, val, len) {
     return ss;
 };
 
+var memcpy = func(dest, src, len) {
+    var dd = dest;
+    while (len--)
+        *(dest++) = *(src++);
+    return dd;
+};
+
 var strcpy = func(dest, src) {
     var dd = dest;
     while (*src)

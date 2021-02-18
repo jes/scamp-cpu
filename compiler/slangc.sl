@@ -27,6 +27,7 @@
 include "stdio.sl";
 include "stdlib.sl";
 include "string.sl";
+include "list.sl";
 include "parse.sl";
 
 var die = func(s) {
@@ -71,10 +72,137 @@ var UnaryExpression;
 var ParenExpression;
 var Identifier;
 
+# store identifier value parsed by Identifier()
+var IDENTIFIER = malloc(128);
+
+# EXTERNS and GLOBALS are lists of pointers variable names
+var EXTERNS;
+var GLOBALS;
+# SCOPES is a list of pointers to scopes
+# each scope if a list of pointers to tuples of (name,bp_rel)
+var SCOPES;
+var SCOPELEVEL = 0;
+var BLOCKLEVEL = 0;
+var LABELNUM = 0;
+
+var addextern = func(name) {
+    lstpush(EXTERNS, name);
+};
+var addglobal = func(name) {
+    lstpush(GLOBALS, name);
+};
+# return 1 if "name" is a global or extern, 0 otherwise
+var findglobal = func(name) {
+    if (lstfind(GLOBALS, name, func(a,b) { return strcmp(a,b)==0 })) return 1;
+    if (lstfind(EXTERNS, name, func(a,b) { return strcmp(a,b)==0 })) return 1;
+    return 0;
+};
+
+# note: you need to free "name" once the local scope has ended
+var addlocal = func(name) {
+    var tuple = malloc(2);
+    var bp_rel = 0;
+
+    if (!lsttail(SCOPES)) die("can't add local in global scope");
+    var scope = elemval(lsttail(SCOPES));
+
+    var tail = lsttail(scope);
+
+    # if there's already at least 1 local, the new bp_rel is 1 less than the last
+    # local's bp_rel
+    if (tail) {
+        tail = elemval(tail);
+        bp_rel = *(elemval(tail)+1) - 1;
+    };
+
+    *tuple = name;
+    *(tuple+1) = bp_rel;
+
+    lstpush(scope, tuple);
+};
+# return pointer to (name,bp_rel) if "name" is a local, 0 otherwise
+var findlocal = func(name) {
+    if (!lsttail(SCOPES)) die("can't find local in global scope");
+    var scope = elemval(lsttail(SCOPES));
+    return lstfind(scope, name, func(a,b) { return strcmp(a,b)==0 });
+};
+
+var newscope = func() {
+    # save old base pointer, and put new base pointer in r253
+    puts("# newscope:\n");
+    puts("ld x, r253\n");
+    puts("push x\n");
+    puts("ld r253, sp\n");
+
+    var scope = lstnew();
+    lstpush(SCOPES, scope);
+
+    SCOPELEVEL++;
+};
+
+var runtime_endscope = func() {
+    # restore old sp and bp
+    puts("# endscope:\n");
+    puts("ld sp, r253\n");
+    puts("pop x\n");
+    puts("ld r253, x\n");
+};
+
+var endscope = func() {
+    runtime_endscope();
+    var scope = lstpop(SCOPES);
+    SCOPELEVEL--;
+};
+
+var pushtovar = func(name) {
+    puts("pushtovar: "); puts(name); puts("\n");
+};
+var poptovar = func(name) {
+    var v = findglobal(name);
+    if (v) {
+        puts("# poptovar: global "); puts(name); puts("\n");
+        puts("pop x\n");
+        puts("ld (_"); puts(name); puts("), x\n");
+        return 0;
+    };
+
+    v = findlocal(name);
+    var bp_rel;
+    if (v) {
+        bp_rel = *(v+1);
+        puts("# poptovar: local "); puts(name); puts("("); puts(itoa(bp_rel)); puts(")\n");
+        puts("ld r252, r253\n");
+        puts("add r252, "); puts(itoa(bp_rel)); puts("\n");
+        puts("pop x\n");
+        puts("ld (r252), x\n");
+    };
+
+    die("unrecognised identifier: $name"); # TODO: printf
+};
+
 Program = func(x) {
     skip();
+    EXTERNS = lstnew();
+    GLOBALS = lstnew();
+    SCOPES = lstnew();
+
     parse(Statements,0);
     if (nextchar() != EOF) die("garbage after end of program");
+    if (SCOPELEVEL != 0) die("expected to be left in global scope");
+    if (BLOCKLEVEL != 0) die("expected to be left at block level 0 (probably a compiler bug)");
+
+    lstwalk(GLOBALS, func(name) {
+        putchar('_'); puts(name); puts(": .word 0\n");
+    });
+
+    lstfree(EXTERNS);
+    lstfree(GLOBALS);
+    lstwalk(SCOPES, func(scope) {
+        lstwalk(scope, func(tuple) {
+            var name = *tuple;
+            free(*name);
+        });
+    });
     return 1;
 };
 
@@ -102,6 +230,7 @@ Statement = func(x) {
     return 0;
 };
 
+# TODO: we can't implement "include" until we have a filesystem
 Include = Reject;
 
 Block = func(x) {
@@ -114,27 +243,55 @@ Block = func(x) {
 Extern = func(x) {
     if (!parse(Keyword,"extern")) return 0;
     if (!parse(Identifier,0)) die("extern needs identifier");
+    addextern(strdup(IDENTIFIER));
     return 1;
 };
 
 Declaration = func(x) {
     if (!parse(Keyword,"var")) return 0;
     if (!parse(Identifier,0)) die("var needs identifier");
+    var name = strdup(IDENTIFIER);
+    if (SCOPELEVEL == 0) {
+        addglobal(name);
+    } else {
+        addlocal(name);
+        puts("# allocated space for "); puts(name); puts("\n");
+        puts("dec sp\n");
+    };
     if (!parse(CharSkip,'=')) return 1;
     if (!parse(Expression,0)) die("initialisation needs expression");
+    poptovar(name);
     return 1;
 };
 
 Conditional = func(x) {
     if (!parse(Keyword,"if")) return 0;
+    BLOCKLEVEL++;
     if (!parse(CharSkip,'(')) die("if condition needs open paren");
+    puts("# if condition\n");
     if (!parse(Expression,0)) die("if condition needs expression");
+
+    var falselabel = LABELNUM++;
+    puts("pop x\n");
+    puts("test x\n");
+    puts("jz l__"); puts(itoa(falselabel)); puts("\n");
+
     if (!parse(CharSkip,')')) die("if condition needs close paren");
+    puts("# if body\n");
     if (!parse(Statement,0)) die("if needs body");
+
+    var endiflabel;
     if (parse(Keyword,"else")) {
+        endiflabel = LABELNUM++;
+        puts("jmp l__"); puts(itoa(endiflabel)); puts("\n");
+        puts("# else body\n");
+        puts("l__"); puts(itoa(falselabel)); puts(":\n");
         if (!parse(Statement,0)) die("else needs body");
+        puts("l__"); puts(itoa(endiflabel)); puts(":\n");
     } else {
+        puts("l__"); puts(itoa(falselabel)); puts(":\n");
     };
+    BLOCKLEVEL--;
     return 1;
 };
 
@@ -400,7 +557,9 @@ Identifier = func(x) {
     var pos0 = pos;
     if (!parse(AlphaUnderChar,0)) return 0;
     while (parse(AlphanumUnderChar,0));
-    # now IDENTIFIER = substr(s, pos0, pos-pos0)
+    # TODO: bounds-check
+    memcpy(IDENTIFIER, input+pos0, pos-pos0);
+    *(IDENTIFIER+pos-pos0) = 0;
     skip();
     return 1;
 };
@@ -410,8 +569,4 @@ var buf = malloc(16384);
 while (gets(buf+strlen(buf), 16384)); # XXX: bad
 
 parse_init(buf);
-if (parse(Program,0)) {
-    puts("ok\n");
-} else {
-    puts("bad\n");
-};
+parse(Program,0);

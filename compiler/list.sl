@@ -126,3 +126,19 @@ var lstwalk = func(lst, cb) {
         elem = elemnext(elem);
     };
 };
+
+# call cb(findval, val) on each value in the list
+# if cb(findval, val) returns nonzero, break the loop and return val
+# return 0 if the value is not found
+var lstfind = func(lst, findval, cb) {
+    var elem = lsthead(lst);
+    var val;
+
+    while (elem) {
+        val = elemval(elem);
+        if (cb(findval, val)) return val;
+        elem = elemnext(elem);
+    };
+
+    return 0;
+};
