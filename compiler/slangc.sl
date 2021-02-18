@@ -224,20 +224,7 @@ var funcreturn = func() {
 
 Program = func(x) {
     skip();
-    EXTERNS = lstnew();
-    GLOBALS = lstnew();
-
     parse(Statements,0);
-    if (nextchar() != EOF) die("garbage after end of program");
-    if (LOCALS) die("expected to be left in global scope");
-    if (BLOCKLEVEL != 0) die("expected to be left at block level 0 (probably a compiler bug)");
-
-    lstwalk(GLOBALS, func(name) {
-        putchar('_'); puts(name); puts(": .word 0\n");
-    });
-
-    lstfree(EXTERNS);
-    lstfree(GLOBALS);
     return 1;
 };
 
@@ -700,5 +687,25 @@ while (1) {
 };
 *p = 0;
 
+EXTERNS = lstnew();
+GLOBALS = lstnew();
+
 parse_init(buf);
 parse(Program,0);
+
+if (nextchar() != EOF) die("garbage after end of program");
+if (LOCALS) die("expected to be left in global scope");
+if (BLOCKLEVEL != 0) die("expected to be left at block level 0 (probably a compiler bug)");
+
+# jump over the globals
+var end = label();
+puts("jmp "); plabel(end); puts("\n");
+
+lstwalk(GLOBALS, func(name) {
+    putchar('_'); puts(name); puts(": .word 0\n");
+});
+
+lstfree(EXTERNS);
+lstfree(GLOBALS);
+
+plabel(end); puts(":\n");
