@@ -83,7 +83,7 @@ sub parse {
 
 sub Program {
     skip();
-    die "program should contain statements\n" if !parse(\&Statements);
+    parse(\&Statements);
 
     die "garbage after end of program\n" if $pos != @s;
     die "expected to be left in global scope after program (probably a compiler bug)\n" if !$scope->{global};
