@@ -190,7 +190,7 @@ sub encode {
     die "ALU bits without EO: $uinstr\n" if $have_alu && $uinstr !~ /\bEO\b/ && !@alu_bits;
 
     die "RT with ALU not allowed: $uinstr\n" if $have_alu && $uinstr =~ /\bRT\b/;
-    die "P+ with ALU not allowed: $uinstr\n" if $have_alu && $uinstr =~ /\bP\+\b/;
+    die "P+ with ALU not allowed: $uinstr\n" if $have_alu && $uinstr =~ /\bP\+/;
 
     warn "busout with no busin probably makes no sense: $uinstr\n" if ($have_busout && !$have_busin && !$have_jmp);
     warn "busin with no busout probably makes no sense (will get PC on bus, please specify 'PO'): $uinstr\n" if ($have_busin && !$have_busout && !$have_alu);
