@@ -36,15 +36,37 @@ table {
     border: none;
     border-spacing: 0px;
 }
-tr, td {
+table.pc td {
     padding: 0;
     margin: 0;
     min-width: 4px;
     border: none;
 }
-th {
+table.pc th {
     font-size: 0.7em;
     font-family: monospace;
+}
+table.opcode td {
+    min-width: 40px;
+}
+table.opcode th {
+    font-family: monospace;
+}
+td:hover div.popup {
+    display: block;
+}
+td div.popup {
+    display: none;
+}
+div.popup {
+    font-family: monospace;
+    pointer-events: none;
+    position: absolute;
+    border: none;
+    margin: none;
+    padding: none;
+    background: #eee;
+    width: 200px;
 }
 </style>
 </head>
@@ -56,12 +78,19 @@ th {
 sub pc_cycles {
     my $max_cycles = max(@pc_cycles);
 
-    print "<table>\n";
-    for my $y (0 .. 255) {
+    my $max_addr = max grep { $pc_cycles[$_] } (0..65535);
+
+    print "<table class=\"pc\">\n";
+    for my $y (0 .. ($max_addr>>8)) {
         print "<tr><th>" . sprintf("%04x", $y<<8) . "</th>";
         for my $x (0 .. 255) {
             my $addr = $y<<8 | $x;
-            print "<td style=\"background-color:" . heatcolour($pc_cycles[$addr], $max_cycles) . "\"></td>";
+
+            my $popuphtml = "<br>Address: ".sprintf("<b>%04x</b>",$addr)."<br>";
+            $popuphtml .= "Cycles: <b>$pc_cycles[$addr] " . sprintf("(%.01f%% max)", 100*$pc_cycles[$addr]/$max_cycles) . "</b><br>";
+            $popuphtml .= "Instruction: <b>" . ($pc_cycles[$addr] ? sprintf("%04x",$last_instr[$addr]) : "-") . "</b><br>";
+
+            print "<td style=\"background-color:" . heatcolour($pc_cycles[$addr], $max_cycles) . "\"><div class=\"popup\">$popuphtml</div></td>";
         }
         print "</tr>\n";
     }
@@ -71,12 +100,15 @@ sub pc_cycles {
 sub opcode_cycles {
     my $max_cycles = max(@opcode_cycles);
 
-    print "<table>\n";
+    print "<table class=\"opcode\">\n";
+    print "<tr><th></th>";
+    print sprintf("<th>_%x</th>", $_) for (0..15);
+    print "</tr>\n";
     for my $y (0 .. 15) {
         print "<tr><th>" . sprintf("%01x_", $y) . "</th>";
         for my $x (0 .. 15) {
             my $op = $y<<4 | $x;
-            print "<td style=\"background-color:" . heatcolour($opcode_cycles[$op], $max_cycles) . "\"></td>";
+            print "<td style=\"background-color:" . heatcolour($opcode_cycles[$op], $max_cycles) . "\"><div class=\"popup\">" . sprintf("%02x", $op) . "</div></td>";
         }
         print "</tr>\n";
     }
@@ -92,6 +124,8 @@ sub footer {
 
 sub heatcolour {
     my ($v, $max) = @_;
+
+    return "rgb(255,255,255)" if $v == 0;
 
     my @cold = (227,231,239);
     my @hot = (255,0,0);
