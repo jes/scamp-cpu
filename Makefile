@@ -2,7 +2,7 @@ SOURCES = verilog/fpga.v
 
 .PHONY: all test burn clean
 
-all: ttlcpu.bin doc/table.html emulator/scamp bootrom.hex
+all: doc/table.html emulator/scamp bootrom.hex
 
 ttlcpu.bin: ucode.hex testrom.hex
 	yosys -p "synth_ice40 -top top -json ttlcpu.json" $(SOURCES)
