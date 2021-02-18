@@ -145,7 +145,7 @@ sub Block {
 sub Extern {
     return 0 if !parse(\&Keyword,'extern');
 
-    die "extern expects identifier\n" if !parse(\&Identifier);
+    die "extern needs identifier\n" if !parse(\&Identifier);
     my $id = $IDENTIFIER;
 
     die "can only use extern in global scope\n" if !$scope->{global};

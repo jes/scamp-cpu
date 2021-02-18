@@ -106,6 +106,20 @@ var Keyword = func(s) {
     return 0;
 };
 
+# accept alpha and underscore
+var AlphaUnderChar = func(x) {
+    var ch = nextchar();
+    if (isalpha(ch) || ch == '_') return 1;
+    return 0;
+};
+
+# accept alphanumeric and underscore
+var AlphanumUnderChar = func(x) {
+    var ch = nextchar();
+    if (isalnum(ch) || ch == '_') return 1;
+    return 0;
+};
+
 # accept only character ch, skip whitespace and comments
 var CharSkip = func(ch) {
     if (nextchar() != ch) return 0;
