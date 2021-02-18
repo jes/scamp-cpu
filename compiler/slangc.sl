@@ -78,9 +78,10 @@ var IDENTIFIER = malloc(128);
 # EXTERNS and GLOBALS are lists of pointers variable names
 var EXTERNS;
 var GLOBALS;
-# SCOPES is a list of pointers to scopes
-# each scope if a list of pointers to tuples of (name,bp_rel)
-var SCOPES;
+# LOCALS is a list of pointers to tuples of (name,bp_rel)
+var LOCALS;
+var BP_REL;
+var NPARAMS;
 var BLOCKLEVEL = 0;
 var BREAKLABEL;
 var CONTLABEL;
@@ -99,33 +100,21 @@ var findglobal = func(name) {
     return 0;
 };
 
-# note: you need to free "name" once the local scope has ended
-var addlocal = func(name) {
+var addlocal = func(name, bp_rel) {
     var tuple = malloc(2);
-    var bp_rel = 0;
 
-    if (!lsttail(SCOPES)) die("can't add local in global scope");
-    var scope = elemval(lsttail(SCOPES));
-
-    var tail = lsttail(scope);
-
-    # if there's already at least 1 local, the new bp_rel is 1 less than the last
-    # local's bp_rel
-    if (tail) {
-        tail = elemval(tail);
-        bp_rel = *(elemval(tail)+1) - 1;
-    };
+    if (!LOCALS) die("can't add local in global scope");
 
     *tuple = name;
     *(tuple+1) = bp_rel;
 
-    lstpush(scope, tuple);
+    lstpush(LOCALS, tuple);
+    return tuple;
 };
 # return pointer to (name,bp_rel) if "name" is a local, 0 otherwise
 var findlocal = func(name) {
-    if (!lsttail(SCOPES)) die("can't find local in global scope");
-    var scope = elemval(lsttail(SCOPES));
-    return lstfind(scope, name, func(findname,tuple) { return strcmp(findname,*tuple)==0 });
+    if (!LOCALS) die("can't find local in global scope");
+    return lstfind(LOCALS, name, func(findname,tuple) { return strcmp(findname,*tuple)==0 });
 };
 
 var newscope = func() {
@@ -135,10 +124,8 @@ var newscope = func() {
     puts("push x\n");
     puts("ld r253, sp\n");
 
-    # TODO: instead of making a list of lists, just use the call stack
-    # in FunctionDeclaration to save/restore references to outer scopes
-    var scope = lstnew();
-    lstpush(SCOPES, scope);
+    LOCALS = lstnew();
+    BP_REL = 0;
 };
 
 var runtime_endscope = func() {
@@ -150,13 +137,13 @@ var runtime_endscope = func() {
 };
 
 var compiletime_endscope = func() {
-    if (lstlen(SCOPES)==0) die("can't end the global scope");
-    var scope = lstpop(SCOPES);
-    lstwalk(scope, func(tuple) {
+    if (!LOCALS) die("can't end the global scope");
+    lstwalk(LOCALS, func(tuple) {
         var name = *tuple;
         free(*name);
         free(tuple);
     });
+    lstfree(LOCALS);
 };
 
 var endscope = func() {
@@ -164,8 +151,29 @@ var endscope = func() {
     compiletime_endscope();
 };
 
-var pushtovar = func(name) {
-    puts("pushtovar: "); puts(name); puts("\n");
+var pushvar = func(name) {
+    var v = findglobal(name);
+    if (v) {
+        puts("# pushvar: global "); puts(name); puts("\n");
+        puts("ld x, (_"); puts(name); puts(")\n");
+        puts("push x\n");
+        return 0;
+    };
+
+    v = findlocal(name);
+    var bp_rel;
+    if (v) {
+        bp_rel = *(v+1);
+        puts("# pushvar: local "); puts(name); puts(" ("); puts(itoa(bp_rel)); puts(")\n");
+        puts("ld x, r253\n");
+        puts("add x, "); puts(itoa(bp_rel)); puts("\n");
+        puts("ld x, (x)\n");
+        puts("push x\n");
+        return 0;
+    };
+
+    puts("bad push: "); puts(name); puts("\n");
+    die("unrecognised identifier: $name"); # TODO: printf
 };
 var poptovar = func(name) {
     var v = findglobal(name);
@@ -180,7 +188,7 @@ var poptovar = func(name) {
     var bp_rel;
     if (v) {
         bp_rel = *(v+1);
-        puts("# poptovar: local "); puts(name); puts("("); puts(itoa(bp_rel)); puts(")\n");
+        puts("# poptovar: local "); puts(name); puts(" ("); puts(itoa(bp_rel)); puts(")\n");
         puts("ld r252, r253\n");
         puts("add r252, "); puts(itoa(bp_rel)); puts("\n");
         puts("pop x\n");
@@ -188,21 +196,29 @@ var poptovar = func(name) {
         return 0;
     };
 
-    puts("bad: "); puts(name); puts("\n");
+    puts("bad pop: "); puts(name); puts("\n");
     die("unrecognised identifier: $name"); # TODO: printf
 };
 
 var label = func() { return LABELNUM++; };
 var plabel = func(l) { puts("l__"); puts(itoa(l)); };
 
+var genliteral = func(v) {
+    puts("# genliteral:\n");
+    if ((v&0xff00)==0 || (v&0xff00)==0xff00) {
+        puts("push "); puts(itoa(v)); puts("\n");
+    } else {
+        puts("ld x, "); puts(itoa(v)); puts("\n");
+        puts("push x\n");
+    };
+};
+
 var funcreturn = func() {
-    if (lstlen(SCOPES) == 0) die("can't return from global scope");
-    var scope = elemval(lsttail(SCOPES));
-    var nparams = lstlen(scope);
+    if (!LOCALS) die("can't return from global scope");
     runtime_endscope();
 
-    puts("# function had "); puts(itoa(nparams)); puts(" parameters\n");
-    puts("add sp, "); puts(itoa(nparams)); puts("\n");
+    puts("# function had "); puts(itoa(NPARAMS)); puts(" parameters:\n");
+    puts("add sp, "); puts(itoa(NPARAMS)); puts("\n");
     puts("ret\n");
 };
 
@@ -210,11 +226,10 @@ Program = func(x) {
     skip();
     EXTERNS = lstnew();
     GLOBALS = lstnew();
-    SCOPES = lstnew();
 
     parse(Statements,0);
     if (nextchar() != EOF) die("garbage after end of program");
-    if (lstlen(SCOPES) != 0) die("expected to be left in global scope");
+    if (LOCALS) die("expected to be left in global scope");
     if (BLOCKLEVEL != 0) die("expected to be left at block level 0 (probably a compiler bug)");
 
     lstwalk(GLOBALS, func(name) {
@@ -223,7 +238,6 @@ Program = func(x) {
 
     lstfree(EXTERNS);
     lstfree(GLOBALS);
-    lstfree(SCOPES);
     return 1;
 };
 
@@ -246,6 +260,8 @@ Statement = func(x) {
     if (parse(Return,0)) return 1;
     if (parse(Assignment,0)) return 1;
     if (parse(Expression,0)) {
+        puts("# discard expression value\n");
+        puts("pop x\n");
         return 1;
     };
     return 0;
@@ -272,10 +288,10 @@ Declaration = func(x) {
     if (!parse(Keyword,"var")) return 0;
     if (!parse(Identifier,0)) die("var needs identifier");
     var name = strdup(IDENTIFIER);
-    if (lstlen(SCOPES) == 0) {
+    if (!LOCALS) {
         addglobal(name);
     } else {
-        addlocal(name);
+        addlocal(name, BP_REL--);
         puts("# allocate space for "); puts(name); puts("\n");
         puts("dec sp\n");
     };
@@ -450,6 +466,7 @@ Term = func(x) {
     if (parse(UnaryExpression,0)) return 1;
     if (parse(ParenExpression,0)) return 1;
     if (!parse(Identifier,0)) return 0;
+    pushvar(IDENTIFIER);
     return 1;
 };
 
@@ -469,29 +486,28 @@ NumericLiteral = func(x) {
 
 HexLiteral = func(x) {
     if (!parse(String,"0x")) return 0;
+    var pos0 = pos;
     if (!parse(AnyChar,"0123456789abcdefABCDEF")) return 0;
     while (parse(AnyChar,"0123456789abcdefABCDEF"));
-    #var val = 0;
-    #while (pos0 != pos) {
-    #    val = val * 10;
-    #    val += s[pos0++] - '0';
-    #};
-    #genliteral(val);
+    var was = *(input+pos);
+    *(input+pos) = 0;
+    genliteral(atoibase(input+pos0, 16));
+    *(input+pos) = was;
     skip();
     return 1;
 };
 
 DecimalLiteral = func(x) {
-    var pos0 = pos;
     parse(AnyChar,"+-");
+    var pos0 = pos;
     if (!parse(AnyChar,"0123456789")) return 0;
     while (parse(AnyChar,"0123456789"));
-    #var val = 0;
-    #while (pos0 != pos) {
-    #    val = val * 10;
-    #    val += s[pos0++] - '0';
-    #};
-    #genliteral(val);
+    var was = *(input+pos);
+    *(input+pos) = 0;
+    var v = atoibase(input+pos0, 16);
+    if (*(input+pos0-1) == '-') genliteral(-v)
+    else genliteral(v);
+    *(input+pos) = was;
     skip();
     return 1;
 };
@@ -537,7 +553,8 @@ Parameters = func(x) {
     var p = PARAMS;
     while (1) {
         if (!parse(Identifier,0)) break;
-        # *(p++) = IDENTIFIER;
+         *(p++) = strdup(IDENTIFIER);
+        if (p == PARAMS+maxparams) die("too many params for function");
         if (!parse(CharSkip,',')) break;
     };
     *p = 0;
@@ -555,23 +572,60 @@ FunctionDeclaration = func(x) {
     puts("jmp "); plabel(functionend); puts("\n");
     plabel(functionlabel); puts(":\n");
 
+    var oldscope = LOCALS;
+    var old_bp_rel = BP_REL;
+    var oldnparams = NPARAMS;
     newscope();
 
-    var bp_rel = 2;
-    # TODO: add parameters to current scope, with positive bp_rel starting from 2
+    var bp_rel = 2; # parameters (grows up)
+    var p = params;
+    while (*p) p++;
+    # p now points past the last param
+    NPARAMS = p - params;
+    while (p-- > params) {
+        addlocal(*p, bp_rel++);
+    };
 
     if (!parse(CharSkip,')')) die("func needs close paren");
     parse(Statement,0); # optional
     funcreturn();
     compiletime_endscope();
+    LOCALS = oldscope;
+    BP_REL = old_bp_rel;
+    NPARAMS = oldnparams;
+
+    puts("# end function declaration\n\n");
+    plabel(functionend); puts(":\n");
+    puts("ld x, "); plabel(functionlabel); puts("\n");
+    puts("push x\n");
     return 1;
 };
 
 FunctionCall = func(x) {
     if (!parse(Identifier,0)) return 0;
     if (!parse(CharSkip,'(')) return 0;
+
+    var name = strdup(IDENTIFIER);
+
+    puts("# parseFunctionCall:\n");
+    puts("ld x, r254\n");
+    puts("push x\n");
+
     parse(Arguments,0);
     if (!parse(CharSkip,')')) die("argument list needs closing paren");
+
+    pushvar(name);
+    free(name);
+    # call function
+    puts("pop x\n");
+    puts("call x\n");
+    # restore return address
+    puts("pop x\n");
+    puts("ld r254, x\n");
+    # push return value
+    puts("ld x, r0\n");
+    puts("push x\n");
+
     return 1;
 };
 

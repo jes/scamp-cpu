@@ -1,3 +1,5 @@
+extern mul;
+
 # compute:
 #   *pdiv = num / denom
 #   *pmod = num % denom
@@ -59,8 +61,34 @@ var itoabase = func(num, base) {
 # returns pointer to static buffer
 var itoa = func(num) return itoabase(num, 10);
 
-extern TOP;
+var tolower = func(ch) {
+    if (ch >= 'A' && ch <= 'Z') return ch - 'A' + 'a';
+    return ch;
+};
 
+var stridx = func(alphabet, ch) {
+    var i = 0;
+    while (*(alphabet+i)) {
+        if (*(alphabet+i) == ch) return i;
+        i++;
+    };
+    return 0;
+};
+
+# TODO: negative values?
+var atoibase = func(s, base) {
+    var v = 0;
+    while (*s) {
+        v = mul(v, base) + stridx(itoa_alphabet, tolower(*s));
+        s++;
+    };
+    return v;
+};
+
+# TODO: negative values?
+var atoi = func(s) return atoibase(s, 10);
+
+extern TOP;
 var malloc = func(sz) {
     var oldtop = TOP;
     # TODO: die if this is going to exceed TPA

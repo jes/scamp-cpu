@@ -712,7 +712,7 @@ sub endscope {
 
 sub runtime_endscope {
     # restore old sp and bp
-    print "# endscope: \n";
+    print "# endscope:\n";
     print "ld sp, r253\n";
     print "pop x\n";
     print "ld r253, x\n";
