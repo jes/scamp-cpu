@@ -65,17 +65,25 @@ var lstpush = func(lst, v) {
 # return 0 if the list is empty
 # O(n) (!)
 var lstpop = func(lst) {
+    var head = lsthead(lst);
     var tail = lsttail(lst);
     if (!tail) return 0;
     var val = elemval(tail);
+    var elem;
 
-    # find the second-last element
-    var elem = lsthead(lst);
-    while (elemnext(elem) != tail)
-        elem = elemnext(elem);
+    if (head == tail) {
+        # list becomes empty
+        *lst = 0;
+        *(lst+1) = 0;
+    } else {
+        # find the second-last element
+        elem = head;
+        while (elemnext(elem) != tail)
+            elem = elemnext(elem);
 
-    *(elem+1) = 0;
-    *(lst+1) = elem;
+        *(elem+1) = 0;
+        *(lst+1) = elem;
+    };
 
     elemfree(tail);
     return val;
@@ -99,6 +107,7 @@ var lstshift = func(lst) {
     var val = elemval(head);
 
     *lst = elemnext(head);
+    if (!*lst) *(lst+1) = 0; # tail=0 if head=0
 
     elemfree(head);
     return val;

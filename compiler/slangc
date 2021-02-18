@@ -436,7 +436,6 @@ sub FunctionDeclaration {
     my $parentscope = $scope;
     newscope();
     $scope->{parent} = $globalscope;
-    $scope->{funcdecl} = 1;
 
     my $bp_rel = 2;
     for my $p (reverse @params) {

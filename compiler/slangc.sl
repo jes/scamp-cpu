@@ -81,9 +81,10 @@ var GLOBALS;
 # SCOPES is a list of pointers to scopes
 # each scope if a list of pointers to tuples of (name,bp_rel)
 var SCOPES;
-var SCOPELEVEL = 0;
 var BLOCKLEVEL = 0;
-var LABELNUM = 0;
+var BREAKLABEL;
+var CONTLABEL;
+var LABELNUM = 1;
 
 var addextern = func(name) {
     lstpush(EXTERNS, name);
@@ -124,7 +125,7 @@ var addlocal = func(name) {
 var findlocal = func(name) {
     if (!lsttail(SCOPES)) die("can't find local in global scope");
     var scope = elemval(lsttail(SCOPES));
-    return lstfind(scope, name, func(a,b) { return strcmp(a,b)==0 });
+    return lstfind(scope, name, func(findname,tuple) { return strcmp(findname,*tuple)==0 });
 };
 
 var newscope = func() {
@@ -134,10 +135,10 @@ var newscope = func() {
     puts("push x\n");
     puts("ld r253, sp\n");
 
+    # TODO: instead of making a list of lists, just use the call stack
+    # in FunctionDeclaration to save/restore references to outer scopes
     var scope = lstnew();
     lstpush(SCOPES, scope);
-
-    SCOPELEVEL++;
 };
 
 var runtime_endscope = func() {
@@ -148,10 +149,19 @@ var runtime_endscope = func() {
     puts("ld r253, x\n");
 };
 
+var compiletime_endscope = func() {
+    if (lstlen(SCOPES)==0) die("can't end the global scope");
+    var scope = lstpop(SCOPES);
+    lstwalk(scope, func(tuple) {
+        var name = *tuple;
+        free(*name);
+        free(tuple);
+    });
+};
+
 var endscope = func() {
     runtime_endscope();
-    var scope = lstpop(SCOPES);
-    SCOPELEVEL--;
+    compiletime_endscope();
 };
 
 var pushtovar = func(name) {
@@ -175,9 +185,25 @@ var poptovar = func(name) {
         puts("add r252, "); puts(itoa(bp_rel)); puts("\n");
         puts("pop x\n");
         puts("ld (r252), x\n");
+        return 0;
     };
 
+    puts("bad: "); puts(name); puts("\n");
     die("unrecognised identifier: $name"); # TODO: printf
+};
+
+var label = func() { return LABELNUM++; };
+var plabel = func(l) { puts("l__"); puts(itoa(l)); };
+
+var funcreturn = func() {
+    if (lstlen(SCOPES) == 0) die("can't return from global scope");
+    var scope = elemval(lsttail(SCOPES));
+    var nparams = lstlen(scope);
+    runtime_endscope();
+
+    puts("# function had "); puts(itoa(nparams)); puts(" parameters\n");
+    puts("add sp, "); puts(itoa(nparams)); puts("\n");
+    puts("ret\n");
 };
 
 Program = func(x) {
@@ -188,7 +214,7 @@ Program = func(x) {
 
     parse(Statements,0);
     if (nextchar() != EOF) die("garbage after end of program");
-    if (SCOPELEVEL != 0) die("expected to be left in global scope");
+    if (lstlen(SCOPES) != 0) die("expected to be left in global scope");
     if (BLOCKLEVEL != 0) die("expected to be left at block level 0 (probably a compiler bug)");
 
     lstwalk(GLOBALS, func(name) {
@@ -197,12 +223,7 @@ Program = func(x) {
 
     lstfree(EXTERNS);
     lstfree(GLOBALS);
-    lstwalk(SCOPES, func(scope) {
-        lstwalk(scope, func(tuple) {
-            var name = *tuple;
-            free(*name);
-        });
-    });
+    lstfree(SCOPES);
     return 1;
 };
 
@@ -251,11 +272,11 @@ Declaration = func(x) {
     if (!parse(Keyword,"var")) return 0;
     if (!parse(Identifier,0)) die("var needs identifier");
     var name = strdup(IDENTIFIER);
-    if (SCOPELEVEL == 0) {
+    if (lstlen(SCOPES) == 0) {
         addglobal(name);
     } else {
         addlocal(name);
-        puts("# allocated space for "); puts(name); puts("\n");
+        puts("# allocate space for "); puts(name); puts("\n");
         puts("dec sp\n");
     };
     if (!parse(CharSkip,'=')) return 1;
@@ -271,10 +292,11 @@ Conditional = func(x) {
     puts("# if condition\n");
     if (!parse(Expression,0)) die("if condition needs expression");
 
-    var falselabel = LABELNUM++;
+    # if top of stack is 0, jmp falselabel
+    var falselabel = label();
     puts("pop x\n");
     puts("test x\n");
-    puts("jz l__"); puts(itoa(falselabel)); puts("\n");
+    puts("jz "); plabel(falselabel); puts("\n");
 
     if (!parse(CharSkip,')')) die("if condition needs close paren");
     puts("# if body\n");
@@ -282,14 +304,14 @@ Conditional = func(x) {
 
     var endiflabel;
     if (parse(Keyword,"else")) {
-        endiflabel = LABELNUM++;
+        endiflabel = label();
         puts("jmp l__"); puts(itoa(endiflabel)); puts("\n");
         puts("# else body\n");
-        puts("l__"); puts(itoa(falselabel)); puts(":\n");
+        plabel(falselabel); puts(":\n");
         if (!parse(Statement,0)) die("else needs body");
-        puts("l__"); puts(itoa(endiflabel)); puts(":\n");
+        plabel(endiflabel); puts(":\n");
     } else {
-        puts("l__"); puts(itoa(falselabel)); puts(":\n");
+        plabel(falselabel); puts(":\n");
     };
     BLOCKLEVEL--;
     return 1;
@@ -297,26 +319,62 @@ Conditional = func(x) {
 
 Loop = func(x) {
     if (!parse(Keyword,"while")) return 0;
+    BLOCKLEVEL++;
     if (!parse(CharSkip,'(')) die("while condition needs open paren");
+
+    var oldbreaklabel = BREAKLABEL;
+    var oldcontlabel = CONTLABEL;
+    var loop = label();
+    var endloop = label();
+
+    BREAKLABEL = endloop;
+    CONTLABEL = loop;
+
+    puts("# while loop\n");
+    plabel(loop); puts(":\n");
+
     if (!parse(Expression,0)) die("while condition needs expression");
+
+    # if top of stack is 0, jmp endloop
+    puts("pop x\n");
+    puts("test x\n");
+    puts("jz "); plabel(endloop); puts("\n");
+
     if (!parse(CharSkip,')')) die("while condition needs close paren");
+
     parse(Statement,0); # optional
+    puts("jmp "); plabel(loop); puts("\n");
+    plabel(endloop); puts(":\n");
+
+    BREAKLABEL = oldbreaklabel;
+    CONTLABEL = oldcontlabel;
+    BLOCKLEVEL--;
     return 1;
 };
 
 Break = func(x) {
     if (!parse(Keyword,"break")) return 0;
+    if (!BREAKLABEL) die("can't break here");
+    puts("# break\n");
+    puts("jmp "); plabel(BREAKLABEL); puts("\n");
     return 1;
 };
 
 Continue = func(x) {
     if (!parse(Keyword,"continue")) return 0;
+    if (!CONTLABEL) die("can't continue here");
+    puts("# continue\n");
+    puts("jmp "); plabel(CONTLABEL); puts("\n");
     return 1;
 };
 
 Return = func(x) {
     if (!parse(Keyword,"return")) return 0;
     if (!parse(Expression,0)) die("return needs expression");
+    puts("# return\n");
+    puts("pop x\n");
+    puts("ld r0, x\n");
+    funcreturn();
     return 1;
 };
 
@@ -489,9 +547,23 @@ Parameters = func(x) {
 FunctionDeclaration = func(x) {
     if (!parse(Keyword,"func")) return 0;
     if (!parse(CharSkip,'(')) die("func needs open paren");
+
     var params = Parameters(0);
+    var functionlabel = label();
+    var functionend = label();
+    puts("\n# parseFunctionDeclaration:\n");
+    puts("jmp "); plabel(functionend); puts("\n");
+    plabel(functionlabel); puts(":\n");
+
+    newscope();
+
+    var bp_rel = 2;
+    # TODO: add parameters to current scope, with positive bp_rel starting from 2
+
     if (!parse(CharSkip,')')) die("func needs close paren");
     parse(Statement,0); # optional
+    funcreturn();
+    compiletime_endscope();
     return 1;
 };
 
