@@ -523,6 +523,7 @@ sub PreOp {
     print "push x\n"; # for poptovar
     poptovar($IDENTIFIER);
     print "push x\n"; # for the expression that the pre-op appeared in
+    return 1;
 }
 
 sub PostOp {
@@ -545,6 +546,7 @@ sub PostOp {
     print "$op x\n";
     print "push x\n"; # for poptovar
     poptovar($IDENTIFIER);
+    return 1;
 }
 
 sub AddressOf {

@@ -174,8 +174,57 @@ Assignment = func(x) {
     return 1;
 };
 
-Expression = func(x) { return parse(Term,0); };
-ExpressionLevel = Reject;
+Expression = func(x) { return parse(ExpressionLevel,0); };
+
+# TODO: this would be a lot tidier if we had some better syntax for arrays
+var operators = malloc(4);
+*(operators+0) = malloc(4);
+*(*(operators+0)+0) = "&";
+*(*(operators+0)+1) = "|";
+*(*(operators+0)+2) = "^";
+*(*(operators+0)+3) = 0;
+*(operators+1) = malloc(3);
+*(*(operators+1)+0) = "&&";
+*(*(operators+1)+1) = "||";
+*(*(operators+1)+2) = 0;
+*(operators+2) = malloc(7);
+*(*(operators+2)+0) = "==";
+*(*(operators+2)+1) = "!=";
+*(*(operators+2)+2) = ">=";
+*(*(operators+2)+3) = "<=";
+*(*(operators+2)+4) = ">";
+*(*(operators+2)+5) = "<";
+*(*(operators+2)+6) = 0;
+*(operators+3) = malloc(3);
+*(*(operators+3)+0) = "+";
+*(*(operators+3)+1) = "-";
+*(*(operators+3)+2) = 0;
+var oplevels = 4;
+
+ExpressionLevel = func(lvl) {
+    if (lvl == oplevels) return parse(Term,0);
+
+    var apply_op = 0;
+    var p;
+    var match;
+    while (1) {
+        match = parse(ExpressionLevel, lvl+1);
+        if (apply_op) {
+            if (!match) die("operator $apply_op needs a second operand"); # TODO: sprintf
+        } else {
+            if (!match) return 0;
+        };
+
+        p = *(operators+lvl); # p points to a list of pointers to strings
+        while (*p) {
+            if (parse(String,*p)) break;
+            p++;
+        };
+        if (!*p) return 1;
+        apply_op = *p;
+        skip();
+    };
+};
 
 Term = func(x) {
     if (parse(Constant,0)) return 1;
@@ -203,11 +252,82 @@ NumericLiteral = func(x) {
     return 0;
 };
 
-HexLiteral = Reject;
-DecimalLiteral = Reject;
-CharacterLiteral = Reject;
-StringLiteral = Reject;
-StringLiteralText = Reject;
+HexLiteral = func(x) {
+    if (!parse(String,"0x")) return 0;
+    if (!parse(AnyChar,"0123456789abcdefABCDEF")) return 0;
+    while (parse(AnyChar,"0123456789abcdefABCDEF"));
+    #var val = 0;
+    #while (pos0 != pos) {
+    #    val = val * 10;
+    #    val += s[pos0++] - '0';
+    #};
+    #genliteral(val);
+    skip();
+    return 1;
+};
+
+DecimalLiteral = func(x) {
+    var pos0 = pos;
+    parse(AnyChar,"+-");
+    if (!parse(AnyChar,"0123456789")) return 0;
+    while (parse(AnyChar,"0123456789"));
+    #var val = 0;
+    #while (pos0 != pos) {
+    #    val = val * 10;
+    #    val += s[pos0++] - '0';
+    #};
+    #genliteral(val);
+    skip();
+    return 1;
+};
+
+CharacterLiteral = func(x) {
+    if (!parse(Char,'\'')) return 0;
+    var ch = nextchar();
+    if (ch == '\\') {
+        nextchar();
+    } else {
+    };
+    if (parse(CharSkip,'\'')) return 1;
+    die("illegal character literal");
+};
+
+StringLiteral = func(x) {
+    if (!parse(Char,'"')) return 0;
+    var str = StringLiteralText();
+    return 1;
+};
+
+# expects you to have already parsed the opening quote; consumes the closing quote
+StringLiteralText = func(x) {
+    var pos0 = pos;
+    while (1) {
+        if (parse(CharSkip,'"')) {
+            # allocate a string by copying input between pos0 and pos
+            return 1;
+        };
+        if (parse(Char,'\\')) {
+            nextchar();
+        } else {
+            nextchar();
+        };
+    };
+    die("unterminated string literal");
+};
+
+var maxparams = 32;
+var PARAMS = malloc(maxparams);
+# TODO: bounds check
+Parameters = func(x) {
+    var p = PARAMS;
+    while (1) {
+        if (!parse(Identifier,0)) break;
+        # *(p++) = IDENTIFIER;
+        if (!parse(CharSkip,',')) break;
+    };
+    *p = 0;
+    return PARAMS;
+};
 
 FunctionDeclaration = func(x) {
     if (!parse(Keyword,"func")) return 0;
@@ -218,16 +338,63 @@ FunctionDeclaration = func(x) {
     return 1;
 };
 
-Parameters = Reject;
+FunctionCall = func(x) {
+    if (!parse(Identifier,0)) return 0;
+    if (!parse(CharSkip,'(')) return 0;
+    parse(Arguments,0);
+    if (!parse(CharSkip,')')) die("argument list needs closing paren");
+    return 1;
+};
 
-FunctionCall = Reject;
+Arguments = func(x) {
+    while (1) {
+        if (!parse(Expression,0)) return 1;
+        if (!parse(CharSkip,',')) return 1;
+    }
+};
 
-Arguments = Reject;
-PreOp = Reject;
-PostOp = Reject;
-AddressOf = Reject;
-UnaryExpression = Reject;
-ParenExpression = Reject;
+PreOp = func(x) {
+    if (parse(String,"++")) {
+    } else if (parse(String,"--")) {
+    } else {
+        return 0;
+    };
+    skip();
+    if (!parse(Identifier,0)) return 0;
+    skip();
+    return 1;
+};
+
+PostOp = func(x) {
+    if (!parse(Identifier,0)) return 0;
+    skip();
+    if (parse(String,"++")) {
+    } else if (parse(String,"--")) {
+    } else {
+        return 0;
+    };
+    skip();
+    return 1;
+};
+
+AddressOf = func(x) {
+    if (!parse(CharSkip,'&')) return 0;
+    if (!parse(Identifier,0)) die("address-of (&) needs identifier");
+    return 1;
+};
+
+UnaryExpression = func(x) {
+    if (!parse(AnyChar,"!~*+-")) return 0;
+    skip();
+    if (!parse(Term,0)) die("unary operator $op needs operand"); # TODO: sprintf
+    return 1;
+};
+
+ParenExpression = func(x) {
+    if (!parse(CharSkip,'(')) return 0;
+    if (parse(Expression,0)) return parse(CharSkip,')');
+    return 0;
+};
 
 Identifier = func(x) {
     var pos0 = pos;
