@@ -75,6 +75,7 @@ var Identifier;
 # store identifier value parsed by Identifier()
 var IDENTIFIER = malloc(128);
 
+var STRINGS;
 # EXTERNS and GLOBALS are lists of pointers variable names
 var EXTERNS;
 var GLOBALS;
@@ -211,6 +212,83 @@ var genliteral = func(v) {
         puts("ld x, "); puts(itoa(v)); puts("\n");
         puts("push x\n");
     };
+};
+
+var genop = func(op) {
+
+    puts("# operator: "); puts(op); puts("\n");
+    puts("pop x\n");
+    puts("ld r0, x\n");
+    puts("pop x\n");
+
+    var end;
+
+    if (strcmp(op,"+") == 0) {
+        puts("add x, r0\n");
+    } else if (strcmp(op,"-") == 0) {
+        puts("sub x, r0\n");
+    } else if (strcmp(op,"&") == 0) {
+        puts("and x, r0\n");
+    } else if (strcmp(op,"|") == 0) {
+        puts("or x, r0\n");
+    } else if (strcmp(op,"^") == 0) {
+        puts("ld y, r0\n");
+        puts("xor x, y\n");
+    } else if (strcmp(op,"!=") == 0) {
+        end = label();
+        puts("sub x, r0 #peepopt:test\n");
+        puts("jz "); plabel(end); puts("\n");
+        puts("ld x, 1\n");
+        plabel(end); puts(":\n");
+    } else if (strcmp(op,"==") == 0) {
+        end = label();
+        puts("sub x, r0 #peepopt:test\n");
+        puts("ld x, 0\n"); # doesn't clobber flags
+        puts("jnz "); plabel(end); puts("\n");
+        puts("ld x, 1\n");
+        plabel(end); puts(":\n");
+    } else if (strcmp(op,">=") == 0) {
+        end = label();
+        puts("sub x, r0 #peepopt:test\n");
+        puts("ld x, 0\n"); # doesn't clobber flags
+        puts("jlt "); plabel(end); puts("\n");
+        puts("ld x, 1\n");
+        plabel(end); puts(":\n");
+    } else if (strcmp(op,"<=") == 0) {
+        end = label();
+        puts("sub r0, x #peepopt:test\n");
+        puts("ld x, 0\n"); # doesn't clobber flags
+        puts("jlt "); plabel(end); puts("\n");
+        puts("ld x, 1\n");
+        plabel(end); puts(":\n");
+    } else if (strcmp(op,">") == 0) {
+        puts("sub r0, x #peepopt:test\n");
+        puts("ld x, 1\n"); # doesn't clobber flags
+        puts("jlt "); plabel(end); puts("\n");
+        puts("ld x, 0\n");
+        plabel(end); puts(":\n");
+    } else if (strcmp(op,"<") == 0) {
+        end = label();
+        puts("sub x, r0 #peepopt:test\n");
+        puts("ld x, 1\n"); # doesn't clobber flags
+        puts("jlt "); plabel(end); puts("\n");
+        puts("ld x, 0\n");
+        plabel(end); puts(":\n");
+    } else if (strcmp(op,"&&") == 0) {
+        end = label();
+        puts("test x\n");
+        puts("ld x, 0\n"); # doesn't clobber flags
+        puts("jz "); plabel(end); puts("\n");
+        puts("test r0\n");
+        puts("jz "); plabel(end); puts("\n");
+        puts("ld x, 1\n"); # both args true: x=1
+        plabel(end); puts(":\n");
+    } else {
+        puts("bad op: "); puts(op); puts("\n");
+        die("unrecognised binary operator $op (probably a compiler bug)");
+    };
+
+    puts("push x\n");
 };
 
 var funcreturn = func() {
@@ -382,13 +460,26 @@ Return = func(x) {
 };
 
 Assignment = func(x) {
+    var id = 0;
     if (parse(Identifier,0)) {
+        id = strdup(IDENTIFIER);
     } else {
         if (!parse(CharSkip,'*')) return 0;
         if (!parse(Term,0)) die("can't dereference non-expression");
     };
     if (!parse(CharSkip,'=')) return 0;
     if (!parse(Expression,0)) die("assignment needs rvalue");
+
+    if (id) {
+        poptovar(id);
+        free(id);
+    } else {
+        puts("# store to pointer:\n");
+        puts("pop x\n");
+        puts("ld r0, x\n");
+        puts("pop x\n");
+        puts("ld (x), r0\n");
+    };
     return 1;
 };
 
@@ -429,6 +520,7 @@ ExpressionLevel = func(lvl) {
         match = parse(ExpressionLevel, lvl+1);
         if (apply_op) {
             if (!match) die("operator $apply_op needs a second operand"); # TODO: sprintf
+            genop(apply_op);
         } else {
             if (!match) return 0;
         };
@@ -499,12 +591,22 @@ DecimalLiteral = func(x) {
     return 1;
 };
 
+var escapedchar = func(ch) {
+    if (ch == 'r') return '\r';
+    if (ch == 'n') return '\n';
+    if (ch == 't') return '\t';
+    if (ch == '0') return '\0';
+    if (ch == ']') return '\]';
+    return ch;
+};
+
 CharacterLiteral = func(x) {
     if (!parse(Char,'\'')) return 0;
     var ch = nextchar();
     if (ch == '\\') {
-        nextchar();
+        genliteral(escapedchar(nextchar()));
     } else {
+        genliteral(ch);
     };
     if (parse(CharSkip,'\'')) return 1;
     die("illegal character literal");
@@ -513,16 +615,27 @@ CharacterLiteral = func(x) {
 StringLiteral = func(x) {
     if (!parse(Char,'"')) return 0;
     var str = StringLiteralText();
+    var strlabel = label();
+    puts("ld x, "); plabel(strlabel); puts("\n");
+    puts("push x\n");
+    var tuple = malloc(2);
+    *tuple = str;
+    *(tuple+1) = strlabel;
+    lstpush(STRINGS, tuple);
     return 1;
 };
 
 # expects you to have already parsed the opening quote; consumes the closing quote
-StringLiteralText = func(x) {
+StringLiteralText = func() {
     var pos0 = pos;
+    var str;
     while (1) {
         if (parse(CharSkip,'"')) {
-            # allocate a string by copying input between pos0 and pos
-            return 1;
+            # TODO: handle escaped chars
+            str = malloc(pos - pos0);
+            memcpy(str, input+pos0, pos-pos0-1);
+            *(str+pos-pos0-1) = 0;
+            return str;
         };
         if (parse(Char,'\\')) {
             nextchar();
@@ -624,39 +737,105 @@ Arguments = func(x) {
 };
 
 PreOp = func(x) {
+    var op;
     if (parse(String,"++")) {
+        op = "inc";
     } else if (parse(String,"--")) {
+        op = "dec";
     } else {
         return 0;
     };
     skip();
     if (!parse(Identifier,0)) return 0;
     skip();
+    puts("# pre-"); puts(op); puts("\n");
+    pushvar(IDENTIFIER);
+    puts("pop x\n");
+    puts(op); puts(" x\n");
+    puts("push x\n");
+    poptovar(IDENTIFIER);
+    puts("push x\n");
     return 1;
 };
 
 PostOp = func(x) {
     if (!parse(Identifier,0)) return 0;
     skip();
+    var op;
     if (parse(String,"++")) {
+        op = "inc";
     } else if (parse(String,"--")) {
+        op = "dec";
     } else {
         return 0;
     };
     skip();
+    puts("# post-"); puts(op); puts("\n");
+    pushvar(IDENTIFIER);
+    puts("pop x\n");
+    puts("push x\n");
+    puts(op); puts(" x\n");
+    puts("push x\n");
+    poptovar(IDENTIFIER);
     return 1;
 };
 
 AddressOf = func(x) {
     if (!parse(CharSkip,'&')) return 0;
     if (!parse(Identifier,0)) die("address-of (&) needs identifier");
+
+    var v = findlocal(IDENTIFIER);
+    var bp_rel;
+    if (v) {
+        bp_rel = *(v+1);
+        puts("# &"); puts(IDENTIFIER); puts(" (local)\n");
+        puts("ld x, r253\n");
+        puts("add x, "); puts(itoa(bp_rel)); puts("\n");
+        puts("push x\n");
+        return 1;
+    };
+
+    v = findglobal(IDENTIFIER);
+    if (v) {
+        puts("# &"); puts(IDENTIFIER); puts(" (global)\n");
+        puts("ld x, _"); puts(IDENTIFIER); puts("\n");
+        puts("push x\n");
+        return 1;
+    };
+
+    puts("bad address-of: "); puts(IDENTIFIER); puts("\n");
+    die("unrecognised identifier: $name"); # TODO: printf
+
     return 1;
 };
 
 UnaryExpression = func(x) {
+    var op = *(input+pos);
     if (!parse(AnyChar,"!~*+-")) return 0;
     skip();
     if (!parse(Term,0)) die("unary operator $op needs operand"); # TODO: sprintf
+
+    puts("# unary "); putchar(op); puts("\n");
+    if (op == '~') {
+        puts("pop x\n");
+        puts("not x\n");
+        puts("push x\n");
+    } else if (op == '-') {
+        puts("pop x\n");
+        puts("neg x\n");
+        puts("push x\n");
+    } else if (op == '!') {
+        die("unary ! not implemented");
+    } else if (op == '+') {
+        # no-op
+    } else if (op == '*') {
+        puts("# pointer dereference:\n");
+        puts("pop x\n");
+        puts("ld x, (x)\n");
+        puts("push x\n");
+    } else {
+        die("unrecognised unary operator $op (probably a compiler bug)"); # TODO: sprintf
+    };
     return 1;
 };
 
@@ -687,6 +866,7 @@ while (1) {
 };
 *p = 0;
 
+STRINGS = lstnew();
 EXTERNS = lstnew();
 GLOBALS = lstnew();
 
@@ -703,6 +883,18 @@ puts("jmp "); plabel(end); puts("\n");
 
 lstwalk(GLOBALS, func(name) {
     putchar('_'); puts(name); puts(": .word 0\n");
+});
+
+lstwalk(STRINGS, func(tuple) {
+    var str = *tuple;
+    var label = *(tuple+1);
+    plabel(label); puts(":\n");
+    var p = str;
+    while (*p) {
+        puts(".word "); puts(itoa(*p)); puts("\n");
+        p++;
+    };
+    puts(".word 0\n");
 });
 
 lstfree(EXTERNS);
