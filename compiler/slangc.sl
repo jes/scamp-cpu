@@ -1,13 +1,39 @@
-# Dumb parsing program in slang
+# SLANG Compiler by jes
 #
-# TODO: accept multi-line input
-# TODO: die instead of returning -1 when we find a failure
+# Reads SLANG source from stdin, produces SCAMP assembly code on stdout. In the
+# event of a compile error, there'll be a message on stderr and a non-zero exit
+# status, and the code on stdout should be ignored.
+#
+# Recursive descent parser based on https://www.youtube.com/watch?v=Ytq0GQdnChg
+# Each Foo() parses a rule from the grammar; if the rule matches it returns 1,
+# else it returns 0.
+#
+# Rather than turning the source code into an abstract syntax tree and then
+# turning the AST into code, we treat the compiler's call graph as an implicit
+# AST and generate code as we "walk the call graph", i.e. as the compiler parses
+# the source.
+#
+# TODO: optionally annotate generated assembly code with the source code that
+#       generated it
+# TODO: fix all of the magnitude-comparison operators, and provide both signed
+#       and unsigned versions?
+# TODO: some way to include assembly code
+# TODO: some way to include files only the first time (maybe *only* work that way? how
+#       often is it actually useful to be able to include a file multiple times?)
+# TODO: array indexing syntax
+#
 # TODO: generate code
 
 include "stdio.sl";
 include "stdlib.sl";
 include "string.sl";
 include "parse.sl";
+
+var die = func(s) {
+    puts("error: line "); puts(itoa(line)); puts(": col "); puts(itoa(col)); puts(": ");
+    puts(s); putchar('\n');
+    outp(3,0); # halt the emulator
+};
 
 var Reject = func(x) { return 0; };
 
@@ -48,7 +74,7 @@ var Identifier;
 Program = func(x) {
     skip();
     parse(Statements,0);
-    if (nextchar() != EOF) return 0; # die "garbage after end of program"
+    if (nextchar() != EOF) die("garbage after end of program");
     return 1;
 };
 
@@ -81,19 +107,45 @@ Include = Reject;
 Block = func(x) {
     if (!parse(CharSkip,'{')) return 0;
     parse(Statements,0);
-    if (!parse(CharSkip,'}')) return 0; # die "block needs closing brace"
+    if (!parse(CharSkip,'}')) die("block needs closing brace");
     return 1;
 };
 
 Extern = func(x) {
     if (!parse(Keyword,"extern")) return 0;
-    if (!parse(Identifier,0)) return 0; # die "extern needs identifier"
+    if (!parse(Identifier,0)) die("extern needs identifier");
     return 1;
 };
 
-Declaration = Reject;
-Conditional = Reject;
-Loop = Reject;
+Declaration = func(x) {
+    if (!parse(Keyword,"var")) return 0;
+    if (!parse(Identifier,0)) die("var needs identifier");
+    if (!parse(CharSkip,'=')) return 1;
+    if (!parse(Expression,0)) die("initialisation needs expression");
+    return 1;
+};
+
+Conditional = func(x) {
+    if (!parse(Keyword,"if")) return 0;
+    if (!parse(CharSkip,'(')) die("if condition needs open paren");
+    if (!parse(Expression,0)) die("if condition needs expression");
+    if (!parse(CharSkip,')')) die("if condition needs close paren");
+    if (!parse(Statement,0)) die("if needs body");
+    if (parse(Keyword,"else")) {
+        if (!parse(Statement,0)) die("else needs body");
+    } else {
+    };
+    return 1;
+};
+
+Loop = func(x) {
+    if (!parse(Keyword,"while")) return 0;
+    if (!parse(CharSkip,'(')) die("while condition needs open paren");
+    if (!parse(Expression,0)) die("while condition needs expression");
+    if (!parse(CharSkip,')')) die("while condition needs close paren");
+    parse(Statement,0); # optional
+    return 1;
+};
 
 Break = func(x) {
     if (!parse(Keyword,"break")) return 0;
@@ -105,21 +157,71 @@ Continue = func(x) {
     return 1;
 };
 
-Return = Reject;
-Assignment = Reject;
-Expression = Reject;
+Return = func(x) {
+    if (!parse(Keyword,"return")) return 0;
+    if (!parse(Expression,0)) die("return needs expression");
+    return 1;
+};
+
+Assignment = func(x) {
+    if (parse(Identifier,0)) {
+    } else {
+        if (!parse(CharSkip,'*')) return 0;
+        if (!parse(Term,0)) die("can't dereference non-expression");
+    };
+    if (!parse(CharSkip,'=')) return 0;
+    if (!parse(Expression,0)) die("assignment needs rvalue");
+    return 1;
+};
+
+Expression = func(x) { return parse(Term,0); };
 ExpressionLevel = Reject;
-Term = Reject;
-Constant = Reject;
-NumericLiteral = Reject;
+
+Term = func(x) {
+    if (parse(Constant,0)) return 1;
+    if (parse(FunctionCall,0)) return 1;
+    if (parse(AddressOf,0)) return 1;
+    if (parse(PreOp,0)) return 1;
+    if (parse(PostOp,0)) return 1;
+    if (parse(UnaryExpression,0)) return 1;
+    if (parse(ParenExpression,0)) return 1;
+    if (!parse(Identifier,0)) return 0;
+    return 1;
+};
+
+Constant = func(x) {
+    if (parse(NumericLiteral,0)) return 1;
+    if (parse(StringLiteral,0)) return 1;
+    if (parse(FunctionDeclaration,0)) return 1;
+    return 0;
+};
+
+NumericLiteral = func(x) {
+    if (parse(HexLiteral,0)) return 1;
+    if (parse(CharacterLiteral,0)) return 1;
+    if (parse(DecimalLiteral,0)) return 1;
+    return 0;
+};
+
 HexLiteral = Reject;
 DecimalLiteral = Reject;
 CharacterLiteral = Reject;
 StringLiteral = Reject;
 StringLiteralText = Reject;
-FunctionDeclaration = Reject;
+
+FunctionDeclaration = func(x) {
+    if (!parse(Keyword,"func")) return 0;
+    if (!parse(CharSkip,'(')) die("func needs open paren");
+    var params = Parameters(0);
+    if (!parse(CharSkip,')')) die("func needs close paren");
+    parse(Statement,0); # optional
+    return 1;
+};
+
 Parameters = Reject;
+
 FunctionCall = Reject;
+
 Arguments = Reject;
 PreOp = Reject;
 PostOp = Reject;
@@ -137,11 +239,12 @@ Identifier = func(x) {
 };
 
 var buf = malloc(16384);
-while (gets(buf, 16384)) {
-    parse_init(buf);
-    if (parse(Program,0)) {
-        puts("ok\n");
-    } else {
-        puts("bad\n");
-    };
+*buf = 0;
+while (gets(buf+strlen(buf), 16384)); # XXX: bad
+
+parse_init(buf);
+if (parse(Program,0)) {
+    puts("ok\n");
+} else {
+    puts("bad\n");
 };
