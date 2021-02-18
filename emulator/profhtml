@@ -1,5 +1,10 @@
 #!/usr/bin/perl
 
+# TODO: would be good to load instructions.json and show some specific
+#       instruction-related information
+# TODO: we probably want the emulator to write the address that the instruction
+#       register was last loaded from, rather than the literal current PC
+
 use strict;
 use warnings;
 
