@@ -372,9 +372,10 @@ int main(int argc, char **argv) {
         if (test && steps > 3000)
             halt = 1;
 
+        gettimeofday(&curtime, NULL);
+        elapsed_us = ((curtime.tv_sec * 1000000) + curtime.tv_usec) - ((starttime.tv_sec * 1000000) + starttime.tv_usec);
+
         if (freq) {
-            gettimeofday(&curtime, NULL);
-            elapsed_us = ((curtime.tv_sec * 1000000) + curtime.tv_usec) - ((starttime.tv_sec * 1000000) + starttime.tv_usec);
             target_us = (steps * 1000000ull) / freq;
             if (elapsed_us < target_us)
                 usleep(target_us - elapsed_us);

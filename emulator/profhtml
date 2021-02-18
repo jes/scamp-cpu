@@ -1,0 +1,126 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use List::Util qw(max);
+
+my $l = <>;
+die "don't recognise profile\n" if $l ne "scamp-profile\n";
+my $endtime = readval('endtime');
+my $cmdline = readval('cmdline');
+my $cycles = readval('cycles');
+my $elapsed_us = readval('elapsed_us');
+my @pc_cycles = readarray('pc_cycles', 65536);
+my @last_instr = readarray('last_instr', 65536);
+my @opcode_cycles = readarray('opcode_cycles', 256);
+
+print header();
+print "Profiling completed: <b>$endtime</b><br>\n";
+print "Command line: <b><tt>$cmdline</tt></b><br>\n";
+print "Total cycles: <b>$cycles</b><br>\n";
+print "Elapsed time: <b>" . sprintf("%.03f", $elapsed_us/1000000) . "</b> secs<br>\n";
+print "Time at 1 MHz: <b>" . sprintf("%.03f", $cycles/1000000) . "</b> secs<br>\n";
+print "<h2>Cycles per address</h2>\n";
+pc_cycles();
+print "<h2>Cycles per opcode</h2>\n";
+opcode_cycles();
+print footer();
+
+sub header {
+    qq{<html>
+<head>
+<title>SCAMP Profiling</title>
+<style type="text/css">
+table {
+    border: none;
+    border-spacing: 0px;
+}
+tr, td {
+    padding: 0;
+    margin: 0;
+    min-width: 4px;
+    border: none;
+}
+th {
+    font-size: 0.7em;
+    font-family: monospace;
+}
+</style>
+</head>
+<body>
+<h1>SCAMP Profiling</h1>
+};
+}
+
+sub pc_cycles {
+    my $max_cycles = max(@pc_cycles);
+
+    print "<table>\n";
+    for my $y (0 .. 255) {
+        print "<tr><th>" . sprintf("%04x", $y<<8) . "</th>";
+        for my $x (0 .. 255) {
+            my $addr = $y<<8 | $x;
+            print "<td style=\"background-color:" . heatcolour($pc_cycles[$addr], $max_cycles) . "\"></td>";
+        }
+        print "</tr>\n";
+    }
+    print "</table>\n";
+}
+
+sub opcode_cycles {
+    my $max_cycles = max(@opcode_cycles);
+
+    print "<table>\n";
+    for my $y (0 .. 15) {
+        print "<tr><th>" . sprintf("%01x_", $y) . "</th>";
+        for my $x (0 .. 15) {
+            my $op = $y<<4 | $x;
+            print "<td style=\"background-color:" . heatcolour($opcode_cycles[$op], $max_cycles) . "\"></td>";
+        }
+        print "</tr>\n";
+    }
+    print "</table>\n";
+
+}
+
+sub footer {
+    qq{</body>
+</html>
+};
+}
+
+sub heatcolour {
+    my ($v, $max) = @_;
+
+    my @cold = (227,231,239);
+    my @hot = (255,0,0);
+
+    my $k = $v / $max;
+
+    my @col = map { $cold[$_]+($hot[$_]-$cold[$_])*$k } 0..2;
+    return 'rgb(' . join(',',@col) . ')';
+}
+
+sub readval {
+    my ($key) = @_;
+    my $line = <>;
+    chomp $line;
+    die "line $.: expected $key: $line\n" if $line !~ /^$key: (.*)$/;
+    return $1;
+}
+
+sub readarray {
+    my ($key, $len) = @_;
+    my $line = <>;
+    chomp $line;
+    die "line $.: expected $key: $line\n" if $line !~ /^$key:$/;
+    my @vals;
+    for (1..$len) {
+        my $l = <>;
+        chomp $l;
+        die "line $.: expected numeric: $l\n", if $l !~ /^\d+$/;
+        push @vals, $l;
+    }
+    return @vals;
+}
