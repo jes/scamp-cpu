@@ -22,8 +22,10 @@ my @last_instr = readarray('last_instr', 65536);
 my @opcode_cycles = readarray('opcode_cycles', 256);
 
 my $endtimestr = strftime("%Y-%m-%d %H:%M:%S", localtime($endtime));
+my $nowtimestr = strftime("%Y-%m-%d %H:%M:%S", localtime(time));
 
 print header();
+print "Page generated: <b>$nowtimestr</b><br>\n";
 print "Profiling completed: <b>$endtimestr</b><br>\n";
 print "Command line: <b><tt>$cmdline</tt></b><br>\n";
 print "Total cycles: <b>$cycles</b><br>\n";
