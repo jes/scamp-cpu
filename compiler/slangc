@@ -83,7 +83,7 @@ sub parse {
 
 sub Program {
     skip();
-    return 0 if !parse(\&Statements);
+    die "program should contain statements\n" if !parse(\&Statements);
 
     die "garbage after end of program\n" if $pos != @s;
     die "expected to be left in global scope after program (probably a compiler bug)\n" if !$scope->{global};
@@ -255,6 +255,7 @@ sub Break {
     die "can't break here\n" if !$BREAKLABEL;
     print "# break\n";
     print "jmp $BREAKLABEL\n";
+    return 1;
 }
 
 sub Continue {
@@ -262,6 +263,7 @@ sub Continue {
     die "can't continue here\n" if !$CONTLABEL;
     print "# continue\n";
     print "jmp $CONTLABEL\n";
+    return 1;
 }
 
 sub Return {

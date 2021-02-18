@@ -88,6 +88,24 @@ var skip = func() {
     }
 };
 
+# TODO: put these somewhere more useful
+# TODO: ...and better-organise the standard library in general
+var isalpha = func(ch) return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
+var isdigit = func(ch) return ch >= '0' && ch <= '9';
+var isalnum = func(ch) return isalpha(ch) || isdigit(ch);
+
+# accept string s if it ends at a word boundary
+var Keyword = func(s) {
+    if (!parse(String,s)) return 0;
+    var ch = *(input+pos);
+    var alnumunder = isalnum(ch) || ch == '_';
+    if (ch == 0 || !alnumunder) {
+        skip();
+        return 1;
+    };
+    return 0;
+};
+
 # accept only character ch, skip whitespace and comments
 var CharSkip = func(ch) {
     if (nextchar() != ch) return 0;
