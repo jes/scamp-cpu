@@ -108,7 +108,11 @@ sub opcode_cycles {
         print "<tr><th>" . sprintf("%01x_", $y) . "</th>";
         for my $x (0 .. 15) {
             my $op = $y<<4 | $x;
-            print "<td style=\"background-color:" . heatcolour($opcode_cycles[$op], $max_cycles) . "\"><div class=\"popup\">" . sprintf("%02x", $op) . "</div></td>";
+
+            my $popuphtml = "<br>Opcode: ".sprintf("<b>%02x</b>",$op)."<br>";
+            $popuphtml .= "Cycles: <b>$opcode_cycles[$op] " . sprintf("(%.01f%% max)", 100*$opcode_cycles[$op]/$max_cycles) . "</b><br>";
+
+            print "<td style=\"background-color:" . heatcolour($opcode_cycles[$op], $max_cycles) . "\"><div class=\"popup\">$popuphtml</div></td>";
         }
         print "</tr>\n";
     }
