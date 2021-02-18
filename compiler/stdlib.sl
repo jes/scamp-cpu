@@ -66,6 +66,8 @@ var tolower = func(ch) {
     return ch;
 };
 
+# return index of ch in alphabet, or 0 if not present; note 0 is indistinguishable
+# from "present at index 0"
 var stridx = func(alphabet, ch) {
     var i = 0;
     while (*(alphabet+i)) {
