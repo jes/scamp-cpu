@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use List::Util qw(max);
+use POSIX qw(strftime);
 
 my $l = <>;
 die "don't recognise profile\n" if $l ne "scamp-profile\n";
@@ -15,8 +16,10 @@ my @pc_cycles = readarray('pc_cycles', 65536);
 my @last_instr = readarray('last_instr', 65536);
 my @opcode_cycles = readarray('opcode_cycles', 256);
 
+my $endtimestr = strftime("%Y-%m-%d %H:%M:%S", localtime($endtime));
+
 print header();
-print "Profiling completed: <b>$endtime</b><br>\n";
+print "Profiling completed: <b>$endtimestr</b><br>\n";
 print "Command line: <b><tt>$cmdline</tt></b><br>\n";
 print "Total cycles: <b>$cycles</b><br>\n";
 print "Elapsed time: <b>" . sprintf("%.03f", $elapsed_us/1000000) . "</b> secs<br>\n";
