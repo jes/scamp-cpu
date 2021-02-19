@@ -584,32 +584,28 @@ sub UnaryExpression {
     );
 
     print "# unary $op\n";
+    print "pop x\n";
     if ($mnemonic{$op}) {
         # pop arg from stack, negate it, put it back on stack
-        print "pop x\n";
         print "$mnemonic{$op} x\n";
-        print "push x\n";
     } elsif ($op eq '!') {
         # test arg from stack, if it's zero do nothing, otherwise overwrite it with a 1
         my $endlabel = label();
-        print "pop x\n";
         print "test x\n";
         print "ld x, 0\n"; # doesn't clobber flags
         print "jnz $endlabel\n"; # if the popped value is not 0, then we want 0
         print "ld x, 1\n"; # if the popped value was 0, then we want 1
         print "$endlabel:\n";
-        print "push x\n";
     } elsif ($op eq '+') {
         # unary + is a no-op
     } elsif ($op eq '*') {
         # pop arg from stack, dereference it, put it back on stack
         print "# pointer dereference:\n";
-        print "pop x\n";
         print "ld x, (x)\n";
-        print "push x\n";
     } else {
         die "unrecognised unary operator $op (probably a compiler bug)\n";
     }
+    print "push x\n";
     return 1;
 }
 
