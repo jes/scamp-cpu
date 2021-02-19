@@ -9,9 +9,7 @@ var strcmp = func(s1, s2) {
         s1++;
         s2++
     };
-
-    if (*s1 != *s2)
-        return *s1-*s2;
+    if (*s1 != *s2) return *s1-*s2;
     return 0;
 };
 
@@ -23,23 +21,19 @@ var strlen = func(s) {
 
 var memset = func(s, val, len) {
     var ss = s;
-    while (len--) {
-        *(s++) = val;
-    };
+    while (len--) *(s++) = val;
     return ss;
 };
 
 var memcpy = func(dest, src, len) {
     var dd = dest;
-    while (len--)
-        *(dest++) = *(src++);
+    while (len--) *(dest++) = *(src++);
     return dd;
 };
 
 var strcpy = func(dest, src) {
     var dd = dest;
-    while (*src)
-        *(dest++) = *(src++);
+    while (*src) *(dest++) = *(src++);
     return dd;
 };
 
