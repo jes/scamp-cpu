@@ -27,6 +27,10 @@ I'm quite happy with the instruction set, see [doc/table.html](doc/table.html), 
 
 I have some blog posts here: https://incoherency.co.uk/blog/tags/cpu.html
 
+I have created an emulator (see in `emulator/`) and a compiler (`compiler/`). Although there is still useful
+work to be done on the compiler, it can now compile itself from within the emulator, provided the `include`
+lines are preprocessed outside, although it's very tight on memory usage - only about 1K spare.
+
 I'm currently designing the PCBs:
 
  - [x] ALU
@@ -37,13 +41,14 @@ I'm currently designing the PCBs:
  - [ ] Serial port
  - [ ] Storage
 
-Future work:
+Apart from PCBs, other work includes:
 
- - [ ] get the PCBs manufactured
+ - [x] get the PCBs manufactured
+ - [ ] work out how to interface with storage and serial
  - [ ] assemble the computer inside a convenient case
  - [ ] write the bootloader ROM
  - [ ] write the "kernel"
- - [ ] write a compiler
+ - [x] write a compiler
  - [ ] write some applications
  - [ ] write an editor
  - [ ] make it self-host
