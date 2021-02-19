@@ -153,22 +153,25 @@ var endscope = func() {
 };
 
 var pushvar = func(name) {
-    var v = findglobal(name);
+    var v;
+    var bp_rel;
+    if (LOCALS) {
+        v = findlocal(name);
+        if (v) {
+            bp_rel = *(v+1);
+            puts("# pushvar: local "); puts(name); puts(" ("); puts(itoa(bp_rel)); puts(")\n");
+            puts("ld x, r253\n");
+            puts("add x, "); puts(itoa(bp_rel)); puts("\n");
+            puts("ld x, (x)\n");
+            puts("push x\n");
+            return 0;
+        };
+    };
+
+    v = findglobal(name);
     if (v) {
         puts("# pushvar: global "); puts(name); puts("\n");
         puts("ld x, (_"); puts(name); puts(")\n");
-        puts("push x\n");
-        return 0;
-    };
-
-    v = findlocal(name);
-    var bp_rel;
-    if (v) {
-        bp_rel = *(v+1);
-        puts("# pushvar: local "); puts(name); puts(" ("); puts(itoa(bp_rel)); puts(")\n");
-        puts("ld x, r253\n");
-        puts("add x, "); puts(itoa(bp_rel)); puts("\n");
-        puts("ld x, (x)\n");
         puts("push x\n");
         return 0;
     };
@@ -177,23 +180,26 @@ var pushvar = func(name) {
     die("unrecognised identifier: $name"); # TODO: printf
 };
 var poptovar = func(name) {
-    var v = findglobal(name);
+    var v;
+    var bp_rel;
+    if (LOCALS) {
+        v = findlocal(name);
+        if (v) {
+            bp_rel = *(v+1);
+            puts("# poptovar: local "); puts(name); puts(" ("); puts(itoa(bp_rel)); puts(")\n");
+            puts("ld r252, r253\n");
+            puts("add r252, "); puts(itoa(bp_rel)); puts("\n");
+            puts("pop x\n");
+            puts("ld (r252), x\n");
+            return 0;
+        };
+    };
+
+    v = findglobal(name);
     if (v) {
         puts("# poptovar: global "); puts(name); puts("\n");
         puts("pop x\n");
         puts("ld (_"); puts(name); puts("), x\n");
-        return 0;
-    };
-
-    v = findlocal(name);
-    var bp_rel;
-    if (v) {
-        bp_rel = *(v+1);
-        puts("# poptovar: local "); puts(name); puts(" ("); puts(itoa(bp_rel)); puts(")\n");
-        puts("ld r252, r253\n");
-        puts("add r252, "); puts(itoa(bp_rel)); puts("\n");
-        puts("pop x\n");
-        puts("ld (r252), x\n");
         return 0;
     };
 
