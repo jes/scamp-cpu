@@ -21,8 +21,6 @@
 # TODO: some way to include files only the first time (maybe *only* work that way? how
 #       often is it actually useful to be able to include a file multiple times?)
 # TODO: array indexing syntax
-#
-# TODO: generate code
 
 include "stdio.sl";
 include "stdlib.sl";
@@ -268,6 +266,7 @@ var genop = func(op) {
         puts("ld x, 1\n");
         plabel(end); puts(":\n");
     } else if (strcmp(op,">") == 0) {
+        end = label();
         puts("sub r0, x #peepopt:test\n");
         puts("ld x, 1\n"); # doesn't clobber flags
         puts("jlt "); plabel(end); puts("\n");
@@ -288,6 +287,15 @@ var genop = func(op) {
         puts("test r0\n");
         puts("jz "); plabel(end); puts("\n");
         puts("ld x, 1\n"); # both args true: x=1
+        plabel(end); puts(":\n");
+    } else if (strcmp(op,"||") == 0) {
+        end = label();
+        puts("test x\n");
+        puts("ld x, 1\n"); # doesn't clobber flags
+        puts("jnz "); plabel(end); puts("\n");
+        puts("test r0\n");
+        puts("jnz "); plabel(end); puts("\n");
+        puts("ld x, 0\n"); # both args false: x=0
         plabel(end); puts(":\n");
     } else {
         puts("bad op: "); puts(op); puts("\n");
@@ -583,14 +591,16 @@ HexLiteral = func(x) {
 };
 
 DecimalLiteral = func(x) {
-    parse(AnyChar,"+-");
     var pos0 = pos;
+    parse(AnyChar,"+-");
+    skip();
+    var pos1 = pos;
     if (!parse(AnyChar,"0123456789")) return 0;
     while (parse(AnyChar,"0123456789"));
     var was = *(input+pos);
     *(input+pos) = 0;
-    var v = atoibase(input+pos0, 10);
-    if (*(input+pos0-1) == '-') genliteral(-v)
+    var v = atoibase(input+pos1, 10);
+    if (*(input+pos0) == '-') genliteral(-v)
     else genliteral(v);
     *(input+pos) = was;
     skip();
@@ -821,27 +831,31 @@ UnaryExpression = func(x) {
     skip();
     if (!parse(Term,0)) die("unary operator $op needs operand"); # TODO: sprintf
 
+    var end;
+
     puts("# unary "); putchar(op); puts("\n");
+    puts("pop x\n");
     if (op == '~') {
-        puts("pop x\n");
         puts("not x\n");
-        puts("push x\n");
     } else if (op == '-') {
-        puts("pop x\n");
         puts("neg x\n");
-        puts("push x\n");
     } else if (op == '!') {
-        die("unary ! not implemented");
+        end = label();
+        puts("test x\n");
+        puts("ld x, 0\n"); # doesn't clobber flags
+        puts("jnz "); plabel(end); puts("\n");
+        puts("ld x, 1\n");
+        plabel(end); puts(":\n");
     } else if (op == '+') {
         # no-op
     } else if (op == '*') {
         puts("# pointer dereference:\n");
-        puts("pop x\n");
         puts("ld x, (x)\n");
-        puts("push x\n");
     } else {
         die("unrecognised unary operator $op (probably a compiler bug)"); # TODO: sprintf
     };
+
+    puts("push x\n");
     return 1;
 };
 
