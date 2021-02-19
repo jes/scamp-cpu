@@ -25,10 +25,8 @@ var lstnew = func() {
     return cons(0,0);
 };
 
-# return a pointer to the first element of the list
 var lsthead = car;
 var lstsethead = setcar;
-# return a pointer to the last element of the list
 var lsttail = cdr;
 var lstsettail = setcdr;
 
@@ -36,10 +34,8 @@ var elemnew = func(v) {
     return cons(v,0);
 };
 
-# return the value of the given element
 var elemval = car;
 var elemsetval = setcar;
-# return the next element of the given element
 var elemnext = cdr;
 var elemsetnext = setcdr;
 
