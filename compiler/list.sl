@@ -8,12 +8,16 @@
 # TODO: retrieve element at given index
 # TODO: delete element at given index
 
+var cons = func(a,b) {
+    var tuple = malloc(2);
+    *tuple = a;
+    *(tuple+1) = b;
+    return tuple;
+};
+
 # return a pointer to the empty list
 var lstnew = func() {
-    var lst = malloc(2);
-    *lst = 0; # head
-    *(lst+1) = 0; # tail
-    return lst;
+    return cons(0,0);
 };
 
 # return a pointer to the first element of the list
@@ -22,10 +26,7 @@ var lsthead = func(lst) { return *lst; };
 var lsttail = func(lst) { return *(lst+1); };
 
 var elemnew = func(v) {
-    var el = malloc(2);
-    *el = v;
-    *(el+1) = 0;
-    return el;
+    return cons(v,0);
 };
 
 # return the value of the given element

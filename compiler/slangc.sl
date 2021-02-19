@@ -100,13 +100,9 @@ var findglobal = func(name) {
 };
 
 var addlocal = func(name, bp_rel) {
-    var tuple = malloc(2);
-
     if (!LOCALS) die("can't add local in global scope");
 
-    *tuple = name;
-    *(tuple+1) = bp_rel;
-
+    var tuple = cons(name,bp_rel);
     lstpush(LOCALS, tuple);
     return tuple;
 };
@@ -634,9 +630,7 @@ StringLiteral = func(x) {
     var strlabel = label();
     puts("ld x, "); plabel(strlabel); puts("\n");
     puts("push x\n");
-    var tuple = malloc(2);
-    *tuple = str;
-    *(tuple+1) = strlabel;
+    var tuple = cons(str,strlabel);
     lstpush(STRINGS, tuple);
     return 1;
 };
