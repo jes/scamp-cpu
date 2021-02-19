@@ -49,8 +49,11 @@ sub header {
 <title>SCAMP Profiling</title>
 <style type="text/css">
 table {
-    border: none;
     border-spacing: 0px;
+    border-collapse: collapse;
+}
+th, tr {
+    border: solid 1px #ccc;
 }
 table.pc td {
     padding: 0;
