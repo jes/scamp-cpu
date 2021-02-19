@@ -5,8 +5,6 @@ include "stdlib.sl";
 include "string.sl";
 include "list.sl";
 
-extern mul;
-
 # recursive fibonacci
 var rfib = func(n) {
     if (n <= 2)

@@ -154,6 +154,7 @@ sub Extern {
     my $id = $IDENTIFIER;
 
     die "can only use extern in global scope\n" if !$scope->{global};
+    die "duplicate declaration at global scope: $id\n" if $scope->{symbols}{$id};
     $scope->{symbols}{$id} = {
         type => 'global',
         extern => 1,
