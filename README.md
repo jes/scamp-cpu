@@ -49,7 +49,7 @@ Other work includes:
  - [ ] write the bootloader ROM
  - [ ] write the "kernel"
  - [x] write a compiler
- - [ ] write some applications
+ - [ ] write system utilities
  - [ ] write an editor
  - [ ] make it self-host
 
