@@ -37,9 +37,9 @@ print "<h2>Cycles per address</h2>\n";
 pc_cycles();
 print "<h2>Cycles per opcode</h2>\n";
 opcode_cycles();
-print "<h2>Reads per address</h2>\n";
+print "<h2>Reads per address <small>(excl. pseudoregs)</small></h2>\n";
 addr_reads();
-print "<h2>Writes per address</h2>\n";
+print "<h2>Writes per address <small>(excl. pseudoregs)</small></h2>\n";
 addr_writes();
 print footer();
 
@@ -48,6 +48,12 @@ sub header {
 <head>
 <title>SCAMP Profiling</title>
 <style type="text/css">
+body {
+    font-family: sans-serif;
+}
+h2 small {
+    font-size: 0.5em;
+}
 table {
     border-spacing: 0px;
     border-collapse: collapse;
