@@ -917,6 +917,7 @@ lstwalk(STRINGS, func(tuple) {
     puts(".word 0\n");
 });
 
+lstfree(STRINGS);
 lstfree(EXTERNS);
 lstfree(GLOBALS);
 
