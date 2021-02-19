@@ -43,9 +43,7 @@ var elemsetval = setcar;
 var elemnext = cdr;
 var elemsetnext = setcdr;
 
-var elemfree = func(elem) {
-    free(elem);
-};
+var elemfree = free;
 
 var lstfree = func(lst) {
     var elem = lsthead(lst);
@@ -54,7 +52,7 @@ var lstfree = func(lst) {
 
     while (elem) {
         next = elemnext(elem);
-        free(elem);
+        elemfree(elem);
         elem = next;
     };
 };
