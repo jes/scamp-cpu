@@ -641,16 +641,30 @@ StringLiteral = func(x) {
     return 1;
 };
 
+var unescapechars = func(s) {
+    var p = s;
+    while (*s) {
+        if (*s == '\\') {
+            *p = escapedchar(*++s);
+        } else {
+            *p = *s;
+        };
+        p++;
+        s++;
+    };
+    *p = 0;
+};
+
 # expects you to have already parsed the opening quote; consumes the closing quote
 StringLiteralText = func() {
     var pos0 = pos;
     var str;
     while (1) {
         if (parse(CharSkip,'"')) {
-            # TODO: handle escaped chars
             str = malloc(pos - pos0);
             memcpy(str, input+pos0, pos-pos0-1);
             *(str+pos-pos0-1) = 0;
+            unescapechars(str);
             return str;
         };
         if (parse(Char,'\\')) {
