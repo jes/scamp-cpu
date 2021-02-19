@@ -15,24 +15,33 @@ var cons = func(a,b) {
     return tuple;
 };
 
+var car = func(tuple) { return *tuple; };
+var cdr = func(tuple) { return *(tuple+1); };
+var setcar = func(tuple,a) { *tuple = a; };
+var setcdr = func(tuple,b) { *(tuple+1) = b; };
+
 # return a pointer to the empty list
 var lstnew = func() {
     return cons(0,0);
 };
 
 # return a pointer to the first element of the list
-var lsthead = func(lst) { return *lst; };
+var lsthead = car;
+var lstsethead = setcar;
 # return a pointer to the last element of the list
-var lsttail = func(lst) { return *(lst+1); };
+var lsttail = cdr;
+var lstsettail = setcdr;
 
 var elemnew = func(v) {
     return cons(v,0);
 };
 
 # return the value of the given element
-var elemval = func(elem) { return *elem; };
+var elemval = car;
+var elemsetval = setcar;
 # return the next element of the given element
-var elemnext = func(elem) { return *(elem+1); };
+var elemnext = cdr;
+var elemsetnext = setcdr;
 
 var elemfree = func(elem) {
     free(elem);
@@ -56,10 +65,10 @@ var lstpush = func(lst, v) {
     var new_elem = elemnew(v);
     var tail_elem = lsttail(lst);
 
-    if (tail_elem) *(tail_elem+1) = new_elem
-    else *lst = new_elem;
+    if (tail_elem) elemsetnext(tail_elem, new_elem)
+    else lstsethead(lst,new_elem);
 
-    *(lst+1) = new_elem; # tail = new
+    lstsettail(lst, new_elem);
 };
 
 # remove the last value from the list and return it
@@ -74,16 +83,16 @@ var lstpop = func(lst) {
 
     if (head == tail) {
         # list becomes empty
-        *lst = 0;
-        *(lst+1) = 0;
+        lstsethead(lst, 0);
+        lstsettail(lst, 0);
     } else {
         # find the second-last element
         elem = head;
         while (elemnext(elem) != tail)
             elem = elemnext(elem);
 
-        *(elem+1) = 0;
-        *(lst+1) = elem;
+        elemsetnext(elem, 0);
+        lstsettail(lst, elem);
     };
 
     elemfree(tail);
@@ -96,8 +105,8 @@ var lstunshift = func(lst, v) {
     var new_elem = elemnew(v);
     var head_elem = lsthead(lst);
 
-    *(new_elem+1) = head_elem;
-    *lst = new_elem;
+    elemsetnext(new_elem, head_elem);
+    lstsethead(lst, new_elem);
 };
 
 # remove the first value from the list and return it
@@ -107,8 +116,8 @@ var lstshift = func(lst) {
     if (!head) return 0;
     var val = elemval(head);
 
-    *lst = elemnext(head);
-    if (!*lst) *(lst+1) = 0; # tail=0 if head=0
+    lstsethead(lst, elemnext(head));
+    if (!lsthead(lst)) lstsettail(lst, 0); # tail=0 if head=0
 
     elemfree(head);
     return val;
