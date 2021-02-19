@@ -93,8 +93,12 @@ var atoi = func(s) return atoibase(s, 10);
 extern TOP;
 var malloc = func(sz) {
     var oldtop = TOP;
-    # TODO: die if this is going to exceed TPA
     TOP = TOP + sz;
+    if (TOP&0xff00 == 0xff00) { # TODO: use >= operator when it's fixed
+        puts("out of memory\n");
+        outp(3,0);
+        while(1); # in case outp(3,0) doesn't halt
+    };
     return oldtop;
 };
 
