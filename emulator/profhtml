@@ -32,6 +32,7 @@ print "Profiling completed: <b>$endtimestr</b><br>\n";
 print "Command line: <b><tt>$cmdline</tt></b><br>\n";
 print "Total cycles: <b>$cycles</b><br>\n";
 print "Elapsed time: <b>" . sprintf("%.03f", $elapsed_us/1000000) . "</b> secs<br>\n";
+print "Implied clock frequency: <b>" . sprintf("%.03f", $cycles / $elapsed_us) . " </b> MHz<br>\n";
 print "Time at 1 MHz: <b>" . sprintf("%.03f", $cycles/1000000) . "</b> secs<br>\n";
 print "<h2>Cycles per address</h2>\n";
 pc_cycles();
