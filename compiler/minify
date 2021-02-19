@@ -1,0 +1,30 @@
+#!/usr/bin/perl
+
+# handle includes and strip leading whitespace
+
+use strict;
+use warnings;
+
+while (<>) {
+    chomp;
+    handle($_);
+}
+
+sub handle {
+    my ($line) = @_;
+    # TODO: $line =~ s/#.*//; except inside char/string literals
+    $line =~ s/^\s+//;
+    return if $line eq '';
+    if ($line =~ /^include\s+\"([^"]+)\"\s*;$/) {
+        my $file = $1;
+        open(my $fh, '<', $file)
+            or die "can't read $file: $!\n";
+        while (<$fh>) {
+            chomp;
+            handle($_);
+        }
+        close $fh;
+    } else {
+        print "$line\n";
+    }
+}
