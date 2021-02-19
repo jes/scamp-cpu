@@ -94,9 +94,11 @@ var fibtest = func() {
         puts(itoa(f3));
         puts("\n");
 
-        puts("rfib("); puts(itoa(n)); puts(") = ");
-        puts(itoa(rfib(n)));
-        puts("\n");
+        if (n <= 18) {
+            puts("rfib("); puts(itoa(n)); puts(") = ");
+            puts(itoa(rfib(n)));
+            puts("\n");
+        };
     };
 
     puts("\n");

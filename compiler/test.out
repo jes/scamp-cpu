@@ -67,15 +67,10 @@ rfib(17) = 1597
 fib(18) = 2584
 rfib(18) = 2584
 fib(19) = 4181
-rfib(19) = 4181
 fib(20) = 6765
-rfib(20) = 6765
 fib(21) = 10946
-rfib(21) = 10946
 fib(22) = 17711
-rfib(22) = 17711
 fib(23) = 28657
-rfib(23) = 28657
 
 string: Hello, world!
 reversed: !dlrow ,olleH
