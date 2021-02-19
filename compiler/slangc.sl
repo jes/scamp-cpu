@@ -158,7 +158,7 @@ var pushvar = func(name) {
         v = findlocal(name);
         if (v) {
             bp_rel = *(v+1);
-            puts("# pushvar: local "); puts(name); puts(" ("); puts(itoa(bp_rel)); puts(")\n");
+            puts("# pushvar: local "); puts(name); puts("\n");
             puts("ld x, r253\n");
             puts("add x, "); puts(itoa(bp_rel)); puts("\n");
             puts("ld x, (x)\n");
@@ -185,7 +185,7 @@ var poptovar = func(name) {
         v = findlocal(name);
         if (v) {
             bp_rel = *(v+1);
-            puts("# poptovar: local "); puts(name); puts(" ("); puts(itoa(bp_rel)); puts(")\n");
+            puts("# poptovar: local "); puts(name); puts("\n");
             puts("ld r252, r253\n");
             puts("add r252, "); puts(itoa(bp_rel)); puts("\n");
             puts("pop x\n");
@@ -890,13 +890,16 @@ Identifier = func(x) {
     return 1;
 };
 
-var buf = malloc(16384);
+var maxinput = 34000;
+var buf = malloc(maxinput);
 var p = buf;
 var ch = 0;
+var len = 0;
 while (1) {
     ch = getchar();
     if (ch == EOF) break;
     *(p++) = ch;
+    if (++len == maxinput) die("input too long");
 };
 *p = 0;
 

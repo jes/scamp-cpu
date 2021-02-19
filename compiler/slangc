@@ -740,7 +740,7 @@ sub poptovar {
         print "pop x\n";
         print "ld (_$name), x\n";
     } else {
-        print "# poptovar: local $name ($sym->{bp_rel})\n";
+        print "# poptovar: local $name\n";
         print "ld r252, r253\n";
         print "add r252, " . (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
         print "pop x\n";
@@ -757,7 +757,7 @@ sub pushvar {
         print "ld x, (_$name)\n";
         print "push x\n";
     } else {
-        print "# pushvar: local $name ($sym->{bp_rel})\n";
+        print "# pushvar: local $name\n";
         print "ld x, r253\n";
         print "add x, " . (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
         print "ld x, (x)\n";
