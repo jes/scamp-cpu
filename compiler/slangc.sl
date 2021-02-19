@@ -659,7 +659,7 @@ Parameters = func(x) {
     var p = PARAMS;
     while (1) {
         if (!parse(Identifier,0)) break;
-         *(p++) = strdup(IDENTIFIER);
+        *(p++) = strdup(IDENTIFIER);
         if (p == PARAMS+maxparams) die("too many params for function");
         if (!parse(CharSkip,',')) break;
     };
