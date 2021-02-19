@@ -86,12 +86,6 @@ var BREAKLABEL;
 var CONTLABEL;
 var LABELNUM = 1;
 
-var addextern = func(name) {
-    lstpush(EXTERNS, name);
-};
-var addglobal = func(name) {
-    lstpush(GLOBALS, name);
-};
 # return 1 if "name" is a global or extern, 0 otherwise
 var findglobal = func(name) {
     if (lstfind(GLOBALS, name, func(a,b) { return strcmp(a,b)==0 })) return 1;
@@ -99,17 +93,28 @@ var findglobal = func(name) {
     return 0;
 };
 
-var addlocal = func(name, bp_rel) {
-    if (!LOCALS) die("can't add local in global scope");
-
-    var tuple = cons(name,bp_rel);
-    lstpush(LOCALS, tuple);
-    return tuple;
+var addextern = func(name) {
+    if (findglobal(name)) die("duplicate global: $name"); # TODO: printf
+    lstpush(EXTERNS, name);
 };
+var addglobal = func(name) {
+    if (findglobal(name)) die("duplicate global: $name"); # TODO: printf
+    lstpush(GLOBALS, name);
+};
+
 # return pointer to (name,bp_rel) if "name" is a local, 0 otherwise
 var findlocal = func(name) {
     if (!LOCALS) die("can't find local in global scope");
     return lstfind(LOCALS, name, func(findname,tuple) { return strcmp(findname,*tuple)==0 });
+};
+var addlocal = func(name, bp_rel) {
+    if (!LOCALS) die("can't add local in global scope");
+
+    if (findlocal(name)) die("duplicate local: $name"); # TODO: printf
+
+    var tuple = cons(name,bp_rel);
+    lstpush(LOCALS, tuple);
+    return tuple;
 };
 
 var newscope = func() {
