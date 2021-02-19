@@ -654,11 +654,12 @@ StringLiteralText = func() {
     var pos0 = pos;
     var str;
     while (1) {
-        if (parse(CharSkip,'"')) {
+        if (parse(Char,'"')) {
             str = malloc(pos - pos0);
             memcpy(str, input+pos0, pos-pos0-1);
             *(str+pos-pos0-1) = 0;
             unescapechars(str);
+            skip();
             return str;
         };
         if (parse(Char,'\\')) {
