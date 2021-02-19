@@ -35,6 +35,8 @@ uint16_t disk[65536];
 uint64_t pc_cycles[65536];
 uint16_t last_instr[65536];
 uint64_t opcode_cycles[256];
+uint64_t addr_reads[65536];
+uint64_t addr_writes[65536];
 FILE *profile_fp;
 
 void load_hex(uint16_t *buf, int maxlen, char *name) {
@@ -99,6 +101,12 @@ void write_profile(int argc, char **argv, int cycles, uint64_t elapsed_us) {
     fprintf(profile_fp, "opcode_cycles:\n");
     for (i = 0; i < 256; i++)
         fprintf(profile_fp, "%lu\n", opcode_cycles[i]);
+    fprintf(profile_fp, "addr_reads:\n");
+    for (i = 0; i < 65536; i++)
+        fprintf(profile_fp, "%lu\n", addr_reads[i]);
+    fprintf(profile_fp, "addr_writes:\n");
+    for (i = 0; i < 65536; i++)
+        fprintf(profile_fp, "%lu\n", addr_writes[i]);
     fclose(profile_fp);
 }
 
@@ -227,7 +235,10 @@ void negedge(void) {
     if (PO)  bus = PC;
     if (IOH) bus = 0xff00 | (instr&0xff);
     if (IOL) bus = instr&0xff;
-    if (MO)  bus = (addr < 256 ? rom[addr] : ram[addr]);
+    if (MO) {
+        bus = (addr < 256 ? rom[addr] : ram[addr]);
+        addr_reads[addr]++;
+    }
     if (DO)  bus = in(addr);
 }
 
@@ -239,6 +250,7 @@ void posedge(void) {
         if (watch == addr)
             fprintf(stderr, "[watch] PC=%04x: M[%04x] was %04x, now %04x\n", PC, addr, ram[addr], bus);
         ram[addr] = bus;
+        addr_writes[addr]++;
         if (stacktrace && addr == 0xffff)
             fprintf(stderr, "[stack] PC=%04x: sp=%04x: stack = %04x %04x %04x %04x %04x...\n", PC, ram[0xffff], ram[ram[0xffff]+1], ram[ram[0xffff]+2], ram[ram[0xffff]+3], ram[ram[0xffff]+4], ram[ram[0xffff]+5]);
     }

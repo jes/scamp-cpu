@@ -20,6 +20,8 @@ my $elapsed_us = readval('elapsed_us');
 my @pc_cycles = readarray('pc_cycles', 65536);
 my @last_instr = readarray('last_instr', 65536);
 my @opcode_cycles = readarray('opcode_cycles', 256);
+my @addr_reads = readarray('addr_reads', 65536);
+my @addr_writes = readarray('addr_writes', 65536);
 
 my $endtimestr = strftime("%Y-%m-%d %H:%M:%S", localtime($endtime));
 my $nowtimestr = strftime("%Y-%m-%d %H:%M:%S", localtime(time));
@@ -35,6 +37,10 @@ print "<h2>Cycles per address</h2>\n";
 pc_cycles();
 print "<h2>Cycles per opcode</h2>\n";
 opcode_cycles();
+print "<h2>Reads per address</h2>\n";
+addr_reads();
+print "<h2>Writes per address</h2>\n";
+addr_writes();
 print footer();
 
 sub header {
@@ -130,6 +136,50 @@ sub opcode_cycles {
     }
     print "</table>\n";
 
+}
+
+# up to 0xfeff to exclude pseudo-registers
+sub addr_reads {
+    my $max_cycles = max(@addr_reads[0 .. 0xfeff]);
+
+    my $max_addr = max grep { $addr_reads[$_] } (0 .. 0xfeff);
+
+    print "<table class=\"pc\">\n";
+    for my $y (0 .. ($max_addr>>8)) {
+        print "<tr><th>" . sprintf("%04x", $y<<8) . "</th>";
+        for my $x (0 .. 255) {
+            my $addr = $y<<8 | $x;
+
+            my $popuphtml = "<br>Address: ".sprintf("<b>%04x</b>",$addr)."<br>";
+            $popuphtml .= "Reads: <b>$addr_reads[$addr] " . sprintf("(%.01f%% max)", 100*$addr_reads[$addr]/$max_cycles) . "</b><br>";
+
+            print "<td style=\"background-color:" . heatcolour($addr_reads[$addr], $max_cycles, 1.0) . "\"><div class=\"popup\" style=\"background-color:" . heatcolour($addr_reads[$addr], $max_cycles, 0.4) . "\">$popuphtml</div></td>";
+        }
+        print "</tr>\n";
+    }
+    print "</table>\n";
+}
+
+# up to 0xfeff to exclude pseudo-registers
+sub addr_writes {
+    my $max_cycles = max(@addr_writes[0 .. 0xfeff]);
+
+    my $max_addr = max grep { $addr_writes[$_] } (0 .. 0xfeff);
+
+    print "<table class=\"pc\">\n";
+    for my $y (0 .. ($max_addr>>8)) {
+        print "<tr><th>" . sprintf("%04x", $y<<8) . "</th>";
+        for my $x (0 .. 255) {
+            my $addr = $y<<8 | $x;
+
+            my $popuphtml = "<br>Address: ".sprintf("<b>%04x</b>",$addr)."<br>";
+            $popuphtml .= "Writes: <b>$addr_writes[$addr] " . sprintf("(%.01f%% max)", 100*$addr_writes[$addr]/$max_cycles) . "</b><br>";
+
+            print "<td style=\"background-color:" . heatcolour($addr_writes[$addr], $max_cycles, 1.0) . "\"><div class=\"popup\" style=\"background-color:" . heatcolour($addr_writes[$addr], $max_cycles, 0.4) . "\">$popuphtml</div></td>";
+        }
+        print "</tr>\n";
+    }
+    print "</table>\n";
 }
 
 sub footer {
