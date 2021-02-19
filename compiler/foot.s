@@ -121,10 +121,10 @@ mul:
 shl:
     pop x
     ld r1, 15
-    sub r1, x # r0 = 15 - n
+    sub r1, x # r1 = 15 - n
 
     pop x
-    ld r0, x # r1 = i
+    ld r0, x # r0 = i
 
     # kind of "Duff's device" way to get a variable
     # number of left shifts
