@@ -41,7 +41,7 @@ I'm currently designing the PCBs:
  - [ ] Serial port
  - [ ] Storage
 
-Apart from PCBs, other work includes:
+Other work includes:
 
  - [x] get the PCBs manufactured
  - [ ] work out how to interface with storage and serial
