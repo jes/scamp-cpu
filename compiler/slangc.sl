@@ -891,7 +891,7 @@ Identifier = func(x) {
     return 1;
 };
 
-var maxinput = 34000;
+var maxinput = 30000;
 var buf = malloc(maxinput);
 var p = buf;
 var ch = 0;
