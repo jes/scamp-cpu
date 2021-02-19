@@ -22,6 +22,7 @@
 # TODO: some way to include files only the first time (maybe *only* work that way? how
 #       often is it actually useful to be able to include a file multiple times?)
 # TODO: array indexing syntax
+# TODO: don't read the entire input into memory
 
 include "stdio.sl";
 include "stdlib.sl";
