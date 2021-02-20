@@ -20,6 +20,7 @@ my $l7ldxr0;
 my $l8remove;
 my $l9ldxx = 0;
 my $l10reg;
+my $l11state = 0;
 
 while (<>) {
     chomp;
@@ -198,8 +199,30 @@ sub level10 {
     if ($line =~ /^ld x, (r\d+)$/) {
         $l10reg = $1;
     } else {
-        print "ld x, $l10reg\n" if defined $l10reg;
+        level11("ld x, $l10reg") if defined $l10reg;
         $l10reg = undef;
+        level11("$line");
+    }
+}
+
+# turn "ld r252, r253; [pop x; ]ld (r252), ..." into "[pop x; ]ld (r253), ..."
+# (specifically for r252 and r253, because other registers might be used in
+# ways where it's unsound to drop the first load)
+sub level11 {
+    my ($line) = @_;
+
+    if ($l11state == 0 && $line =~ /^ld r252, r253$/) {
+        $l11state++;
+    } elsif ($l11state == 1 && $line =~ /^pop x$/) {
+        $l11state++;
+    } elsif ($l11state >= 1 && $line =~ /^ld \(r252\), (x|\d+)$/) {
+        print "pop x\n" if $l11state >= 2;
+        print "ld (r253), $1\n";
+        $l11state = 0;
+    } else {
+        print "ld r252, r253\n" if $l11state >= 1;
+        print "pop x\n" if $l11state >= 2;
+        $l11state = 0;
         print "$line\n";
     }
 }
