@@ -1326,10 +1326,17 @@ out x, (i8h): # Output <tt>r</tt> to address <tt>x</tt>.
     XO AI
     YO DI
 
-out x, i16: # Output <tt>i16</tt> to address <tt>x</tt>.
-    PO AI
-    MO YI P+
+#out x, i16: # Output <tt>i16</tt> to address <tt>x</tt>.
+#    PO AI
+#    MO YI P+
+#    XO AI
+#    YO DI
+
+out i16, (x): # Output the value in <tt>(x)</tt> to address <tt>i16</tt>.
     XO AI
+    MO YI
+    PO AI
+    MO AI P+
     YO DI
 
 out x, (i16): # Output the value in <tt>(i16)</tt> to address <tt>x</tt>.

@@ -6,11 +6,10 @@ out 3, x
 # take a pointer to a nul-terminated string, and print it
 puts:
     pop x
-    ld r0, x
     print_loop:
-        out 2, (r0)
-        inc r0
-        test (r0)
+        out 2, (x)
+        inc x
+        test (x)
         jnz print_loop
     ret
 
