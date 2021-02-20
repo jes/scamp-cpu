@@ -14,11 +14,11 @@ var divmod = func(num, denom, pdiv, pmod) {
     if (denom == 0)
         return 0;
 
-    while (i >= 0) {
+    #while (i >= 0) {
+    while (~i) {
         R = R+R;
-        if (num & *(powers_of_2+i)) {
+        if (num & *(powers_of_2+i))
             R++;
-        };
         if (R >= denom) {
             R = R - denom;
             Q = Q | *(powers_of_2+i);
@@ -32,12 +32,29 @@ var divmod = func(num, denom, pdiv, pmod) {
     return 0;
 };
 
+extern TOP;
+var malloc = func(sz) {
+    var oldtop = TOP;
+    TOP = TOP + sz;
+    if ((TOP&0xff00) == 0xff00) { # TODO: use >= operator when it's fixed
+        puts("out of memory\n");
+        outp(3,0);
+        while(1); # in case outp(3,0) doesn't halt
+    };
+    return oldtop;
+};
+
+var free = func(p) {
+    # TODO: free
+};
+
 var itoa_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
+var itoa_space = malloc(17);
 
 # returns pointer to static buffer
 # "base" should range from 2 to 36
 var itoabase = func(num, base) {
-    var s = "storage space here";
+    var s = itoa_space+16;
     var d;
     var m;
 
@@ -89,19 +106,3 @@ var atoibase = func(s, base) {
 
 # TODO: negative values?
 var atoi = func(s) return atoibase(s, 10);
-
-extern TOP;
-var malloc = func(sz) {
-    var oldtop = TOP;
-    TOP = TOP + sz;
-    if ((TOP&0xff00) == 0xff00) { # TODO: use >= operator when it's fixed
-        puts("out of memory\n");
-        outp(3,0);
-        while(1); # in case outp(3,0) doesn't halt
-    };
-    return oldtop;
-};
-
-var free = func(p) {
-    # TODO: free
-};
