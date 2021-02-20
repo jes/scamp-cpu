@@ -12,7 +12,7 @@ while (<>) {
 
 sub handle {
     my ($line) = @_;
-    # TODO: $line =~ s/#.*//; except inside char/string literals
+    $line =~ s/^#.*//; # TODO: delete more comments, except inside char/string literals
     $line =~ s/^\s+//;
     return if $line eq '';
     if ($line =~ /^include\s+\"([^"]+)\"\s*;$/) {
