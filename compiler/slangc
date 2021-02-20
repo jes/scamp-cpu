@@ -835,9 +835,29 @@ sub genop {
         my $xr0 = ($op =~ /^(>=|<)$/) ? "x, r0" : "r0, x";
         my $match = $op =~ /=/ ? 0 : 1;
         my $nomatch = $match ? 0 : 1;
+        my $wantlt = ($op =~ />/) ? 0 : 1;
+        my $wantgt = $wantlt ? 0 : 1;
         # subtract 2nd argument from first, if result is less than zero, then 2nd argument is bigger than first
-        # XXX: dubious? (what about integer overflow)
+        my $docmp = label();
         my $lt = label();
+        print "ld r1, r0\n";
+        print "ld r2, x\n";
+        print "ld r3, x\n";
+        print "and r1, 32768 #peepopt:test\n"; # r1 = r0 & 0x8000
+        print "and r2, 32768 #peepopt:test\n"; # r2 = x & 0x8000
+        print "sub r1, r2 #peepopt:test\n";
+        print "ld x, r3\n"; # doesn't clobber flags
+        print "jz $docmp\n"; # only directly compare x and r0 if they're both negative or both positive
+
+        # just compare signs
+        print "test r2\n";
+        print "ld x, $wantlt\n"; # doesn't clobber flags
+        print "jnz $lt\n";
+        print "ld x, $wantgt\n";
+        print "jmp $lt\n";
+
+        # do the actual magnitude comparison
+        print "$docmp:\n";
         print "sub $xr0 #peepopt:test\n";
         print "ld x, $match\n"; # doesn't clobber flags
         print "jlt $lt\n";
