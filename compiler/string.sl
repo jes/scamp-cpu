@@ -34,6 +34,7 @@ var memcpy = func(dest, src, len) {
 var strcpy = func(dest, src) {
     var dd = dest;
     while (*src) *(dest++) = *(src++);
+    *dest = 0;
     return dd;
 };
 
