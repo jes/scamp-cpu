@@ -1,18 +1,25 @@
 # Parsing routines
 #
-# TODO: don't require entire input to be loaded into memory
 # TODO: better-namespaced globals
-# TODO: some exception-handling mechanism
 
-var input;
 var pos;
+var readpos;
 var line;
 var col;
 
+var ringbufsz = 256; # must be power of 2
+var ringbuf = malloc(ringbufsz);
+
+var die = func(s) {
+    puts("error: line "); puts(itoa(line)); puts(": col "); puts(itoa(col)); puts(": ");
+    puts(s); putchar('\n');
+    outp(3,0); # halt the emulator
+};
+
 # setup parser state ready to parse the given string
-var parse_init = func(s) {
-    input = s;
+var parse_init = func() {
     pos = 0;
+    readpos = 0;
     line = 1;
     col = 1;
 };
@@ -28,20 +35,27 @@ var parse = func(f, arg) {
     var r = f(arg);
     if (r) return r;
 
+    if (pos-pos0 >= ringbufsz) die("too much backtrack\n");
+
     pos = pos0;
     line = line0;
     col = col0;
     return 0;
 };
 
-# look at the next char without advancing the cursor
+# look at the next input char without advancing the cursor
 var peekchar = func() {
-    return *(input+pos);
+    var lookpos = pos&(ringbufsz-1);
+    if (lookpos == readpos) {
+        *(ringbuf+readpos) = getchar();
+        readpos = (readpos+1)&(ringbufsz-1);
+    };
+    return *(ringbuf+lookpos);
 };
 
 var nextchar = func() {
     var ch = peekchar();
-    if (ch == 0) return EOF;
+    if (ch == EOF) return EOF;
     if (ch == '\n') {
         line++;
         col = 0;

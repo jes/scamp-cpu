@@ -29,12 +29,6 @@ include "string.sl";
 include "list.sl";
 include "parse.sl";
 
-var die = func(s) {
-    puts("error: line "); puts(itoa(line)); puts(": col "); puts(itoa(col)); puts(": ");
-    puts(s); putchar('\n');
-    outp(3,0); # halt the emulator
-};
-
 var Reject = func(x) { return 0; };
 
 var Program;
@@ -917,24 +911,11 @@ Identifier = func(x) {
     die("identifier too long");
 };
 
-var maxinput = 30000;
-var buf = malloc(maxinput);
-var p = buf;
-var ch = 0;
-var len = 0;
-while (1) {
-    ch = getchar();
-    if (ch == EOF) break;
-    *(p++) = ch;
-    if (++len == maxinput) die("input too long");
-};
-*p = 0;
-
 STRINGS = lstnew();
 EXTERNS = lstnew();
 GLOBALS = lstnew();
 
-parse_init(buf);
+parse_init();
 parse(Program,0);
 
 if (nextchar() != EOF) die("garbage after end of program");
