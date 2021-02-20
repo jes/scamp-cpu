@@ -34,8 +34,13 @@ var parse = func(f, arg) {
     return 0;
 };
 
+# look at the next char without advancing the cursor
+var peekchar = func() {
+    return *(input+pos);
+};
+
 var nextchar = func() {
-    var ch = *(input+pos);
+    var ch = peekchar();
     if (ch == 0) return EOF;
     if (ch == '\n') {
         line++;
@@ -97,7 +102,7 @@ var isalnum = func(ch) return isalpha(ch) || isdigit(ch);
 # accept string s if it ends at a word boundary
 var Keyword = func(s) {
     if (!parse(String,s)) return 0;
-    var ch = *(input+pos);
+    var ch = peekchar();
     var alnumunder = isalnum(ch) || ch == '_';
     if (ch == 0 || !alnumunder) {
         skip();

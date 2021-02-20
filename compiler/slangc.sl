@@ -614,34 +614,36 @@ NumericLiteral = func(x) {
     return 0;
 };
 
+var maxliteral = 8;
+var literal_buf = malloc(maxliteral);
+
+var NumLiteral = func(alphabet,base,neg) {
+    *literal_buf = peekchar();
+    if (!parse(AnyChar,alphabet)) return 0;
+    var i = 1;
+    while (i < maxliteral) {
+        *(literal_buf+i) = peekchar();
+        if (!parse(AnyChar,alphabet)) {
+            *(literal_buf+i) = 0;
+            if (neg) genliteral(-atoibase(literal_buf,base))
+            else     genliteral( atoibase(literal_buf,base));
+            skip();
+            return 1;
+        };
+        i++;
+    };
+    die("numeric literal too long");
+};
+
 HexLiteral = func(x) {
     if (!parse(String,"0x")) return 0;
-    var pos0 = pos;
-    if (!parse(AnyChar,"0123456789abcdefABCDEF")) return 0;
-    while (parse(AnyChar,"0123456789abcdefABCDEF"));
-    var was = *(input+pos);
-    *(input+pos) = 0;
-    genliteral(atoibase(input+pos0, 16));
-    *(input+pos) = was;
-    skip();
-    return 1;
+    return NumLiteral("0123456789abcdefABCDEF",16,0);
 };
 
 DecimalLiteral = func(x) {
-    var pos0 = pos;
+    var neg = peekchar() == '-';
     parse(AnyChar,"+-");
-    skip();
-    var pos1 = pos;
-    if (!parse(AnyChar,"0123456789")) return 0;
-    while (parse(AnyChar,"0123456789"));
-    var was = *(input+pos);
-    *(input+pos) = 0;
-    var v = atoibase(input+pos1, 10);
-    if (*(input+pos0) == '-') genliteral(-v)
-    else genliteral(v);
-    *(input+pos) = was;
-    skip();
-    return 1;
+    return NumLiteral("0123456789",10,neg);
 };
 
 var escapedchar = func(ch) {
@@ -874,7 +876,7 @@ AddressOf = func(x) {
 };
 
 UnaryExpression = func(x) {
-    var op = *(input+pos);
+    var op = peekchar();
     if (!parse(AnyChar,"!~*+-")) return 0;
     skip();
     if (!parse(Term,0)) die("unary operator $op needs operand"); # TODO: sprintf
