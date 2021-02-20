@@ -72,7 +72,8 @@ var ParenExpression;
 var Identifier;
 
 # store identifier value parsed by Identifier()
-var IDENTIFIER = malloc(128);
+var maxidentifier = 128;
+var IDENTIFIER = malloc(maxidentifier);
 
 var STRINGS;
 # EXTERNS and GLOBALS are lists of pointers variable names
@@ -614,7 +615,8 @@ NumericLiteral = func(x) {
     return 0;
 };
 
-var maxliteral = 8;
+# TODO: use the same buffer for literals and identifiers
+var maxliteral = 512; # used to store numeric and string literals
 var literal_buf = malloc(maxliteral);
 
 var NumLiteral = func(alphabet,base,neg) {
@@ -676,40 +678,23 @@ StringLiteral = func(x) {
     return 1;
 };
 
-var unescapechars = func(s) {
-    var p = s;
-    while (*s) {
-        if (*s == '\\') {
-            *p = escapedchar(*++s);
-        } else {
-            *p = *s;
-        };
-        p++;
-        s++;
-    };
-    *p = 0;
-};
-
 # expects you to have already parsed the opening quote; consumes the closing quote
 StringLiteralText = func() {
-    var pos0 = pos;
-    var str;
-    while (1) {
+    var i = 0;
+    while (i < maxliteral) {
         if (parse(Char,'"')) {
-            str = malloc(pos - pos0);
-            memcpy(str, input+pos0, pos-pos0-1);
-            *(str+pos-pos0-1) = 0;
-            unescapechars(str);
+            *(literal_buf+i) = 0;
             skip();
-            return str;
+            return strdup(literal_buf);
         };
         if (parse(Char,'\\')) {
-            nextchar();
+            *(literal_buf+i) = escapedchar(nextchar());
         } else {
-            nextchar();
+            *(literal_buf+i) = nextchar();
         };
+        i++;
     };
-    die("unterminated string literal");
+    die("string literal too long");
 };
 
 var maxparams = 32;
@@ -916,14 +901,20 @@ ParenExpression = func(x) {
 };
 
 Identifier = func(x) {
-    var pos0 = pos;
+    *IDENTIFIER = peekchar();
     if (!parse(AlphaUnderChar,0)) return 0;
-    while (parse(AlphanumUnderChar,0));
-    # TODO: bounds-check
-    memcpy(IDENTIFIER, input+pos0, pos-pos0);
-    *(IDENTIFIER+pos-pos0) = 0;
-    skip();
-    return 1;
+    var i = 1;
+    while (i < maxidentifier) {
+        *(IDENTIFIER+i) = peekchar();
+        if (!parse(AlphanumUnderChar,0)) {
+            *(IDENTIFIER+i) = 0;
+            skip();
+            return 1;
+        };
+        if (*(IDENTIFIER+i) == '\\') *(IDENTIFIER+i) = escapedchar(nextchar());
+        i++;
+    };
+    die("identifier too long");
 };
 
 var maxinput = 30000;
