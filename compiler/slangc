@@ -39,7 +39,7 @@ my $scope = {
     symbols => {},
     parent => undef,
 };
-my @STRINGS;
+my %STRINGS;
 my $globalscope = $scope;
 my $IDENTIFIER;
 my $BLOCKLEVEL = 0;
@@ -58,9 +58,15 @@ for my $global (sort keys %{ $scope->{symbols} }) {
 }
 
 # store string constants
-for my $s (@STRINGS) {
-    print "$s->{label}:\n";
-    print ".word $_\n" for map { ord($_) } split //, $s->{string};
+my $labelcmp = sub {
+    my ($a,$b) = @_;
+    $a =~ s/^l__//;
+    $b =~ s/^l__//;
+    return $a <=> $b;
+};
+for my $s (sort {$labelcmp->($STRINGS{$a},$STRINGS{$b})} keys %STRINGS) {
+    print "$STRINGS{$s}:\n";
+    print ".word $_\n" for map { ord($_) } split //, $s;
     print ".word 0\n";
 }
 print "$end:\n";
@@ -402,13 +408,15 @@ sub escapedchar {
 sub StringLiteral {
     return 0 if !parse(\&Char,'"');
     my $string = StringLiteralText();
-    my $label = label();
+    my $label;
+    if (exists $STRINGS{$string}) {
+        $label = $STRINGS{$string};
+    } else {
+        $label = label();
+    }
     print "ld x, $label\n";
     print "push x\n";
-    push @STRINGS, {
-        label => $label,
-        string => $string,
-    };
+    $STRINGS{$string} = $label;
     return 1;
 }
 

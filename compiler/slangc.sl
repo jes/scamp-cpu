@@ -87,6 +87,9 @@ var BREAKLABEL;
 var CONTLABEL;
 var LABELNUM = 1;
 
+var label = func() { return LABELNUM++; };
+var plabel = func(l) { puts("l__"); puts(itoa(l)); };
+
 # return 1 if "name" is a global or extern, 0 otherwise
 var findglobal = func(name) {
     if (lstfind(GLOBALS, name, func(a,b) { return strcmp(a,b)==0 })) return 1;
@@ -116,6 +119,15 @@ var addlocal = func(name, bp_rel) {
     var tuple = cons(name,bp_rel);
     lstpush(LOCALS, tuple);
     return tuple;
+};
+
+var addstring = func(str) {
+    var v = lstfind(STRINGS, str, func(find,tuple) { return strcmp(find,*tuple)==0 });
+    if (v) return *(v+1);
+
+    var l = label();
+    lstpush(STRINGS, cons(str,l));
+    return l;
 };
 
 var newscope = func() {
@@ -206,9 +218,6 @@ var poptovar = func(name) {
     puts("bad pop: "); puts(name); puts("\n");
     die("unrecognised identifier: $name"); # TODO: printf
 };
-
-var label = func() { return LABELNUM++; };
-var plabel = func(l) { puts("l__"); puts(itoa(l)); };
 
 var genliteral = func(v) {
     puts("# genliteral:\n");
@@ -659,11 +668,9 @@ CharacterLiteral = func(x) {
 StringLiteral = func(x) {
     if (!parse(Char,'"')) return 0;
     var str = StringLiteralText();
-    var strlabel = label();
+    var strlabel = addstring(str);
     puts("ld x, "); plabel(strlabel); puts("\n");
     puts("push x\n");
-    var tuple = cons(str,strlabel);
-    lstpush(STRINGS, tuple);
     return 1;
 };
 
