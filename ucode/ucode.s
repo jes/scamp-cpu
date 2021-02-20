@@ -640,8 +640,16 @@ sb (65534), i8l: # Set bits in <tt>r254</tt> based on <tt>i8l</tt>. i.e. <tt>r25
     IOL YI
     MI X|Y
 
-nop:
-nop:
+ld x, i8l(x): # Load the value in <tt>(x+i8l)</tt> into <tt>x</tt>.
+    IOL YI
+    X+Y AI
+    MO XI
+
+ld x, i8h(x): # Load the value in <tt>(x+i8h)</tt> into <tt>x</tt>.
+    IOH YI
+    X+Y AI
+    MO XI
+
 nop:
 nop:
 nop:

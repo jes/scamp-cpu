@@ -167,8 +167,7 @@ var pushvar = func(name) {
             bp_rel = *(v+1);
             puts("# pushvar: local "); puts(name); puts("\n");
             puts("ld x, r253\n");
-            puts("add x, "); puts(itoa(bp_rel)); puts("\n");
-            puts("ld x, (x)\n");
+            puts("ld x, "); puts(itoa(bp_rel)); puts("(x)\n");
             puts("push x\n");
             return 0;
         };

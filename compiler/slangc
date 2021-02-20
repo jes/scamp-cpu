@@ -767,8 +767,7 @@ sub pushvar {
     } else {
         print "# pushvar: local $name\n";
         print "ld x, r253\n";
-        print "add x, " . (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
-        print "ld x, (x)\n";
+        print "ld x, " . (($sym->{bp_rel}+0x10000)%0x10000) . "(x)\n";
         print "push x\n";
     }
 }
