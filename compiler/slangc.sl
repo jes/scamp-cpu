@@ -340,8 +340,7 @@ var funcreturn = func() {
     runtime_endscope();
 
     puts("# function had "); puts(itoa(NPARAMS)); puts(" parameters:\n");
-    puts("add sp, "); puts(itoa(NPARAMS)); puts("\n");
-    puts("ret\n");
+    puts("ret "); puts(itoa(NPARAMS)); puts("\n");
 };
 
 Program = func(x) {

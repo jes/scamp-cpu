@@ -777,12 +777,9 @@ sub funcreturn {
     my $s = $scope;
     runtime_endscope();
 
-    # then clean up the function parameters
+    # then clean up the function parameters and return
     print "# function had $s->{params} parameters:\n";
-    print "add sp, $s->{params}\n";
-
-    # then return to the caller
-    print "ret\n";
+    print "ret $s->{params}\n";
 }
 
 sub genliteral {
