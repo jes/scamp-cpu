@@ -837,8 +837,8 @@ sub genop {
         my $wantlt = ($op =~ />/) ? 0 : 1;
         my $wantgt = $wantlt ? 0 : 1;
         # subtract 2nd argument from first, if result is less than zero, then 2nd argument is bigger than first
-        my $docmp = label();
         my $lt = label();
+        my $docmp = label();
         print "ld r1, r0\n";
         print "ld r2, x\n";
         print "ld r3, x\n";
