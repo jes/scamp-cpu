@@ -7,7 +7,7 @@ var readpos;
 var line;
 var col;
 
-var ringbufsz = 256; # must be power of 2
+var ringbufsz = 256; # check the "too much backtrack" test before changing this!
 var ringbuf = malloc(ringbufsz);
 
 var die = func(s) {
@@ -35,7 +35,8 @@ var parse = func(f, arg) {
     var r = f(arg);
     if (r) return r;
 
-    if (pos-pos0 >= ringbufsz) die("too much backtrack\n");
+    # die if pos-pos0 >= 256 (update this if ringbufsz changes)
+    if ((pos-pos0) & 0xff00) die("too much backtrack\n");
 
     pos = pos0;
     line = line0;
