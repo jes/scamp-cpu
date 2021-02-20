@@ -15,8 +15,7 @@
 #
 # TODO: optionally annotate generated assembly code with the source code that
 #       generated it
-# TODO: fix all of the magnitude-comparison operators, and provide both signed
-#       and unsigned versions?
+# TODO: provide unsigned mangitude comparison?
 # TODO: fix &/| precedence
 # TODO: some way to include assembly code
 # TODO: some way to include files only the first time (maybe *only* work that way? how
@@ -228,6 +227,28 @@ var genop = func(op) {
     puts("ld r0, x\n");
     puts("pop x\n");
 
+    var signstest = func(wantlt, end) {
+        var wantgt = !wantlt;
+        var cont = label();
+
+        puts("ld r1, r0\n");
+        puts("ld r2, x\n");
+        puts("ld r3, x\n");
+        puts("and r1, 32768 #peepopt:test\n"); # r1 = r0 & 0x8000
+        puts("and r2, 32768 #peepopt:test\n"); # r2 = x & 0x8000
+        puts("sub r1, r2 #peepopt:test\n");
+        puts("ld x, r3\n"); # restore x (doesn't clobber flags)
+        puts("jz "); plabel(cont); puts("\n");
+
+        puts("test r2\n");
+        puts("ld x, "); puts(itoa(wantlt)); puts("\n"); # doesn't clobber flags
+        puts("jnz "); plabel(end); puts("\n");
+        puts("ld x, "); puts(itoa(wantgt)); puts("\n");
+        puts("jmp "); plabel(end); puts("\n");
+
+        plabel(cont); puts(":\n");
+    };
+
     var end;
 
     if (strcmp(op,"+") == 0) {
@@ -256,6 +277,7 @@ var genop = func(op) {
         plabel(end); puts(":\n");
     } else if (strcmp(op,">=") == 0) {
         end = label();
+        signstest(0, end);
         puts("sub x, r0 #peepopt:test\n");
         puts("ld x, 0\n"); # doesn't clobber flags
         puts("jlt "); plabel(end); puts("\n");
@@ -263,6 +285,7 @@ var genop = func(op) {
         plabel(end); puts(":\n");
     } else if (strcmp(op,"<=") == 0) {
         end = label();
+        signstest(1, end);
         puts("sub r0, x #peepopt:test\n");
         puts("ld x, 0\n"); # doesn't clobber flags
         puts("jlt "); plabel(end); puts("\n");
@@ -270,6 +293,7 @@ var genop = func(op) {
         plabel(end); puts(":\n");
     } else if (strcmp(op,">") == 0) {
         end = label();
+        signstest(0, end);
         puts("sub r0, x #peepopt:test\n");
         puts("ld x, 1\n"); # doesn't clobber flags
         puts("jlt "); plabel(end); puts("\n");
@@ -277,6 +301,7 @@ var genop = func(op) {
         plabel(end); puts(":\n");
     } else if (strcmp(op,"<") == 0) {
         end = label();
+        signstest(1, end);
         puts("sub x, r0 #peepopt:test\n");
         puts("ld x, 1\n"); # doesn't clobber flags
         puts("jlt "); plabel(end); puts("\n");
