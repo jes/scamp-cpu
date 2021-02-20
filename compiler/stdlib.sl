@@ -5,38 +5,13 @@ extern mul;
 #   *pmod = num % denom
 # Pass a null pointer if you want to discard one of the results
 # https://en.wikipedia.org/wiki/Division_algorithm#Integer_division_(unsigned)_with_remainder
-extern powers_of_2;
-var divmod = func(num, denom, pdiv, pmod) {
-    var Q = 0;
-    var R = 0;
-    var i = 15;
-
-    if (denom == 0)
-        return 0;
-
-    #while (i >= 0) {
-    while (~i) {
-        R = R+R;
-        if (num & *(powers_of_2+i))
-            R++;
-        if (R >= denom) {
-            R = R - denom;
-            Q = Q | *(powers_of_2+i);
-        };
-        i--;
-    };
-
-    *pdiv = Q;
-    *pmod = R;
-
-    return 0;
-};
+extern divmod;
 
 extern TOP;
 var malloc = func(sz) {
     var oldtop = TOP;
     TOP = TOP + sz;
-    if ((TOP&0xff00) == 0xff00) { # TODO: use >= operator when it's fixed
+    if ((TOP&0xff00) == 0xff00) { # TODO: use unsigned >= operator when it exists
         puts("out of memory\n");
         outp(3,0);
         while(1); # in case outp(3,0) doesn't halt

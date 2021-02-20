@@ -1,15 +1,15 @@
 extern inp;
 extern outp;
+extern puts;
 
-var SERIALDEV = 2;
 var EOF = -1;
 
 var getchar = func() {
-    return inp(SERIALDEV);
+    return inp(2);
 };
 
 var putchar = func(ch) {
-    outp(SERIALDEV, ch);
+    outp(2, ch);
 };
 
 # read at most size-1 characters into s, and terminate with a 0
@@ -31,9 +31,4 @@ var gets = func(s, size) {
     *(s+len) = 0;
 
     return s;
-};
-
-var puts = func(s) {
-    while (*s)
-        putchar(*(s++));
 };

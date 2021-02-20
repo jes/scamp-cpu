@@ -4,7 +4,7 @@ ld x, 0
 out 3, x
 
 # take a pointer to a nul-terminated string, and print it
-print:
+puts:
     pop x
     ld r0, x
     print_loop:
@@ -13,63 +13,6 @@ print:
         test (r0)
         jnz print_loop
     ret
-
-# print a number (in hex, with digits reversed...)
-alphabet: .str "0123456789abcdef"
-printnum:
-    pop x
-    ld r0, x
-
-    # stash return address
-    ld x, r254
-    push x
-
-    printnum_loop:
-        # low nybble
-        ld x, r0
-        and x, 0x0f
-        add x, alphabet
-        ld x, (x)
-        out 2, x
-
-        # high nybble
-        ld r1, 0
-        ld x, r0
-        and x, 0x10
-        jz b2
-        add r1, 1
-
-        b2: ld x, r0
-        and x, 0x20
-        jz b3
-        add r1, 2
-
-        b3: ld x, r0
-        and x, 0x40
-        jz b4
-        add r1, 4
-
-        b4: ld x, r0
-        and x, 0x80
-        jz b5
-        add r1, 8
-
-        b5:
-        ld x, r1
-        add x, alphabet
-        ld x, (x)
-        out 2, x
-
-        ld x, r0
-        push x
-        call shr8 # return goes to r0
-
-        test r0
-        jnz printnum_loop
-
-    # return
-    pop x
-    jmp x
 
 # >>8 1 arg from the stack and return the result in r0
 shr8:
@@ -183,14 +126,110 @@ outp:
     out x, r0
     ret
 
-_print: .word print
-_printnum: .word printnum
+# compute:
+#   *pdiv = num / denom
+#   *pmod = num % denom
+# Pass a null pointer if you want to discard one of the results
+# https://en.wikipedia.org/wiki/Division_algorithm#Integer_division_(unsigned)_with_remainder
+divmod:
+    ld x, sp
+    ld r7, 1(x) # r7 = pmod
+    ld r8, 2(x) # r8 = pdiv
+    ld r9, 3(x) # r9 = denom
+    ld r10, 4(x) # r10 = num
+    add sp, 4
+
+    ld r4, 0 # r4 = Q
+    ld r5, 0 # r5 = R
+    ld r6, 15 # r6 = i
+
+    # while (i >= 0) {
+    divmod_loop:
+        # R = R+R
+        shl r5
+
+        # r11 = powers_of_2[i]
+        ld x, powers_of_2
+        add x, r6
+        ld r11, (x)
+
+        # if (num & powers_of_2[i]) R++;
+        ld r12, r10
+        and r12, r11
+        jz divmod_cont1
+        inc r5
+        divmod_cont1:
+
+        # if (R >= denom) {
+        ld r12, r5
+        sub r12, r9 # r12 = R - denom
+        jlt divmod_cont2
+            # R = R - denom
+            ld r5, r12
+            # Q = Q | powers_of_2[i]
+            or r4, r11
+        # }
+        divmod_cont2:
+
+        # i--
+        dec r6
+        jge divmod_loop
+    # }
+
+    # if pdiv or pmod are null, they'll point to rom, so writing to them is a no-op
+    # *pdiv = Q
+    ld x, r8
+    ld (x), r4
+    # *pmod = R
+    ld x, r7
+    ld (x), r5
+    # return
+    ret
+
+# return a value:
+#  <0  if s1 < s2
+#   0  if s1 == s2
+#  >0  if s1 > s2
+strcmp:
+    pop x
+    ld r2, x # r2 = s2
+    pop x
+    ld r1, x # r1 = s1
+
+    # while (*s1 && *s2)
+    strcmp_loop:
+        ld x, (r1)
+        and x, (r2)
+        jz strcmp_done
+
+        # if (*s1 != *s2) return *s1-*s2
+        ld x, (r1)
+        sub x, (r2)
+        jz strcmp_cont
+        ld r0, x
+        ret
+
+        strcmp_cont:
+        inc r1
+        inc r2
+        jmp strcmp_loop
+    strcmp_done:
+
+    # return *s1-*s2
+    ld x, (r1)
+    sub x, (r2)
+    ld r0, x
+    ret
+
+_puts: .word puts
 _mul: .word mul
 _shl: .word shl
 _pwr2: .word pwr2
 _powers_of_2: .word powers_of_2
 _inp: .word inp
 _outp: .word outp
+_divmod: .word divmod
+_strcmp: .word strcmp
 _TOP: .word TOP
 
 # leave a gap for the stack to live in
