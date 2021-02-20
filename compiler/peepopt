@@ -33,7 +33,7 @@ while (<>) {
 
 level1('');
 
-# collapse "push x; pop x", and turn "ret 0" into "ret"
+# collapse "push x; pop x", and turn "ret 0" into "ret" and turn "ld x, 0(x)" into "ld x, (x)"
 sub level1 {
     my ($line) = @_;
 
@@ -43,6 +43,8 @@ sub level1 {
         $l1level--;
     } elsif ($line eq 'ret 0') {
         level2("ret");
+    } elsif ($line eq 'ld x, 0(x)') {
+        level2("ld x, (x)");
     } else {
         level2("push x") for 1..$l1level;
         level2($line);
