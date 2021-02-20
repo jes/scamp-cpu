@@ -6,27 +6,26 @@ echo 0
 ./slangc < slangc1.sl > slangc0.s
 echo 1
 ./run slangc.sl < slangc1.sl > slangc1.s
+cmp slangc0.s slangc1.s
 echo 2
 ./run slangc1.sl < slangc1.sl > slangc2.s
+cmp slangc0.s slangc2.s
+cmp slangc1.s slangc2.s
 echo 3
 ./srun slangc1.s < slangc1.sl > slangc3.s
+cmp slangc0.s slangc3.s
+cmp slangc1.s slangc3.s
+cmp slangc2.s slangc3.s
 echo 4
 ./srun slangc2.s < slangc1.sl > slangc4.s
+cmp slangc0.s slangc4.s
+cmp slangc1.s slangc4.s
+cmp slangc2.s slangc4.s
+cmp slangc3.s slangc4.s
 echo 5
 ./srun slangc3.s < slangc1.sl > slangc5.s
-
-cmp slangc0.s slangc1.s
-cmp slangc0.s slangc2.s
-cmp slangc0.s slangc3.s
-cmp slangc0.s slangc4.s
 cmp slangc0.s slangc5.s
-cmp slangc1.s slangc2.s
-cmp slangc1.s slangc3.s
-cmp slangc1.s slangc4.s
 cmp slangc1.s slangc5.s
-cmp slangc2.s slangc3.s
-cmp slangc2.s slangc4.s
 cmp slangc2.s slangc5.s
-cmp slangc3.s slangc4.s
 cmp slangc3.s slangc5.s
 cmp slangc4.s slangc5.s
