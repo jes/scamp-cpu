@@ -357,5 +357,6 @@ fizzbuzz();
 primestest();
 listtest();
 arraytest();
+
 var new_sp = *sp;
 puts("sp change="); puts(itoa(new_sp-initial_sp)); puts("\n");
