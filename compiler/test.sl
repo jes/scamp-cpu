@@ -74,6 +74,27 @@ var optest = func() {
     printf("x>y-6=%d\n", [x>y-6]);
 
     puts("\n");
+    puts("unsigned magnitude comparison:\n");
+    a = 0;
+    while (a != 0xff00) {
+        b = a;
+        while (b != 0xff00) {
+            printf("%d < %d = %d\n", [a, b, a < b]);
+            printf("%d > %d = %d\n", [a, b, a > b]);
+            printf("%d <= %d = %d\n", [a, b, a <= b]);
+            printf("%d >= %d = %d\n", [a, b, a >= b]);
+
+            printf("%d lt %d = %d\n", [a, b, a lt b]);
+            printf("%d gt %d = %d\n", [a, b, a gt b]);
+            printf("%d le %d = %d\n", [a, b, a le b]);
+            printf("%d ge %d = %d\n", [a, b, a ge b]);
+
+            b = b + 16320;
+        };
+        a = a + 16320;
+    };
+
+    puts("\n");
 };
 
 var fibtest = func() {

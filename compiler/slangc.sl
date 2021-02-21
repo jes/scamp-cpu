@@ -15,7 +15,6 @@
 #
 # TODO: optionally annotate generated assembly code with the source code that
 #       generated it
-# TODO: provide unsigned magnitude comparison?
 # TODO: fix &/| precedence
 # TODO: some way to include files
 
@@ -231,9 +230,14 @@ var genop = func(op) {
     puts("ld r0, x\n");
     puts("pop x\n");
 
-    var signstest = func(wantlt, end) {
+    var signcmp = func(subxr0, match, wantlt) {
         var wantgt = !wantlt;
-        var cont = label();
+        var nomatch = !match;
+
+        # subtract 2nd argument from first, if result is less than zero, then 2nd
+        # argument is bigger than first
+        var lt = label();
+        var docmp = label();
 
         puts("ld r1, r0\n");
         puts("ld r2, x\n");
@@ -241,16 +245,24 @@ var genop = func(op) {
         puts("and r1, 32768 #peepopt:test\n"); # r1 = r0 & 0x8000
         puts("and r2, 32768 #peepopt:test\n"); # r2 = x & 0x8000
         puts("sub r1, r2 #peepopt:test\n");
-        puts("ld x, r3\n"); # restore x (doesn't clobber flags)
-        puts("jz "); plabel(cont); puts("\n");
+        puts("ld x, r3\n"); # doesn't clobber flags
+        puts("jz "); plabel(docmp); puts("\n"); # only directly compare x and r0 if they're both negative or both positive
 
+        # just compare signs
         puts("test r2\n");
-        puts("ld x, "); puts(itoa(wantlt)); puts("\n"); # doesn't clobber flags
-        puts("jnz "); plabel(end); puts("\n");
-        puts("ld x, "); puts(itoa(wantgt)); puts("\n");
-        puts("jmp "); plabel(end); puts("\n");
+        printf("ld x, %d\n", [wantlt]); # doesn't clobber flags
+        puts("jnz "); plabel(lt); puts("\n");
+        printf("ld x, %d\n", [wantgt]); # doesn't clobber flags
+        puts("jmp "); plabel(lt); puts("\n");
 
-        plabel(cont); puts(":\n");
+        # do the actual magnitude comparison
+        plabel(docmp); puts(":\n");
+        if (subxr0) puts("sub x, r0 #peepopt:test\n")
+        else        puts("sub r0, x #peepopt:test\n");
+        printf("ld x, %d\n", [match]); # doesn't clobber flags
+        puts("jlt "); plabel(lt); puts("\n");
+        printf("ld x, %d\n", [nomatch]);
+        plabel(lt); puts(":\n");
     };
 
     var end;
@@ -280,37 +292,21 @@ var genop = func(op) {
         puts("ld x, 1\n");
         plabel(end); puts(":\n");
     } else if (strcmp(op,">=") == 0) {
-        end = label();
-        signstest(0, end);
-        puts("sub x, r0 #peepopt:test\n");
-        puts("ld x, 0\n"); # doesn't clobber flags
-        puts("jlt "); plabel(end); puts("\n");
-        puts("ld x, 1\n");
-        plabel(end); puts(":\n");
+        signcmp(1, 0, 0);
     } else if (strcmp(op,"<=") == 0) {
-        end = label();
-        signstest(1, end);
-        puts("sub r0, x #peepopt:test\n");
-        puts("ld x, 0\n"); # doesn't clobber flags
-        puts("jlt "); plabel(end); puts("\n");
-        puts("ld x, 1\n");
-        plabel(end); puts(":\n");
+        signcmp(0, 0, 1);
     } else if (strcmp(op,">") == 0) {
-        end = label();
-        signstest(0, end);
-        puts("sub r0, x #peepopt:test\n");
-        puts("ld x, 1\n"); # doesn't clobber flags
-        puts("jlt "); plabel(end); puts("\n");
-        puts("ld x, 0\n");
-        plabel(end); puts(":\n");
+        signcmp(0, 1, 0);
     } else if (strcmp(op,"<") == 0) {
-        end = label();
-        signstest(1, end);
-        puts("sub x, r0 #peepopt:test\n");
-        puts("ld x, 1\n"); # doesn't clobber flags
-        puts("jlt "); plabel(end); puts("\n");
-        puts("ld x, 0\n");
-        plabel(end); puts(":\n");
+        signcmp(1, 1, 1);
+    } else if (strcmp(op,"ge") == 0) {
+        signcmp(1, 0, 1);
+    } else if (strcmp(op,"le") == 0) {
+        signcmp(0, 0, 0);
+    } else if (strcmp(op,"gt") == 0) {
+        signcmp(0, 1, 1);
+    } else if (strcmp(op,"lt") == 0) {
+        signcmp(1, 1, 0);
     } else if (strcmp(op,"&&") == 0) {
         end = label();
         puts("test x\n");
@@ -535,7 +531,7 @@ Expression = func(x) { return parse(ExpressionLevel,0); };
 var operators = [
     ["&", "|", "^"],
     ["&&", "||"],
-    ["==", "!=", ">=", "<=", ">", "<"],
+    ["==", "!=", ">=", "<=", ">", "<", "lt", "gt", "le", "ge"],
     ["+", "-"],
 ];
 ExpressionLevel = func(lvl) {

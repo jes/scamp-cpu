@@ -17,7 +17,6 @@
 #
 # TODO: optionally annotate generated assembly code with the source code that
 #       generated it
-# TODO: provide unsigned magnitude comparison?
 # TODO: fix &/| precedence
 
 use strict;
@@ -335,7 +334,7 @@ sub ExpressionLevel {
     my @operators = (
         ['&','|','^'], # XXX: these should be precedence between == and +, but parsing forbids it for now due to collision with &&
         ['&&','||'],
-        ['==','!=','>=','<=','>','<'],
+        ['==','!=','>=','<=','>','<', 'gt', 'lt', 'ge', 'le'],
         ['+','-'],
         #['*','/','%'], # XXX: these will turn into function calls, if supported at all
     );
@@ -904,30 +903,11 @@ sub genop {
     print "ld r0, x\n";
     print "pop x\n";
 
-    if ($mnemonic{$op}) {
-        print "$mnemonic{$op} x, r0\n";
-    } elsif ($op eq '^') {
-        print "ld y, r0\n"; # TODO: refactor to load this to y in the first place instead of going via r0
-        print "xor x, y\n";
-    } elsif ($op eq '!=') {
-        my $end = label();
-        print "sub x, r0 #peepopt:test\n";
-        print "jz $end\n";
-        print "ld x, 1\n";
-        print "$end:\n";
-    } elsif ($op eq '==') {
-        my $end = label();
-        print "sub x, r0 #peepopt:test\n";
-        print "ld x, 0\n"; # doesn't clobber flags
-        print "jnz $end\n";
-        print "ld x, 1\n";
-        print "$end:\n";
-    } elsif ($op =~ /^(>=|<=|>|<)$/) {
-        my $xr0 = ($op =~ /^(>=|<)$/) ? "x, r0" : "r0, x";
-        my $match = $op =~ /=/ ? 0 : 1;
+    my $signcmp = sub {
+        my ($xr0, $match, $wantlt) = @_;
         my $nomatch = $match ? 0 : 1;
-        my $wantlt = ($op =~ />/) ? 0 : 1;
         my $wantgt = $wantlt ? 0 : 1;
+
         # subtract 2nd argument from first, if result is less than zero, then 2nd argument is bigger than first
         my $lt = label();
         my $docmp = label();
@@ -954,6 +934,36 @@ sub genop {
         print "jlt $lt\n";
         print "ld x, $nomatch\n";
         print "$lt:\n";
+    };
+
+    if ($mnemonic{$op}) {
+        print "$mnemonic{$op} x, r0\n";
+    } elsif ($op eq '^') {
+        print "ld y, r0\n"; # TODO: refactor to load this to y in the first place instead of going via r0
+        print "xor x, y\n";
+    } elsif ($op eq '!=') {
+        my $end = label();
+        print "sub x, r0 #peepopt:test\n";
+        print "jz $end\n";
+        print "ld x, 1\n";
+        print "$end:\n";
+    } elsif ($op eq '==') {
+        my $end = label();
+        print "sub x, r0 #peepopt:test\n";
+        print "ld x, 0\n"; # doesn't clobber flags
+        print "jnz $end\n";
+        print "ld x, 1\n";
+        print "$end:\n";
+    } elsif ($op =~ /^(>=|<=|>|<)$/) {
+        my $xr0 = ($op =~ /^(>=|<)$/) ? "x, r0" : "r0, x";
+        my $match = $op =~ /=/ ? 0 : 1;
+        my $wantlt = ($op =~ />/) ? 0 : 1;
+        $signcmp->($xr0, $match, $wantlt);
+    } elsif ($op =~ /^(l|g)(t|e)$/) {
+        my $xr0 = ($op =~ /^(ge|lt)$/) ? "x, r0" : "r0, x";
+        my $match = ($op =~ /e/) ? 0 : 1;
+        my $wantlt = ($op =~ /l/) ? 0 : 1;
+        $signcmp->($xr0, $match, $wantlt);
     } elsif ($op eq '&&') {
         my $false = label();
         print "test x\n";
