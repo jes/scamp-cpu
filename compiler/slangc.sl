@@ -63,9 +63,12 @@ var UnaryExpression;
 var ParenExpression;
 var Identifier;
 
-# store identifier value parsed by Identifier()
-var maxidentifier = 128;
-var IDENTIFIER = malloc(maxidentifier);
+# space to store numeric and stirng literals
+var maxliteral = 512;
+var literal_buf = malloc(maxliteral);
+# space to store identifier value parsed by Identifier()
+var maxidentifier = maxliteral;
+var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 
 var STRINGS;
 # EXTERNS and GLOBALS are lists of pointers variable names
@@ -605,10 +608,6 @@ NumericLiteral = func(x) {
     if (parse(DecimalLiteral,0)) return 1;
     return 0;
 };
-
-# TODO: use the same buffer for literals and identifiers
-var maxliteral = 512; # used to store numeric and string literals
-var literal_buf = malloc(maxliteral);
 
 var NumLiteral = func(alphabet,base,neg) {
     *literal_buf = peekchar();
