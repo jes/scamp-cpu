@@ -108,12 +108,6 @@ var skip = func() {
     }
 };
 
-# TODO: put these somewhere more useful
-# TODO: ...and better-organise the standard library in general
-var isalpha = func(ch) return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
-var isdigit = func(ch) return ch >= '0' && ch <= '9';
-var isalnum = func(ch) return isalpha(ch) || isdigit(ch);
-
 # accept string s if it ends at a word boundary
 var Keyword = func(s) {
     if (!parse(String,s)) return 0;

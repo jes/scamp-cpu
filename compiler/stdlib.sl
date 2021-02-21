@@ -204,8 +204,13 @@ var itoabase = func(num, base) {
 # returns pointer to static buffer
 var itoa = func(num) return itoabase(num, 10);
 
+var islower = func(ch) return ch >= 'a' && ch <= 'z';
+var isupper = func(ch) return ch >= 'A' && ch <= 'Z';
+var isalpha = func(ch) return islower(ch) || isupper(ch);
+var isdigit = func(ch) return ch >= '0' && ch <= '9';
+var isalnum = func(ch) return isalpha(ch) || isdigit(ch);
 var tolower = func(ch) {
-    if (ch >= 'A' && ch <= 'Z') return ch - 'A' + 'a';
+    if (isupper(ch)) return ch - 'A' + 'a';
     return ch;
 };
 
