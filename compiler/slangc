@@ -363,6 +363,24 @@ sub ExpressionLevel {
 }
 
 sub Term {
+    return 0 if !parse(\&AnyTerm);
+    while (1) { # index into array
+        last if !parse(\&CharSkip,'[');
+        die "array index needs expression\n" if !parse(\&Expression);
+        die "array index needs close bracket\n" if !parse(\&CharSkip,']');
+
+        # stack now has array and index on it: pop, add together, dereference, push
+        print "pop x\n";
+        print "ld r0, x\n";
+        print "pop x\n";
+        print "add x, r0\n";
+        print "ld x, (x)\n";
+        print "push x\n";
+    }
+    return 1;
+}
+
+sub AnyTerm {
     return 1 if parse(\&Constant) || parse(\&ArrayLiteral) || parse(\&FunctionCall) || parse(\&AddressOf) || parse(\&PreOp) || parse(\&PostOp) || parse(\&UnaryExpression) || parse(\&ParenExpression);
     return 0 if !parse(\&Identifier);
     pushvar($IDENTIFIER);

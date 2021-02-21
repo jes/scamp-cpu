@@ -140,14 +140,44 @@ length = 2
 
 array:
 Hello, world! For time no. 1
+arr[3]=1
+strcmp(arr[0],"Hello, ")=0
+strcmp(arr[0],"foo")=65506
 Hello, world! For time no. 2
+arr[3]=2
+strcmp(arr[0],"Hello, ")=0
+strcmp(arr[0],"foo")=65506
 Hello, world! For time no. 3
+arr[3]=3
+strcmp(arr[0],"Hello, ")=0
+strcmp(arr[0],"foo")=65506
 Hello, world! For time no. 4
+arr[3]=4
+strcmp(arr[0],"Hello, ")=0
+strcmp(arr[0],"foo")=65506
 Hello, world! For time no. 5
+arr[3]=5
+strcmp(arr[0],"Hello, ")=0
+strcmp(arr[0],"foo")=65506
 Hello, world! For time no. 6
+arr[3]=6
+strcmp(arr[0],"Hello, ")=0
+strcmp(arr[0],"foo")=65506
 Hello, world! For time no. 7
+arr[3]=7
+strcmp(arr[0],"Hello, ")=0
+strcmp(arr[0],"foo")=65506
 Hello, world! For time no. 8
+arr[3]=8
+strcmp(arr[0],"Hello, ")=0
+strcmp(arr[0],"foo")=65506
 Hello, world! For time no. 9
+arr[3]=9
+strcmp(arr[0],"Hello, ")=0
+strcmp(arr[0],"foo")=65506
 Hello, world! For time no. 10
+arr[3]=10
+strcmp(arr[0],"Hello, ")=0
+strcmp(arr[0],"foo")=65506
 
 sp change=0

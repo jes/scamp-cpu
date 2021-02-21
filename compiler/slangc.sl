@@ -44,6 +44,7 @@ var Assignment;
 var Expression;
 var ExpressionLevel;
 var Term;
+var AnyTerm;
 var Constant;
 var NumericLiteral;
 var HexLiteral;
@@ -586,6 +587,24 @@ ExpressionLevel = func(lvl) {
 };
 
 Term = func(x) {
+    if (!parse(AnyTerm,0)) return 0;
+    while (1) { # index into array
+        if (!parse(CharSkip,'[')) break;
+        if (!parse(Expression,0)) die("array index needs expression");
+        if (!parse(CharSkip,']')) die("array index needs close bracket");
+
+        # stack now has array and index on it: pop, add together, dereference, push
+        puts("pop x\n");
+        puts("ld r0, x\n");
+        puts("pop x\n");
+        puts("add x, r0\n");
+        puts("ld x, (x)\n");
+        puts("push x\n");
+    };
+    return 1;
+};
+
+AnyTerm = func(x) {
     if (parse(Constant,0)) return 1;
     if (parse(ArrayLiteral,0)) return 1;
     if (parse(FunctionCall,0)) return 1;

@@ -328,6 +328,10 @@ var arraytest = func() {
         while (*p) {
             puts(*(p++));
         };
+
+        puts("arr[3]="); puts(arr[3]); puts("\n");
+        puts("strcmp(arr[0],\"Hello, \")="); puts(itoa(strcmp(arr[0], "Hello, "))); puts("\n");
+        puts("strcmp(arr[0],\"foo\")="); puts(itoa(strcmp(arr[0], "foo"))); puts("\n");
     };
     puts("\n");
 };
