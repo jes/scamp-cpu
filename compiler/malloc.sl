@@ -57,6 +57,8 @@ var free = func(ap) {
 };
 
 var morecore = func(sz) {
+    if (sz < 1024)
+        sz = 1024;
     var p = sbrk(sz);
     *(p+1) = sz;
     free(p+2);
