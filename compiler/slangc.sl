@@ -18,7 +18,6 @@
 # TODO: provide unsigned magnitude comparison?
 # TODO: fix &/| precedence
 # TODO: some way to include files
-# TODO: array indexing syntax
 
 include "stdio.sl";
 include "stdlib.sl";
@@ -535,33 +534,14 @@ Assignment = func(x) {
 
 Expression = func(x) { return parse(ExpressionLevel,0); };
 
-# TODO: this would be a lot tidier if we had some better syntax for arrays
-var operators = malloc(4);
-*(operators+0) = malloc(4);
-*(*(operators+0)+0) = "&";
-*(*(operators+0)+1) = "|";
-*(*(operators+0)+2) = "^";
-*(*(operators+0)+3) = 0;
-*(operators+1) = malloc(3);
-*(*(operators+1)+0) = "&&";
-*(*(operators+1)+1) = "||";
-*(*(operators+1)+2) = 0;
-*(operators+2) = malloc(7);
-*(*(operators+2)+0) = "==";
-*(*(operators+2)+1) = "!=";
-*(*(operators+2)+2) = ">=";
-*(*(operators+2)+3) = "<=";
-*(*(operators+2)+4) = ">";
-*(*(operators+2)+5) = "<";
-*(*(operators+2)+6) = 0;
-*(operators+3) = malloc(3);
-*(*(operators+3)+0) = "+";
-*(*(operators+3)+1) = "-";
-*(*(operators+3)+2) = 0;
-var oplevels = 4;
-
+var operators = [
+    ["&", "|", "^"],
+    ["&&", "||"],
+    ["==", "!=", ">=", "<=", ">", "<"],
+    ["+", "-"],
+];
 ExpressionLevel = func(lvl) {
-    if (lvl == oplevels) return parse(Term,0);
+    if (!operators[lvl]) return parse(Term,0);
 
     var apply_op = 0;
     var p;
@@ -575,7 +555,7 @@ ExpressionLevel = func(lvl) {
             if (!match) return 0;
         };
 
-        p = *(operators+lvl); # p points to a list of pointers to strings
+        p = operators[lvl]; # p points to a list of pointers to strings
         while (*p) {
             if (parse(String,*p)) break;
             p++;
