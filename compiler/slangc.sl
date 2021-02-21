@@ -976,6 +976,7 @@ puts("jmp "); plabel(end); puts("\n");
 
 lstwalk(GLOBALS, func(name) {
     putchar('_'); puts(name); puts(": .word 0\n");
+    free(name);
 });
 
 lstwalk(STRINGS, func(tuple) {
@@ -988,6 +989,7 @@ lstwalk(STRINGS, func(tuple) {
         p++;
     };
     puts(".word 0\n");
+    free(str);
     free(tuple);
 });
 
