@@ -22,6 +22,7 @@ include "stdio.sl";
 include "stdlib.sl";
 include "string.sl";
 include "list.sl";
+include "grarr.sl";
 include "parse.sl";
 
 var Reject = func(x) { return 0; };
@@ -89,24 +90,24 @@ var plabel = func(l) { puts("l__"); puts(itoa(l)); };
 
 # return 1 if "name" is a global or extern, 0 otherwise
 var findglobal = func(name) {
-    if (lstfind(GLOBALS, name, func(a,b) { return strcmp(a,b)==0 })) return 1;
-    if (lstfind(EXTERNS, name, func(a,b) { return strcmp(a,b)==0 })) return 1;
+    if (grfind(GLOBALS, name, func(a,b) { return strcmp(a,b)==0 })) return 1;
+    if (grfind(EXTERNS, name, func(a,b) { return strcmp(a,b)==0 })) return 1;
     return 0;
 };
 
 var addextern = func(name) {
     if (findglobal(name)) die("duplicate global: %s",[name]);
-    lstpush(EXTERNS, name);
+    grpush(EXTERNS, name);
 };
 var addglobal = func(name) {
     if (findglobal(name)) die("duplicate global: %s",[name]);
-    lstpush(GLOBALS, name);
+    grpush(GLOBALS, name);
 };
 
 # return pointer to (name,bp_rel) if "name" is a local, 0 otherwise
 var findlocal = func(name) {
     if (!LOCALS) die("can't find local in global scope: %s",[name]);
-    return lstfind(LOCALS, name, func(findname,tuple) { return strcmp(findname,car(tuple))==0 });
+    return grfind(LOCALS, name, func(findname,tuple) { return strcmp(findname,car(tuple))==0 });
 };
 var addlocal = func(name, bp_rel) {
     if (!LOCALS) die("can't add local in global scope: %s",[name]);
@@ -114,16 +115,16 @@ var addlocal = func(name, bp_rel) {
     if (findlocal(name)) die("duplicate local: %s",[name]);
 
     var tuple = cons(name,bp_rel);
-    lstpush(LOCALS, tuple);
+    grpush(LOCALS, tuple);
     return tuple;
 };
 
 var addstring = func(str) {
-    var v = lstfind(STRINGS, str, func(find,tuple) { return strcmp(find,car(tuple))==0 });
+    var v = grfind(STRINGS, str, func(find,tuple) { return strcmp(find,car(tuple))==0 });
     if (v) return cdr(v);
 
     var l = label();
-    lstpush(STRINGS, cons(str,l));
+    grpush(STRINGS, cons(str,l));
     return l;
 };
 
@@ -134,7 +135,7 @@ var newscope = func() {
     puts("push x\n");
     puts("ld r253, sp\n");
 
-    LOCALS = lstnew();
+    LOCALS = grnew();
     BP_REL = 0;
 };
 
@@ -148,12 +149,12 @@ var runtime_endscope = func() {
 
 var compiletime_endscope = func() {
     if (!LOCALS) die("can't end the global scope",0);
-    lstwalk(LOCALS, func(tuple) {
+    grwalk(LOCALS, func(tuple) {
         var name = car(tuple);
         free(name);
         free(tuple);
     });
-    lstfree(LOCALS);
+    grfree(LOCALS);
 };
 
 var endscope = func() {
@@ -711,7 +712,7 @@ ArrayLiteral = func(x) {
     puts("ld x, "); plabel(l); puts("\n");
     puts("push x\n");
 
-    lstpush(ARRAYS, cons(l,length));
+    grpush(ARRAYS, cons(l,length));
     return 1;
 };
 
@@ -958,10 +959,10 @@ Identifier = func(x) {
     die("identifier too long",0);
 };
 
-ARRAYS = lstnew();
-STRINGS = lstnew();
-EXTERNS = lstnew();
-GLOBALS = lstnew();
+ARRAYS = grnew();
+STRINGS = grnew();
+EXTERNS = grnew();
+GLOBALS = grnew();
 
 parse_init();
 parse(Program,0);
@@ -974,12 +975,12 @@ if (BLOCKLEVEL != 0) die("expected to be left at block level 0 (probably a compi
 var end = label();
 puts("jmp "); plabel(end); puts("\n");
 
-lstwalk(GLOBALS, func(name) {
+grwalk(GLOBALS, func(name) {
     putchar('_'); puts(name); puts(": .word 0\n");
     free(name);
 });
 
-lstwalk(STRINGS, func(tuple) {
+grwalk(STRINGS, func(tuple) {
     var str = car(tuple);
     var l = cdr(tuple);
     plabel(l); puts(":\n");
@@ -993,7 +994,7 @@ lstwalk(STRINGS, func(tuple) {
     free(tuple);
 });
 
-lstwalk(ARRAYS, func(tuple) {
+grwalk(ARRAYS, func(tuple) {
     var l = car(tuple);
     var length = cdr(tuple);
     plabel(l); puts(":\n");
@@ -1002,9 +1003,9 @@ lstwalk(ARRAYS, func(tuple) {
     free(tuple);
 });
 
-lstfree(ARRAYS);
-lstfree(STRINGS);
-lstfree(EXTERNS);
-lstfree(GLOBALS);
+grfree(ARRAYS);
+grfree(STRINGS);
+grfree(EXTERNS);
+grfree(GLOBALS);
 
 plabel(end); puts(":\n");
