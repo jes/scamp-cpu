@@ -53,6 +53,7 @@ var CharacterLiteral;
 var StringLiteral;
 var StringLiteralText;
 var FunctionDeclaration;
+var InlineAsm;
 var Parameters;
 var FunctionCall;
 var Arguments;
@@ -595,6 +596,7 @@ Constant = func(x) {
     if (parse(NumericLiteral,0)) return 1;
     if (parse(StringLiteral,0)) return 1;
     if (parse(FunctionDeclaration,0)) return 1;
+    if (parse(InlineAsm,0)) return 1;
     return 0;
 };
 
@@ -738,6 +740,32 @@ FunctionDeclaration = func(x) {
     puts("# end function declaration\n\n");
     plabel(functionend); puts(":\n");
     puts("ld x, "); plabel(functionlabel); puts("\n");
+    puts("push x\n");
+    return 1;
+};
+
+InlineAsm = func(x) {
+    if (!parse(Keyword,"asm")) return 0;
+    if (!parse(CharSkip,'{')) return 0;
+
+    var end = label();
+    var asm = label();
+    puts("jmp "); plabel(end); puts("\n");
+    plabel(asm); puts(":\n");
+
+    puts("#peepopt:off\n");
+    var ch;
+    while (1) {
+        ch = nextchar();
+        if (ch == EOF) die("eof inside asm block");
+        if (ch == '}') break;
+        putchar(ch);
+    };
+    puts("\n");
+    puts("#peepopt:on\n");
+
+    plabel(end); puts(":\n");
+    puts("ld x, "); plabel(asm); puts("\n");
     puts("push x\n");
     return 1;
 };

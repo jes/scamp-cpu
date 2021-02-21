@@ -362,7 +362,7 @@ sub Term {
     return 1;
 }
 
-sub Constant { return parse(\&NumericLiteral) || parse(\&StringLiteral) || parse(\&FunctionDeclaration); }
+sub Constant { return parse(\&NumericLiteral) || parse(\&StringLiteral) || parse(\&FunctionDeclaration) || parse(\&InlineAsm); }
 sub NumericLiteral { return parse(\&HexLiteral) || parse(\&CharacterLiteral) || parse(\&DecimalLiteral); }
 
 sub HexLiteral {
@@ -475,6 +475,31 @@ sub FunctionDeclaration {
     print "$functionend:\n";
     print "ld x, $functionlabel\n";
     print "push x\n";
+    return 1;
+}
+
+sub InlineAsm {
+    return 0 if !parse(\&Keyword,'asm');
+    return 0 if !parse(\&CharSkip,'{');
+
+    my $end = label();
+    my $asm = label();
+
+    print "jmp $end\n";
+    print "$asm:\n";
+
+    print "#peepopt:off\n";
+    while ($pos < @s) {
+        last if parse(\&Char,'}');
+        print nextchar();
+    }
+    print "\n";
+    print "#peepopt:on\n";
+
+    print "$end:\n";
+    print "ld x, $asm\n";
+    print "push x\n";
+
     return 1;
 }
 
