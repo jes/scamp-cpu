@@ -689,7 +689,6 @@ StringLiteralText = func() {
 
 var maxparams = 32;
 var PARAMS = malloc(maxparams);
-# TODO: bounds check
 Parameters = func(x) {
     var p = PARAMS;
     while (1) {
@@ -723,9 +722,8 @@ FunctionDeclaration = func(x) {
     while (*p) p++;
     # p now points past the last param
     NPARAMS = p - params;
-    while (p-- > params) {
+    while (p-- > params)
         addlocal(*p, bp_rel++);
-    };
 
     if (!parse(CharSkip,')')) die("func needs close paren");
     parse(Statement,0); # optional
