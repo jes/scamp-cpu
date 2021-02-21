@@ -317,6 +317,21 @@ var listtest = func() {
     lstfree(l2);
 };
 
+var arraytest = func() {
+    puts("array:\n");
+    var arr;
+    var p;
+    var i = 0;
+    while (i++ < 10) {
+        arr = ["Hello, ", "world! ", "For time no. ", itoa(i), "\n"];
+        p = arr;
+        while (*p) {
+            puts(*(p++));
+        };
+    };
+    puts("\n");
+};
+
 var sp = 0xffff;
 var initial_sp = *sp;
 optest();
@@ -328,5 +343,6 @@ looptest();
 fizzbuzz();
 primestest();
 listtest();
+arraytest();
 var new_sp = *sp;
 puts("sp change="); puts(itoa(new_sp-initial_sp)); puts("\n");

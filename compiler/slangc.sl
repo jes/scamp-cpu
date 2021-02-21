@@ -51,6 +51,7 @@ var DecimalLiteral;
 var CharacterLiteral;
 var StringLiteral;
 var StringLiteralText;
+var ArrayLiteral;
 var FunctionDeclaration;
 var InlineAsm;
 var Parameters;
@@ -71,6 +72,7 @@ var maxidentifier = maxliteral;
 var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 
 var STRINGS;
+var ARRAYS;
 # EXTERNS and GLOBALS are lists of pointers variable names
 var EXTERNS;
 var GLOBALS;
@@ -401,6 +403,8 @@ Declaration = func(x) {
     if (!LOCALS) {
         addglobal(name);
     } else {
+        # TODO: if (findglobal(name)) warn("local var overrides global");
+        # once we can write to stderr separately from stdout
         addlocal(name, BP_REL--);
         puts("# allocate space for "); puts(name); puts("\n");
         puts("dec sp\n");
@@ -583,6 +587,7 @@ ExpressionLevel = func(lvl) {
 
 Term = func(x) {
     if (parse(Constant,0)) return 1;
+    if (parse(ArrayLiteral,0)) return 1;
     if (parse(FunctionCall,0)) return 1;
     if (parse(AddressOf,0)) return 1;
     if (parse(PreOp,0)) return 1;
@@ -685,6 +690,36 @@ StringLiteralText = func() {
         i++;
     };
     die("string literal too long");
+};
+
+ArrayLiteral = func(x) {
+    if (!parse(CharSkip,'[')) return 0;
+
+    var l = label();
+    var length = 0;
+
+    while (1) {
+        if (!parse(Expression,0)) break;
+
+        # TODO: this loads to a constant address, we should make the assembler
+        # allow us to calculate it at assembly like like:
+        #   ld (l+length), x
+        puts("ld r0, "); plabel(l); puts("\n");
+        puts("add r0, "); puts(itoa(length)); puts("\n");
+        puts("pop x\n");
+        puts("ld (r0), x\n");
+
+        length++;
+        if (!parse(CharSkip,',')) break;
+    };
+
+    if (!parse(CharSkip,']')) die("array literal needs close bracket");
+
+    puts("ld x, "); plabel(l); puts("\n");
+    puts("push x\n");
+
+    lstpush(ARRAYS, cons(l,length));
+    return 1;
 };
 
 var maxparams = 32;
@@ -931,6 +966,7 @@ Identifier = func(x) {
     die("identifier too long");
 };
 
+ARRAYS = lstnew();
 STRINGS = lstnew();
 EXTERNS = lstnew();
 GLOBALS = lstnew();
@@ -951,17 +987,28 @@ lstwalk(GLOBALS, func(name) {
 });
 
 lstwalk(STRINGS, func(tuple) {
-    var str = *tuple;
-    var label = *(tuple+1);
-    plabel(label); puts(":\n");
+    var str = car(tuple);
+    var l = cdr(tuple);
+    plabel(l); puts(":\n");
     var p = str;
     while (*p) {
         puts(".word "); puts(itoa(*p)); puts("\n");
         p++;
     };
     puts(".word 0\n");
+    free(tuple);
 });
 
+lstwalk(ARRAYS, func(tuple) {
+    var l = car(tuple);
+    var length = cdr(tuple);
+    plabel(l); puts(":\n");
+    puts(".gap "); puts(itoa(length)); puts("\n");
+    puts(".word 0\n");
+    free(tuple);
+});
+
+lstfree(ARRAYS);
 lstfree(STRINGS);
 lstfree(EXTERNS);
 lstfree(GLOBALS);

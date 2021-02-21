@@ -14,6 +14,7 @@ var die = func(s) {
     puts("error: line "); puts(itoa(line)); puts(": col "); puts(itoa(col)); puts(": ");
     puts(s); putchar('\n');
     outp(3,0); # halt the emulator
+    while(1); # in case it doesn't halt
 };
 
 # setup parser state ready to parse the given string
