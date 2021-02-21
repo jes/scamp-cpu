@@ -19,7 +19,6 @@
 #       generated it
 # TODO: provide unsigned magnitude comparison?
 # TODO: fix &/| precedence
-# TODO: some way to include assembly code
 # TODO: array indexing syntax
 
 use strict;

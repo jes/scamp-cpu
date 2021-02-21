@@ -17,7 +17,6 @@
 #       generated it
 # TODO: provide unsigned mangitude comparison?
 # TODO: fix &/| precedence
-# TODO: some way to include assembly code
 # TODO: some way to include files
 # TODO: array indexing syntax
 
