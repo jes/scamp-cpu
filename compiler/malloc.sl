@@ -92,3 +92,22 @@ var malloc = func(sz) {
         p = p[0];
     };
 };
+
+var realloc = func(p, sz) {
+    var bp = p-2;
+    var oldsz = bp[1];
+
+    # TODO: if there's free space immediately after p, just grow into it
+
+    var newp = malloc(sz);
+    var copysz = oldsz;
+    if (sz < oldsz) copysz = sz;
+
+    var dest = newp;
+    var src = p;
+    while (copysz--) *(dest++) = *(src++);
+
+    free(p);
+
+    return newp;
+};
