@@ -20,8 +20,6 @@
 # TODO: provide unsigned magnitude comparison?
 # TODO: fix &/| precedence
 # TODO: some way to include assembly code
-# TODO: some way to include files only the first time (maybe *only* work that way? how
-#       often is it actually useful to be able to include a file multiple times?)
 # TODO: array indexing syntax
 
 use strict;
@@ -40,6 +38,7 @@ my $scope = {
     parent => undef,
 };
 my %STRINGS;
+my %INCLUDED;
 my $globalscope = $scope;
 my $IDENTIFIER;
 my $BLOCKLEVEL = 0;
@@ -125,9 +124,13 @@ sub Include {
     return 0 if !parse(\&Char,'"');
     my $file = StringLiteralText();
 
+    return 1 if $INCLUDED{$file};
+    $INCLUDED{$file} = 1;
+
     my @was = ($s,$filename,$pos,$line,$col);
 
-    open(my $fh, '<', $file);
+    open(my $fh, '<', $file)
+        or die "can't read $file: $!\n";
     $s = join('', <$fh>);
     close $fh;
 

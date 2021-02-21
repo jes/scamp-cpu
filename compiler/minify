@@ -5,6 +5,8 @@
 use strict;
 use warnings;
 
+my %INCLUDED;
+
 while (<>) {
     chomp;
     handle($_);
@@ -17,6 +19,9 @@ sub handle {
     return if $line eq '';
     if ($line =~ /^include\s+\"([^"]+)\"\s*;$/) {
         my $file = $1;
+        return if $INCLUDED{$file};
+        $INCLUDED{$file} = 1;
+
         open(my $fh, '<', $file)
             or die "can't read $file: $!\n";
         while (<$fh>) {

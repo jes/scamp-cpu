@@ -18,8 +18,7 @@
 # TODO: provide unsigned mangitude comparison?
 # TODO: fix &/| precedence
 # TODO: some way to include assembly code
-# TODO: some way to include files only the first time (maybe *only* work that way? how
-#       often is it actually useful to be able to include a file multiple times?)
+# TODO: some way to include files
 # TODO: array indexing syntax
 
 include "stdio.sl";
