@@ -304,6 +304,18 @@ sub Assignment {
     my $id;
     if (parse(\&Identifier)) {
         $id = $IDENTIFIER;
+        while (parse(\&CharSkip,'[')) { # array index
+            pushvar($id) if $id;
+            $id = undef; # want to store to pointer, not identifier
+            die "array index lvalue needs expression\n" if !parse(\&Expression);
+            die "array index lvalue needs close bracket\n" if !parse(\&CharSkip,']');
+            # now stack has array and index, need to add them together and push the result
+            print "pop x\n";
+            print "ld r0, x\n";
+            print "pop x\n";
+            print "add x, r0\n";
+            print "push x\n";
+        }
     } else {
         return 0 if !parse(\&CharSkip,'*');
         die "can't dereference non-expression\n" if !parse(\&Term);

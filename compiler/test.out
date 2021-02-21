@@ -139,44 +139,54 @@ shift 3
 length = 2
 
 array:
-Hello, world! For time no. 1
+Hello, everyone; For time no. 1
 arr[3]=1
+arr[3]=lol
 strcmp(arr[0],"Hello, ")=0
 strcmp(arr[0],"foo")=65506
-Hello, world! For time no. 2
+Hello, everyone; For time no. 2
 arr[3]=2
+arr[3]=lol
 strcmp(arr[0],"Hello, ")=0
 strcmp(arr[0],"foo")=65506
-Hello, world! For time no. 3
+Hello, everyone; For time no. 3
 arr[3]=3
+arr[3]=lol
 strcmp(arr[0],"Hello, ")=0
 strcmp(arr[0],"foo")=65506
-Hello, world! For time no. 4
+Hello, everyone; For time no. 4
 arr[3]=4
+arr[3]=lol
 strcmp(arr[0],"Hello, ")=0
 strcmp(arr[0],"foo")=65506
-Hello, world! For time no. 5
+Hello, everyone; For time no. 5
 arr[3]=5
+arr[3]=lol
 strcmp(arr[0],"Hello, ")=0
 strcmp(arr[0],"foo")=65506
-Hello, world! For time no. 6
+Hello, everyone; For time no. 6
 arr[3]=6
+arr[3]=lol
 strcmp(arr[0],"Hello, ")=0
 strcmp(arr[0],"foo")=65506
-Hello, world! For time no. 7
+Hello, everyone; For time no. 7
 arr[3]=7
+arr[3]=lol
 strcmp(arr[0],"Hello, ")=0
 strcmp(arr[0],"foo")=65506
-Hello, world! For time no. 8
+Hello, everyone; For time no. 8
 arr[3]=8
+arr[3]=lol
 strcmp(arr[0],"Hello, ")=0
 strcmp(arr[0],"foo")=65506
-Hello, world! For time no. 9
+Hello, everyone; For time no. 9
 arr[3]=9
+arr[3]=lol
 strcmp(arr[0],"Hello, ")=0
 strcmp(arr[0],"foo")=65506
-Hello, world! For time no. 10
+Hello, everyone; For time no. 10
 arr[3]=10
+arr[3]=lol
 strcmp(arr[0],"Hello, ")=0
 strcmp(arr[0],"foo")=65506
 
