@@ -107,7 +107,7 @@ var addglobal = func(name) {
 # return pointer to (name,bp_rel) if "name" is a local, 0 otherwise
 var findlocal = func(name) {
     if (!LOCALS) die("can't find local in global scope");
-    return lstfind(LOCALS, name, func(findname,tuple) { return strcmp(findname,*tuple)==0 });
+    return lstfind(LOCALS, name, func(findname,tuple) { return strcmp(findname,car(tuple))==0 });
 };
 var addlocal = func(name, bp_rel) {
     if (!LOCALS) die("can't add local in global scope");
@@ -120,8 +120,8 @@ var addlocal = func(name, bp_rel) {
 };
 
 var addstring = func(str) {
-    var v = lstfind(STRINGS, str, func(find,tuple) { return strcmp(find,*tuple)==0 });
-    if (v) return *(v+1);
+    var v = lstfind(STRINGS, str, func(find,tuple) { return strcmp(find,car(tuple))==0 });
+    if (v) return cdr(v);
 
     var l = label();
     lstpush(STRINGS, cons(str,l));
@@ -150,8 +150,8 @@ var runtime_endscope = func() {
 var compiletime_endscope = func() {
     if (!LOCALS) die("can't end the global scope");
     lstwalk(LOCALS, func(tuple) {
-        var name = *tuple;
-        free(*name);
+        var name = car(tuple);
+        free(name);
         free(tuple);
     });
     lstfree(LOCALS);
@@ -168,7 +168,7 @@ var pushvar = func(name) {
     if (LOCALS) {
         v = findlocal(name);
         if (v) {
-            bp_rel = *(v+1);
+            bp_rel = cdr(v);
             puts("# pushvar: local "); puts(name); puts("\n");
             puts("ld x, r253\n");
             puts("ld x, "); puts(itoa(bp_rel)); puts("(x)\n");
@@ -194,7 +194,7 @@ var poptovar = func(name) {
     if (LOCALS) {
         v = findlocal(name);
         if (v) {
-            bp_rel = *(v+1);
+            bp_rel = cdr(v);
             puts("# poptovar: local "); puts(name); puts("\n");
             puts("ld r252, r253\n");
             puts("add r252, "); puts(itoa(bp_rel)); puts("\n");
@@ -886,7 +886,7 @@ AddressOf = func(x) {
     var v = findlocal(IDENTIFIER);
     var bp_rel;
     if (v) {
-        bp_rel = *(v+1);
+        bp_rel = cdr(v);
         puts("# &"); puts(IDENTIFIER); puts(" (local)\n");
         puts("ld x, r253\n");
         puts("add x, "); puts(itoa(bp_rel)); puts("\n");
@@ -959,7 +959,7 @@ Identifier = func(x) {
             skip();
             return 1;
         };
-        if (*(IDENTIFIER+i) == '\\') *(IDENTIFIER+i) = escapedchar(nextchar());
+        if (IDENTIFIER[i] == '\\') *(IDENTIFIER+i) = escapedchar(nextchar());
         i++;
     };
     die("identifier too long");
