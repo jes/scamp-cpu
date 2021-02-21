@@ -158,24 +158,8 @@ var shl = asm {
     ret
 };
 
-extern TOP;
-var malloc = func(sz) {
-    var oldtop = TOP;
-    TOP = TOP + sz;
-    if ((TOP&0xff00) == 0xff00) { # TODO: use unsigned >= operator when it exists
-        puts("out of memory\n");
-        outp(3,0);
-        while(1); # in case outp(3,0) doesn't halt
-    };
-    return oldtop;
-};
-
-var free = func(p) {
-    # TODO: free
-};
-
 var itoa_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
-var itoa_space = malloc(17);
+var itoa_space = "................."; # static 17-word buffer
 
 # returns pointer to static buffer
 # "base" should range from 2 to 36
@@ -237,3 +221,24 @@ var atoibase = func(s, base) {
 
 # TODO: negative values?
 var atoi = func(s) return atoibase(s, 10);
+
+# usage: inp(addr)
+var inp = asm {
+    pop x
+    in r0, x
+    ret
+};
+
+# usage: outp(addr, value)
+var outp = asm {
+    pop x
+    ld r0, x
+    pop x
+    out x, r0
+    ret
+};
+
+var exit = func(rc) {
+    outp(3,rc); # halt the emulator
+    while(1); # just in case it doesn't halt
+};

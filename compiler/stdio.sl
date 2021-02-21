@@ -1,20 +1,6 @@
+include "stdlib.sl";
+
 var EOF = -1;
-
-# usage: inp(addr)
-var inp = asm {
-    pop x
-    in r0, x
-    ret
-};
-
-# usage: outp(addr, value)
-var outp = asm {
-    pop x
-    ld r0, x
-    pop x
-    out x, r0
-    ret
-};
 
 var getchar = func() {
     return inp(2);
@@ -54,4 +40,43 @@ var puts = asm {
         test (x)
         jnz print_loop
     ret
+};
+
+# usage: printf(fmt, [arg1, arg2, ...]);
+# format string:
+#   %% -> %
+#   %c -> character
+#   %s -> string
+#   %d -> decimal integer
+#   %x -> hex integer
+# TODO: signed vs unsigned integers? padding?
+# TODO: show (null) for null pointers
+# TODO: show arrays? lists?
+# TODO: return the number of chars output
+var printf = func(fmt, args) {
+    var p = fmt;
+    var argidx = 0;
+
+    while (*p) {
+        if (*p == '%') {
+            p++;
+            if (!*p) return 0;
+            if (*p == '%') {
+                putchar('%');
+            } else if (*p == 'c') {
+                putchar(args[argidx++]);
+            } else if (*p == 's') {
+                puts(args[argidx++]);
+            } else if (*p == 'd') {
+                puts(itoa(args[argidx++]));
+            } else if (*p == 'x') {
+                puts(itoabase(args[argidx++],16));
+            } else {
+                puts("<???>");
+            }
+        } else {
+            putchar(*p);
+        };
+        p++;
+    };
 };

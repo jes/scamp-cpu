@@ -1,3 +1,5 @@
+include "malloc.sl";
+
 # usage: strcmp(s1,s2)
 # return a value:
 #  <0  if s1 < s2

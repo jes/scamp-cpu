@@ -8,6 +8,8 @@
 # TODO: retrieve element at given index
 # TODO: delete element at given index
 
+include "malloc.sl";
+
 var cons = func(a,b) {
     var tuple = malloc(2);
     *tuple = a;

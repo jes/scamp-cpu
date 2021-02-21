@@ -40,38 +40,38 @@ var optest = func() {
 
     puts("Operators test:\n");
 
-    puts("a="); puts(itoa(a)); puts("\n");
-    puts("b="); puts(itoa(b)); puts("\n");
-    puts("~a="); puts(itoa(~a)); puts("\n");
-    puts("-b="); puts(itoa(-b)); puts("\n");
-    puts("+a="); puts(itoa(+a)); puts("\n");
-    puts("a+b="); puts(itoa(a+b)); puts("\n");
-    puts("a-b="); puts(itoa(a-b)); puts("\n");
-    puts("a&b="); puts(itoa(a&b)); puts("\n");
-    puts("a|b="); puts(itoa(a|b)); puts("\n");
-    puts("a^b="); puts(itoa(a^b)); puts("\n");
-    puts("a&&b="); puts(itoa(a&&b)); puts("\n");
-    puts("a||b="); puts(itoa(a||b)); puts("\n");
-    puts("a&&0="); puts(itoa(a&&0)); puts("\n");
-    puts("a||0="); puts(itoa(a||0)); puts("\n");
-    puts("(-1 > 0)="); puts(itoa(-1>0)); puts("\n");
-    puts("(-1 >= 0)="); puts(itoa(-1>=0)); puts("\n");
-    puts("(-1 < 0)="); puts(itoa(-1<0)); puts("\n");
-    puts("(-1 <= 0)="); puts(itoa(-1<=0)); puts("\n");
-    puts("(32767>0)="); puts(itoa(32767>0)); puts("\n");
-    puts("(32767>=0)="); puts(itoa(32767>=0)); puts("\n");
-    puts("(32767<0)="); puts(itoa(32767<0)); puts("\n");
-    puts("(32767<=0)="); puts(itoa(32767<=0)); puts("\n");
-    puts("(32767>-2)="); puts(itoa(32767>-2)); puts("\n");
-    puts("(32767>=-2)="); puts(itoa(32767>=-2)); puts("\n");
-    puts("(32767<-2)="); puts(itoa(32767<-2)); puts("\n");
-    puts("(32767<=-2)="); puts(itoa(32767<=-2)); puts("\n");
+    printf("a=%d\n", [a]);
+    printf("b=%d\n", [b]);
+    printf("~a=%d\n", [~a]);
+    printf("-b=%d\n", [-b]);
+    printf("+a=%d\n", [+a]);
+    printf("a+b=%d\n", [a+b]);
+    printf("a-b=%d\n", [a-b]);
+    printf("a&b=%d\n", [a&b]);
+    printf("a|b=%d\n", [a|b]);
+    printf("a^b=%d\n", [a^b]);
+    printf("a&&b=%d\n", [a&&b]);
+    printf("a||b=%d\n", [a||b]);
+    printf("a&&0=%d\n", [a&&0]);
+    printf("a||0=%d\n", [a||0]);
+    printf("(-1 > 0)=%d\n", [-1>0]);
+    printf("(-1 >= 0)=%d\n", [-1>=0]);
+    printf("(-1 < 0)=%d\n", [-1<0]);
+    printf("(-1 <= 0)=%d\n", [-1<=0]);
+    printf("(32767>0)=%d\n", [32767>0]);
+    printf("(32767>=0)=%d\n", [32767>=0]);
+    printf("(32767<0)=%d\n", [32767<0]);
+    printf("(32767<=0)=%d\n", [32767<=0]);
+    printf("(32767>-2)=%d\n", [32767>-2]);
+    printf("(32767>=-2)=%d\n", [32767>=-2]);
+    printf("(32767<-2)=%d\n", [32767<-2]);
+    printf("(32767<=-2)=%d\n", [32767<=-2]);
 
     var x = 5;
     var y = 10;
-    puts("x="); puts(itoa(x)); puts("\n");
-    puts("y="); puts(itoa(y)); puts("\n");
-    puts("x>y-6="); puts(itoa(x>y-6)); puts("\n");
+    printf("x=%d\n", [x]);
+    printf("y=%d\n", [y]);
+    printf("x>y-6=%d\n", [x>y-6]);
 
     puts("\n");
 };
@@ -89,16 +89,8 @@ var fibtest = func() {
         f1 = f2;
         f2 = f3;
 
-        # TODO: printf()
-        puts("fib("); puts(itoa(n)); puts(") = ");
-        puts(itoa(f3));
-        puts("\n");
-
-        if (n <= 18) {
-            puts("rfib("); puts(itoa(n)); puts(") = ");
-            puts(itoa(rfib(n)));
-            puts("\n");
-        };
+        printf("fib(%d) = %d\n", [n,f3]);
+        if (n <= 18) printf("rfib(%d) = %d\n", [n,rfib(n)]);
     };
 
     puts("\n");
@@ -107,15 +99,15 @@ var fibtest = func() {
 var strtest = func() {
     var s1 = "Hello, world!";
 
-    puts("string: "); puts(s1); puts("\n");
-    puts("reversed: "); puts(strrev(s1)); puts("\n");
-    puts("re-reversed: "); puts(strrev(s1)); puts("\n");
+    printf("string: %s\n", [s1]);
+    printf("reversed: %s\n", [strrev(s1)]);
+    printf("re-reversed: %s\n", [strrev(s1)]);
 
-    puts("cmp self: "); puts(itoa(strcmp(s1,s1))); puts("\n");
-    puts("cmp hello world: "); puts(itoa(strcmp(s1,"Hello, world!"))); puts("\n");
-    puts("cmp foo: "); puts(itoa(strcmp(s1,"foo"))); puts("\n");
+    printf("cmp self: %d\n", [strcmp(s1,s1)]);
+    printf("cmp hello world: %d\n", [strcmp(s1,"Hello, world!")]);
+    printf("cmp foo: %d\n", [strcmp(s1,"foo")]);
 
-    puts("length: "); puts(itoa(strlen(s1))); puts("\n");
+    printf("length: %d\n", [strlen(s1)]);
 
     puts("\n");
 };
@@ -135,11 +127,10 @@ var functest = func() {
         return x() + x();
     };
 
-    puts("2. 5 = "); puts(itoa(f(func() {
+    printf("2. 5 = %d\n", [f(func() {
         globule++;
         return globule;
-    })));
-    puts("\n");
+    })]);
 
     # this function produces no output, but will leave the sp incorrect if
     # vars inside the function body interact poorly with early returns
@@ -167,21 +158,21 @@ var ptrtest = func() {
 
     puts("Pointers to locals:\n");
 
-    puts("1. x = "); puts(itoa(x)); puts("\n");
-    puts("1. y = "); puts(itoa(y)); puts("\n");
-    puts("1. *p = "); puts(itoa(*p)); puts("\n");
+    printf("1. x = %d\n", [x]);
+    printf("1. y = %d\n", [y]);
+    printf("1. *p = %d\n", [*p]);
     *p = 7;
-    puts("2. x = "); puts(itoa(x)); puts("\n");
-    puts("2. y = "); puts(itoa(y)); puts("\n");
-    puts("2. *p = "); puts(itoa(*p)); puts("\n");
+    printf("2. x = %d\n", [x]);
+    printf("2. y = %d\n", [y]);
+    printf("2. *p = %d\n", [*p]);
     p = &y;
-    puts("3. x = "); puts(itoa(x)); puts("\n");
-    puts("3. y = "); puts(itoa(y)); puts("\n");
-    puts("3. *p = "); puts(itoa(*p)); puts("\n");
+    printf("3. x = %d\n", [x]);
+    printf("3. y = %d\n", [y]);
+    printf("3. *p = %d\n", [*p]);
     *p = 11;
-    puts("4. x = "); puts(itoa(x)); puts("\n");
-    puts("4. y = "); puts(itoa(y)); puts("\n");
-    puts("4. *p = "); puts(itoa(*p)); puts("\n");
+    printf("4. x = %d\n", [x]);
+    printf("4. y = %d\n", [y]);
+    printf("4. *p = %d\n", [*p]);
 
     puts("\n");
 };
@@ -245,7 +236,7 @@ var primestest = func() {
 
     # output the difference between "prime" and the next malloc, to highlight any changes
     var x = malloc(1);
-    puts("x-prime="); puts(itoa(x-prime)); puts("\n\n");
+    printf("x-prime=%d\n\n", [x-prime]);
 
     puts("primes:\n");
 
@@ -270,10 +261,7 @@ var primestest = func() {
     puts("2");
     i = 3;
     while (i < maxprime) {
-        if (*(prime+i)) {
-            puts(" ");
-            puts(itoa(i));
-        };
+        if (*(prime+i)) printf(" %d", [i]);
         i = i + 2;
     };
 
