@@ -22,13 +22,27 @@ my $l9ldxx = 0;
 my $l10reg;
 my $l11state = 0;
 
+my $off = 0;
+
 while (<>) {
     chomp;
 
     next if $_ =~ /^#/;
     next if $_ eq '';
 
-    level1($_);
+    if (/peepopt:off/) {
+        level1('');
+        $off=1;
+    }
+    if (/peepopt:on/) {
+        $off = 0;
+    }
+
+    if ($off) {
+        print "$_\n";
+    } else {
+        level1($_);
+    }
 }
 
 level1('');
