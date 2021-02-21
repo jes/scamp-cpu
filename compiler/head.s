@@ -1,7 +1,7 @@
 .at 0x100
 
 # initialise sp and TOP
-.def STACKSZ 1024
+.def STACKSZ 2048
 ld sp, TOP
 add sp, STACKSZ
 
