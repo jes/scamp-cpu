@@ -121,7 +121,7 @@ var addlocal = func(name, bp_rel) {
 
 var addstring = func(str) {
     var v = lstfind(STRINGS, str, func(find,tuple) { return strcmp(find,*tuple)==0 });
-    if (v) return cdr(v);
+    if (v) return *(v+1);
 
     var l = label();
     lstpush(STRINGS, cons(str,l));
@@ -168,7 +168,7 @@ var pushvar = func(name) {
     if (LOCALS) {
         v = findlocal(name);
         if (v) {
-            bp_rel = cdr(v);
+            bp_rel = *(v+1);
             puts("# pushvar: local "); puts(name); puts("\n");
             puts("ld x, r253\n");
             puts("ld x, "); puts(itoa(bp_rel)); puts("(x)\n");
@@ -194,7 +194,7 @@ var poptovar = func(name) {
     if (LOCALS) {
         v = findlocal(name);
         if (v) {
-            bp_rel = cdr(v);
+            bp_rel = *(v+1);
             puts("# poptovar: local "); puts(name); puts("\n");
             puts("ld r252, r253\n");
             puts("add r252, "); puts(itoa(bp_rel)); puts("\n");
@@ -512,22 +512,6 @@ Assignment = func(x) {
     var id = 0;
     if (parse(Identifier,0)) {
         id = strdup(IDENTIFIER);
-        while (parse(CharSkip,'[')) { # array index
-            if (id) {
-                pushvar(id);
-                # want to store to pointer, not identifier
-                free(id);
-                id = 0;
-            };
-            if (!parse(Expression,0)) die("array index lvalue needs expression");
-            if (!parse(CharSkip,']')) die("array index lvalue needs close bracket");
-            # now stack has array and index, need to add them together and push the result
-            puts("pop x\n");
-            puts("ld r0, x\n");
-            puts("pop x\n");
-            puts("add x, r0\n");
-            puts("push x\n");
-        };
     } else {
         if (!parse(CharSkip,'*')) return 0;
         if (!parse(Term,0)) die("can't dereference non-expression");
@@ -634,9 +618,9 @@ var NumLiteral = func(alphabet,base,neg) {
     if (!parse(AnyChar,alphabet)) return 0;
     var i = 1;
     while (i < maxliteral) {
-        literal_buf[i] = peekchar();
+        *(literal_buf+i) = peekchar();
         if (!parse(AnyChar,alphabet)) {
-            literal_buf[i] = 0;
+            *(literal_buf+i) = 0;
             if (neg) genliteral(-atoibase(literal_buf,base))
             else     genliteral( atoibase(literal_buf,base));
             skip();
@@ -693,14 +677,14 @@ StringLiteralText = func() {
     var i = 0;
     while (i < maxliteral) {
         if (parse(Char,'"')) {
-            literal_buf[i] = 0;
+            *(literal_buf+i) = 0;
             skip();
             return strdup(literal_buf);
         };
         if (parse(Char,'\\')) {
-            literal_buf[i] = escapedchar(nextchar());
+            *(literal_buf+i) = escapedchar(nextchar());
         } else {
-            literal_buf[i] = nextchar();
+            *(literal_buf+i) = nextchar();
         };
         i++;
     };
@@ -902,7 +886,7 @@ AddressOf = func(x) {
     var v = findlocal(IDENTIFIER);
     var bp_rel;
     if (v) {
-        bp_rel = cdr(v);
+        bp_rel = *(v+1);
         puts("# &"); puts(IDENTIFIER); puts(" (local)\n");
         puts("ld x, r253\n");
         puts("add x, "); puts(itoa(bp_rel)); puts("\n");
@@ -969,13 +953,13 @@ Identifier = func(x) {
     if (!parse(AlphaUnderChar,0)) return 0;
     var i = 1;
     while (i < maxidentifier) {
-        IDENTIFIER[i] = peekchar();
+        *(IDENTIFIER+i) = peekchar();
         if (!parse(AlphanumUnderChar,0)) {
-            IDENTIFIER[i] = 0;
+            *(IDENTIFIER+i) = 0;
             skip();
             return 1;
         };
-        if (IDENTIFIER[i] == '\\') IDENTIFIER[i] = escapedchar(nextchar());
+        if (*(IDENTIFIER+i) == '\\') *(IDENTIFIER+i) = escapedchar(nextchar());
         i++;
     };
     die("identifier too long");

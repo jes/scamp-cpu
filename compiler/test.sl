@@ -324,14 +324,11 @@ var arraytest = func() {
     var i = 0;
     while (i++ < 10) {
         arr = ["Hello, ", "world! ", "For time no. ", itoa(i), "\n"];
-        arr[1] = "everyone; ";
         p = arr;
         while (*p) {
             puts(*(p++));
         };
 
-        puts("arr[3]="); puts(arr[3]); puts("\n");
-        arr[3] = "lol";
         puts("arr[3]="); puts(arr[3]); puts("\n");
         puts("strcmp(arr[0],\"Hello, \")="); puts(itoa(strcmp(arr[0], "Hello, "))); puts("\n");
         puts("strcmp(arr[0],\"foo\")="); puts(itoa(strcmp(arr[0], "foo"))); puts("\n");
