@@ -37,6 +37,7 @@ my $scope = {
 };
 my %STRINGS;
 my @ARRAYS;
+my @GLOBALS_ORDER;
 my %INCLUDED;
 my $globalscope = $scope;
 my $IDENTIFIER;
@@ -51,7 +52,7 @@ my $end = label();
 print "jmp $end\n";
 
 # allocate space for globals
-for my $global (sort keys %{ $scope->{symbols} }) {
+for my $global (@GLOBALS_ORDER) {
     print "_$global: .word 0\n" if !$scope->{symbols}{$global}{extern};
 }
 
@@ -192,6 +193,8 @@ sub Declaration {
     if (!$scope->{global}) {
         print "# allocate space for $id\n";
         print "dec sp\n";
+    } else {
+        push @GLOBALS_ORDER, $id;
     }
     return 1 if !parse(\&CharSkip,'=');
 
