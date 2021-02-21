@@ -10,9 +10,10 @@ var col;
 var ringbufsz = 256; # check the "too much backtrack" test before changing this!
 var ringbuf = malloc(ringbufsz);
 
-var die = func(s) {
-    puts("error: line "); puts(itoa(line)); puts(": col "); puts(itoa(col)); puts(": ");
-    puts(s); putchar('\n');
+var die = func(fmt, args) {
+    printf("error: line %d: col %d: ", [line, col]);
+    if (args) printf(fmt, args);
+    putchar('\n');
     outp(3,0); # halt the emulator
     while(1); # in case it doesn't halt
 };
@@ -37,7 +38,7 @@ var parse = func(f, arg) {
     if (r) return r;
 
     # die if pos-pos0 >= 256 (update this if ringbufsz changes)
-    if ((pos-pos0) & 0xff00) die("too much backtrack\n");
+    if ((pos-pos0) & 0xff00) die("too much backtrack",0);
 
     pos = pos0;
     line = line0;

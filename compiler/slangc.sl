@@ -96,23 +96,23 @@ var findglobal = func(name) {
 };
 
 var addextern = func(name) {
-    if (findglobal(name)) die("duplicate global: $name"); # TODO: printf
+    if (findglobal(name)) die("duplicate global: %s",[name]);
     lstpush(EXTERNS, name);
 };
 var addglobal = func(name) {
-    if (findglobal(name)) die("duplicate global: $name"); # TODO: printf
+    if (findglobal(name)) die("duplicate global: %s",[name]);
     lstpush(GLOBALS, name);
 };
 
 # return pointer to (name,bp_rel) if "name" is a local, 0 otherwise
 var findlocal = func(name) {
-    if (!LOCALS) die("can't find local in global scope");
+    if (!LOCALS) die("can't find local in global scope: %s",[name]);
     return lstfind(LOCALS, name, func(findname,tuple) { return strcmp(findname,car(tuple))==0 });
 };
 var addlocal = func(name, bp_rel) {
-    if (!LOCALS) die("can't add local in global scope");
+    if (!LOCALS) die("can't add local in global scope: %s",[name]);
 
-    if (findlocal(name)) die("duplicate local: $name"); # TODO: printf
+    if (findlocal(name)) die("duplicate local: %s",[name]);
 
     var tuple = cons(name,bp_rel);
     lstpush(LOCALS, tuple);
@@ -148,7 +148,7 @@ var runtime_endscope = func() {
 };
 
 var compiletime_endscope = func() {
-    if (!LOCALS) die("can't end the global scope");
+    if (!LOCALS) die("can't end the global scope",0);
     lstwalk(LOCALS, func(tuple) {
         var name = car(tuple);
         free(name);
@@ -185,8 +185,7 @@ var pushvar = func(name) {
         return 0;
     };
 
-    puts("bad push: "); puts(name); puts("\n");
-    die("unrecognised identifier: $name"); # TODO: printf
+    die("unrecognised identifier: %s",[name]);
 };
 var poptovar = func(name) {
     var v;
@@ -212,8 +211,7 @@ var poptovar = func(name) {
         return 0;
     };
 
-    puts("bad pop: "); puts(name); puts("\n");
-    die("unrecognised identifier: $name"); # TODO: printf
+    die("unrecognised identifier: %s",[name]);
 };
 
 var genliteral = func(v) {
@@ -333,14 +331,14 @@ var genop = func(op) {
         plabel(end); puts(":\n");
     } else {
         puts("bad op: "); puts(op); puts("\n");
-        die("unrecognised binary operator $op (probably a compiler bug)");
+        die("unrecognised binary operator %s (probably a compiler bug)",[op]);
     };
 
     puts("push x\n");
 };
 
 var funcreturn = func() {
-    if (!LOCALS) die("can't return from global scope");
+    if (!LOCALS) die("can't return from global scope",0);
     runtime_endscope();
 
     puts("# function had "); puts(itoa(NPARAMS)); puts(" parameters:\n");
@@ -385,20 +383,20 @@ Include = Reject;
 Block = func(x) {
     if (!parse(CharSkip,'{')) return 0;
     parse(Statements,0);
-    if (!parse(CharSkip,'}')) die("block needs closing brace");
+    if (!parse(CharSkip,'}')) die("block needs closing brace",0);
     return 1;
 };
 
 Extern = func(x) {
     if (!parse(Keyword,"extern")) return 0;
-    if (!parse(Identifier,0)) die("extern needs identifier");
+    if (!parse(Identifier,0)) die("extern needs identifier",0);
     addextern(strdup(IDENTIFIER));
     return 1;
 };
 
 Declaration = func(x) {
     if (!parse(Keyword,"var")) return 0;
-    if (!parse(Identifier,0)) die("var needs identifier");
+    if (!parse(Identifier,0)) die("var needs identifier",0);
     var name = strdup(IDENTIFIER);
     if (!LOCALS) {
         addglobal(name);
@@ -410,7 +408,7 @@ Declaration = func(x) {
         puts("dec sp\n");
     };
     if (!parse(CharSkip,'=')) return 1;
-    if (!parse(Expression,0)) die("initialisation needs expression");
+    if (!parse(Expression,0)) die("initialisation needs expression",0);
     poptovar(name);
     return 1;
 };
@@ -418,9 +416,9 @@ Declaration = func(x) {
 Conditional = func(x) {
     if (!parse(Keyword,"if")) return 0;
     BLOCKLEVEL++;
-    if (!parse(CharSkip,'(')) die("if condition needs open paren");
+    if (!parse(CharSkip,'(')) die("if condition needs open paren",0);
     puts("# if condition\n");
-    if (!parse(Expression,0)) die("if condition needs expression");
+    if (!parse(Expression,0)) die("if condition needs expression",0);
 
     # if top of stack is 0, jmp falselabel
     var falselabel = label();
@@ -428,9 +426,9 @@ Conditional = func(x) {
     puts("test x\n");
     puts("jz "); plabel(falselabel); puts("\n");
 
-    if (!parse(CharSkip,')')) die("if condition needs close paren");
+    if (!parse(CharSkip,')')) die("if condition needs close paren",0);
     puts("# if body\n");
-    if (!parse(Statement,0)) die("if needs body");
+    if (!parse(Statement,0)) die("if needs body",0);
 
     var endiflabel;
     if (parse(Keyword,"else")) {
@@ -438,7 +436,7 @@ Conditional = func(x) {
         puts("jmp l__"); puts(itoa(endiflabel)); puts("\n");
         puts("# else body\n");
         plabel(falselabel); puts(":\n");
-        if (!parse(Statement,0)) die("else needs body");
+        if (!parse(Statement,0)) die("else needs body",0);
         plabel(endiflabel); puts(":\n");
     } else {
         plabel(falselabel); puts(":\n");
@@ -450,7 +448,7 @@ Conditional = func(x) {
 Loop = func(x) {
     if (!parse(Keyword,"while")) return 0;
     BLOCKLEVEL++;
-    if (!parse(CharSkip,'(')) die("while condition needs open paren");
+    if (!parse(CharSkip,'(')) die("while condition needs open paren",0);
 
     var oldbreaklabel = BREAKLABEL;
     var oldcontlabel = CONTLABEL;
@@ -463,14 +461,14 @@ Loop = func(x) {
     puts("# while loop\n");
     plabel(loop); puts(":\n");
 
-    if (!parse(Expression,0)) die("while condition needs expression");
+    if (!parse(Expression,0)) die("while condition needs expression",0);
 
     # if top of stack is 0, jmp endloop
     puts("pop x\n");
     puts("test x\n");
     puts("jz "); plabel(endloop); puts("\n");
 
-    if (!parse(CharSkip,')')) die("while condition needs close paren");
+    if (!parse(CharSkip,')')) die("while condition needs close paren",0);
 
     parse(Statement,0); # optional
     puts("jmp "); plabel(loop); puts("\n");
@@ -484,7 +482,7 @@ Loop = func(x) {
 
 Break = func(x) {
     if (!parse(Keyword,"break")) return 0;
-    if (!BREAKLABEL) die("can't break here");
+    if (!BREAKLABEL) die("can't break here",0);
     puts("# break\n");
     puts("jmp "); plabel(BREAKLABEL); puts("\n");
     return 1;
@@ -492,7 +490,7 @@ Break = func(x) {
 
 Continue = func(x) {
     if (!parse(Keyword,"continue")) return 0;
-    if (!CONTLABEL) die("can't continue here");
+    if (!CONTLABEL) die("can't continue here",0);
     puts("# continue\n");
     puts("jmp "); plabel(CONTLABEL); puts("\n");
     return 1;
@@ -500,7 +498,7 @@ Continue = func(x) {
 
 Return = func(x) {
     if (!parse(Keyword,"return")) return 0;
-    if (!parse(Expression,0)) die("return needs expression");
+    if (!parse(Expression,0)) die("return needs expression",0);
     puts("# return\n");
     puts("pop x\n");
     puts("ld r0, x\n");
@@ -514,10 +512,10 @@ Assignment = func(x) {
         id = strdup(IDENTIFIER);
     } else {
         if (!parse(CharSkip,'*')) return 0;
-        if (!parse(Term,0)) die("can't dereference non-expression");
+        if (!parse(Term,0)) die("can't dereference non-expression",0);
     };
     if (!parse(CharSkip,'=')) return 0;
-    if (!parse(Expression,0)) die("assignment needs rvalue");
+    if (!parse(Expression,0)) die("assignment needs rvalue",0);
 
     if (id) {
         poptovar(id);
@@ -549,7 +547,7 @@ ExpressionLevel = func(lvl) {
     while (1) {
         match = parse(ExpressionLevel, lvl+1);
         if (apply_op) {
-            if (!match) die("operator $apply_op needs a second operand"); # TODO: sprintf
+            if (!match) die("operator %s needs a second operand",[apply_op]);
             genop(apply_op);
         } else {
             if (!match) return 0;
@@ -570,8 +568,8 @@ Term = func(x) {
     if (!parse(AnyTerm,0)) return 0;
     while (1) { # index into array
         if (!parse(CharSkip,'[')) break;
-        if (!parse(Expression,0)) die("array index needs expression");
-        if (!parse(CharSkip,']')) die("array index needs close bracket");
+        if (!parse(Expression,0)) die("array index needs expression",0);
+        if (!parse(CharSkip,']')) die("array index needs close bracket",0);
 
         # stack now has array and index on it: pop, add together, dereference, push
         puts("pop x\n");
@@ -628,7 +626,7 @@ var NumLiteral = func(alphabet,base,neg) {
         };
         i++;
     };
-    die("numeric literal too long");
+    die("numeric literal too long",0);
 };
 
 HexLiteral = func(x) {
@@ -660,7 +658,7 @@ CharacterLiteral = func(x) {
         genliteral(ch);
     };
     if (parse(CharSkip,'\'')) return 1;
-    die("illegal character literal");
+    die("illegal character literal",0);
 };
 
 StringLiteral = func(x) {
@@ -688,7 +686,7 @@ StringLiteralText = func() {
         };
         i++;
     };
-    die("string literal too long");
+    die("string literal too long",0);
 };
 
 ArrayLiteral = func(x) {
@@ -712,7 +710,7 @@ ArrayLiteral = func(x) {
         if (!parse(CharSkip,',')) break;
     };
 
-    if (!parse(CharSkip,']')) die("array literal needs close bracket");
+    if (!parse(CharSkip,']')) die("array literal needs close bracket",0);
 
     puts("ld x, "); plabel(l); puts("\n");
     puts("push x\n");
@@ -728,7 +726,7 @@ Parameters = func(x) {
     while (1) {
         if (!parse(Identifier,0)) break;
         *(p++) = strdup(IDENTIFIER);
-        if (p == PARAMS+maxparams) die("too many params for function");
+        if (p == PARAMS+maxparams) die("too many params for function",0);
         if (!parse(CharSkip,',')) break;
     };
     *p = 0;
@@ -737,7 +735,7 @@ Parameters = func(x) {
 
 FunctionDeclaration = func(x) {
     if (!parse(Keyword,"func")) return 0;
-    if (!parse(CharSkip,'(')) die("func needs open paren");
+    if (!parse(CharSkip,'(')) die("func needs open paren",0);
 
     var params = Parameters(0);
     var functionlabel = label();
@@ -759,7 +757,7 @@ FunctionDeclaration = func(x) {
     while (p-- > params)
         addlocal(*p, bp_rel++);
 
-    if (!parse(CharSkip,')')) die("func needs close paren");
+    if (!parse(CharSkip,')')) die("func needs close paren",0);
     parse(Statement,0); # optional
     funcreturn();
     compiletime_endscope();
@@ -787,7 +785,7 @@ InlineAsm = func(x) {
     var ch;
     while (1) {
         ch = nextchar();
-        if (ch == EOF) die("eof inside asm block");
+        if (ch == EOF) die("eof inside asm block",0);
         if (ch == '}') break;
         putchar(ch);
     };
@@ -811,7 +809,7 @@ FunctionCall = func(x) {
     puts("push x\n");
 
     parse(Arguments,0);
-    if (!parse(CharSkip,')')) die("argument list needs closing paren");
+    if (!parse(CharSkip,')')) die("argument list needs closing paren",0);
 
     pushvar(name);
     free(name);
@@ -881,7 +879,7 @@ PostOp = func(x) {
 
 AddressOf = func(x) {
     if (!parse(CharSkip,'&')) return 0;
-    if (!parse(Identifier,0)) die("address-of (&) needs identifier");
+    if (!parse(Identifier,0)) die("address-of (&) needs identifier",0);
 
     var v = findlocal(IDENTIFIER);
     var bp_rel;
@@ -902,8 +900,7 @@ AddressOf = func(x) {
         return 1;
     };
 
-    puts("bad address-of: "); puts(IDENTIFIER); puts("\n");
-    die("unrecognised identifier: $name"); # TODO: printf
+    die("unrecognised identifier: %s",[IDENTIFIER]);
 
     return 1;
 };
@@ -912,7 +909,7 @@ UnaryExpression = func(x) {
     var op = peekchar();
     if (!parse(AnyChar,"!~*+-")) return 0;
     skip();
-    if (!parse(Term,0)) die("unary operator $op needs operand"); # TODO: sprintf
+    if (!parse(Term,0)) die("unary operator %c needs operand",[op]);
 
     var end;
 
@@ -935,7 +932,7 @@ UnaryExpression = func(x) {
         puts("# pointer dereference:\n");
         puts("ld x, (x)\n");
     } else {
-        die("unrecognised unary operator $op (probably a compiler bug)"); # TODO: sprintf
+        die("unrecognised unary operator %c (probably a compiler bug)",[op]);
     };
 
     puts("push x\n");
@@ -962,7 +959,7 @@ Identifier = func(x) {
         if (IDENTIFIER[i] == '\\') *(IDENTIFIER+i) = escapedchar(nextchar());
         i++;
     };
-    die("identifier too long");
+    die("identifier too long",0);
 };
 
 ARRAYS = lstnew();
@@ -973,9 +970,9 @@ GLOBALS = lstnew();
 parse_init();
 parse(Program,0);
 
-if (nextchar() != EOF) die("garbage after end of program");
-if (LOCALS) die("expected to be left in global scope");
-if (BLOCKLEVEL != 0) die("expected to be left at block level 0 (probably a compiler bug)");
+if (nextchar() != EOF) die("garbage after end of program",0);
+if (LOCALS) die("expected to be left in global scope",0);
+if (BLOCKLEVEL != 0) die("expected to be left at block level 0 (probably a compiler bug)",0);
 
 # jump over the globals
 var end = label();
