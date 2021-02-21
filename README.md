@@ -29,7 +29,7 @@ I have some blog posts here: https://incoherency.co.uk/blog/tags/cpu.html
 
 I have created an emulator (see in `emulator/`) and a compiler (`compiler/`). Although there is still useful
 work to be done on the compiler, it can now compile itself from within the emulator, provided the `include`
-lines are preprocessed outside, although it's very tight on memory usage - only about 1K spare.
+lines are preprocessed outside.
 
 I'm currently designing the PCBs:
 

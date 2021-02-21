@@ -1,19 +1,13 @@
 # Operating System notes
 
-I realise it's a bit early to be talking about an operating system, but I can't help having the thoughts...
-
-I think I'd want a very short boot ROM permanently mapped into memory at address 0, maybe 512 bytes long, or less if possible.
+We'll have a very short boot ROM permanently mapped into memory at address 0, 256 words long.
 When the machine is reset the PC would be reset to 0 which would cause the boot ROM to execute.
 The boot ROM's only job is to liaise with the storage device (hard disk? compactflash? sd? not sure yet) and load the kernel
-from the first N KBytes from the storage into RAM and then jump to it.
+from the first N KBytes from the storage into RAM and then jump to it. See [BOOT.md](BOOT.md).
 
 The kernel would contain implementations of the system calls, and space for system buffers etc.
 
 At startup, the kernel would probably just execute a program from disk (e.g. init).
-
-I was initially thinking that this N KByte block from storage would then be responsible for loading the real OS from disk, but
-actually if I pick a sensible value for N then the block at the start of the storage could just be the real OS, with no
-secondary bootloader required.
 
 I have been toying with the idea of supporting a workflow that is kind of in between CP/M and FUZIX. The filesystem could
 support directories instead of CP/M's silly drive letter and user number system. We could support a system()-like call
@@ -31,13 +25,17 @@ Example:
     /bin
         asm.x
         cat.x
-        cc.x
+        cmp.x
         cp.x
+        grep.x
         init.x
         ls.x
         mkdir.x
+        peepopt.x
         rm.x
         sh.x
+        slangc.x
+        slc.x
         vi.x
     /etc
         motd
@@ -48,6 +46,8 @@ Example:
         [source code of kernel and all programs]
     /swap
         [contents of swapped-out processes]
+    /sd
+        [SD card filesystem]
 
 ## Programs
 
@@ -74,21 +74,21 @@ From the shell's perspective, the system() call would return.
 At this point the shell would set stdout to point back to whatever it was originally set to, and then
 set stdin to point to the temporary file. It would then system("grep", "bar").
 
-The kernel wuold then swap the shell out once again, and this time execute grep, whose stdin
+The kernel would then swap the shell out once again, and this time execute grep, whose stdin
 comes from the temporary file. Once grep calls exit(), the kernel would swap the shell back in
 and the second system() call would return.
 
 This method doesn't allow for example `cat foo.txt | head` to bail out of the cat early, but it still provides a lot of
 the useful properties of program composition, without needing to support actual multitasking.
 
-### asm/cc
+### asm/slangc/slc/peepopt
 
-These would form a complete self-hosting build environment. I don't yet know whether I'd rather write
-a proper C compiler, or whether it should be a different language entirely.
-Writing in C means I can bootstrap it using an existing C compiler, but even C probably has more features than I really
-need.
+These would form a complete self-hosting build environment.
 
-Probably a strict subset of C would suffice.
+asm: assembler
+slangc: compiler
+slc: compiler driver (slangc foo.sl | peepopt > foo.s; cat head.s foo.s foot.s | asm > foo.x)
+peepopt: peephole optimiser
 
 ### vi
 
@@ -115,6 +115,22 @@ When a process is swapped out, we need to store some state about it:
 
 ## System calls
 
+### Calling
+
+Each system call has an assigned pointer address just below the pseudoregs. Takes args in pseudoregs. Returns value in r0.
+Calling from SLANG can be something like:
+
+    # foo(r1,r2,r3) is syscall at 0xfeff
+    var foo = asm {
+        pop x
+        ld r3, x
+        pop x
+        ld r2, x
+        pop x
+        ld r1, x
+        jmp (0xfeff)
+    };
+
 ### Unix-inspired
 
 system(file, cmdline):
@@ -125,6 +141,7 @@ system(file, cmdline):
     - if copying the entire TPA onto disk is too slow, system() could potentially take an argument to say how many
       bytes of the caller's TPA need to be saved/restored; the value for this would be provided by the C runtime,
       which would track the required value via malloc()/free() calls
+    - what happens if a "child" process deletes/changes a file that the "parent" process was using?
 
 exec(file, cmdline):
     - open() the named file
@@ -136,11 +153,13 @@ exit(rc):
     - pop the calling processes return address and filename off the process stack
     - restore the caller into the TPA
     - unlink() the caller's swap file
-    - put 'rc' in register A?
+    - put 'rc' in r0
     - jump to the return address
 
 open()/read()/write()/close() ?
+seek()/tell()?
 mkdir()/opendir()/readdir() ?
+stat() ?
 
 unlink():
     - lookup the named file
@@ -162,18 +181,16 @@ read/write a byte directly to/from a serial device
 
 check if reading/writing a serial device would block
 
+### Other
+
+osbase():
+     - return the (constant) base address of the OS stuff, so that malloc() knows where the limit for TOP is
+
 ## Conventions
 
-We could say that system/exec will either run a proper named file if it begins with a slash, or otherwise lookup "/bin/$foo.x" and execute that.
-Or maybe system/exec only take absolute paths, and the shell is responsible for handling the $PATH.
+Maybe system/exec only take absolute paths, and the shell is responsible for handling the $PATH.
 
-"Executables" work exactly like COM files in CP/M: just load them into a fixed address and jump to the start.
-
-Since the CPU is likely to have the bare minimum of registers, we could define a block of 16 addresses (say, 0xfff0 - 0xffff)
-to use as "surrogate" registers that are basically used as swap space for the real registers.
-
-It is likely that the word size will not be 8 bits. Should strings typically be packed so that there are multiple
-characters per word, or is it better to just use 1 character per word for simplicity?
+"Executables" work exactly like COM files in CP/M: just load them into 0x100 and jump to the start.
 
 How should we pass command-line arguments? Probably array of strings, like C
 
@@ -181,4 +198,4 @@ Do we want environment variables? Probably not.
 
 Do we want to support a shebang for shell scripts? Probably, seems easy enough. If not, just "sh foo.sh" would work for most cases.
 
-Do we want the concept of a working directory in kernel-space? Maybe it's enough to have it in the C runtime.
+Do we want the concept of a working directory in kernel-space? Maybe it's enough to have it in the SLANG standard library.
