@@ -27,7 +27,10 @@ my $off = 0;
 while (<>) {
     chomp;
 
-    next if $_ =~ /^#/;
+    if ($_ =~ /^#/) {
+        print "$_\n";
+        next;
+    }
     next if $_ eq '';
 
     if (/peepopt:off/) {
