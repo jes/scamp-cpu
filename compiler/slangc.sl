@@ -15,7 +15,7 @@
 #
 # TODO: optionally annotate generated assembly code with the source code that
 #       generated it
-# TODO: provide unsigned mangitude comparison?
+# TODO: provide unsigned magnitude comparison?
 # TODO: fix &/| precedence
 # TODO: some way to include files
 # TODO: array indexing syntax
