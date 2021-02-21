@@ -29,7 +29,7 @@ var parse_init = func() {
 # call a parsing function and return whatever it returned
 # if it returned 0, reset input position before returning
 # the parsing function should expect exactly 1 argument
-var parse = func(f, arg) {
+var slangparse = func(f, arg) {
     var pos0 = pos;
     var line0 = line;
     var col0 = col;
@@ -45,6 +45,63 @@ var parse = func(f, arg) {
     col = col0;
     return 0;
 };
+
+var asmparse = asm {
+    pop x
+    ld r0, x # r0 = arg
+    pop x
+    ld r1, x # r1 = f
+
+    ld x, (_pos) # pos0
+    push x
+    ld x, (_line) # line0
+    push x
+    ld x, (_col) # col0
+    push x
+
+    ld x, r254
+    push x # save return address
+
+    ld x, r0
+    push x # push arg
+    call r1 # r0 = f(arg)
+    pop x
+    ld r254, x # restore return address
+
+    test r0
+    jz parsereset
+    add sp, 3 # skip over col0,line0,pos0
+    ret
+
+    parsereset:
+    pop x
+    ld r2, x # col0
+    pop x
+    ld r3, x # line0
+    pop x
+    ld r4, x # pos0
+
+    ld r1, (_pos)
+    sub r1, r4
+    and r1, 0xff00
+    jz parsereturn
+
+    ld x, tmb_s
+    push x
+    push 0
+    ld x, (_die)
+    call x
+
+    parsereturn:
+    ld (_pos), r4
+    ld (_line), r3
+    ld (_col), r2
+    ret
+
+    tmb_s: .str "too much backtrack\0"
+};
+
+var parse = asmparse;
 
 # look at the next input char without advancing the cursor
 var peekchar = func() {
