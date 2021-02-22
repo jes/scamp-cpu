@@ -6,7 +6,7 @@ var pos;
 var readpos;
 var line;
 
-var ringbufsz = 256; # check the "too much backtrack" test before changing this!
+var ringbufsz = 256; # check the "too much backtrack" test, and peekchar(), before changing this
 var ringbuf = malloc(ringbufsz);
 
 var die = func(fmt, args) {
@@ -95,12 +95,12 @@ var parse = asmparse;
 
 # look at the next input char without advancing the cursor
 var peekchar = func() {
-    var lookpos = pos&(ringbufsz-1);
+    var lookpos = pos&0xff; # 0xff == ringbufsz-1
     if (lookpos == readpos) {
         *(ringbuf+readpos) = getchar();
-        readpos = (readpos+1)&(ringbufsz-1);
+        readpos = (readpos+1)&0xff; # 0xff == ringbufsz-1
     };
-    return *(ringbuf+lookpos);
+    return ringbuf[lookpos];
 };
 
 var nextchar = func() {
