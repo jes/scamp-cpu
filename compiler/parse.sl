@@ -5,13 +5,12 @@
 var pos;
 var readpos;
 var line;
-var col;
 
 var ringbufsz = 256; # check the "too much backtrack" test before changing this!
 var ringbuf = malloc(ringbufsz);
 
 var die = func(fmt, args) {
-    printf("error: line %d: col %d: ", [line, col]);
+    printf("error: line %d: ", [line]);
     if (args) printf(fmt, args);
     putchar('\n');
     outp(3,0); # halt the emulator
@@ -23,7 +22,6 @@ var parse_init = func() {
     pos = 0;
     readpos = 0;
     line = 1;
-    col = 1;
 };
 
 # call a parsing function and return whatever it returned
@@ -32,7 +30,6 @@ var parse_init = func() {
 var slangparse = func(f, arg) {
     var pos0 = pos;
     var line0 = line;
-    var col0 = col;
 
     var r = f(arg);
     if (r) return r;
@@ -42,7 +39,6 @@ var slangparse = func(f, arg) {
 
     pos = pos0;
     line = line0;
-    col = col0;
     return 0;
 };
 
@@ -56,8 +52,6 @@ var asmparse = asm {
     push x
     ld x, (_line) # line0
     push x
-    ld x, (_col) # col0
-    push x
 
     ld x, r254
     push x # save return address
@@ -70,13 +64,13 @@ var asmparse = asm {
 
     test r0
     jz parsereset
-    ret 3 # skip over col0,line0,pos0
+    ret 2 # skip over line0,pos0
 
     parsereset:
-    ld x, sp
-    ld r2, 1(x) # col0
-    ld r3, 2(x) # line0
-    ld r4, 3(x) # pos0
+    pop x
+    ld r3, x # line0
+    pop x
+    ld r4, x # pos0
 
     ld r1, (_pos)
     sub r1, r4
@@ -92,8 +86,7 @@ var asmparse = asm {
     parsereturn:
     ld (_pos), r4
     ld (_line), r3
-    ld (_col), r2
-    ret 3
+    ret
 
     tmb_s: .str "too much backtrack\0"
 };
@@ -113,12 +106,8 @@ var peekchar = func() {
 var nextchar = func() {
     var ch = peekchar();
     if (ch == EOF) return EOF;
-    if (ch == '\n') {
-        line++;
-        col = 0;
-    };
+    if (ch == '\n') line++;
     pos++;
-    col++;
 
     return ch;
 };
