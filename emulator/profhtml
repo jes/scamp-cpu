@@ -59,9 +59,9 @@ print "Page generated: <b>$nowtimestr</b><br>\n";
 print "Profiling completed: <b>$endtimestr</b><br>\n";
 print "Command line: <b><tt>$cmdline</tt></b><br>\n";
 print "Total cycles: <b>$cycles</b><br>\n";
-print "Elapsed time: <b>" . sprintf("%.03f", $elapsed_us/1000000) . "</b> secs<br>\n";
+print "Elapsed time: " . fmt_secs($elapsed_us/1000000) . "<br>\n";
 print "Implied clock frequency: <b>" . sprintf("%.03f", $cycles / $elapsed_us) . " </b> MHz<br>\n";
-print "Time at 1 MHz: <b>" . sprintf("%.03f", $cycles/1000000) . "</b> secs<br>\n";
+print "Time at 1 MHz: " . fmt_secs($cycles/1000000) . "<br>\n";
 print "<h2>Cycles per address</h2>\n";
 pc_cycles();
 print "<h2>Cycles per symbol</h2>\n";
@@ -250,6 +250,26 @@ sub footer {
     qq{</body>
 </html>
 };
+}
+
+sub fmt_secs {
+    my ($secs) = @_;
+
+    my $hrs = 0;
+    my $mins = 0;
+
+    if ($secs > 60) {
+        $mins = int($secs/60);
+        $secs = $secs%60;
+    }
+    if ($mins > 60) {
+        $hrs = int($mins/60);
+        $mins = $mins%60;
+    }
+
+    return sprintf("<b>%d</b>h<b>%02d</b>m", $hrs, $mins) if $hrs > 0;
+    return sprintf("<b>%d</b>m<b>%02d</b>s", $mins, $secs) if $mins > 0;
+    return sprintf("<b>%02.3f</b>s", $secs);
 }
 
 sub heatcolour {
