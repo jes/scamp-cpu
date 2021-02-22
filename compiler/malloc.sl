@@ -113,3 +113,10 @@ var realloc = func(p, sz) {
 
     return newp;
 };
+
+var cons = func(a,b) {
+    var tuple = malloc(2);
+    *tuple = a;
+    *(tuple+1) = b;
+    return tuple;
+};

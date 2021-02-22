@@ -21,7 +21,6 @@
 include "stdio.sl";
 include "stdlib.sl";
 include "string.sl";
-include "list.sl";
 include "grarr.sl";
 include "parse.sl";
 

@@ -10,18 +10,6 @@
 
 include "malloc.sl";
 
-var cons = func(a,b) {
-    var tuple = malloc(2);
-    *tuple = a;
-    *(tuple+1) = b;
-    return tuple;
-};
-
-var car = func(tuple) { return *tuple; };
-var cdr = func(tuple) { return *(tuple+1); };
-var setcar = func(tuple,a) { *tuple = a; };
-var setcdr = func(tuple,b) { *(tuple+1) = b; };
-
 # return a pointer to the empty list
 var lstnew = func() {
     return cons(0,0);
