@@ -981,7 +981,7 @@ puts("jmp "); plabel(end); puts("\n");
 
 grwalk(GLOBALS, func(name) {
     putchar('_'); puts(name); puts(": .word 0\n");
-    free(name);
+    #free(name);
 });
 
 grwalk(STRINGS, func(tuple) {
@@ -994,8 +994,8 @@ grwalk(STRINGS, func(tuple) {
         p++;
     };
     puts(".word 0\n");
-    free(str);
-    free(tuple);
+    #free(str);
+    #free(tuple);
 });
 
 grwalk(ARRAYS, func(tuple) {
@@ -1004,12 +1004,12 @@ grwalk(ARRAYS, func(tuple) {
     plabel(l); puts(":\n");
     puts(".gap "); puts(itoa(length)); puts("\n");
     puts(".word 0\n");
-    free(tuple);
+    #free(tuple);
 });
 
-grfree(ARRAYS);
-grfree(STRINGS);
-grfree(EXTERNS);
-grfree(GLOBALS);
+#grfree(ARRAYS);
+#grfree(STRINGS);
+#grfree(EXTERNS);
+#grfree(GLOBALS);
 
 plabel(end); puts(":\n");
