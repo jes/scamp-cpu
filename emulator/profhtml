@@ -64,6 +64,8 @@ print "Implied clock frequency: <b>" . sprintf("%.03f", $cycles / $elapsed_us) .
 print "Time at 1 MHz: <b>" . sprintf("%.03f", $cycles/1000000) . "</b> secs<br>\n";
 print "<h2>Cycles per address</h2>\n";
 pc_cycles();
+print "<h2>Cycles per symbol</h2>\n";
+symbol_cycles();
 print "<h2>Cycles per opcode</h2>\n";
 opcode_cycles();
 print "<h2>Reads per address <small>(excl. pseudoregs)</small></h2>\n";
@@ -100,6 +102,13 @@ table.pc th {
     font-size: 0.7em;
     font-family: monospace;
 }
+.right {
+    text-align: right;
+}
+table.sym td {
+    border: solid 1px #ccc;
+    padding: 2px;
+};
 table.opcode td {
     min-width: 40px;
 }
@@ -150,6 +159,20 @@ sub pc_cycles {
             print "<td style=\"background-color:" . heatcolour($pc_cycles[$addr], $max_cycles, 1.0) . "\"><div class=\"popup\" style=\"background-color:" . heatcolour($pc_cycles[$addr], $max_cycles, 0.4) . "\">$popuphtml</div></td>";
         }
         print "</tr>\n";
+    }
+    print "</table>\n";
+}
+
+sub symbol_cycles {
+    my %symcycles;
+    for my $addr (0..65535) {
+        $symcycles{$SYMBOL[$addr]} += $pc_cycles[$addr] if $SYMBOL[$addr];
+    }
+    print "<table class=\"sym\">\n";
+    print "<tr><th>Symbol</th><th>Cycles</th><th>% total</th></tr>\n";
+    my @syms = sort { $symcycles{$b} <=> $symcycles{$a} } keys %symcycles;
+    for my $s (@syms) {
+        print "<tr><td class=\"right\"><tt>$s</tt></td><td><b>$symcycles{$s}</b></td><td>". sprintf("%.2f%%", 100*$symcycles{$s}/$cycles) ."</td></tr>\n" if $symcycles{$s} > 0.001 * $cycles;
     }
     print "</table>\n";
 }
