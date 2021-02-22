@@ -110,7 +110,7 @@ table.pc th {
 table.sym td {
     border: solid 1px #ccc;
     padding: 2px;
-};
+}
 table.opcode td {
     min-width: 40px;
 }
