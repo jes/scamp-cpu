@@ -64,8 +64,10 @@ print "Implied clock frequency: <b>" . sprintf("%.03f", $cycles / $elapsed_us) .
 print "Time at 1 MHz: " . fmt_secs($cycles/1000000) . "<br>\n";
 print "<h2>Cycles per address</h2>\n";
 pc_cycles();
-print "<h2>Cycles per symbol</h2>\n";
-symbol_cycles();
+if ($anhex) {
+    print "<h2>Cycles per symbol</h2>\n";
+    symbol_cycles();
+}
 print "<h2>Cycles per opcode</h2>\n";
 opcode_cycles();
 print "<h2>Reads per address <small>(excl. pseudoregs)</small></h2>\n";
