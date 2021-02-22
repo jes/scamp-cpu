@@ -27,22 +27,22 @@ var parse_init = func() {
 # call a parsing function and return whatever it returned
 # if it returned 0, reset input position before returning
 # the parsing function should expect exactly 1 argument
-var slangparse = func(f, arg) {
-    var pos0 = pos;
-    var line0 = line;
+#var slang_parse = func(f, arg) {
+#    var pos0 = pos;
+#    var line0 = line;
+#
+#    var r = f(arg);
+#    if (r) return r;
+#
+#    # die if pos-pos0 >= 256 (update this if ringbufsz changes)
+#    if ((pos-pos0) & 0xff00) die("too much backtrack",0);
+#
+#    pos = pos0;
+#    line = line0;
+#    return 0;
+#};
 
-    var r = f(arg);
-    if (r) return r;
-
-    # die if pos-pos0 >= 256 (update this if ringbufsz changes)
-    if ((pos-pos0) & 0xff00) die("too much backtrack",0);
-
-    pos = pos0;
-    line = line0;
-    return 0;
-};
-
-var asmparse = asm {
+var asm_parse = asm {
     pop x
     ld r0, x # r0 = arg
     pop x
@@ -91,7 +91,7 @@ var asmparse = asm {
     tmb_s: .str "too much backtrack\0"
 };
 
-var parse = asmparse;
+var parse = asm_parse;
 
 # look at the next input char without advancing the cursor
 var peekchar = func() {
@@ -103,14 +103,14 @@ var peekchar = func() {
     return ringbuf[lookpos];
 };
 
-var slangnextchar = func() {
-    var ch = peekchar();
-    if (ch == EOF) return EOF;
-    if (ch == '\n') line++;
-    pos++;
-    return ch;
-};
-var asmnextchar = asm {
+#var slang_nextchar = func() {
+#    var ch = peekchar();
+#    if (ch == EOF) return EOF;
+#    if (ch == '\n') line++;
+#    pos++;
+#    return ch;
+#};
+var asm_nextchar = asm {
     ld x, r254
     push x
     call (_peekchar)
@@ -133,7 +133,7 @@ var asmnextchar = asm {
     nextchar_eof:
     ret
 };
-var nextchar = asmnextchar;
+var nextchar = asm_nextchar;
 
 # accept only character ch
 var Char = func(ch) {
