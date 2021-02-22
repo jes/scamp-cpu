@@ -103,14 +103,37 @@ var peekchar = func() {
     return ringbuf[lookpos];
 };
 
-var nextchar = func() {
+var slangnextchar = func() {
     var ch = peekchar();
     if (ch == EOF) return EOF;
     if (ch == '\n') line++;
     pos++;
-
     return ch;
 };
+var asmnextchar = asm {
+    ld x, r254
+    push x
+    call (_peekchar)
+    pop x
+    ld r254, x
+
+    ld x, r0
+    sub x, 10 # '\n'
+    jnz nextchar_notnl
+    inc (_line)
+    inc (_pos)
+    ret
+    nextchar_notnl:
+
+    ld x, r0
+    not x
+    jz nextchar_eof
+    inc (_pos)
+
+    nextchar_eof:
+    ret
+};
+var nextchar = asmnextchar;
 
 # accept only character ch
 var Char = func(ch) {
