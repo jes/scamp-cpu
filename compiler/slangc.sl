@@ -405,7 +405,9 @@ Declaration = func(x) {
         puts("dec sp\n");
     };
     if (!parse(CharSkip,'=')) return 1;
+    if (!LOCALS) printf("#sym:%s\n", [name]);
     if (!parse(Expression,0)) die("initialisation needs expression",0);
+    if (!LOCALS) puts("#nosym\n");
     poptovar(name);
     return 1;
 };
@@ -512,7 +514,9 @@ Assignment = func(x) {
         if (!parse(Term,0)) die("can't dereference non-expression",0);
     };
     if (!parse(CharSkip,'=')) return 0;
+    if (id && !LOCALS) printf("#sym:%s\n", [id]);
     if (!parse(Expression,0)) die("assignment needs rvalue",0);
+    if (id && !LOCALS) puts("#nosym\n");
 
     if (id) {
         poptovar(id);

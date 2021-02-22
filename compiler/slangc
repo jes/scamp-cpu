@@ -197,8 +197,10 @@ sub Declaration {
     }
     return 1 if !parse(\&CharSkip,'=');
 
-    # now an expression to initialise the variable
+    print "#sym:$id\n" if $scope->{global};
     die "initialisation needs expression\n" if !parse(\&Expression);
+    print "#nosym\n" if $scope->{global};
+
     poptovar($id);
     return 1;
 }
@@ -312,7 +314,9 @@ sub Assignment {
     }
 
     return 0 if !parse(\&CharSkip,'=');
+    print "#sym:$id\n" if $id && $scope->{global};
     die "assignment needs rvalue\n" if !parse(\&Expression);
+    print "#nosym\n" if $id && $scope->{global};
 
     if ($id) {
         poptovar($id);

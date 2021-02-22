@@ -1,0 +1,24 @@
+#!/bin/bash
+# Run a source file in the emulator, with profiling
+
+set -e
+
+if [ "$1" = "" ]; then
+    echo "usage: profrun foo.sl"
+    exit 1
+fi
+
+echo slangc...
+./slangc < $1 > $1.s
+echo peepopt...
+./peepopt $1.s | ./peepopt > $1.opt.s
+echo asm...
+cat head.s $1.opt.s foot.s | ../asm/asm > $1.hex
+echo asm -v...
+cat head.s $1.opt.s foot.s | ../asm/asm -v > $1.anhex
+echo emulator...
+../emulator/scamp -r $1.hex -c -p $1.prof
+echo profhtml...
+../emulator/profhtml -x $1.anhex $1.prof > $1.prof.html
+echo xdg-open...
+xdg-open $1.prof.html
