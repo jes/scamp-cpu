@@ -70,16 +70,13 @@ var asmparse = asm {
 
     test r0
     jz parsereset
-    add sp, 3 # skip over col0,line0,pos0
-    ret
+    ret 3 # skip over col0,line0,pos0
 
     parsereset:
-    pop x
-    ld r2, x # col0
-    pop x
-    ld r3, x # line0
-    pop x
-    ld r4, x # pos0
+    ld x, sp
+    ld r2, 1(x) # col0
+    ld r3, 2(x) # line0
+    ld r4, 3(x) # pos0
 
     ld r1, (_pos)
     sub r1, r4
@@ -96,7 +93,7 @@ var asmparse = asm {
     ld (_pos), r4
     ld (_line), r3
     ld (_col), r2
-    ret
+    ret 3
 
     tmb_s: .str "too much backtrack\0"
 };

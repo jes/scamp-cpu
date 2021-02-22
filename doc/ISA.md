@@ -71,8 +71,8 @@ and
 
     func:
         ld x, sp     # 4 cycles, 1 word
-        ld r1, 1(sp) # 8 cycles, 2 words
-        ld r2, 2(sp) # 8 cycles, 2 words
+        ld r1, 1(x)  # 8 cycles, 2 words
+        ld r2, 2(x)  # 8 cycles, 2 words
         ...
         ret 2        # 8 cycles, 1 word
 
