@@ -2,7 +2,7 @@
 
 ## Physical dimensions
 
-Cards are 237.49 mm long, 102.87 mm deep.
+Cards are 237.49 mm long, 102.87 mm wide.
 
 The backplane connector is at the back of the card, on the top side, in the centre. The rearmost holes
 for the backplane connector pins are set forward 2.54 mm from the rear edge of the card.
@@ -120,7 +120,7 @@ Traces are all on the back-side copper layer. There is also silkscreen labelling
 end of the world if I can't have the text. My vague plan is to spray-paint the non-copper side of the board black and then
 engrave the text into it, so the paint is removed where the text goes.
 
-The backplane board is 302.0 mm by 104.0 mm.
+The backplane board is 302.0 mm by 102.80 mm.
 
 The connectors are spaced 40 mm apart.
 
