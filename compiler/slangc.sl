@@ -73,10 +73,10 @@ var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 
 var STRINGS;
 var ARRAYS;
-# EXTERNS and GLOBALS are lists of pointers variable names
+# EXTERNS and GLOBALS are grarrs of pointers to variable names
 var EXTERNS;
 var GLOBALS;
-# LOCALS is a list of pointers to tuples of (name,bp_rel)
+# LOCALS is a grarr of pointers to tuples of (name,bp_rel)
 var LOCALS;
 var BP_REL;
 var NPARAMS;
@@ -554,7 +554,7 @@ ExpressionLevel = func(lvl) {
             if (!match) return 0;
         };
 
-        p = operators[lvl]; # p points to a list of pointers to strings
+        p = operators[lvl]; # p points to an array of pointers to strings
         while (*p) {
             if (parse(String,*p)) break;
             p++;
