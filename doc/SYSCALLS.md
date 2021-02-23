@@ -52,7 +52,7 @@ current process and return `rc`.
 
     Return: 0, or -ERR on error
     Implemented: no
-    Errors: BADFD, NOWRITE
+    Errors: BADFD
 
 Write a single character to the given file descriptor.
 
@@ -60,7 +60,7 @@ Write a single character to the given file descriptor.
 
     Return: 0, or -ERR on error
     Implemented: no
-    Errors: BADFD, NOWRITE
+    Errors: BADFD
 
 Write multiple characters to the given file descriptor.
 
@@ -68,7 +68,7 @@ Write multiple characters to the given file descriptor.
 
     Return: character, or -ERR on error
     Implemented: no
-    Errors: BADFD, NOREAD
+    Errors: BADFD
 
 Read a single character from the given file descriptor.
 
@@ -76,7 +76,7 @@ Read a single character from the given file descriptor.
 
     Return: number of characters read, or -ERR on error
     Implemented: no
-    Errors: BADFD, NOREAD
+    Errors: BADFD
 
 Read multiple characters from the given file descriptor.
 
@@ -84,7 +84,7 @@ Read multiple characters from the given file descriptor.
 
     Return: new file descriptor, or -ERR on error
     Implemented: no
-    Errors: NOTFOUND, NOWRITE, NOREAD
+    Errors: NOTFOUND
 
 Open the file at the given path with the given mode.
 
@@ -106,7 +106,7 @@ Close the given file descriptor.
 
     Return: old position, or -ERR on error
     Implemented: no
-    Errors: BADFD, NOSEEK
+    Errors: BADFD
     TODO: how do we take >16-bit positions?
 
 Seek to the given position on the given file descriptor.
@@ -115,7 +115,7 @@ Seek to the given position on the given file descriptor.
 
     Return: current position, or -ERR on error
     Implemented: no
-    Errors: BADFD, NOSEEK
+    Errors: BADFD
     TODO: how do we give >16-bit positions?
 
 Return the current position on the given file descriptor.
@@ -218,7 +218,7 @@ to grow into.
 ### 0xfeec: cmdargs()
 
     Return: pointer to argument list
-    Implemented: no
+    Implemented: yes
     Errors: n/a
 
 Return a pointer to the argument list, including the command name, exactly as passed to `exec()`/`system()`.
@@ -251,16 +251,4 @@ The given path exists but is not a directory (e.g. it's a file).
 
 ### -5: BADFD
 
-File descriptor not allocated.
-
-### -6: NOWRITE
-
-The given fd is not writable.
-
-### -7: NOREAD
-
-The given fd is not readable.
-
-### -8: NOSEEK
-
-The given fd is not seekable (e.g. it's a serial port).
+File descriptor not allocated, or requested operation not available on this fd.
