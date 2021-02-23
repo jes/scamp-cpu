@@ -209,7 +209,7 @@ restore it later
 ### 0xfeed: osbase()
 
     Return: the first address above the TPA
-    Implemented: no
+    Implemented: yes
     Errors: n/a
 
 Return the first address of the OS, i.e. the lowest address that the user heap is not allowed

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+../emulator/scamp -i os.disk -c -p os.prof $@
+../emulator/profhtml -x os.anhex < os.prof > os.prof.html
+xdg-open os.prof.html
