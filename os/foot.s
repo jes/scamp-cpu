@@ -10,8 +10,8 @@ sys_osbase:
 #nosym
 INITIAL_SP: .word 0
 
-# system call vectors
 .at 0xfeec
+# system call vectors
 _sys_cmdargs: .word 0
 _sys_osbase:  .word sys_osbase
 _sys_copyfd:  .word 0

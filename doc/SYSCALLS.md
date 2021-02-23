@@ -51,7 +51,7 @@ current process and return `rc`.
 ### 0xfefc: putchar(fd, ch)
 
     Return: 0, or -ERR on error
-    Implemented: no
+    Implemented: only for serial
     Errors: BADFD
 
 Write a single character to the given file descriptor.
@@ -59,7 +59,7 @@ Write a single character to the given file descriptor.
 ### 0xfefb: write(fd, buf, sz)
 
     Return: 0, or -ERR on error
-    Implemented: no
+    Implemented: only for serial
     Errors: BADFD
 
 Write multiple characters to the given file descriptor.
@@ -67,7 +67,7 @@ Write multiple characters to the given file descriptor.
 ### 0xfefa: getchar(fd)
 
     Return: character, or -ERR on error
-    Implemented: no
+    Implemented: only for serial
     Errors: BADFD
 
 Read a single character from the given file descriptor.
@@ -75,7 +75,7 @@ Read a single character from the given file descriptor.
 ### 0xfef9: read(fd, buf, sz)
 
     Return: number of characters read, or -ERR on error
-    Implemented: no
+    Implemented: only for serial
     Errors: BADFD
 
 Read multiple characters from the given file descriptor.
@@ -178,13 +178,13 @@ Fields are:
 
 Remove the file at the given path.
 
-### 0xfeee: copyfd(fd, curfd)
+### 0xfeee: copyfd(destfd, srcfd)
 
     Return: the old mapping of fd, or -ERR on error
-    Implemented: no
+    Implemented: yes, but dubious
     Errors: BADFD
 
-Make `fd` go to/from the same place as `curfd`.
+Make `destfd` go to/from the same place as `srcfd`.
 
 By convention programs should take input from fd *0*, output to fd *1*, and send error messages
 to fd *2*. Fds *3..n* should be permanently mapped to serial ports, with fd *3* being the

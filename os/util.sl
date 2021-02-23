@@ -54,3 +54,9 @@ var unimpl = func(s) {
     kputs("\n");
     khalt();
 };
+
+var memcpy = func(dest, src, len) {
+    var dd = dest;
+    while (len--) *(dest++) = *(src++);
+    return dd;
+};

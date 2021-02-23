@@ -11,9 +11,19 @@ extern sys_getchar;
 extern sys_write;
 extern sys_putchar;
 
-sys_copyfd  = func() unimpl("copyfd");
+# TODO: is this sound in the general case? what about seek/tell offsets?
+#       buffers? maybe we just tell people not to use it if they're not sure;
+#       the intended purpose is for remapping stdin/stdout/stderr, so as long
+#       as srcfd is never used again, it's not a problem; but what happens if
+#       they call close(srcfd)? hopefully we won't destroy the destfd?
+#       maybe it should be swapfd instead?
+sys_copyfd  = func(destfd, srcfd) {
+    var srcbase = fdbaseptr(srcfd);
+    var destbase = fdbaseptr(destfd);
+    memcpy(destbase, srcbase, 8);
+};
 
-# These calls dispatch to their implementations based on the fd table
+# The following calls dispatch to their implementations based on the fd table
 
 sys_tell = func(fd) {
     var fdbase = fdbaseptr(fd);

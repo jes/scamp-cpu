@@ -10,6 +10,7 @@
 #   4: tell function pointer
 #   5: seek function pointer
 #   6..8: device-specific reserved space
+# TODO: what about close()?
 #
 # Unallocated fds should have all pointers set to 0
 #
@@ -25,13 +26,10 @@ var fdtable = asm {
 };
 
 # base pointer for an fd is that fd*8
-# TODO: return an all-0s fd if the given fd is illegal
-var fdbaseptr = asm {
-    pop x
-    shl3 x
-    ld r0, fdtable
-    add r0, x
-    ret
+var fdbaseptr = func(fd) {
+    if (fd ge nfds) return [0,0,0,0,0,0,0,0];
+    var fd8 = (fd+fd+fd+fd)+(fd+fd+fd+fd);
+    return fdtable+fd8;
 };
 
 # Command-line arguments
