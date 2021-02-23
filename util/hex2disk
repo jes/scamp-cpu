@@ -40,7 +40,7 @@ while (<>) {
     push @d, $v&0xff;
 }
 
-my $nwords = (@d-4)/2;
+my $nwords = (@d-6)/2;
 $d[4] = ($nwords>>8)&0xff;
 $d[5] = $nwords&0xff;
 
