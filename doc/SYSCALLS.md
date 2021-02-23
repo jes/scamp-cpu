@@ -48,13 +48,11 @@ current process and return `rc`.
 
 `cmd` should be a fully-qualified path. `args` should be terminated with a 0.
 
-### 0xfefc: putchar(fd, ch)
+### 0xfefc: UNUSED
 
-    Return: 0, or -ERR on error
-    Implemented: only for serial
-    Errors: BADFD
-
-Write a single character to the given file descriptor.
+    Return: ??
+    Implemented: ??
+    Errors: ??
 
 ### 0xfefb: write(fd, buf, sz)
 
@@ -64,13 +62,11 @@ Write a single character to the given file descriptor.
 
 Write multiple characters to the given file descriptor.
 
-### 0xfefa: getchar(fd)
+### 0xfefa: UNUSED
 
-    Return: character, or -ERR on error
-    Implemented: only for serial
-    Errors: BADFD
-
-Read a single character from the given file descriptor.
+    Return: ??
+    Implemented: ??
+    Errors: ??
 
 ### 0xfef9: read(fd, buf, sz)
 

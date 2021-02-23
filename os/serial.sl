@@ -2,9 +2,12 @@
 
 include "data.sl";
 
+var READPORT = FDDATA;
+var WRITEPORT = FDDATA+1;
+
 var ser_read = func(fd, buf, sz) {
     var p = fdbaseptr(fd);
-    var readport = p[6];
+    var readport = p[READPORT];
     var i = sz;
     while (i--)
         *(buf++) = inp(readport);
@@ -13,21 +16,9 @@ var ser_read = func(fd, buf, sz) {
 
 var ser_write = func(fd, buf, sz) {
     var p = fdbaseptr(fd);
-    var writeport = p[7];
+    var writeport = p[WRITEPORT];
     while (sz--)
         outp(writeport, *(buf++));
-};
-
-var ser_getchar = func(fd) {
-    var p = fdbaseptr(fd);
-    var readport = p[6];
-    return inp(readport);
-};
-
-var ser_putchar = func(fd, ch) {
-    var p = fdbaseptr(fd);
-    var writeport = p[7];
-    outp(writeport, ch);
 };
 
 # store read/write port number in fd field 6/7
@@ -40,12 +31,10 @@ var ser_init = func() {
     while (ser_fds[i]) {
         # set functions for fd ser_fds[i]
         p = fdbaseptr(ser_fds[i]);
-        *(p+0) = ser_read;
-        *(p+1) = ser_write;
-        *(p+2) = ser_getchar;
-        *(p+3) = ser_putchar;
-        *(p+6) = ser_readports[i];
-        *(p+7) = ser_writeports[i];
+        *(p+READFD) = ser_read;
+        *(p+WRITEFD) = ser_write;
+        *(p+READPORT) = ser_readports[i];
+        *(p+WRITEPORT) = ser_writeports[i];
         i++;
     };
 };

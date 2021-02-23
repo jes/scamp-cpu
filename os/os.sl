@@ -15,8 +15,7 @@ include "os_proc.sl";
 kputs("Welcome to SCAMP OS.\n");
 
 # fd 3 is always the console
-sys_write(3, "sys_write works", 15);
-sys_putchar(3, '\n');
+sys_write(3, "sys_write works\n", 16);
 
 # We just need to start init to boot the system.
 sys_exec(["/bin/init.x", 0]);

@@ -26,9 +26,9 @@ _sys_seek:    .word 0
 _sys_close:   .word 0
 _sys_open:    .word 0
 _sys_read:    .word 0
-_sys_getchar: .word 0
+_sys_UNUSED1: .word 0
 _sys_write:   .word 0
-_sys_putchar: .word 0
+_sys_UNUSED2: .word 0
 _sys_system:  .word 0
 _sys_exec:    .word 0
 _sys_exit:    .word 0
