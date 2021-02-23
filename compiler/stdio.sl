@@ -34,11 +34,14 @@ var gets = func(s, size) {
 # take a pointer to a nul-terminated string, and print it
 var puts = asm {
     pop x
-    print_loop:
+    test (x)
+    jnz puts_loop
+    ret
+    puts_loop:
         out 2, (x)
         inc x
         test (x)
-        jnz print_loop
+        jnz puts_loop
     ret
 };
 
