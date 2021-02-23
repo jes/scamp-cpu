@@ -49,7 +49,7 @@ var kpanic = func(s) {
 };
 
 var unimpl = func(s) {
-    kputs("unimplemented system call: ");
+    kputs("panic: unimplemented: ");
     kputs(s);
     kputs("\n");
     khalt();
