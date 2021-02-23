@@ -6,8 +6,33 @@
 use strict;
 use warnings;
 
+sub usage {
+    my ($rc) = @_;
+    print qq{usage: $0 [options] < HEXFILE > DISKFILE
+
+options:
+    --start ADDR    Start the OS at the given address (in hex).
+};
+    exit($rc);
+}
+
+my $addr;
+
+use Getopt::Long;
+GetOptions(
+    'start=s' => \$addr,
+    'h|help' => sub { usage(0) },
+) or usage(1);
+
+if ($addr) {
+    $addr = hex($addr);
+    print STDERR sprintf("start at 0x%04x\n", $addr) if $addr;
+} else {
+    $addr = 0x100;
+}
+
 # initialise magic number (0x5343), start address (0x0100), and placeholder length (0x0000)
-my @d = (0x53,0x43, 0x01,0x00, 0x00,0x00);
+my @d = (0x53,0x43, $addr>>8,$addr&0xff, 0x00,0x00);
 
 while (<>) {
     chomp;
