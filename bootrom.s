@@ -10,17 +10,20 @@
 
 .at 0
 
-.def DISKDEV   1
+.def DISKBLK   4
+.def DISKDEV   5
 .def SERIALDEV 2
 .def STARTREG  r1
 .def POINTREG  r2
 .def LENGTHREG r3
 
-# TODO: initialise serial device...
+call serial_init
 
 # 1. print hello
 ld r0, welcome_s
 call print
+
+call storage_init
 
 # 2. read magic from disk
 .def MAGIC 0x5343
@@ -79,17 +82,43 @@ print:
     printdone:
     ret
 
+serial_init:
+    # TODO: initialise serial
+    ret
+
+.def BLKNUMREG r10
+.def BLKIDXREG r11
+storage_init:
+    # TODO: initialise a real storage device
+    ld x, 0
+    out DISKBLK, x
+    ld BLKNUMREG, 0
+    ld BLKIDXREG, 0
+    ret
+
 # read the next 1 word from the disk device and return it in r0
 # TODO: support a real disk device
 inword:
     # high byte
     in x, DISKDEV
+    inc BLKIDXREG
     shl3 x
     shl3 x
     shl2 x
     # low byte
     in r0, DISKDEV
     or r0, x
+    inc BLKIDXREG
+    # do we need to go to the next block?
+    ld x, BLKIDXREG
+    sub x, 512
+    jz nextblk
+    ret
+
+    nextblk:
+    inc BLKNUMREG
+    ld BLKIDXREG, 0
+    out DISKBLK, BLKNUMREG
     ret
 
 welcome_s:    .str "SCAMP boot...\r\n\0"

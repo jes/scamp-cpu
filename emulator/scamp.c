@@ -31,6 +31,8 @@ uint8_t T, Z, LT;
 
 uint16_t diskptr = 0;
 uint16_t disk[65536];
+uint16_t blknum = 0;
+uint16_t blkidx = 0;
 
 uint64_t pc_cycles[65536];
 uint16_t last_instr[65536];
@@ -130,13 +132,18 @@ uint16_t alu(uint16_t argx, uint16_t argy) {
 
 /* input a word from addr */
 uint16_t in(uint16_t addr) {
+    uint16_t r = 0;
     if (addr == 1) {
-        return disk[diskptr++];
+        r = disk[diskptr++];
     }
     if (addr == 2) {
-        return getchar();
+        r = getchar();
     }
-    return 0;
+    if (addr == 5) {
+        r = disk[512*blknum + blkidx];
+        blkidx = (blkidx+1)%512;
+    }
+    return r;
 }
 
 /* output a word to addr */
@@ -154,6 +161,14 @@ void out(uint16_t val, uint16_t addr) {
     }
     if (addr == 3) {
         halt = 1;
+    }
+    if (addr == 4) {
+        blknum = val;
+        blkidx = 0;
+    }
+    if (addr == 5) {
+        disk[512*blknum + blkidx] = val;
+        blkidx = (blkidx+1)%512;
     }
 }
 
