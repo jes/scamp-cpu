@@ -4,7 +4,10 @@ sys_osbase:
     ret
 
 # kernel stack
+#sym:kernel_stack
 .gap STACKSZ
+.word 0
+#nosym
 INITIAL_SP: .word 0
 
 # system call vectors

@@ -1,5 +1,12 @@
 # "Kernel" utilities
 
+# Error codes
+var EOF = -1;
+var NOTFOUND = -2;
+var NOTFILE = -3;
+var NOTDIR = -4;
+var BADFD = -5;
+
 # usage: inp(addr)
 var inp = asm {
     pop x

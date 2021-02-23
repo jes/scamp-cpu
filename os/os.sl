@@ -12,6 +12,13 @@ include "os_proc.sl";
 
 kputs("Welcome to SCAMP OS.\n");
 
+# XXX: set write() implementation for fd 3
+*(fdbaseptr(3)+1) = func(fd,buf,sz) {
+    while (sz--)
+        outp(2,*(buf++));
+};
+sys_write(3, "sys_write works\n", 16);
+
 # We just need to start init to boot the system.
 sys_exec(["/bin/init.x", 0]);
 
