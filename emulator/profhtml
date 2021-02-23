@@ -326,14 +326,20 @@ sub read_anhex {
         chomp;
         $addr=hex($1) if /^([0-9a-f]+):/;
 
-        $sym = $1 if /#sym:(\w+)/;
-        $sym = undef if /#nosym/;
         $sym = $1 if /# (\w+): \.word 0/;
+        $sym = undef if /#nosym/;
 
         if ($sym) {
+            $lastaddr ||= $addr;
             $SYMBOL[$_] = $sym for ($lastaddr+1..$addr);
         }
-        $lastaddr = $addr;
+
+        if (/#sym:(\w+)/) {
+            $sym = $1;
+            $lastaddr = undef;
+        } else {
+            $lastaddr = $addr;
+        }
     }
     close $fh;
 }
