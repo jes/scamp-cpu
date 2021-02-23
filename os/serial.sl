@@ -1,5 +1,6 @@
 # Serial port routines
 
+include "util.sl";
 include "data.sl";
 
 var READPORT = FDDATA;

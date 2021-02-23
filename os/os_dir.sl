@@ -1,5 +1,7 @@
 # Directories
 
+include "util.sl";
+
 extern sys_readdir;
 extern sys_opendir;
 extern sys_mkdir;
