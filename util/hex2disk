@@ -26,7 +26,6 @@ GetOptions(
 
 if ($addr) {
     $addr = hex($addr);
-    print STDERR sprintf("start at 0x%04x\n", $addr) if $addr;
 } else {
     $addr = 0x100;
 }
