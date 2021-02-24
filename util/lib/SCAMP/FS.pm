@@ -128,6 +128,49 @@ sub getblk {
     }
 }
 
+sub put {
+    my ($self, $path, $str) = @_;
+
+    print "Put to $path\n";
+
+    my $abs = $self->abspath($path);
+    die "$path: already exists\n" if $self->find($abs);
+    my ($parents,$child) = $self->splitpath($abs);
+    die "$parents: not a directory\n" if $self->type($parents) != $TYPE_DIR;
+    my $parentblk = $self->find($parents);
+    my $blk0 = $self->new_file;
+    $self->add_dirent($parentblk, $child, $blk0);
+    $self->blkadd($blk0, $str);
+}
+
+sub blkadd {
+    my ($self, $blknum, $str) = @_;
+
+    while (1) {
+        print "Still to add: [$str]\n";
+
+        my $len = length($str) > 504 ? 504 : length($str);
+        my $add = substr($str, 0, $len, '');
+
+        my @block = $self->readblock($blknum);
+        @block[4..4+$len-1] = map { ord($_) } split //, $add;
+
+        $block[0] |= $len>>8;
+        $block[1] = $len&0xff;
+
+        if ($str ne '') {
+            my $newblk = $self->new_file;
+            $block[2] = $newblk>>8;
+            $block[3] = $newblk&0xff;
+            $self->writeblock($blknum, @block);
+            $blknum = $newblk;
+        } else {
+            $self->writeblock($blknum, @block);
+            return;
+        }
+    }
+}
+
 sub abspath {
     my ($self, $file) = @_;
 
@@ -429,6 +472,19 @@ sub new_directory {
 
     my @data = (0)x$BLKSZ;
     $data[0] = $TYPE_DIR << 1;
+
+    $self->writeblock($blknum, @data);
+
+    return $blknum;
+}
+
+sub new_file {
+    my ($self) = @_;
+
+    my $blknum = $self->allocate_block();
+
+    my @data = (0)x$BLKSZ;
+    $data[0] = $TYPE_FILE << 1;
 
     $self->writeblock($blknum, @data);
 
