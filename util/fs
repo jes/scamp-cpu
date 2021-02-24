@@ -1,0 +1,118 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use FindBin;
+use lib "$FindBin::Bin/lib";
+
+use SCAMP::FS;
+use Try::Tiny;
+
+$| = 1;
+
+my $diskfile = shift or die "usage: fs DISK\n";
+
+info("loading...");
+my $fs = SCAMP::FS->new($diskfile);
+info("\n");
+
+my %cmd = (
+    help => \&help,
+    ls => \&ls,
+    cd => \&cd,
+    mkdir => \&mkdir,
+    pwd => \&pwd,
+    cat => \&cat,
+    get => \&get,
+    put => \&put,
+    exit => \&done,
+    abort => \&abort,
+);
+
+info("\$ ");
+
+while (<>) {
+    chomp;
+    s/^\s*//g;
+    s/\s*$//g;
+    s/\s+/ /g;
+
+    if ($_ ne '') {
+        my @args = split / /;
+        if ($cmd{$args[0]}) {
+            try {
+                $cmd{$args[0]}->(@args[1..$#args]);
+            } catch {
+                print STDERR "$args[0]: $_";
+            };
+        } else {
+            print STDERR "don't know: $args[0]\n";
+        }
+    }
+
+    info("\$ ");
+}
+
+done();
+
+sub info {
+    print STDERR @_ if -t STDIN;
+}
+
+sub help {
+    print qq{commands:
+    help      show this text
+    ls        show directory contents
+    cd DIR    change current directory
+    mkdir DIR create a directory
+    pwd       show current directory
+    cat FILE  show contents of a file
+    get FILE [HOSTFILE] get a file from the image into the host fs
+    put HOSTFILE [FILE] put a file into the image from the host fs
+    exit      save the disk contents and quit
+    abort     quit without saving contents
+};
+}
+
+sub ls {
+    my ($dir) = @_;
+    print "$_\n" for $fs->ls($dir);
+}
+
+sub cd {
+    my ($dir) = @_;
+    die "usage: cd DIR\n" if !$dir;
+    $fs->chdir($dir);
+}
+
+sub mkdir {
+    my ($dir) = @_;
+    die "usage: mkdir DIR\n" if !$dir;
+    $fs->mkdir($dir);
+}
+
+sub pwd {
+    print $fs->cwd, "\n";
+}
+
+sub cat {
+}
+
+sub get {
+}
+
+sub put {
+}
+
+sub done {
+    info("saving...");
+    $fs->save;
+    info("\n");
+    exit(0);
+}
+
+sub abort {
+    info("quit without saving!\n");
+    exit(0);
+}

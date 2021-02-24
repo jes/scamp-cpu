@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use FindBin;
+use lib "$FindBin::Bin/lib/";
+
+use SCAMP::FS;
+
+my $fs = SCAMP::FS->new("/dev/null");
+
+my $BLKSZ = 512;
+my $SKIP_BLOCKS = 64;
+my $BITMAP_BLOCKS = 16;
+my $FS_SIZE = $BLKSZ * 65536;
+
+my @d;
+
+while (<>) {
+    chomp;
+    push @d, hex($_);
+}
+
+push @d, 0 while @d < $FS_SIZE;
+
+# mark skipped blocks and bitmap blocks as unavailable
+$d[($SKIP_BLOCKS * $BLKSZ) + $_] = 0xff for (0 .. 9);
+$d[($SKIP_BLOCKS * $BLKSZ) + 10] = 0x01;
+
+$fs->{disk} = \@d;
+
+$fs->add_dirent(80, ".", 80);
+$fs->add_dirent(80, "..", 80);
+
+print sprintf("%02x\n", $_) for @d;
