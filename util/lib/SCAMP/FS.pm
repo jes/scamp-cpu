@@ -72,8 +72,8 @@ sub abspath {
     }
 
     # normalise "././././"
-    $abs =~ s{/./}{/}g;
-    $abs =~ s{/.$}{};
+    $abs =~ s{/\./}{/}g;
+    $abs =~ s{/\.$}{};
     # TODO: normalise "/foo/../"
     return $abs;
 }
@@ -100,6 +100,8 @@ sub chdir {
 sub mkdir {
     my ($self, $dir) = @_;
 
+    # TODO: don't allow duplicate names
+
     my $abs = $self->abspath($dir);
     my ($parents,$child) = $self->splitpath($abs);
     die "$parents: not a directory\n" if $self->type($parents) != $TYPE_DIR;
@@ -121,7 +123,7 @@ sub unlink {
 }
 
 sub unlinkblk {
-    my ($self, $blknum, $rmname) = @_;
+    my ($self, $blknum, $rmname, $prevblk) = @_;
 
     my @block = $self->readblock($blknum);
     die "block $blknum: not a directory\n" if $self->blktype(@block) != $TYPE_DIR;
@@ -129,6 +131,8 @@ sub unlinkblk {
     my @r;
 
     my $off = 4;
+    my $deleted = 0;
+    my $nfiles = 0;
     while (($off+$DIRENT_SIZE) <= $BLKSZ) {
         my @bytes = @block[$off .. $off+$DIRENT_SIZE-1];
         my ($name, $childblk) = $self->decode_dirent(@bytes);
@@ -136,15 +140,29 @@ sub unlinkblk {
             @block[$off .. $off+$DIRENT_SIZE-1] = $self->encode_dirent("",0);
             $self->writeblock($blknum, @block);
             $self->freefile($childblk);
-            # TODO: if the directory block is now empty, free it
-            return;
+            $deleted = 1;
+        } elsif ($name ne '') {
+            $nfiles++;
         }
         $off += $DIRENT_SIZE;
     }
 
+    if ($deleted) {
+        if ($nfiles == 0 && $prevblk) {
+            # make prevblk's "next" point at our "next"
+            my $next = $self->blknext(@block);
+            my @prevblock = $self->readblock($prevblk);
+            $prevblock[2] = $next>>8;
+            $prevblock[3] = $next&0xff;
+            # and mark our block as free
+            $self->setblkused($blknum, 0);
+        }
+        return;
+    }
+
     my $nextblock = $self->blknext(@block);
     if ($nextblock != 0) {
-        $self->unlinkblk($nextblock, $rmname);
+        $self->unlinkblk($nextblock, $rmname, $blknum);
     } else {
         die "not found: $rmname\n";
     }
@@ -250,6 +268,7 @@ sub encode_dirent {
     my ($self, $name, $blknum) = @_;
 
     my @de = map { ord($_) } split //, $name;
+    die "$name: name too long\n" if @de >= 30;
     push @de, 0 while @de < 30;
 
     push @de, $blknum>>8;

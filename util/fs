@@ -79,7 +79,8 @@ sub help {
 
 sub ls {
     my ($dir) = @_;
-    print "$_\n" for $fs->ls($dir);
+    print "$_  " for $fs->ls($dir);
+    print "\n";
 }
 
 sub cd {
