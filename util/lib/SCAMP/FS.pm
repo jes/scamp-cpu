@@ -135,7 +135,7 @@ sub unlinkblk {
         if ($name eq $rmname) {
             @block[$off .. $off+$DIRENT_SIZE-1] = $self->encode_dirent("",0);
             $self->writeblock($blknum, @block);
-            # TODO: free the unlinked file's blocks
+            $self->freefile($childblk);
             # TODO: if the directory block is now empty, free it
             return;
         }
@@ -147,6 +147,31 @@ sub unlinkblk {
         $self->unlinkblk($nextblock, $rmname);
     } else {
         die "not found: $rmname\n";
+    }
+}
+
+sub freedir {
+    my ($self, $blk, @block) = @_;
+
+    my $off = 4;
+    while (($off+$DIRENT_SIZE) <= $BLKSZ) {
+        my @bytes = @block[$off .. $off+$DIRENT_SIZE-1];
+        my ($name, $childblk) = $self->decode_dirent(@bytes);
+        $self->freefile($childblk) if $name ne '' && $name ne '.' && $name ne '..';
+        $off += $DIRENT_SIZE;
+    }
+}
+
+sub freefile {
+    my ($self, $blk) = @_;
+
+    while ($blk) {
+        my @block = $self->readblock($blk);
+        if ($self->blktype(@block) == $TYPE_DIR) {
+            $self->freedir($blk, @block);
+        }
+        $self->setblkused($blk, 0);
+        $blk = $self->blknext(@block);
     }
 }
 
