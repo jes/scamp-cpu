@@ -21,6 +21,7 @@ my %cmd = (
     help => \&help,
     ls => \&ls,
     cd => \&cd,
+    rm => \&rm,
     mkdir => \&mkdir,
     pwd => \&pwd,
     cat => \&cat,
@@ -65,6 +66,7 @@ sub help {
     help      show this text
     ls        show directory contents
     cd DIR    change current directory
+    rm NAME   remove the given file or directory
     mkdir DIR create a directory
     pwd       show current directory
     cat FILE  show contents of a file
@@ -86,6 +88,12 @@ sub cd {
     $fs->chdir($dir);
 }
 
+sub rm {
+    my ($name) = @_;
+    die "usage: rm NAME\n" if !$name;
+    $fs->unlink($name);
+}
+
 sub mkdir {
     my ($dir) = @_;
     die "usage: mkdir DIR\n" if !$dir;
@@ -93,7 +101,7 @@ sub mkdir {
 }
 
 sub pwd {
-    print $fs->cwd, "\n";
+    print $fs->cwd, "/\n";
 }
 
 sub cat {
