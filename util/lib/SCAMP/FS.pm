@@ -27,6 +27,46 @@ sub new {
     return $self;
 }
 
+sub nametype {
+    my ($self, $path) = @_;
+
+    $path ||= '';
+    $path = $self->abspath($path);
+
+    my $blk0 = $self->find($path);
+    die "$path: does not exist\n" if !defined $blk0;
+    my @block = $self->readblock($blk0);
+    return $self->blktype(@block);
+}
+
+sub namelen {
+    my ($self, $path) = @_;
+
+    $path ||= '';
+    $path = $self->abspath($path);
+
+    my $blk0 = $self->find($path);
+    die "$path: does not exist\n" if !defined $blk0;
+
+    return $self->lenblk($blk0);
+}
+
+sub lenblk {
+    my ($self, $blk) = @_;
+
+    my $len = 0;
+    my $blks = 0;
+
+    while ($blk) {
+        my @block = $self->readblock($blk);
+        $len += $self->blklen(@block);
+        $blks++;
+        $blk = $self->blknext(@block);
+    }
+
+    return ($blks, $len);
+}
+
 sub ls {
     my ($self, $path) = @_;
 
@@ -58,6 +98,34 @@ sub lsblk {
     push @r, $self->lsblk($nextblock) if $nextblock != 0;
 
     return @r;
+}
+
+sub get {
+    my ($self, $path) = @_;
+
+    $path = $self->abspath($path);
+    my $blk0 = $self->find($path);
+    die "$path: does not exist\n" if !defined $blk0;
+    return $self->getblk($blk0)
+}
+
+sub getblk {
+    my ($self, $blknum) = @_;
+
+    my @block = $self->readblock($blknum);
+    die "block $blknum: not a file\n" if $self->blktype(@block) != $TYPE_FILE;
+
+    my $c = '';
+
+    my $len = $self->blklen(@block);
+    $c = join('', map { chr($_) } @block[4..4+$len-1]);
+
+    my $next = $self->blknext(@block);
+    if ($next) {
+        return $c . $self->getblk($next);
+    } else {
+        return $c;
+    }
 }
 
 sub abspath {
@@ -206,6 +274,11 @@ sub type {
 sub blktype {
     my ($self, @data) = @_;
     return $data[0] >> 1;
+}
+
+sub blklen {
+    my ($self, @data) = @_;
+    return (($data[0]&1)<<8)|$data[1];
 }
 
 sub blknext {

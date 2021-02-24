@@ -19,6 +19,7 @@ info("\n");
 
 my %cmd = (
     help => \&help,
+    ll => \&ll,
     ls => \&ls,
     cd => \&cd,
     rm => \&rm,
@@ -64,6 +65,7 @@ sub info {
 sub help {
     print qq{commands:
     help      show this text
+    ll        show directory contents, long listing
     ls        show directory contents
     cd DIR    change current directory
     rm NAME   remove the given file or directory
@@ -75,6 +77,18 @@ sub help {
     exit      save the disk contents and quit
     abort     quit without saving contents
 };
+}
+
+sub ll {
+    my ($dir) = @_;
+
+    $dir ||= '.';
+
+    for my $name ($fs->ls($dir)) {
+        my $type = $fs->nametype("$dir/$name") ? 'f' : 'd';
+        my ($blks, $len) = $fs->namelen("$dir/$name");
+        print "$type  $len  $blks  $name\n";
+    }
 }
 
 sub ls {
@@ -106,6 +120,8 @@ sub pwd {
 }
 
 sub cat {
+    my ($file) = @_;
+    print $fs->get($file);
 }
 
 sub get {
