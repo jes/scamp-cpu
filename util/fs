@@ -29,6 +29,7 @@ my %cmd = (
     cat => \&cat,
     get => \&get,
     put => \&put,
+    free => \&free,
     exit => \&done,
     abort => \&abort,
 );
@@ -57,6 +58,8 @@ while (<>) {
     info("\$ ");
 }
 
+info("exit\n");
+
 done();
 
 sub info {
@@ -75,6 +78,7 @@ sub help {
     cat FILE  show contents of a file
     get FILE [HOSTFILE] get a file from the image into the host fs
     put HOSTFILE [FILE] put a file into the image from the host fs
+    free      show number of free blocks
     exit      save the disk contents and quit
     abort     quit without saving contents
 };
@@ -126,22 +130,31 @@ sub cat {
 }
 
 sub get {
+    my ($file, $hostfile) = @_;
+    my $str = $fs->get($file);
+
+    open(my $fh, '>', $hostfile)
+        or die "can't write $hostfile: $!\n";
+    print $fh $str;
+    close $fh;
 }
 
 sub put {
     my ($hostfile, $file) = @_;
-
-    print "Read $hostfile...\n";
 
     open(my $fh, '<', $hostfile)
         or die "can't read $hostfile: $!\n";
     my $str = join('',<$fh>);
     close $fh;
 
-    print "Read " . length($str) . " bytes\n";
-
     $file ||= basename($hostfile);
     $fs->put($file, $str);
+}
+
+sub free {
+    my ($nfree, $ntotal) = $fs->free;
+
+    print "$nfree blocks free out of $ntotal total\n";
 }
 
 sub done {

@@ -27,6 +27,19 @@ sub new {
     return $self;
 }
 
+sub free {
+    my ($self) = @_;
+
+    my $ntotal = 65536;
+    my $nfree = 0;
+
+    for my $blk (0 .. 65535) {
+        $nfree++ if $self->blkisfree($blk);
+    }
+
+    return ($nfree, $ntotal);
+}
+
 sub nametype {
     my ($self, $path) = @_;
 
@@ -131,8 +144,6 @@ sub getblk {
 sub put {
     my ($self, $path, $str) = @_;
 
-    print "Put to $path\n";
-
     my $abs = $self->abspath($path);
     die "$path: already exists\n" if $self->find($abs);
     my ($parents,$child) = $self->splitpath($abs);
@@ -147,8 +158,6 @@ sub blkadd {
     my ($self, $blknum, $str) = @_;
 
     while (1) {
-        print "Still to add: [$str]\n";
-
         my $len = length($str) > 504 ? 504 : length($str);
         my $add = substr($str, 0, $len, '');
 
@@ -176,6 +185,7 @@ sub abspath {
 
     my $abs;
     if ($file =~ m{^/}) {
+        $file =~ s{/$}{};
         $abs = $file;
     } else {
         $file =~ s{/$}{};
@@ -427,12 +437,12 @@ sub blkisfree {
     my ($self, $blknum) = @_;
 
     my $blkblk = $SKIP_BLOCKS + int($blknum / ($BLKSZ * 8));
-    my $byteinblk = int(($blknum % $BLKSZ)/8);
+    my $byteinblk = int($blknum/8) % $BLKSZ;
     my $bitinbyte = $blknum % 8;
 
     my @bitmapblock = $self->readblock($blkblk);
     my $byte = $bitmapblock[$byteinblk];
-    my $bit = !! ($byte & (1 << $bitinbyte));
+    my $bit = $byte & (1 << $bitinbyte);
     return $bit == 0;
 }
 
@@ -440,7 +450,7 @@ sub setblkused {
     my ($self, $blknum, $used) = @_;
 
     my $blkblk = $SKIP_BLOCKS + int($blknum / ($BLKSZ * 8));
-    my $byteinblk = int(($blknum % $BLKSZ)/8);
+    my $byteinblk = int($blknum/8) % $BLKSZ;
     my $bitinbyte = $blknum % 8;
 
     my @bitmapblock = $self->readblock($blkblk);
