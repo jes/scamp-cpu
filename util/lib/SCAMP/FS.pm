@@ -27,24 +27,52 @@ sub new {
     return $self;
 }
 
-sub free {
+# utility functions that don't touch the disk:
+
+sub cwd {
     my ($self) = @_;
+    return $self->{cwd};
+}
 
-    my $ntotal = 65536;
-    my $nfree = 0;
+sub abspath {
+    my ($self, $file) = @_;
 
-    for my $blk (0 .. 65535) {
-        $nfree++ if $self->blkisfree($blk);
+    my $abs;
+    if ($file =~ m{^/}) {
+        $abs = $file;
+    } else {
+        $abs = "$self->{cwd}/$file";
     }
 
-    return ($nfree, $ntotal);
+    # normalise "././././"
+    $abs =~ s{/\./}{/}g;
+    $abs =~ s{/\.$}{};
+    # normalise "/foo/../"
+    $abs =~ s{/[^/]+/\.\./}{/}g;
+    $abs =~ s{/[^/]+/\.\.$}{}g;
+    # normalise "////foo///"
+    $abs =~ s{/+}{/}g;
+
+    # strip trailing slash
+    $abs =~ s{/$}{};
+    # add slash back if it's root dir
+    $abs = '/' if $abs eq '';
+    return $abs;
 }
+
+sub splitpath {
+    my ($self, $abs) = @_;
+    my $parents = $abs;
+    $parents =~ s{/[^/]*$}{};
+    my $child = $abs;
+    $child =~ s{.*/}{};
+    return ($parents, $child);
+}
+
+# functions that take names:
 
 sub nametype {
     my ($self, $path) = @_;
-
-    $path ||= '';
-    $path = $self->abspath($path);
 
     my $blk0 = $self->find($path);
     die "$path: does not exist\n" if !defined $blk0;
@@ -55,14 +83,117 @@ sub nametype {
 sub namelen {
     my ($self, $path) = @_;
 
-    $path ||= '';
-    $path = $self->abspath($path);
-
     my $blk0 = $self->find($path);
     die "$path: does not exist\n" if !defined $blk0;
 
     return $self->lenblk($blk0);
 }
+
+sub ls {
+    my ($self, $path) = @_;
+
+    my $blk0 = $self->find($path);
+    die "$path: does not exist\n" if !defined $blk0;
+    return $self->lsblk($blk0);
+}
+
+sub get {
+    my ($self, $path) = @_;
+
+    my $blk0 = $self->find($path);
+    die "$path: does not exist\n" if !defined $blk0;
+    return $self->getblk($blk0)
+}
+
+sub put {
+    my ($self, $path, $str) = @_;
+
+    my $abs = $self->abspath($path);
+    die "$path: already exists\n" if $self->find($abs);
+    my ($parents,$child) = $self->splitpath($abs);
+    die "$parents: not a directory\n" if $self->nametype($parents) != $TYPE_DIR;
+    my $parentblk = $self->find($parents);
+    my $blk0 = $self->new_file;
+    $self->add_dirent($parentblk, $child, $blk0);
+    $self->blkadd($blk0, $str);
+}
+
+sub chdir {
+    my ($self, $dir) = @_;
+
+    if ($self->nametype($dir) == $TYPE_DIR) {
+        $self->{cwd} = $self->abspath($dir);
+    } else {
+        die "$dir: not a directory\n";
+    }
+}
+
+sub mkdir {
+    my ($self, $dir) = @_;
+
+    # TODO: don't allow duplicate names
+
+    my $abs = $self->abspath($dir);
+    my ($parents,$child) = $self->splitpath($abs);
+    die "$parents: not a directory\n" if $self->nametype($parents) != $TYPE_DIR;
+    my $parentblk = $self->find($parents);
+    my $blk0 = $self->new_directory();
+    $self->add_dirent($parentblk, $child, $blk0);
+    $self->add_dirent($blk0, ".", $blk0);
+    $self->add_dirent($blk0, "..", $parentblk);
+}
+
+sub unlink {
+    my ($self, $name) = @_;
+
+    my $abs = $self->abspath($name);
+    my ($parents,$child) = $self->splitpath($abs);
+    die "parents: not a directory\n" if $self->nametype($parents) != $TYPE_DIR;
+    my $parentblk = $self->find($parents);
+    $self->unlinkblk($parentblk, $name);
+}
+
+sub find {
+    my ($self, $path) = @_;
+
+    $path ||= '';
+    my $abspath = $self->abspath($path);
+    $abspath =~ s{^/}{};
+    $abspath =~ s{/$}{};
+
+    my $origpath = $abspath;
+
+    my $blknum = $ROOTBLOCK;
+
+    while ($abspath =~ s{([^/]+)/?}{}) {
+        my $name = $1;
+        $blknum = $self->find_name_in_dir($blknum, $name);
+        return undef if !$blknum;
+    }
+
+    return $blknum;
+}
+
+sub find_name_in_dir {
+    my ($self, $inblock, $findname) = @_;
+
+    my @block = $self->readblock($inblock);
+    die "block $inblock: not a directory\n" if $self->blktype(@block) != $TYPE_DIR;
+
+    die "wrong block length: " . scalar(@block) . "\n" if @block != $BLKSZ;
+
+    my $foundblk = 0;
+    $self->dirwalk($inblock, sub {
+        my ($name, $blknum) = @_;
+        return 1 if $name ne $findname;
+        $foundblk = $blknum;
+        return 0;
+    });
+
+    return $foundblk;
+}
+
+# functions that take block numbers:
 
 sub lenblk {
     my ($self, $blk) = @_;
@@ -80,46 +211,15 @@ sub lenblk {
     return ($blks, $len);
 }
 
-sub ls {
-    my ($self, $path) = @_;
-
-    $path ||= '';
-    $path = $self->abspath($path);
-
-    my $blk0 = $self->find($path);
-    die "$path: does not exist\n" if !defined $blk0;
-    return $self->lsblk($blk0);
-}
-
 sub lsblk {
     my ($self, $blknum) = @_;
 
-    my @block = $self->readblock($blknum);
-    die "block $blknum: not a directory\n" if $self->blktype(@block) != $TYPE_DIR;
-
     my @r;
-
-    my $off = 4;
-    while (($off+$DIRENT_SIZE) <= $BLKSZ) {
-        my @bytes = @block[$off .. $off+$DIRENT_SIZE-1];
-        my ($name, $blknum) = $self->decode_dirent(@bytes);
+    $self->dirwalk($blknum, sub {
+        my ($name) = @_;
         push @r, $name if $name ne '';
-        $off += $DIRENT_SIZE;
-    }
-
-    my $nextblock = $self->blknext(@block);
-    push @r, $self->lsblk($nextblock) if $nextblock != 0;
-
+    });
     return @r;
-}
-
-sub get {
-    my ($self, $path) = @_;
-
-    $path = $self->abspath($path);
-    my $blk0 = $self->find($path);
-    die "$path: does not exist\n" if !defined $blk0;
-    return $self->getblk($blk0)
 }
 
 sub getblk {
@@ -139,19 +239,6 @@ sub getblk {
     } else {
         return $c;
     }
-}
-
-sub put {
-    my ($self, $path, $str) = @_;
-
-    my $abs = $self->abspath($path);
-    die "$path: already exists\n" if $self->find($abs);
-    my ($parents,$child) = $self->splitpath($abs);
-    die "$parents: not a directory\n" if $self->type($parents) != $TYPE_DIR;
-    my $parentblk = $self->find($parents);
-    my $blk0 = $self->new_file;
-    $self->add_dirent($parentblk, $child, $blk0);
-    $self->blkadd($blk0, $str);
 }
 
 sub blkadd {
@@ -178,69 +265,6 @@ sub blkadd {
             return;
         }
     }
-}
-
-sub abspath {
-    my ($self, $file) = @_;
-
-    my $abs;
-    if ($file =~ m{^/}) {
-        $file =~ s{/$}{};
-        $abs = $file;
-    } else {
-        $file =~ s{/$}{};
-        $abs = "$self->{cwd}/$file";
-    }
-
-    # normalise "././././"
-    $abs =~ s{/\./}{/}g;
-    $abs =~ s{/\.$}{};
-    # TODO: normalise "/foo/../"
-    return $abs;
-}
-
-sub splitpath {
-    my ($self, $abs) = @_;
-    my $parents = $abs;
-    $parents =~ s{/.*}{};
-    my $child = $abs;
-    $child =~ s{.*/}{};
-    return ($parents, $child);
-}
-
-sub chdir {
-    my ($self, $dir) = @_;
-
-    if ($self->type($dir) == $TYPE_DIR) {
-        $self->{cwd} = $self->abspath($dir);
-    } else {
-        die "$dir: not a directory\n";
-    }
-}
-
-sub mkdir {
-    my ($self, $dir) = @_;
-
-    # TODO: don't allow duplicate names
-
-    my $abs = $self->abspath($dir);
-    my ($parents,$child) = $self->splitpath($abs);
-    die "$parents: not a directory\n" if $self->type($parents) != $TYPE_DIR;
-    my $parentblk = $self->find($parents);
-    my $blk0 = $self->new_directory();
-    $self->add_dirent($parentblk, $child, $blk0);
-    $self->add_dirent($blk0, ".", $blk0);
-    $self->add_dirent($blk0, "..", $parentblk);
-}
-
-sub unlink {
-    my ($self, $name) = @_;
-
-    my $abs = $self->abspath($name);
-    my ($parents,$child) = $self->splitpath($abs);
-    die "parents: not a directory\n" if $self->type($parents) != $TYPE_DIR;
-    my $parentblk = $self->find($parents);
-    $self->unlinkblk($parentblk, $name);
 }
 
 sub unlinkblk {
@@ -292,13 +316,10 @@ sub unlinkblk {
 sub freedir {
     my ($self, $blk, @block) = @_;
 
-    my $off = 4;
-    while (($off+$DIRENT_SIZE) <= $BLKSZ) {
-        my @bytes = @block[$off .. $off+$DIRENT_SIZE-1];
-        my ($name, $childblk) = $self->decode_dirent(@bytes);
+    $self->dirwalk($blk, sub {
+        my ($name, $childblk) = @_;
         $self->freefile($childblk) if $name ne '' && $name ne '.' && $name ne '..';
-        $off += $DIRENT_SIZE;
-    }
+    });
 }
 
 sub freefile {
@@ -312,125 +333,6 @@ sub freefile {
         $self->setblkused($blk, 0);
         $blk = $self->blknext(@block);
     }
-}
-
-sub type {
-    my ($self, $path) = @_;
-
-    my $blk0 = $self->find($path);
-    die "$path: no such file\n" if !defined $blk0;
-
-    my @data = $self->readblock($blk0);
-    return $self->blktype(@data);
-}
-
-sub blktype {
-    my ($self, @data) = @_;
-    return $data[0] >> 1;
-}
-
-sub blklen {
-    my ($self, @data) = @_;
-    return (($data[0]&1)<<8)|$data[1];
-}
-
-sub blknext {
-    my ($self, @data) = @_;
-    return ($data[2]<<8)|$data[3];
-}
-
-sub find {
-    my ($self, $path) = @_;
-
-    my $abspath = $self->abspath($path);
-    $abspath =~ s{^/}{};
-    $abspath =~ s{/$}{};
-
-    my $origpath = $abspath;
-
-    my $blknum = $ROOTBLOCK;
-
-    while ($abspath =~ s{([^/]+)/?}{}) {
-        my $name = $1;
-        $blknum = $self->find_name_in_dir($blknum, $name);
-        return undef if !defined $blknum;
-    }
-
-    return $blknum;
-}
-
-sub find_name_in_dir {
-    my ($self, $inblock, $findname) = @_;
-
-    my @block = $self->readblock($inblock);
-    die "block $inblock: not a directory\n" if $self->blktype(@block) != $TYPE_DIR;
-
-    die "wrong block length: " . scalar(@block) . "\n" if @block != $BLKSZ;
-
-    my $off = 4;
-    while (($off+$DIRENT_SIZE) <= $BLKSZ) {
-        my @bytes = @block[$off .. $off+$DIRENT_SIZE-1];
-        my ($name, $blknum) = $self->decode_dirent(@bytes);
-        return $blknum if $blknum != 0 && $name eq $findname;
-        $off += $DIRENT_SIZE;
-    }
-
-    return undef;
-}
-
-sub decode_dirent {
-    my ($self, @dirent) = @_;
-
-    die "wrong length: " . scalar(@dirent) . "\n" if @dirent != 32;
-
-    my $name = join('', map { chr($_) } @dirent[0..29]);
-    $name =~ s/\0.*$//; # names are nul-terminated
-    my $blknum = ($dirent[30] << 8) | $dirent[31];
-
-    return ($name, $blknum);
-}
-
-sub encode_dirent {
-    my ($self, $name, $blknum) = @_;
-
-    my @de = map { ord($_) } split //, $name;
-    die "$name: name too long\n" if @de >= 30;
-    push @de, 0 while @de < 30;
-
-    push @de, $blknum>>8;
-    push @de, $blknum&0xff;
-
-    return @de;
-}
-
-sub add_dirent {
-    my ($self, $dirblk, $addname, $blk0) = @_;
-
-    my @block = $self->readblock($dirblk);
-    die "block $dirblk: not a directory\n" if $self->blktype(@block) != $TYPE_DIR;
-
-    die "wrong block length: " . scalar(@block) . "\n" if @block != $BLKSZ;
-
-    my $off = 4;
-    while (($off+$DIRENT_SIZE) <= $BLKSZ) {
-        my @bytes = @block[$off .. $off+$DIRENT_SIZE-1];
-        my ($name, $blknum) = $self->decode_dirent(@bytes);
-        if ($name eq '') {
-            @block[$off .. $off+$DIRENT_SIZE-1] = $self->encode_dirent($addname, $blk0);
-            $self->writeblock($dirblk, @block);
-            return;
-        }
-        $off += $DIRENT_SIZE;
-    }
-
-    my $next = $self->blknext(@block);
-    if ($next == 0) {
-        $next = $self->new_directory();
-        $block[2] = $next>>8;
-        $block[3] = $next&0xff;
-        $self->writeblock($dirblk, @block);
-    }
-    $self->add_dirent($next, $addname, $blk0);
 }
 
 sub blkisfree {
@@ -462,6 +364,114 @@ sub setblkused {
     }
 
     $self->writeblock($blkblk, @bitmapblock);
+}
+
+# functions for dealing with directory entries:
+
+sub decode_dirent {
+    my ($self, @dirent) = @_;
+
+    die "wrong length: " . scalar(@dirent) . "\n" if @dirent != 32;
+
+    my $name = join('', map { chr($_) } @dirent[0..29]);
+    $name =~ s/\0.*$//; # names are nul-terminated
+    my $blknum = ($dirent[30] << 8) | $dirent[31];
+
+    return ($name, $blknum);
+}
+
+sub encode_dirent {
+    my ($self, $name, $blknum) = @_;
+
+    my @de = map { ord($_) } split //, $name;
+    die "$name: name too long\n" if @de >= 30;
+    push @de, 0 while @de < 30;
+
+    push @de, $blknum>>8;
+    push @de, $blknum&0xff;
+
+    return @de;
+}
+
+sub add_dirent {
+    my ($self, $dirblk, $addname, $blk0) = @_;
+
+    my $done = 0;
+    my $lastdirblknum;
+    my $lastdirblkdata;
+    $self->dirwalk($dirblk, sub {
+        my ($name, $blk, $dirblknum, $off, $dirblkdata) = @_;
+        $lastdirblknum = $dirblknum;
+        $lastdirblkdata = $dirblkdata;
+        return 1 if $name ne ''; # continue searching until we find an empty slot
+
+        my @block = @$dirblkdata;
+        @block[$off .. $off+$DIRENT_SIZE-1] = $self->encode_dirent($addname, $blk0);
+        $self->writeblock($dirblknum, @block);
+        $done = 1;
+        return 0;
+    });
+
+    return if $done;
+
+    # if we didn't find an empty space in the directory, add a new block to this directory
+    my $newdir = $self->new_directory();
+    $lastdirblkdata->[2] = $newdir>>8;
+    $lastdirblkdata->[3] = $newdir&0xff;
+    $self->writeblock($dirblk, @$lastdirblkdata);
+    $self->add_dirent($newdir, $addname, $blk0);
+}
+
+# call $cb->($name, $blk, $dirblk, $dirent_offset, \@block) for every entry in the directory
+# if the callback returns truthy, continue
+# if the callback returns falsey, stop early
+sub dirwalk {
+    my ($self, $dirblk, $cb) = @_;
+
+    while ($dirblk != 0) {
+        my @block = $self->readblock($dirblk);
+        die "block $dirblk: not a directory\n" if $self->blktype(@block) != $TYPE_DIR;
+
+        my $off = 4;
+        while (($off+$DIRENT_SIZE) <= $BLKSZ) {
+            my @bytes = @block[$off .. $off+$DIRENT_SIZE-1];
+            my ($name, $blknum) = $self->decode_dirent(@bytes);
+            return if !$cb->($name, $blknum, $dirblk, $off, \@block);
+            $off += $DIRENT_SIZE;
+        }
+
+        $dirblk = $self->blknext(@block);
+    }
+}
+
+# functions that directly interact with the disk:
+
+sub free {
+    my ($self) = @_;
+
+    my $ntotal = 65536;
+    my $nfree = 0;
+
+    for my $blk (0 .. 65535) {
+        $nfree++ if $self->blkisfree($blk);
+    }
+
+    return ($nfree, $ntotal);
+}
+
+sub blktype {
+    my ($self, @data) = @_;
+    return $data[0] >> 1;
+}
+
+sub blklen {
+    my ($self, @data) = @_;
+    return (($data[0]&1)<<8)|$data[1];
+}
+
+sub blknext {
+    my ($self, @data) = @_;
+    return ($data[2]<<8)|$data[3];
 }
 
 sub allocate_block {
@@ -517,11 +527,6 @@ sub readblock {
     my $start = $BLKSZ * $blknum;
 
     return @{ $self->{disk} }[$start .. $start+$BLKSZ-1];
-}
-
-sub cwd {
-    my ($self) = @_;
-    return $self->{cwd};
 }
 
 sub load {

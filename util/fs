@@ -121,7 +121,7 @@ sub mkdir {
 }
 
 sub pwd {
-    print $fs->cwd, "/\n";
+    print $fs->cwd, "\n";
 }
 
 sub cat {
