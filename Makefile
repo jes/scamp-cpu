@@ -37,6 +37,7 @@ testrom-high.hex: testrom.hex
 test: ucode-low.hex ucode-high.hex testrom-low.hex testrom-high.hex emulator/scamp
 	cd emulator/ && ./scamp -t
 	cd compiler/ && ./run-test.sh
+	cd fs/ && ./run-test.sh
 	cd verilog/ && ./run-tests.sh
 
 asm/instructions.json: ucode/ucode.s

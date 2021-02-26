@@ -48,10 +48,10 @@ while (<>) {
             try {
                 $cmd{$args[0]}->(@args[1..$#args]);
             } catch {
-                print STDERR "$args[0]: $_";
+                print "$args[0]: $_";
             };
         } else {
-            print STDERR "don't know: $args[0]\n";
+            print "don't know: $args[0]\n";
         }
     }
 

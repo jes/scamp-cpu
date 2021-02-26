@@ -1,0 +1,53 @@
+free
+ll
+mkdir foo
+ls
+cd foo
+put testfile1
+ll
+cat testfile1
+rm testfile1
+ll
+free
+cd /
+mkdir a
+mkdir b
+mkdir c
+mkdir d
+mkdir e
+mkdir f
+mkdir g
+mkdir h
+mkdir i
+mkdir j
+mkdir k
+mkdir l
+mkdir m
+mkdir n
+mkdir o
+mkdir p
+mkdir q
+mkdir r
+mkdir s
+mkdir t
+mkdir y
+mkdir v
+mkdir w
+mkdir x
+mkdir y
+mkdir z
+free
+ls
+ll foo
+rm foo/testfile1
+ll foo
+put testfile2 a/b/illegal-file
+free
+put testfile2 a/testfile2
+put testfile2 b/testfile2
+put testfile2 c/testfile2
+put testfile2 d/testfile2
+put testfile2 e/testfile2
+put testfile2 f/testfile2
+cat f/testfile2
+free
