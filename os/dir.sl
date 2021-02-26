@@ -1,5 +1,29 @@
 # Directory handling routines
 
+# encode (name,blknum) into a dirent at the given dirent address
+# "name" has max. length of 30 characters
+# example:
+#    dirent(BLKBUF+4, "foo.txt", 1234)
+var dirent = func(dirent, name, blknum) {
+    var s = name;
+    var i = 0;
+
+    while (1) {
+        *(dirent+i) = shl(*s, 8);
+        if (!*s) break;
+        s++;
+
+        *(dirent+i) = dirent[i] | (*s & 0xff);
+        if (!*s) break;
+        s++;
+
+        i++;
+        if (i == 16) throw(TOOLONG);
+    };
+
+    *(dirent+15) = blknum;
+};
+
 # decode the dirent starting at dirent into a name and block number;
 # store a pointer to a (static) string containing the name in *pname,
 # and store the block number in *pblknum
@@ -8,13 +32,19 @@ var undirent = func(dirent, pname, pblknum) {
     var p = dirent;
     var s = undirent_str;
 
-    while (1) {
-        *(s++) = shr8(*p); # high byte
-        *s = *p & 0xff;    # low byte
+    while (p != dirent+16) {
+        *s = shr8(*p); # high byte
         if (!*s) break;
-        p++;
         s++;
+
+        *s = *p & 0xff; # low byte
+        if (!*s) break;
+        s++;
+
+        p++;
     };
+
+    *s = 0; # nul-terminate even if the name in the dirent used all 30 chars
 
     *pname = undirent_str;
     *pblknum = dirent[15];

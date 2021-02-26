@@ -6,6 +6,7 @@ var NOTFOUND = -2;
 var NOTFILE = -3;
 var NOTDIR = -4;
 var BADFD = -5;
+var TOOLONG = -6;
 
 # usage: inp(addr)
 var inp = asm {

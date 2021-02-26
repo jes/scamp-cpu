@@ -248,3 +248,7 @@ The given path exists but is not a directory (e.g. it's a file).
 ### -5: BADFD
 
 File descriptor not allocated, or requested operation not available on this fd.
+
+### -6: TOOLONG
+
+A path component was too long.
