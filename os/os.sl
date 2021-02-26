@@ -24,13 +24,11 @@ kputs("\nWelcome to SCAMP OS.\n\n");
 sys_write(3, "sys_write works\n", 16);
 
 # Try to read a file
-var fd = sys_open("/motd", O_READ);
+var fd = sys_open("/etc/motd", O_READ);
 if (fd < 0) kpanic("no motd");
-kputs("opened file\n");
 var ch = ".";
 while (sys_read(fd, ch, 1)) kputs(ch);
 sys_close(fd);
-kputs("closed file\n");
 
 # We just need to start init to boot the system.
 sys_exec(["/bin/init.x", 0]);

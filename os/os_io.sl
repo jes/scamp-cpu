@@ -2,7 +2,6 @@
 
 include "util.sl";
 include "data.sl";
-include "os_proc.sl";
 
 extern sys_copyfd;
 extern sys_tell;
