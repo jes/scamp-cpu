@@ -16,6 +16,7 @@
 # TODO: optionally annotate generated assembly code with the source code that
 #       generated it
 # TODO: fix &/| precedence
+# TODO: only backup return address once per function?
 # TODO: some way to include files
 
 include "stdio.sl";
@@ -78,6 +79,7 @@ var GLOBALS;
 # LOCALS is a grarr of pointers to tuples of (name,bp_rel)
 var LOCALS;
 var BP_REL;
+var SP_OFF;
 var NPARAMS;
 var BLOCKLEVEL = 0;
 var BREAKLABEL;
@@ -128,25 +130,11 @@ var addstring = func(str) {
 };
 
 var newscope = func() {
-    # save old base pointer, and put new base pointer in r253
-    puts("# newscope:\n");
-    puts("ld x, r253\n");
-    puts("push x\n");
-    puts("ld r253, sp\n");
-
     LOCALS = grnew();
     BP_REL = 0;
 };
 
-var runtime_endscope = func() {
-    # restore old sp and bp
-    puts("# endscope:\n");
-    puts("ld sp, r253\n");
-    puts("pop x\n");
-    puts("ld r253, x\n");
-};
-
-var compiletime_endscope = func() {
+var endscope = func() {
     if (!LOCALS) die("can't end the global scope",0);
     grwalk(LOCALS, func(tuple) {
         var name = car(tuple);
@@ -156,9 +144,14 @@ var compiletime_endscope = func() {
     grfree(LOCALS);
 };
 
-var endscope = func() {
-    runtime_endscope();
-    compiletime_endscope();
+var pushx = func() {
+    puts("push x\n");
+    SP_OFF--;
+};
+
+var popx = func() {
+    puts("pop x\n");
+    SP_OFF++;
 };
 
 var pushvar = func(name) {
@@ -169,9 +162,8 @@ var pushvar = func(name) {
         if (v) {
             bp_rel = cdr(v);
             puts("# pushvar: local "); puts(name); puts("\n");
-            puts("ld x, r253\n");
-            puts("ld x, "); puts(itoa(bp_rel)); puts("(x)\n");
-            puts("push x\n");
+            puts("ld x, "); puts(itoa(bp_rel-SP_OFF)); puts("(sp)\n");
+            pushx();
             return 0;
         };
     };
@@ -180,7 +172,7 @@ var pushvar = func(name) {
     if (v) {
         puts("# pushvar: global "); puts(name); puts("\n");
         puts("ld x, (_"); puts(name); puts(")\n");
-        puts("push x\n");
+        pushx();
         return 0;
     };
 
@@ -194,9 +186,9 @@ var poptovar = func(name) {
         if (v) {
             bp_rel = cdr(v);
             puts("# poptovar: local "); puts(name); puts("\n");
-            puts("ld r252, r253\n");
-            puts("add r252, "); puts(itoa(bp_rel)); puts("\n");
-            puts("pop x\n");
+            puts("ld r252, sp\n");
+            puts("add r252, "); puts(itoa(bp_rel-SP_OFF)); puts("\n");
+            popx();
             puts("ld (r252), x\n");
             return 0;
         };
@@ -205,7 +197,7 @@ var poptovar = func(name) {
     v = findglobal(name);
     if (v) {
         puts("# poptovar: global "); puts(name); puts("\n");
-        puts("pop x\n");
+        popx();
         puts("ld (_"); puts(name); puts("), x\n");
         return 0;
     };
@@ -217,18 +209,19 @@ var genliteral = func(v) {
     puts("# genliteral:\n");
     if ((v&0xff00)==0 || (v&0xff00)==0xff00) {
         puts("push "); puts(itoa(v)); puts("\n");
+        SP_OFF--;
     } else {
         puts("ld x, "); puts(itoa(v)); puts("\n");
-        puts("push x\n");
+        pushx();
     };
 };
 
 var genop = func(op) {
 
     puts("# operator: "); puts(op); puts("\n");
-    puts("pop x\n");
+    popx();
     puts("ld r0, x\n");
-    puts("pop x\n");
+    popx();
 
     var signcmp = func(subxr0, match, wantlt) {
         var wantgt = !wantlt;
@@ -330,15 +323,14 @@ var genop = func(op) {
         die("unrecognised binary operator %s (probably a compiler bug)",[op]);
     };
 
-    puts("push x\n");
+    pushx();
 };
 
 var funcreturn = func() {
     if (!LOCALS) die("can't return from global scope",0);
-    runtime_endscope();
 
-    puts("# function had "); puts(itoa(NPARAMS)); puts(" parameters:\n");
-    puts("ret "); puts(itoa(NPARAMS)); puts("\n");
+    printf("# function had %d parameters and %d locals:\n", [NPARAMS, -BP_REL]);
+    puts("ret "); puts(itoa(NPARAMS-BP_REL)); puts("\n");
 };
 
 Program = func(x) {
@@ -367,7 +359,7 @@ Statement = func(x) {
     if (parse(Assignment,0)) return 1;
     if (parse(Expression,0)) {
         puts("# discard expression value\n");
-        puts("pop x\n");
+        popx();
         return 1;
     };
     return 0;
@@ -402,6 +394,7 @@ Declaration = func(x) {
         addlocal(name, BP_REL--);
         puts("# allocate space for "); puts(name); puts("\n");
         puts("dec sp\n");
+        SP_OFF--;
     };
     if (!parse(CharSkip,'=')) return 1;
     if (!LOCALS) printf("#sym:%s\n", [name]);
@@ -420,7 +413,7 @@ Conditional = func(x) {
 
     # if top of stack is 0, jmp falselabel
     var falselabel = label();
-    puts("pop x\n");
+    popx();
     puts("test x\n");
     puts("jz "); plabel(falselabel); puts("\n");
 
@@ -462,7 +455,7 @@ Loop = func(x) {
     if (!parse(Expression,0)) die("while condition needs expression",0);
 
     # if top of stack is 0, jmp endloop
-    puts("pop x\n");
+    popx();
     puts("test x\n");
     puts("jz "); plabel(endloop); puts("\n");
 
@@ -498,7 +491,7 @@ Return = func(x) {
     if (!parse(Keyword,"return")) return 0;
     if (!parse(Expression,0)) die("return needs expression",0);
     puts("# return\n");
-    puts("pop x\n");
+    popx();
     puts("ld r0, x\n");
     funcreturn();
     return 1;
@@ -522,9 +515,9 @@ Assignment = func(x) {
         free(id);
     } else {
         puts("# store to pointer:\n");
-        puts("pop x\n");
+        popx();
         puts("ld r0, x\n");
-        puts("pop x\n");
+        popx();
         puts("ld (x), r0\n");
     };
     return 1;
@@ -572,12 +565,12 @@ Term = func(x) {
         if (!parse(CharSkip,']')) die("array index needs close bracket",0);
 
         # stack now has array and index on it: pop, add together, dereference, push
-        puts("pop x\n");
+        popx();
         puts("ld r0, x\n");
-        puts("pop x\n");
+        popx();
         puts("add x, r0\n");
         puts("ld x, (x)\n");
-        puts("push x\n");
+        pushx();
     };
     return 1;
 };
@@ -666,7 +659,7 @@ StringLiteral = func(x) {
     var str = StringLiteralText();
     var strlabel = addstring(str);
     puts("ld x, "); plabel(strlabel); puts("\n");
-    puts("push x\n");
+    pushx();
     return 1;
 };
 
@@ -703,7 +696,7 @@ ArrayLiteral = func(x) {
         #   ld (l+length), x
         puts("ld r0, "); plabel(l); puts("\n");
         puts("add r0, "); puts(itoa(length)); puts("\n");
-        puts("pop x\n");
+        popx();
         puts("ld (r0), x\n");
 
         length++;
@@ -713,7 +706,7 @@ ArrayLiteral = func(x) {
     if (!parse(CharSkip,']')) die("array literal needs close bracket",0);
 
     puts("ld x, "); plabel(l); puts("\n");
-    puts("push x\n");
+    pushx();
 
     grpush(ARRAYS, cons(l,length));
     return 1;
@@ -747,9 +740,11 @@ FunctionDeclaration = func(x) {
     var oldscope = LOCALS;
     var old_bp_rel = BP_REL;
     var oldnparams = NPARAMS;
+    var old_sp_off = SP_OFF;
+    SP_OFF = 0;
     newscope();
 
-    var bp_rel = 2; # parameters (grows up)
+    var bp_rel = 1; # parameters (grows up)
     var p = params;
     while (*p) p++;
     # p now points past the last param
@@ -760,15 +755,16 @@ FunctionDeclaration = func(x) {
     if (!parse(CharSkip,')')) die("func needs close paren",0);
     parse(Statement,0); # optional
     funcreturn();
-    compiletime_endscope();
+    endscope();
     LOCALS = oldscope;
     BP_REL = old_bp_rel;
     NPARAMS = oldnparams;
+    SP_OFF = old_sp_off;
 
     puts("# end function declaration\n\n");
     plabel(functionend); puts(":\n");
     puts("ld x, "); plabel(functionlabel); puts("\n");
-    puts("push x\n");
+    pushx();
     return 1;
 };
 
@@ -794,7 +790,7 @@ InlineAsm = func(x) {
 
     plabel(end); puts(":\n");
     puts("ld x, "); plabel(asm); puts("\n");
-    puts("push x\n");
+    pushx();
     return 1;
 };
 
@@ -806,30 +802,34 @@ FunctionCall = func(x) {
 
     puts("# parseFunctionCall:\n");
     puts("ld x, r254\n");
-    puts("push x\n");
+    pushx();
 
-    parse(Arguments,0);
+    var nargs = Arguments();
     if (!parse(CharSkip,')')) die("argument list needs closing paren",0);
 
     pushvar(name);
     free(name);
     # call function
-    puts("pop x\n");
+    popx();
     puts("call x\n");
+    # arguments have been consumed
+    SP_OFF = SP_OFF + nargs;
     # restore return address
-    puts("pop x\n");
+    popx();
     puts("ld r254, x\n");
     # push return value
     puts("ld x, r0\n");
-    puts("push x\n");
+    pushx();
 
     return 1;
 };
 
-Arguments = func(x) {
+Arguments = func() {
+    var n = 0;
     while (1) {
-        if (!parse(Expression,0)) return 1;
-        if (!parse(CharSkip,',')) return 1;
+        if (!parse(Expression,0)) return n;
+        n++;
+        if (!parse(CharSkip,',')) return n;
     }
 };
 
@@ -847,11 +847,11 @@ PreOp = func(x) {
     skip();
     puts("# pre-"); puts(op); puts("\n");
     pushvar(IDENTIFIER);
-    puts("pop x\n");
+    popx();
     puts(op); puts(" x\n");
-    puts("push x\n");
+    pushx();
     poptovar(IDENTIFIER);
-    puts("push x\n");
+    pushx();
     return 1;
 };
 
@@ -869,10 +869,10 @@ PostOp = func(x) {
     skip();
     puts("# post-"); puts(op); puts("\n");
     pushvar(IDENTIFIER);
-    puts("pop x\n");
-    puts("push x\n");
+    popx();
+    pushx();
     puts(op); puts(" x\n");
-    puts("push x\n");
+    pushx();
     poptovar(IDENTIFIER);
     return 1;
 };
@@ -886,9 +886,9 @@ AddressOf = func(x) {
     if (v) {
         bp_rel = cdr(v);
         puts("# &"); puts(IDENTIFIER); puts(" (local)\n");
-        puts("ld x, r253\n");
-        puts("add x, "); puts(itoa(bp_rel)); puts("\n");
-        puts("push x\n");
+        puts("ld x, sp\n");
+        puts("add x, "); puts(itoa(bp_rel-SP_OFF)); puts("\n");
+        pushx();
         return 1;
     };
 
@@ -896,7 +896,7 @@ AddressOf = func(x) {
     if (v) {
         puts("# &"); puts(IDENTIFIER); puts(" (global)\n");
         puts("ld x, _"); puts(IDENTIFIER); puts("\n");
-        puts("push x\n");
+        pushx();
         return 1;
     };
 
@@ -914,7 +914,7 @@ UnaryExpression = func(x) {
     var end;
 
     puts("# unary "); putchar(op); puts("\n");
-    puts("pop x\n");
+    popx();
     if (op == '~') {
         puts("not x\n");
     } else if (op == '-') {
@@ -935,7 +935,7 @@ UnaryExpression = func(x) {
         die("unrecognised unary operator %c (probably a compiler bug)",[op]);
     };
 
-    puts("push x\n");
+    pushx();
     return 1;
 };
 
@@ -971,8 +971,9 @@ parse_init();
 parse(Program,0);
 
 if (nextchar() != EOF) die("garbage after end of program",0);
-if (LOCALS) die("expected to be left in global scope",0);
-if (BLOCKLEVEL != 0) die("expected to be left at block level 0 (probably a compiler bug)",0);
+if (LOCALS) die("expected to be left in global scope after program",0);
+if (BLOCKLEVEL != 0) die("expected to be left at block level 0 after program (probably a compiler bug)",0);
+if (SP_OFF != 0) die("expected to be left at SP_OFF==0 after program, found %d (probably a compiler bug)",[SP_OFF]);
 
 # jump over the globals
 var end = label();

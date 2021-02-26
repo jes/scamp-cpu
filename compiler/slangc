@@ -826,13 +826,11 @@ sub symlookup {
 sub popx {
     $SP_OFF++;
     print "pop x\n";
-    print "#SP_OFF=$SP_OFF\n";
 }
 
 sub pushx {
     $SP_OFF--;
     print "push x\n";
-    print "#SP_OFF=$SP_OFF\n";
 }
 
 sub poptovar {
