@@ -68,4 +68,10 @@ var cmdargs = asm {
 var undirent_str = asm { .gap 32 };
 
 # block number of current working directory
-var CWDBLK;
+var CWDBLK = ROOTBLOCK;
+
+# file modes
+var O_READ    = 0x01;
+var O_WRITE   = 0x02;
+var O_CREAT   = 0x04;
+var O_NOTRUNC = 0x08;

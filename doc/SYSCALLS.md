@@ -86,9 +86,10 @@ Open the file at the given path with the given mode.
 
 Mode flags are:
 
-    0x01: O_READ
-    0x02: O_WRITE
-    0x04: O_CREAT
+    0x01: O_READ    - support read()
+    0x02: O_WRITE   - support write()
+    0x04: O_CREAT   - create the file if it doesn't exist
+    0x08: O_NOTRUNC - with O_WRITE: don't truncate the file if it already exists
 
 ### 0xfef7: close(fd)
 
