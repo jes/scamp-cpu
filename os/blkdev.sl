@@ -5,18 +5,6 @@
 # from to avoid confusing and annoying bugs. Or maybe a separate buffer for
 # each device?
 
-var BLKSZ = 256;
-var BLKBUF = asm { .gap 256 };
-var BLKBUFNUM;
-
-var TYPE_DIR = 0;
-var TYPE_FILE = 0x200;
-
-var blkselectport = 4;
-var blkdataport = 5;
-
-var nextfreeblk = 0;
-
 # read the given block number into the BLKBUF
 var blkread = func(num) {
     if (BLKBUFNUM == num) return 0;
@@ -51,14 +39,15 @@ var blkwrite = func(num) {
     };
 };
 
-# return the "type" field from the current block
+# get the "type"/"length"/"next" field of the current block
 var blktype = func() return BLKBUF[0] & 0xfe00;
-
-# return the "length" field from the current block
 var blklen = func() return BLKBUF[0] & 0x01ff;
-
-# return the "next" field from the current block
 var blknext = func() return BLKBUF[1];
+
+# set the "type"/"length"/"next" field of the current block
+var blksettype = func(typ) BLKBUF[0] = blklen() | typ;
+var blksetlen = func(len) BLKBUF[0] = blktype() | len;
+var blksetnext = func(blk) BLKBUF[1] = blk;
 
 # find a free block and update "blknextfree"
 # TODO: start searching from the current "blknextfree" to avoid the long
@@ -90,6 +79,25 @@ var blkfindfree = func() {
     # so now bit i in BLKBUF[blkgroup] is 0, so the free block number is:
     #    (bitmapblk*4096 + blkgroup*16 + i)
     nextfreeblk = shl(bitmapblk, 12) + shl(blkgroup, 4) + i;
+};
+
+# Mark the given block as used/unused ("used" should be 0 or 1)
+var blksetused = func(blk, used) {
+    # block "blk" corresponds to:
+    #   bitmapblk = blk / 4096
+    #   blkgroup  = (blk%4096) / 16
+    #   bit i     = blk % 16
+    var bitmapblk = shr12(blk);
+    var blkgroup  = byteshr4(blk & 0x0fff);
+    var i         = blk & 0x0f;
+
+    blkread(bitmapblk);
+    if (used) {
+        *(BLKBUF+blkgroup) = BLKBUF[blkgroup] | shl(1,i);
+    } else {
+        *(BLKBUF+blkgroup) = BLKBUF[blkgroup] & ~shl(1,i);
+    };
+    blkwrite(bitmapblk);
 };
 
 # initialise nextfreeblk

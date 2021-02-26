@@ -36,6 +36,21 @@ var fdbaseptr = func(fd) {
     return fdtable+fd8;
 };
 
+# Block device state
+var BLKSZ = 256; # 256 words, 512 bytes
+var BLKBUF = asm {
+    BLKBUF: .gap 256
+};
+var BLKBUFNUM;
+
+var TYPE_DIR = 0;
+var TYPE_FILE = 0x200;
+
+var blkselectport = 4;
+var blkdataport = 5;
+
+var nextfreeblk = 0;
+
 # Command-line arguments
 #
 # Starts out with a 0-terminated list of pointers to strings; the strings

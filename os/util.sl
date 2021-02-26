@@ -87,6 +87,43 @@ var shr8 = asm {
     jmp r1 # return
 };
 
+# >>12 1 arg from the stack and return the result in r0
+var shr12 = asm {
+    pop x
+    ld r0, x
+    ld r1, r254 # stash return address
+    ld r254, 0
+    tbsz r0, 0x8000
+    sb r254, 0x8
+    tbsz r0, 0x4000
+    sb r254, 0x4
+    tbsz r0, 0x2000
+    sb r254, 0x2
+    tbsz r0, 0x1000
+    sb r254, 0x1
+    ld r0, r254
+    jmp r1 # return
+};
+
+# >>4 1 arg from the stack and return the result in r0
+# note upper byte is ignored
+var byteshr4 = asm {
+    pop x
+    ld r0, x
+    ld r1, r254 # stash return address
+    ld r254, 0
+    tbsz r0, 0x80
+    sb r254, 0x8
+    tbsz r0, 0x40
+    sb r254, 0x4
+    tbsz r0, 0x20
+    sb r254, 0x2
+    tbsz r0, 0x10
+    sb r254, 0x1
+    ld r0, r254
+    jmp r1 # return
+};
+
 # usage: shl(i,n)
 # compute "i << n", return it in r0
 var shl = asm {
