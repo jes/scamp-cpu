@@ -27,7 +27,6 @@ var dirent = func(dirent, name, blknum) {
 # decode the dirent starting at dirent into a name and block number;
 # store a pointer to a (static) string containing the name in *pname,
 # and store the block number in *pblknum
-var undirent_str = asm { .gap 32 };
 var undirent = func(dirent, pname, pblknum) {
     var p = dirent;
     var s = undirent_str;

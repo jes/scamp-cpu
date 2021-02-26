@@ -1,4 +1,7 @@
 # Data storage and related functions
+# TODO: we should probably aim to move some of this into the middle of the top
+# page so that the kernel is smaller. Maybe leave 16/32 pseudoregs free at the
+# bottom, and some more at the top, and use the rest for kernel data.
 
 # File descriptor table
 #
@@ -32,8 +35,7 @@ var fdtable = asm {
 # base pointer for an fd is that fd*8
 var fdbaseptr = func(fd) {
     if (fd ge nfds) return [0,0,0,0,0,0,0,0];
-    var fd8 = (fd+fd+fd+fd)+(fd+fd+fd+fd);
-    return fdtable+fd8;
+    return fdtable+shl(fd,3);
 };
 
 # Block device state
@@ -61,3 +63,9 @@ var cmdargs_sz = 128; # words, including pointers, characters, and nuls
 var cmdargs = asm {
     cmdargs: .gap 128
 };
+
+# Space to build names for undirent()
+var undirent_str = asm { .gap 32 };
+
+# block number of current working directory
+var CWDBLK;
