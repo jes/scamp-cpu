@@ -8,6 +8,7 @@ kputs("starting kernel...\n");
 include "data.sl";
 include "serial.sl";
 include "blkdev.sl";
+include "dir.sl";
 
 # Each of the included os_*.sl modules initialises itself and writes the correct addresses
 # to the system call vectors that it is responsible for.

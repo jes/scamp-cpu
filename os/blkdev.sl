@@ -82,6 +82,7 @@ var blkfindfree = func() {
 };
 
 # Mark the given block as used/unused ("used" should be 0 or 1)
+# If using "nextfreeblk", make sure to call blkfindfree() straight away
 var blksetused = func(blk, used) {
     # block "blk" corresponds to:
     #   bitmapblk = blk / 4096
@@ -92,11 +93,8 @@ var blksetused = func(blk, used) {
     var i         = blk & 0x0f;
 
     blkread(bitmapblk);
-    if (used) {
-        *(BLKBUF+blkgroup) = BLKBUF[blkgroup] | shl(1,i);
-    } else {
-        *(BLKBUF+blkgroup) = BLKBUF[blkgroup] & ~shl(1,i);
-    };
+    if (used) *(BLKBUF+blkgroup) = BLKBUF[blkgroup] |  shl(1,i)
+    else      *(BLKBUF+blkgroup) = BLKBUF[blkgroup] & ~shl(1,i);
     blkwrite(bitmapblk);
 };
 

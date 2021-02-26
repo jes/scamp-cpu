@@ -156,3 +156,30 @@ var shl = asm {
 
     ret
 };
+
+# return 1 if the "name" is the first element of the given path
+# examples:
+#   pathbegins("foo/bar/fsdfs","foo") = 1
+#   pathbegins("foo/bar/fsdfs","f") = 0
+#   pathbegins("foo/bar/fsdfs","foo/bar") = 0
+var pathbegins = func(path, name) {
+    while (*path && *name && *path != '/') {
+        if (*path != *name) return 0;
+        path++;
+        name++;
+    };
+
+    if (*name == 0 && (*path == 0 || *path == '/')) return 1;
+    return 0;
+};
+
+# TODO: use setjmp/longjmp to return this error to the responsible party
+var throw = func(n) {
+    if (n == EOF) kpanic("eof");
+    if (n == NOTFOUND) kpanic("notfound");
+    if (n == NOTFILE) kpanic("notfile");
+    if (n == NOTDIR) kpanic("notdir");
+    if (n == BADFD) kpanic("badfd");
+
+    kpanic("unrecognised error");
+};
