@@ -91,6 +91,7 @@ var blkfindfree = func() {
     nextfreeblk = shl(bitmapblk, 12) + shl(blkgroup, 4) + i;
 };
 
+# initialise nextfreeblk
 kputs("finding free block...");
-blkfindfree(); # initialise nextfreeblk
+blkfindfree();
 kputs(" ok\n");
