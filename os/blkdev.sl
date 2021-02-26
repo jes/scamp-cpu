@@ -76,6 +76,7 @@ var blkfindfree = func() {
             blkgroup++;
         };
         if (blkgroup != BLKSZ) break;
+        bitmapblk++;
     };
 
     # TODO: don't kernel panic when disk is full
