@@ -2,8 +2,12 @@
 
 # "Kernel" utilities
 include "util.sl";
+
+kputs("starting kernel...\n");
+
 include "data.sl";
 include "serial.sl";
+include "blkdev.sl";
 
 # Each of the included os_*.sl modules initialises itself and writes the correct addresses
 # to the system call vectors that it is responsible for.
@@ -12,7 +16,7 @@ include "os_dir.sl";
 include "os_io.sl";
 include "os_proc.sl";
 
-kputs("Welcome to SCAMP OS.\n");
+kputs("\nWelcome to SCAMP OS.\n\n");
 
 # fd 3 is always the console
 sys_write(3, "sys_write works\n", 16);

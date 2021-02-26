@@ -60,3 +60,62 @@ var memcpy = func(dest, src, len) {
     while (len--) *(dest++) = *(src++);
     return dd;
 };
+
+# >>8 1 arg from the stack and return the result in r0
+var shr8 = asm {
+    pop x
+    ld r0, x
+    ld r1, r254 # stash return address
+    ld r254, 0
+    tbsz r0, 0x8000
+    sb r254, 0x80
+    tbsz r0, 0x4000
+    sb r254, 0x40
+    tbsz r0, 0x2000
+    sb r254, 0x20
+    tbsz r0, 0x1000
+    sb r254, 0x10
+    tbsz r0, 0x0800
+    sb r254, 0x08
+    tbsz r0, 0x0400
+    sb r254, 0x04
+    tbsz r0, 0x0200
+    sb r254, 0x02
+    tbsz r0, 0x0100
+    sb r254, 0x01
+    ld r0, r254
+    jmp r1 # return
+};
+
+# usage: shl(i,n)
+# compute "i << n", return it in r0
+var shl = asm {
+    pop x
+    ld r1, 15
+    sub r1, x # r1 = 15 - n
+
+    pop x
+    ld r0, x # r0 = i
+
+    # kind of "Duff's device" way to get a variable
+    # number of left shifts
+    jr+ r1
+
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+    shl r0
+
+    ret
+};
