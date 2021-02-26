@@ -18,6 +18,7 @@
 # TODO: optionally annotate generated assembly code with the source code that
 #       generated it
 # TODO: fix &/| precedence
+# TODO: only backup return address once per function?
 
 use strict;
 use warnings;
@@ -43,6 +44,7 @@ my $IDENTIFIER;
 my $BLOCKLEVEL = 0;
 my $BREAKLABEL;
 my $CONTLABEL;
+my $SP_OFF = 0;
 
 parse(\&Program);
 
@@ -101,7 +103,8 @@ sub Program {
 
     die "garbage after end of program\n" if $pos != @s;
     die "expected to be left in global scope after program (probably a compiler bug)\n" if !$scope->{global};
-    die "expected to be left at block level 0 (probably a compiler bug)\n" if $BLOCKLEVEL != 0;
+    die "expected to be left at block level 0 after program (probably a compiler bug)\n" if $BLOCKLEVEL != 0;
+    die "expected to be left with SP_OFF==0 after program, found $SP_OFF (probably a compiler bug)\n" if $SP_OFF != 0;
 
     return 1;
 }
@@ -117,7 +120,7 @@ sub Statement {
     return 1 if parse(\&Include) || parse(\&Block) || parse(\&Extern) || parse(\&Declaration) || parse(\&Conditional) || parse(\&Loop) || parse(\&Break) || parse(\&Continue) || parse(\&Return) || parse(\&Assignment);
     if (parse(\&Expression)) {
         print "# discard expression value\n";
-        print "pop x\n";
+        popx();
         return 1;
     }
     return 0;
@@ -192,6 +195,7 @@ sub Declaration {
     if (!$scope->{global}) {
         print "# allocate space for $id\n";
         print "dec sp\n";
+        $SP_OFF--;
     } else {
         push @GLOBALS_ORDER, $id;
     }
@@ -215,7 +219,7 @@ sub Conditional {
 
     # if top of stack is 0, jmp $falselabel
     my $falselabel = label();
-    print "pop x\n";
+    popx();
     print "test x\n";
     print "jz $falselabel\n";
 
@@ -257,7 +261,7 @@ sub Loop {
     die "while condition needs expression\n" if !parse(\&Expression);
 
     # if top of stack is 0, jmp $endloop
-    print "pop x\n";
+    popx();
     print "test x\n";
     print "jz $endloop\n";
 
@@ -298,7 +302,7 @@ sub Return {
 
     # we currently have the return value on the stack, we want to pop it to r0
     print "# return\n";
-    print "pop x\n";
+    popx();
     print "ld r0, x\n";
     funcreturn();
     return 1;
@@ -322,9 +326,9 @@ sub Assignment {
         poptovar($id);
     } else {
         print "# store to pointer:\n";
-        print "pop x\n";
+        popx();
         print "ld r0, x\n";
-        print "pop x\n";
+        popx();
         print "ld (x), r0\n";
     }
     return 1;
@@ -375,12 +379,12 @@ sub Term {
         die "array index needs close bracket\n" if !parse(\&CharSkip,']');
 
         # stack now has array and index on it: pop, add together, dereference, push
-        print "pop x\n";
+        popx();
         print "ld r0, x\n";
-        print "pop x\n";
+        popx();
         print "add x, r0\n";
         print "ld x, (x)\n";
-        print "push x\n";
+        pushx();
     }
     return 1;
 }
@@ -448,7 +452,7 @@ sub StringLiteral {
         $label = label();
     }
     print "ld x, $label\n";
-    print "push x\n";
+    pushx();
     $STRINGS{$string} = $label;
     return 1;
 }
@@ -481,7 +485,7 @@ sub ArrayLiteral {
         #   ld ($label+$length), x
         print "ld r0, $label\n";
         print "add r0, $length\n";
-        print "pop x\n";
+        popx();
         print "ld (r0), x\n";
 
         $length++;
@@ -491,7 +495,7 @@ sub ArrayLiteral {
     die "array literal needs close bracket\n" if !parse(\&CharSkip,']');
 
     print "ld x, $label\n";
-    print "push x\n";
+    pushx();
 
     push @ARRAYS, {
         label => $label,
@@ -517,7 +521,7 @@ sub FunctionDeclaration {
     newscope();
     $scope->{parent} = $globalscope;
 
-    my $bp_rel = 2;
+    my $bp_rel = 1;
     for my $p (reverse @params) {
         die "duplicate parameter name: $p\n" if $scope->{symbols}{$p};
         $scope->{symbols}{$p} = {
@@ -526,18 +530,21 @@ sub FunctionDeclaration {
         };
         $scope->{params}++;
     }
+    my $SP_OFF0 = $SP_OFF;
+    $SP_OFF = 0;
 
     die "func needs close paren\n" if !parse(\&CharSkip,')');
     parse(\&Statement);
     funcreturn();
 
     # endscope()-ish
+    $SP_OFF = $SP_OFF0;
     $scope = $parentscope;
 
     print "# end function declaration\n\n";
     print "$functionend:\n";
     print "ld x, $functionlabel\n";
-    print "push x\n";
+    pushx();
     return 1;
 }
 
@@ -561,7 +568,7 @@ sub InlineAsm {
 
     print "$end:\n";
     print "ld x, $asm\n";
-    print "push x\n";
+    pushx();
 
     return 1;
 }
@@ -582,29 +589,35 @@ sub FunctionCall {
     print "# parseFunctionCall:\n";
     # backup return address before we push arguments
     print "ld x, r254\n";
-    print "push x\n";
+    pushx();
 
-    die "argument list needs closing paren\n" if !(parse(\&Arguments) && parse(\&CharSkip, ')'));
+    my $nargs = Arguments();
+    die "argument list needs closing paren\n" if !parse(\&CharSkip, ')');
 
     # call function
     pushvar($id);
-    print "pop x\n";
+    popx();
     print "call x\n";
 
+    # arguments have been consumed
+    $SP_OFF += $nargs;
+
     # restore return address
-    print "pop x\n";
+    popx();
     print "ld r254, x\n";
 
     # push return value
     print "ld x, r0\n";
-    print "push x\n";
+    pushx();
     return 1;
 }
 
 sub Arguments {
+    my $n = 0;
     while (1) {
-        return 1 if !parse(\&Expression);
-        return 1 if !parse(\&CharSkip,',');
+        return $n if !parse(\&Expression);
+        $n++;
+        return $n if !parse(\&CharSkip,',');
     }
 }
 
@@ -622,11 +635,11 @@ sub PreOp {
     skip();
     print "# pre-$op\n";
     pushvar($IDENTIFIER);
-    print "pop x\n";
+    popx();
     print "$op x\n";
-    print "push x\n"; # for poptovar
+    pushx();
     poptovar($IDENTIFIER);
-    print "push x\n"; # for the expression that the pre-op appeared in
+    pushx();
     return 1;
 }
 
@@ -645,10 +658,10 @@ sub PostOp {
     skip();
     print "# post-$op\n";
     pushvar($IDENTIFIER);
-    print "pop x\n";
-    print "push x\n"; # for the expression that the post-op appeared in
+    popx();
+    pushx();
     print "$op x\n";
-    print "push x\n"; # for poptovar
+    pushx();
     poptovar($IDENTIFIER);
     return 1;
 }
@@ -662,12 +675,12 @@ sub AddressOf {
     if ($sym->{type} eq 'global') {
         print "# &$id (global)\n";
         print "ld x, _$id\n";
-        print "push x\n";
+        pushx();
     } else {
         print "# &$id (local)\n";
-        print "ld x, r253\n";
-        print "add x, ". (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
-        print "push x\n";
+        print "ld x, sp\n";
+        print "add x, ". (($sym->{bp_rel}-$SP_OFF+0x10000)%0x10000) . "\n";
+        pushx();
     }
     return 1;
 }
@@ -684,7 +697,7 @@ sub UnaryExpression {
     );
 
     print "# unary $op\n";
-    print "pop x\n";
+    popx();
     if ($mnemonic{$op}) {
         # pop arg from stack, negate it, put it back on stack
         print "$mnemonic{$op} x\n";
@@ -705,7 +718,7 @@ sub UnaryExpression {
     } else {
         die "unrecognised unary operator $op (probably a compiler bug)\n";
     }
-    print "push x\n";
+    pushx();
     return 1;
 }
 
@@ -791,32 +804,12 @@ sub nextchar {
 ### scopes
 
 sub newscope {
-    # save old base pointer, and put new base pointer in r253
-    print "# newscope:\n";
-    print "ld x, r253\n";
-    print "push x\n";
-    print "ld r253, sp\n";
-
     $scope = {
         symbols => {},
         parent => $scope,
         bp_rel => 0,
         params => 0,
     };
-}
-
-sub endscope {
-    runtime_endscope();
-    die "can't exit global scope (probably a compiler bug)\n" if $scope->{global};
-    $scope = $scope->{parent};
-}
-
-sub runtime_endscope {
-    # restore old sp and bp
-    print "# endscope:\n";
-    print "ld sp, r253\n";
-    print "pop x\n";
-    print "ld r253, x\n";
 }
 
 sub symlookup {
@@ -830,19 +823,31 @@ sub symlookup {
 
 ### code generation utilities
 
+sub popx {
+    $SP_OFF++;
+    print "pop x\n";
+    print "#SP_OFF=$SP_OFF\n";
+}
+
+sub pushx {
+    $SP_OFF--;
+    print "push x\n";
+    print "#SP_OFF=$SP_OFF\n";
+}
+
 sub poptovar {
     my ($name) = @_;
     my $sym = symlookup($name);
     die "unrecognised identifier: $name\n" if !$sym;
     if ($sym->{type} eq 'global') {
         print "# poptovar: global $name\n";
-        print "pop x\n";
+        popx();
         print "ld (_$name), x\n";
     } else {
         print "# poptovar: local $name\n";
-        print "ld r252, r253\n";
-        print "add r252, " . (($sym->{bp_rel}+0x10000)%0x10000) . "\n";
-        print "pop x\n";
+        print "ld r252, sp\n";
+        print "add r252, " . (($sym->{bp_rel}-$SP_OFF+0x10000)%0x10000) . "\n";
+        popx();
         print "ld (r252), x\n";
     }
 }
@@ -854,23 +859,21 @@ sub pushvar {
     if ($sym->{type} eq 'global') {
         print "# pushvar: global $name\n";
         print "ld x, (_$name)\n";
-        print "push x\n";
+        pushx();
     } else {
         print "# pushvar: local $name\n";
-        print "ld x, r253\n";
-        print "ld x, " . (($sym->{bp_rel}+0x10000)%0x10000) . "(x)\n";
-        print "push x\n";
+        print "ld x, " . (($sym->{bp_rel}-$SP_OFF+0x10000)%0x10000) . "(sp)\n";
+        pushx();
     }
 }
 
 sub funcreturn {
     # cleanup the local scope
     my $s = $scope;
-    runtime_endscope();
 
     # then clean up the function parameters and return
-    print "# function had $s->{params} parameters:\n";
-    print "ret $s->{params}\n";
+    print "# function had $s->{params} parameters and " . (-$s->{bp_rel}) . " locals:\n";
+    print "ret " . ($s->{params}-$s->{bp_rel}) . "\n";
 }
 
 sub genliteral {
@@ -881,9 +884,10 @@ sub genliteral {
     print "# genliteral:\n";
     if ($val <= 0x00ff || $val >= 0xff00) {
         print "push $val\n";
+        $SP_OFF--;
     } else {
         print "ld x, $val\n";
-        print "push x\n";
+        pushx();
     }
 }
 
@@ -903,9 +907,9 @@ sub genop {
     );
 
     print "# operator: $op\n";
-    print "pop x\n";
+    popx();
     print "ld r0, x\n";
-    print "pop x\n";
+    popx();
 
     my $signcmp = sub {
         my ($xr0, $match, $wantlt) = @_;
@@ -990,5 +994,5 @@ sub genop {
         die "unrecognised binary operator $op (probably a compiler bug)\n";
     }
 
-    print "push x\n";
+    pushx();
 }
