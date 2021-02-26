@@ -46,6 +46,7 @@ var khalt = func() {
 var kpanic = func(s) {
     kputs("panic: ");
     kputs(s);
+    kputs("\n");
     khalt();
 };
 
@@ -174,13 +175,71 @@ var pathbegins = func(path, name) {
     return 0;
 };
 
-# TODO: use setjmp/longjmp to return this error to the responsible party
-var throw = func(n) {
-    if (n == EOF) kpanic("eof");
-    if (n == NOTFOUND) kpanic("notfound");
-    if (n == NOTFILE) kpanic("notfile");
-    if (n == NOTDIR) kpanic("notdir");
-    if (n == BADFD) kpanic("badfd");
+# store current return address, stack pointer, and caller's stashed return
+# address in jmpbuf[0,1,2];
+# it is only acceptable to jump "up" the call stack, never down;
+# return 0 on the initial call
+# return the "val" passed to longjmp when the long jump occurs
+# example:
+#   var jmpbuf = [0,0,0];
+#   if (setjmp(jmpbuf)) {
+#       ... long jump occurred ...
+#   };
+var setjmp = asm {
+    pop x
+    ld r1, x # r1 = jmpbuf
+    ld r2, 1(sp) # r2 = caller's stashed return address
+    ld x, r1 # x = jmpbuf
+    ld (x), r254 # return address
+    inc x
+    ld (x), sp # stack pointer
+    inc x
+    ld (x), r2 # stashed return
+    ld r0, 0 # return 0 this time
+    ret
+};
 
-    kpanic("unrecognised error");
+# restore control and stack pointer to the addresses in jmpbuf,
+# as if setjmp() had returned "val"
+# example:
+#   longjmp(jmpbuf, NOTFOUND);
+var longjmp = asm {
+    pop x
+    ld r0, x # return val
+    pop x # x = jmpbuf
+    ld r254, (x) # return address
+    inc x
+    ld sp, (x) # stack pointer
+    inc x
+    ld x, (x) # stashed return address
+    push x
+    ret
+};
+
+var throw_jmpbuf = [0,0,0];
+
+# use setjmp/longjmp to return the error to the last place that called catch()
+var throw = func(n) {
+    if (n == EOF) kputs("throw eof\n");
+    if (n == NOTFOUND) kputs("throw notfound\n");
+    if (n == NOTFILE) kputs("throw notfile\n");
+    if (n == NOTDIR) kputs("throw notdir\n");
+    if (n == BADFD) kputs("throw badfd\n");
+
+    longjmp(throw_jmpbuf, n);
+};
+
+# return 0 on first call, and update state for throw();
+# when throw() is called, return the value that was thrown
+# ("catch()" is equivalent to "setjmp(throw_jmpbuf)")
+var catch = asm {
+    ld r2, 1(sp) # caller's stashed return address
+    ld x, (_throw_jmpbuf)
+    ld (x), r254 # return address
+    inc x
+    ld (x), sp # stack pointer
+    inc x
+    ld (x), r2 # stashed return
+    ld r0, 0 # return 0 this time
+    ret
 };
