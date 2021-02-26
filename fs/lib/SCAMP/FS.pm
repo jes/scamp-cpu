@@ -245,7 +245,7 @@ sub blkadd {
     my ($self, $blknum, $str) = @_;
 
     while (1) {
-        my $len = length($str) > 504 ? 504 : length($str);
+        my $len = length($str) > 508 ? 508 : length($str);
         my $add = substr($str, 0, $len, '');
 
         my @block = $self->readblock($blknum);

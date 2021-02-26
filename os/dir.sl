@@ -76,6 +76,7 @@ var dirwalk = func(dirblk, cb) {
         if (!next) break;
         dirblk = next;
     };
+    kputs("dirwalk completes\n");
 };
 
 # find the given name in dirblk, traversing directories as necessary
@@ -85,6 +86,7 @@ var dirwalk = func(dirblk, cb) {
 #    dirblknum,     # the block number that the name was found in
 #    dirent_offset, # the word offset of the dirent for this name
 #  ]
+# return a null pointer if not found
 var dfr_offset;
 var dfr_findname;
 var dfr_blknum;
@@ -95,8 +97,12 @@ var dirfindname = func(dirblk, findname) {
     while (1) {
         dfr_blknum = 0;
 
+        kputs("dfr dirwalk...\n");
+
         dirwalk(dirblk, func(name, blknum, dirblknum, dirent_offset) {
+            kputs("dfr sees: "); kputs(name); kputs("\n");
             if (*name && pathbegins(dfr_findname, name)) {
+                while (*dfr_findname && *dfr_findname != '/') dfr_findname++;
                 dfr_blknum = blknum;
                 return 0; # found it
             } else {
@@ -104,13 +110,16 @@ var dirfindname = func(dirblk, findname) {
             };
         });
 
-        if (dfr_blknum == 0) throw(NOTFOUND);
+        if (dfr_blknum == 0) return 0;
 
         while (*dfr_findname == '/') dfr_findname++;
+        kputs("dfr still wants: "); kputs(dfr_findname); kputs("\n");
         if (*dfr_findname == 0) break;
 
         dirblk = dfr_blknum;
     };
+
+    kputs("dfr completes.\n");
 
     return [dfr_blknum, dirblk, dfr_offset];
 };

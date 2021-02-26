@@ -1,4 +1,4 @@
-# Directories
+# Directories syscalls
 
 include "util.sl";
 

@@ -38,6 +38,35 @@ var fdbaseptr = func(fd) {
     return fdtable+shl(fd,3);
 };
 
+# return the next free fd, or -1 if there is none
+var fdalloc = func() {
+    var fd = 0;
+    var i;
+
+    while (fd != nfds) {
+        i = 0;
+        while (i != 8) {
+            if (*(fdbaseptr(fd)+i) != 0)
+                break;
+            i++;
+        };
+        # if all 8 fields are 0, this fd is free
+        if (i == 8) return fd;
+        fd++;
+    };
+
+    return -1;
+};
+
+# make the given fd available for use again
+var fdfree = func(fd) {
+    var i = 0;
+    while (i != 8) {
+        *(fdbaseptr(fd)+i) = 0;
+        i++;
+    };
+};
+
 # Block device state
 var BLKSZ = 256; # 256 words, 512 bytes
 var BLKBUF = asm {
@@ -75,3 +104,4 @@ var O_READ    = 0x01;
 var O_WRITE   = 0x02;
 var O_CREAT   = 0x04;
 var O_NOTRUNC = 0x08;
+var O_APPEND  = 0x10;

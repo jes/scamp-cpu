@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+# in other words: ascii2utf16
+
+use strict;
+use warnings;
+
+my $s = join('',<>);
+
+for my $c (split //, $s) {
+    print chr(0);
+    print $c;
+};

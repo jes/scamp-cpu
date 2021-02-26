@@ -1,4 +1,4 @@
-# File/device IO
+# File/device IO syscalls
 
 include "util.sl";
 include "data.sl";
@@ -9,6 +9,7 @@ extern sys_tell;
 extern sys_seek;
 extern sys_read;
 extern sys_write;
+extern sys_close;
 
 # TODO: is this sound in the general case? what about seek/tell offsets?
 #       buffers? maybe we just tell people not to use it if they're not sure;
@@ -50,5 +51,12 @@ sys_write = func(fd, buf, sz) {
     var fdbase = fdbaseptr(fd);
     var writeimpl = fdbase[WRITEFD];
     if (writeimpl) return writeimpl(fd, buf, sz);
+    return BADFD;
+};
+
+sys_close = func(fd) {
+    var fdbase = fdbaseptr(fd);
+    var closeimpl = fdbase[CLOSEFD];
+    if (closeimpl) return closeimpl(fd);
     return BADFD;
 };

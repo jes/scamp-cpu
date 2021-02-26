@@ -9,6 +9,7 @@ include "data.sl";
 include "serial.sl";
 include "blkdev.sl";
 include "dir.sl";
+include "fs.sl";
 
 # Each of the included os_*.sl modules initialises itself and writes the correct addresses
 # to the system call vectors that it is responsible for.
@@ -25,9 +26,11 @@ sys_write(3, "sys_write works\n", 16);
 # Try to read a file
 var fd = sys_open("/motd", O_READ);
 if (fd < 0) kpanic("no motd");
+kputs("opened file\n");
 var ch = ".";
 while (sys_read(fd, ch, 1)) kputs(ch);
 sys_close(fd);
+kputs("closed file\n");
 
 # We just need to start init to boot the system.
 sys_exec(["/bin/init.x", 0]);

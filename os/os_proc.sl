@@ -1,4 +1,4 @@
-# Processes
+# Processes syscalls
 
 include "util.sl";
 

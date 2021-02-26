@@ -235,3 +235,88 @@ var catch = asm {
     ld r0, 0 # return 0 this time
     ret
 };
+
+var powers_of_2 = asm {
+    powers_of_2:
+    .word 0x0001
+    .word 0x0002
+    .word 0x0004
+    .word 0x0008
+    .word 0x0010
+    .word 0x0020
+    .word 0x0040
+    .word 0x0080
+    .word 0x0100
+    .word 0x0200
+    .word 0x0400
+    .word 0x0800
+    .word 0x1000
+    .word 0x2000
+    .word 0x4000
+    .word 0x8000
+};
+
+# compute:
+#   *pdiv = num / denom
+#   *pmod = num % denom
+# Pass a null pointer if you want to discard one of the results
+# https://en.wikipedia.org/wiki/Division_algorithm#Integer_division_(unsigned)_with_remainder
+var divmod = asm {
+    ld x, sp
+    ld r7, 1(x) # r7 = pmod
+    ld r8, 2(x) # r8 = pdiv
+    ld r9, 3(x) # r9 = denom
+    ld r10, 4(x) # r10 = num
+    add sp, 4
+
+    ld r4, 0 # r4 = Q
+    ld r5, 0 # r5 = R
+    ld r6, 15 # r6 = i
+
+    # while (i >= 0)
+    divmod_loop:
+        # R = R+R
+        shl r5
+
+        # r11 = powers_of_2[i]
+        ld x, powers_of_2
+        add x, r6
+        ld r11, (x)
+
+        # if (num & powers_of_2[i]) R++;
+        ld r12, r10
+        and r12, r11
+        jz divmod_cont1
+        inc r5
+        divmod_cont1:
+
+        # if (R >= denom)
+        ld r12, r5
+        sub r12, r9 # r12 = R - denom
+        jlt divmod_cont2
+            # R = R - denom
+            ld r5, r12
+            # Q = Q | powers_of_2[i]
+            or r4, r11
+        divmod_cont2:
+
+        # i--
+        dec r6
+        jge divmod_loop
+
+    # if pdiv or pmod are null, they'll point to rom, so writing to them is a no-op
+    # *pdiv = Q
+    ld x, r8
+    ld (x), r4
+    # *pmod = R
+    ld x, r7
+    ld (x), r5
+    # return
+    ret
+};
+
+var half = func(x) {
+    var r;
+    divmod(x,2,&r,0);
+    return r;
+};
