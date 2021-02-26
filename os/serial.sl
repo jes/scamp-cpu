@@ -10,8 +10,14 @@ var ser_read = func(fd, buf, sz) {
     var p = fdbaseptr(fd);
     var readport = p[READPORT];
     var i = sz;
-    while (i--)
-        *(buf++) = inp(readport);
+    var ch = 0;
+    sz = 0;
+    while (i--) {
+        ch = inp(readport);
+        if (ch == EOF) break;
+        *(buf++) = ch;
+        sz++;
+    };
     return sz;
 };
 
