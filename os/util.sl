@@ -219,15 +219,7 @@ var longjmp = asm {
 var throw_jmpbuf = [0,0,0];
 
 # use setjmp/longjmp to return the error to the last place that called catch()
-var throw = func(n) {
-    if (n == EOF) kputs("throw eof\n");
-    if (n == NOTFOUND) kputs("throw notfound\n");
-    if (n == NOTFILE) kputs("throw notfile\n");
-    if (n == NOTDIR) kputs("throw notdir\n");
-    if (n == BADFD) kputs("throw badfd\n");
-
-    longjmp(throw_jmpbuf, n);
-};
+var throw = func(n) longjmp(throw_jmpbuf, n);
 
 # return 0 on first call, and update state for throw();
 # when throw() is called, return the value that was thrown
