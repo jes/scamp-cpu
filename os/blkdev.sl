@@ -45,9 +45,9 @@ var blklen = func() return BLKBUF[0] & 0x01ff;
 var blknext = func() return BLKBUF[1];
 
 # set the "type"/"length"/"next" field of the current block
-var blksettype = func(typ) BLKBUF[0] = blklen() | typ;
-var blksetlen = func(len) BLKBUF[0] = blktype() | len;
-var blksetnext = func(blk) BLKBUF[1] = blk;
+var blksettype = func(typ) *(BLKBUF+0) = blklen() | typ;
+var blksetlen = func(len) *(BLKBUF+0) = blktype() | len;
+var blksetnext = func(blk) *(BLKBUF+1) = blk;
 
 # find a free block and update "blknextfree"
 # TODO: start searching from the current "blknextfree" to avoid the long
