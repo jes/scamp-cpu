@@ -16,16 +16,3 @@ echo 3
 cmp slangc0.s slangc3.s
 cmp slangc1.s slangc3.s
 cmp slangc2.s slangc3.s
-echo 4
-./srun slangc2.s < slangc1.sl > slangc4.s
-cmp slangc0.s slangc4.s
-cmp slangc1.s slangc4.s
-cmp slangc2.s slangc4.s
-cmp slangc3.s slangc4.s
-echo 5
-./srun slangc3.s < slangc1.sl > slangc5.s
-cmp slangc0.s slangc5.s
-cmp slangc1.s slangc5.s
-cmp slangc2.s slangc5.s
-cmp slangc3.s slangc5.s
-cmp slangc4.s slangc5.s
