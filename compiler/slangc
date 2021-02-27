@@ -19,6 +19,7 @@
 #       generated it
 # TODO: fix &/| precedence
 # TODO: only backup return address once per function?
+# TODO: search paths for "include"
 
 use strict;
 use warnings;
@@ -136,8 +137,10 @@ sub Include {
 
     my @was = ($s,$filename,$pos,$line,$col);
 
-    open(my $fh, '<', $file)
-        or die "can't read $file: $!\n";
+    my $fh;
+    open($fh, '<', $file)
+        or open($fh, '<', "lib/$file")
+            or die "can't read $file: $!\n";
     $s = join('', <$fh>);
     close $fh;
 
