@@ -27,7 +27,6 @@ sys_exec = func(args) {
     # TODO: put sp somewhere it won't trash the kernel if the program misbehaves? (i.e. osbase()?)
 
     # load file from disk
-    kputs("init tries to open "); kputs(args[0]); kputs("\n");
     var fd = sys_open(args[0], O_READ);
     if (fd < 0) return fd;
     var p = 0x100;
@@ -37,6 +36,7 @@ sys_exec = func(args) {
         if (n <= 0) break;
         p = p + n;
     };
+    sys_close(fd);
 
     # jump to it
     var user = 0x100;
