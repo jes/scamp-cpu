@@ -33,6 +33,9 @@ var close   = sys_close;
 var open    = sys_open;
 var read    = sys_read;
 var write   = sys_write;
-var system  = sys_system;
 var exec    = sys_exec;
 var exit    = sys_exit;
+
+# example: system(["/bin/ls", "-l"])
+extern TOP;
+var system = func(args) sys_system(TOP, args);
