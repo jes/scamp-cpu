@@ -51,7 +51,6 @@ var divmod = asm {
     ld r8, 2(x) # r8 = pdiv
     ld r9, 3(x) # r9 = denom
     ld r10, 4(x) # r10 = num
-    add sp, 4
 
     ld r4, 0 # r4 = Q
     ld r5, 0 # r5 = R
@@ -96,7 +95,7 @@ var divmod = asm {
     ld x, r7
     ld (x), r5
     # return
-    ret
+    ret 4
 };
 
 # >>8 1 arg from the stack and return the result in r0
