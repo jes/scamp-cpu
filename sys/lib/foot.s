@@ -1,7 +1,7 @@
 
-# "halt"
-ld x, 0
-out 3, x
+# return to os
+push 0
+call (_sys_exit)
 
 # top of program address (initialised by head.s)
 _TOP: .word 0

@@ -238,11 +238,6 @@ var outp = asm {
     ret
 };
 
-var exit = func(rc) {
-    outp(3,rc); # halt the emulator
-    while(1); # just in case it doesn't halt
-};
-
 var car = func(tuple) { return *tuple; };
 var cdr = func(tuple) { return *(tuple+1); };
 var setcar = func(tuple,a) { *tuple = a; };
