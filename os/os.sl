@@ -31,6 +31,6 @@ while (sys_read(fd, ch, 1)) kputs(ch);
 sys_close(fd);
 
 # We just need to start init to boot the system.
-sys_exec(["/bin/init.x", 0]);
+sys_exec(["/bin/init", 0]);
 
 kpanic("return from init");
