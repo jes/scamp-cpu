@@ -13,8 +13,7 @@ var die = func(fmt, args) {
     printf("error: line %d: ", [line]);
     if (args) printf(fmt, args);
     putchar('\n');
-    outp(3,0); # halt the emulator
-    while(1); # in case it doesn't halt
+    exit(1);
 };
 
 # setup parser state ready to parse the given string
