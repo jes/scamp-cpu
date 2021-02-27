@@ -119,6 +119,9 @@ inword:
     inc BLKNUMREG
     ld BLKIDXREG, 0
     out DISKBLK, BLKNUMREG
+
+    ld x, 0x2e # '.'
+    out SERIALDEV, x
     ret
 
 welcome_s:    .str "SCAMP boot...\r\n\0"
