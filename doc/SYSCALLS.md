@@ -30,7 +30,7 @@ Exit the current process and return `rc` to the parent.
 ### 0xfefe: exec([cmd, args])
 
     Return: -ERR on error
-    Implemented: no
+    Implemented: partially
     Errors: NOTFOUND
 
 Replace the current process with a new one.
@@ -71,7 +71,7 @@ Write multiple characters to the given file descriptor.
 ### 0xfef9: read(fd, buf, sz)
 
     Return: number of characters read, or -ERR on error
-    Implemented: only for serial
+    Implemented: yes, but serial needs cooked mode
     Errors: BADFD
 
 Read multiple characters from the given file descriptor.
@@ -79,7 +79,7 @@ Read multiple characters from the given file descriptor.
 ### 0xfef8: open(name, mode)
 
     Return: new file descriptor, or -ERR on error
-    Implemented: no
+    Implemented: partially
     Errors: NOTFOUND
 
 Open the file at the given path with the given mode.
@@ -95,7 +95,7 @@ Mode flags are:
 ### 0xfef7: close(fd)
 
     Return: 0, or -ERR on error
-    Implemented: no
+    Implemented: yes
     Errors: BADFD
 
 Close the given file descriptor.
