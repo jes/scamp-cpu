@@ -2,6 +2,7 @@
 
 include "util.sl";
 include "data.sl";
+include "os_io.sl";
 
 var READPORT = FDDATA;
 var WRITEPORT = FDDATA+1;
@@ -44,5 +45,8 @@ var ser_init = func() {
         *(p+WRITEPORT) = ser_writeports[i];
         i++;
     };
+    sys_copyfd(0, 3);
+    sys_copyfd(1, 3);
+    sys_copyfd(2, 3);
 };
 ser_init();
