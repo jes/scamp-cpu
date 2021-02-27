@@ -39,3 +39,27 @@ var exit    = sys_exit;
 # example: system(["/bin/ls", "-l"])
 extern TOP;
 var system = func(args) sys_system(TOP, args);
+
+# file modes
+var O_READ    = 0x01;
+var O_WRITE   = 0x02;
+var O_CREAT   = 0x04;
+var O_NOTRUNC = 0x08;
+var O_APPEND  = 0x10;
+
+# error codes
+var EOF = -1;
+var NOTFOUND = -2;
+var NOTFILE = -3;
+var NOTDIR = -4;
+var BADFD = -5;
+var TOOLONG = -6;
+
+var strerror = func(err) {
+    if (err == EOF) return "end-of-file";
+    if (err == NOTFOUND) return "not found";
+    if (err == NOTFILE) return "not a file";
+    if (err == NOTDIR) return "not a directory";
+    if (err == BADFD) return "bad file descriptor";
+    if (err == TOOLONG) return "path component too long";
+};

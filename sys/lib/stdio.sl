@@ -1,23 +1,26 @@
 include "stdlib.sl";
 include "sys.sl";
 
-var EOF = -1;
-
-var getchar = func() {
+var fgetc = func(fd) {
     var ch;
-    if (read(0, &ch, 1) == 0) return EOF;
+    var n = read(fd, &ch, 1);
+    if (n == 0) return EOF;
+    if (n < 0) return n;
     return ch;
 };
 
-var putchar = func(ch) {
+var fputc = func(fd, ch) {
     var chs = [ch,0];
-    return write(1,&chs,1);
+    return write(fd,&chs,1);
 };
+
+var getchar = func() return fgetc(0);
+var putchar = func(ch) return fputc(1, ch);
 
 # read at most size-1 characters into s, and terminate with a 0
 # return s if any chars were read
 # return 0 if EOF was reached with no chars
-var gets = func(s, size) {
+var fgets = func(fd, s, size) {
     var ch = 0;
     var len = 0;
 
@@ -36,14 +39,17 @@ var gets = func(s, size) {
 };
 
 # take a pointer to a nul-terminated string, and print it
-var puts = func(s) {
+var fputs = func(fd, s) {
     var ss = s;
     var len = 0;
     while (*ss++) len++;
-    write(1,s,len);
+    write(fd,s,len);
 };
 
-# usage: printf(fmt, [arg1, arg2, ...]);
+var gets = func(s,size) return fgets(0,s,size);
+var puts = func(s) return fputs(1,s);
+
+# usage: fprintf(fd, fmt, [arg1, arg2, ...]);
 # format string:
 #   %% -> %
 #   %c -> character
@@ -54,7 +60,7 @@ var puts = func(s) {
 # TODO: show (null) for null pointers
 # TODO: show arrays? lists?
 # TODO: return the number of chars output
-var printf = func(fmt, args) {
+var fprintf = func(fd, fmt, args) {
     var p = fmt;
     var argidx = 0;
 
@@ -63,21 +69,23 @@ var printf = func(fmt, args) {
             p++;
             if (!*p) return 0;
             if (*p == '%') {
-                putchar('%');
+                fputc(fd, '%');
             } else if (*p == 'c') {
-                putchar(args[argidx++]);
+                fputc(fd, args[argidx++]);
             } else if (*p == 's') {
-                puts(args[argidx++]);
+                fputs(fd, args[argidx++]);
             } else if (*p == 'd') {
-                puts(itoa(args[argidx++]));
+                fputs(fd, itoa(args[argidx++]));
             } else if (*p == 'x') {
-                puts(itoabase(args[argidx++],16));
+                fputs(fd, itoabase(args[argidx++],16));
             } else {
-                puts("<???>");
+                fputs(fd, "<???>");
             }
         } else {
-            putchar(*p);
+            fputc(fd, *p);
         };
         p++;
     };
 };
+
+var printf = func(fmt, args) return fprintf(1, fmt, args);

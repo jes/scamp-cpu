@@ -2,8 +2,7 @@
 
 include "stdio.sl";
 include "stdlib.sl";
-
-extern TOP;
+include "sys.sl";
 
 # return a pointer to "sz" words of unused memory
 var sbrk = func(sz) {
