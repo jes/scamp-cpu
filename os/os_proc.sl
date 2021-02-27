@@ -32,7 +32,7 @@ sys_exec = func(args) {
     var p = 0x100;
     var n;
     while (1) {
-        n = sys_read(fd, p, 1);
+        n = sys_read(fd, p, 254);
         if (n <= 0) break;
         p = p + n;
     };
