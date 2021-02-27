@@ -35,7 +35,7 @@ Exit the current process and return `rc` to the parent.
 
 Replace the current process with a new one.
 
-`cmd` should be a fully-qualified path. `args` should be terminated with a 0.
+`cmd` should be a filename. `args` should be terminated with a 0.
 
 ### 0xfefd: system(TOP, [cmd, args])
 
@@ -46,7 +46,7 @@ Replace the current process with a new one.
 Suspend the current process, start a child. When the child calls `exit(rc)`, resume the
 current process and return `rc`.
 
-`cmd` should be a fully-qualified path. `args` should be terminated with a 0.
+`cmd` should be a filename. `args` should be terminated with a 0.
 
 ### 0xfefc: UNUSED
 
@@ -223,9 +223,9 @@ Return a pointer to the argument list, including the command name, exactly as pa
 
 Example:
 
-    system(["ls", "-l", "/home", 0]);
+    system(["/bin/ls", "-l", "/home", 0]);
 
-    cmdargs() returns ["ls", "-l", "/home", 0]
+    cmdargs() returns ["/bin/ls", "-l", "/home", 0]
 
 ## Errors
 
