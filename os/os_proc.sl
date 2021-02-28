@@ -22,9 +22,28 @@ sys_exec = func(args) {
     var err = catch();
     if (err) return err;
 
-    # TODO: copy args into cmdargs, up to cmdargs_sz words
+    # TODO: bounds-check args copying
     # TODO: what happens if no fds are available
     # TODO: put sp somewhere it won't trash the kernel if the program misbehaves? (i.e. osbase()?)
+
+    # count the number of arguments
+    var nargs = 0;
+    while (args[nargs]) nargs++;
+
+    # copy the args into cmdargs
+    var cmdargp = cmdargs + nargs + 1;
+    var i = 0;
+    var j;
+    while (args[i]) {
+        *(cmdargs+i) = cmdargp;
+        j = 0;
+        while (args[i][j]) {
+            *(cmdargp++) = args[i][j];
+            j++;
+        };
+        *(cmdargp++) = 0;
+        i++;
+    };
 
     # load file from disk
     var fd = sys_open(args[0], O_READ);
@@ -41,4 +60,5 @@ sys_exec = func(args) {
     # jump to it
     var user = 0x100;
     user();
+    kpanic("user program returned to exec() call");
 };
