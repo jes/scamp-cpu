@@ -30,7 +30,7 @@ uint8_t JZ, JLT, JGT;
 uint8_t T, Z, LT;
 
 uint16_t diskptr = 0;
-uint16_t disk[65536];
+uint16_t disk[655360]; /* TODO: read/write disk directly to file, not a massive buffer in memory */
 uint16_t blknum = 0;
 uint16_t blkidx = 0;
 
@@ -73,7 +73,7 @@ void load_ram(uint16_t addr, char *file) {
 }
 
 void load_disk(char *file) {
-    load_hex(disk, 65536, file);
+    load_hex(disk, 655360, file);
 }
 
 void open_profile(char *file) {
