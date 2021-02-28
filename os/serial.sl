@@ -45,8 +45,9 @@ var ser_init = func() {
         *(p+WRITEPORT) = ser_writeports[i];
         i++;
     };
-    sys_copyfd(0, 3);
-    sys_copyfd(1, 3);
-    sys_copyfd(2, 3);
+    # use primary serial port for console:
+    sys_copyfd(0, ser_fds[0]);
+    sys_copyfd(1, ser_fds[0]);
+    sys_copyfd(2, ser_fds[0]);
 };
 ser_init();
