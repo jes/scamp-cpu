@@ -10,8 +10,7 @@ var fgetc = func(fd) {
 };
 
 var fputc = func(fd, ch) {
-    var chs = [ch,0];
-    return write(fd,&chs,1);
+    return write(fd,&ch,1);
 };
 
 var getchar = func() return fgetc(0);
