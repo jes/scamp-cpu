@@ -2,8 +2,6 @@ include "stdio.sl";
 include "sys.sl";
 include "malloc.sl";
 
-printf("welcome to cat.\n", []);
-
 var bufsz = 256;
 var buf = malloc(bufsz);
 
@@ -35,13 +33,11 @@ if (!*args) {
 };
 
 while (*args) {
-    printf("cat %s\n", [*args]);
     cat(*args);
     args++;
 };
 
-fputs(2, "cat exits.\n");
-
 exit(0);
 
+outp(3,0);
 while(1);
