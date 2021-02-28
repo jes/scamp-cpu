@@ -76,7 +76,6 @@ var dirwalk = func(dirblk, cb) {
         if (!next) break;
         dirblk = next;
     };
-    kputs("dirwalk completes\n");
 };
 
 # find the given name in dirblk, traversing directories as necessary
