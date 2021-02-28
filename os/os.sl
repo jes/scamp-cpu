@@ -20,7 +20,10 @@ include "os_proc.sl";
 
 kputs("loading init...\n");
 
+sys_exec(["/bin/cat", "/etc/motd", 0]);
+kpanic("return from cat");
+
 # We just need to start init to boot the system.
-sys_exec(["/bin/init", 0]);
+sys_exec(["/bin/init"]);
 
 kpanic("return from init");

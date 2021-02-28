@@ -11,4 +11,5 @@ echo -ne | ../fs/fs os.disk <<END
     put motd.scamp /etc/motd
     mkdir bin
     put ../sys/init.bin /bin/init
+    put ../sys/cat.bin /bin/cat
 END
