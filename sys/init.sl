@@ -12,14 +12,14 @@ if (fd >= 0) {
         n = read(fd, buf, 256);
         if (n == 0) break;
         if (n < 0) {
-            fprintf(2, "read %d: %s\n", [fd, strerror(n)]);
+            fprintf(2, "init: read %d: %s\n", [fd, strerror(n)]);
             break;
         };
         write(1, buf, n);
     };
     close(fd);
 } else {
-    fprintf(2, "open /etc/motd: %s\n", [strerror(fd)]);
+    fprintf(2, "init: open /etc/motd: %s\n", [strerror(fd)]);
 };
 
 # TODO: exec(["/bin/sh"]) ?
