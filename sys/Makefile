@@ -1,5 +1,5 @@
-SOURCES = *.sl lib/*.sl
-BINS = cat.bin init.bin ls.bin mkdir.bin
+LIBS = lib/*.sl
+BINS = cat.bin init.bin ls.bin mkdir.bin sh.bin
 
 .PHONY: all test clean
 
@@ -26,7 +26,7 @@ all: $(BINS)
 	mv $*.opt.s.tmp $*.opt.s
 
 .PRECIOUS: %.s
-%.s: %.sl $(SOURCES)
+%.s: %.sl $(LIBS)
 	../compiler/slangc $*.sl > $*.s.tmp
 	mv $*.s.tmp $*.s
 

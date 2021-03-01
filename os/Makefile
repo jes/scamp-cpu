@@ -11,7 +11,7 @@ prof: os.prof os.anhex
 os.prof: os.disk
 	../emulator/scamp -i os.disk -c -p os.prof
 
-os.disk: os.hex fs.in
+os.disk: os.hex fs.in ../sys/*.bin
 	../util/hex2disk --start 0xd000 os.hex | ../fs/mkfs > os.disk.tmp
 	../util/unix2scamp motd > motd.scamp
 	../fs/fs os.disk.tmp < fs.in

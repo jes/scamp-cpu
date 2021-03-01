@@ -192,6 +192,7 @@ var isupper = func(ch) return ch >= 'A' && ch <= 'Z';
 var isalpha = func(ch) return islower(ch) || isupper(ch);
 var isdigit = func(ch) return ch >= '0' && ch <= '9';
 var isalnum = func(ch) return isalpha(ch) || isdigit(ch);
+var iswhite = func(ch) return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
 var tolower = func(ch) {
     if (isupper(ch)) return ch - 'A' + 'a';
     return ch;
