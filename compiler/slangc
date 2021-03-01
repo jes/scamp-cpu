@@ -948,8 +948,10 @@ sub genop {
     if ($mnemonic{$op}) {
         print "$mnemonic{$op} x, r0\n";
     } elsif ($op eq '^') {
-        print "ld y, r0\n"; # TODO: refactor to load this to y in the first place instead of going via r0
+        print "ld r1, r254\n"; # xor clobbers r254
+        print "ld y, r0\n";
         print "xor x, y\n";
+        print "ld r254, r1\n";
     } elsif ($op eq '!=') {
         my $end = label();
         print "sub x, r0 #peepopt:test\n";

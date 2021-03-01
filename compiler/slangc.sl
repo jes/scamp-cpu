@@ -269,8 +269,10 @@ var genop = func(op) {
     } else if (strcmp(op,"|") == 0) {
         puts("or x, r0\n");
     } else if (strcmp(op,"^") == 0) {
+        puts("ld r1, r254\n"); # xor clobbers r254
         puts("ld y, r0\n");
         puts("xor x, y\n");
+        puts("ld r254, r1\n");
     } else if (strcmp(op,"!=") == 0) {
         end = label();
         puts("sub x, r0 #peepopt:test\n");
