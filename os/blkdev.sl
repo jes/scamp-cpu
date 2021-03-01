@@ -49,10 +49,39 @@ var blkread = func(num) {
     };
 };
 
+var asm_blkwrite = asm {
+    # note shr8() clobbers r0, r1, r254
+    ld r5, 256 # number of words to write
+    ld r6, (_blkdataport) # block data port
+    ld r3, (_BLKBUF) # pointer to read from
+    ld r4, r254 # stash return address
+    asm_blkwrite_loop:
+        ld x, (r3++) # next word to write
+        ld r2, x
+
+        push x
+        call (_shr8)
+        ld x, r0
+        out r6, x # high byte
+
+        ld x, r2
+        and x, 0xff
+        out r6, x # low byte
+
+        dec r5
+        jnz asm_blkwrite_loop
+    ld r254, r4
+    ret
+};
+
 # write the BLKBUF to the given block number
 var blkwrite = func(num) {
     BLKBUFNUM = num;
     outp(blkselectport, num);
+
+    # XXX: asm_blkwrite() is a *much* faster implementation of
+    # the (dead) loop below
+    return asm_blkwrite();
 
     var i = 0;
     var high;
