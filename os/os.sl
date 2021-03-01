@@ -20,6 +20,14 @@ include "os_proc.sl";
 
 kputs("loading init...\n");
 
+var fd = sys_open("/etc/motd", O_WRITE|O_NOTRUNC);
+if (fd >= 0) {
+    sys_write(fd, "    HELLO", 9);
+    sys_close(fd);
+} else {
+    kpanic("bad fd");
+};
+
 sys_exec(["/bin/cat", "/etc/motd"]);
 kpanic("return from cat");
 

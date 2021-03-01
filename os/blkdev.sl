@@ -25,6 +25,7 @@ var blkread = func(num) {
 
 # write the BLKBUF to the given block number
 var blkwrite = func(num) {
+    BLKBUFNUM = num;
     outp(blkselectport, num);
 
     var i = 0;

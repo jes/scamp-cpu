@@ -49,8 +49,75 @@ var fs_read = func(fd, buf, sz) {
     return readsz;
 };
 
-var fs_write = func() unimpl("fs_write");
-var fs_tell = func() unimpl("fs_tell");
+var fs_write = func(fd, buf, sz) {
+    var fdbase = fdbaseptr(fd);
+    var writesz = 0;
+    var blknum;
+    var nextblknum = *(fdbase+FDDATA);
+    var seekpos = *(fdbase+FDDATA+1);
+    var startat;
+    var remain;
+    var write;
+    var needfindfree;
+
+    while (sz) {
+        blknum = nextblknum;
+
+        # read the current block of the file
+        # TODO: we can skip this if we know we're writing at the end of the
+        # file and startat==0, because we don't need length, next pointer, or
+        # block contents.
+        blkread(blknum);
+
+        # 254 words per block, so the position within the block contents is seekpos%254
+        #   startat = seekpos % 254;
+        divmod(seekpos, BLKSZ-2, 0, &startat);
+
+        # how much space remains in this block?
+        remain = (BLKSZ-2)-startat;
+
+        # how much can we write into this block?
+        if (sz < remain) write = sz
+        else             write = remain;
+
+        # do we need to update the block length?
+        if (startat+write > blklen()) blksetlen(startat+write);
+
+        # do we need to move to the next block?
+        if (startat+write == BLKSZ-2) {
+            # use the "nextfreeblk" if we need a free block
+            if (!blknext()) blksetnext(nextfreeblk);
+            nextblknum = blknext();
+        };
+
+        # copy data to block
+        memcpy(BLKBUF+startat+2, buf+writesz, write);
+
+        # write block to disk
+        blkwrite(blknum);
+
+        # if we allocated a new block, initialise its header and refresh "nextfreeblk"
+        if (nextblknum == nextfreeblk) {
+            blkfindfree();
+
+            blksettype(TYPE_FILE);
+            blksetlen(0);
+            blksetnext(0);
+            blkwrite(nextblknum);
+        };
+
+        writesz = writesz + write;
+        sz = sz - write;
+        seekpos = seekpos + write;
+    };
+
+    *(fdbase+FDDATA) = blknum;
+    *(fdbase+FDDATA+1) = seekpos;
+
+    return writesz;
+};
+
+var fs_tell = func(fd) return *(fdbaseptr(fd)+FDDATA+1);
 var fs_seek = func() unimpl("fs_seek");
 
 # we don't need to do anything to close the file, just forget everything
