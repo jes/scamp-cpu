@@ -3,7 +3,7 @@
 # encode (name,blknum) into a dirent at the given dirent address
 # "name" has max. length of 30 characters
 # example:
-#    dirent(BLKBUF+4, "foo.txt", 1234)
+#    dirent(BLKBUF+off, "foo.txt", 1234)
 var dirent = func(dirent, name, blknum) {
     var s = name;
     var i = 0;
@@ -124,6 +124,7 @@ var dirfindname = func(dirblk, findname) {
 #    blknum,        # the block number that the name links to
 #    dirblknum,     # the block number that the name was created in
 #    dirent_offset, # the word offset of the dirent for this name
+#    parent_blknum, # the block number of the start of the parent directory
 #  ]
 # return a null pointer if intermediate path components are not found, or if
 # the file already exists
@@ -209,5 +210,5 @@ var dirmkname = func(dirblk, mkname, mktype) {
     dirent(BLKBUF+dir_offset, dir_name, blknum);
     blkwrite(dir_blknum);
 
-    return [blknum, dir_blknum, dir_offset];
+    return [blknum, dir_blknum, dir_offset, dirblk];
 };

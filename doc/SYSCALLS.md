@@ -129,7 +129,7 @@ Change the current working directory.
 ### 0xfef3: mkdir(path)
 
     Return: 0, or -ERR on error
-    Implemented: no
+    Implemented: yes
     Errors: NOTFOUND, NOTDIR
 
 Create a directory at the given path.

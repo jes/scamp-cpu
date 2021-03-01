@@ -21,7 +21,9 @@ include "kprintf.sl";
 
 kputs("loading init...\n");
 
-var fd = sys_open("/etc/motd2", O_WRITE|O_CREAT);
+if (sys_mkdir("/lol") != 0) kpanic("mkdir fail");
+
+var fd = sys_open("/lol/motd", O_WRITE|O_CREAT);
 if (fd >= 0) {
     sys_write(fd, "Hello, world!\n", 14);
     sys_close(fd);
@@ -30,7 +32,7 @@ if (fd >= 0) {
     kpanic("bad fd");
 };
 
-sys_exec(["/bin/cat", "/etc/motd2"]);
+sys_exec(["/bin/cat", "/lol/motd"]);
 kpanic("return from cat");
 
 # We just need to start init to boot the system.
