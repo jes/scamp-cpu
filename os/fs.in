@@ -1,0 +1,9 @@
+mkdir etc
+put motd.scamp /etc/motd
+mkdir bin
+put ../sys/init.bin /bin/init
+put ../sys/cat.bin /bin/cat
+put ../sys/mkdir.bin /bin/mkdir
+put ../sys/ls.bin /bin/ls
+mkdir proc
+

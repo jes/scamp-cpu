@@ -1,3 +1,4 @@
 #!/bin/sh
 
+make os.disk
 ../emulator/scamp -i os.disk $@

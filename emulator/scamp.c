@@ -330,6 +330,7 @@ void help(void) {
 }
 
 void sighandler(int sig) {
+    (void)sig; /* suppress warning: unused parameter ‘sig’ [-Wunused-parameter] */
     halt = 1;
 }
 

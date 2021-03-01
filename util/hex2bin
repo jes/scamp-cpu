@@ -1,0 +1,20 @@
+#!/usr/bin/perl
+
+# convert hex to raw binary
+# auto-detect whether the input is in bytes or words based on whether the
+# line is 2 or 4 chars
+
+use strict;
+use warnings;
+
+while (<>) {
+    chomp;
+    if (length($_) == 2) {
+        print chr(hex($_));
+    } elsif (length($_) == 4) {
+        print chr(hex($_)>>8);
+        print chr(hex($_)&0xff);
+    } else {
+        die "line $.: unexpected line length: " . length($_) . "; expected 2 or 4 chars\n";
+    }
+}
