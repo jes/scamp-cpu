@@ -26,6 +26,8 @@ sys_copyfd  = func(destfd, srcfd) {
 # The following calls dispatch to their implementations based on the fd table
 
 sys_tell = func(fd) {
+    var err = catch();
+    if (err) return err;
     var fdbase = fdbaseptr(fd);
     var tellimpl = fdbase[TELLFD];
     if (tellimpl) return tellimpl(fd);
@@ -33,6 +35,8 @@ sys_tell = func(fd) {
 };
 
 sys_seek = func(fd, pos) {
+    var err = catch();
+    if (err) return err;
     var fdbase = fdbaseptr(fd);
     var seekimpl = fdbase[SEEKFD];
     if (seekimpl) return seekimpl(fd, pos);
@@ -40,6 +44,8 @@ sys_seek = func(fd, pos) {
 };
 
 sys_read = func(fd, buf, sz) {
+    var err = catch();
+    if (err) return err;
     var fdbase = fdbaseptr(fd);
     var readimpl = fdbase[READFD];
     if (readimpl) return readimpl(fd, buf, sz);
@@ -47,6 +53,8 @@ sys_read = func(fd, buf, sz) {
 };
 
 sys_write = func(fd, buf, sz) {
+    var err = catch();
+    if (err) return err;
     var fdbase = fdbaseptr(fd);
     var writeimpl = fdbase[WRITEFD];
     if (writeimpl) return writeimpl(fd, buf, sz);
@@ -54,6 +62,8 @@ sys_write = func(fd, buf, sz) {
 };
 
 sys_close = func(fd) {
+    var err = catch();
+    if (err) return err;
     var fdbase = fdbaseptr(fd);
     var closeimpl = fdbase[CLOSEFD];
     if (closeimpl) return closeimpl(fd);
