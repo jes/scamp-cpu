@@ -1,5 +1,5 @@
-.def OSBASE 0xe000
+.def OSBASE 0xd000
 .at OSBASE
 
-.def STACKSZ 128
+.def STACKSZ 64
 ld sp, INITIAL_SP
