@@ -26,13 +26,12 @@ var FDDATA =  5;
 #   1: stdout (change with copyfd)
 #   2: stderr (change with copyfd)
 #   3: serial port 0 (console)
-#   4: serial port 1 (console)
 var nfds = 16;
 var fdtable = asm {
     fdtable: .gap 128 # space for 16 fds
 };
 
-# base pointer for an fd is that fd*8
+# fd base pointer is (fdtable + fd*8)
 var fdbaseptr = func(fd) {
     if (fd ge nfds) return [0,0,0,0,0,0,0,0];
     return fdtable+shl(fd,3);
