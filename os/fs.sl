@@ -11,9 +11,6 @@ var fs_read = func(fd, buf, sz) {
     var startat;
     var remain;
     var read;
-    var p = buf;
-
-    var blklength;
 
     while (sz) {
         # read the current block of the file
@@ -27,9 +24,7 @@ var fs_read = func(fd, buf, sz) {
         #   ceil(blklen/2) - startat
         remain = half(blklen()+1) - startat;
         if (remain == 0) {
-            read = 0;
-            if (blknext()) blknum = blknext()
-            else break; # EOF
+            break; # EOF
         } else if (remain <= sz) {
             # consume the entire block
             read = remain;
