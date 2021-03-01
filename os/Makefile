@@ -34,4 +34,4 @@ os.s: $(SOURCES)
 	mv os.s.tmp os.s
 
 clean:
-	rm -f os.disk os.prof os.hex os.anhex os.opt.s os.s *.tmp
+	rm -f os.disk os.prof os.hex os.anhex os.opt.s os.s *.tmp os.prof.html motd.scamp

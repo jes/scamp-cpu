@@ -61,7 +61,7 @@ burn: ttlcpu.bin
 	iceFUNprog ttlcpu.bin
 
 clean:
-	rm -f *.asc *.bin *blif verilog/a.out verilog/ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex testrom.hex testrom-low.hex testrom-high.hex *.tmp asm/instructions.json ttlcpu.json
+	rm -f *.asc *.bin *blif verilog/a.out verilog/ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex bootrom.hex testrom.hex testrom-low.hex testrom-high.hex *.tmp asm/instructions.json ttlcpu.json
 	make -C emulator/ clean
 	make -C os/ clean
 	make -C sys/ clean
