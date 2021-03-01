@@ -18,6 +18,7 @@ var fs_read = func(fd, buf, sz) {
 
         # 254 words per block, so the position within the block contents is seekpos%254
         #   startat = seekpos % 254;
+        # TODO: abstract out this divmod into some other function?
         divmod(seekpos, BLKSZ-2, 0, &startat);
 
         # blklen() is counted in bytes, so the number of words remaining is:
@@ -81,7 +82,7 @@ var fs_write = func(fd, buf, sz) {
         else             write = remain;
 
         # do we need to update the block length?
-        if (startat+write > blklen()) blksetlen(startat+write);
+        if (startat+write > half(blklen()+1)) blksetlen(shl(startat+write,1));
 
         # do we need to move to the next block?
         if (startat+write == BLKSZ-2) {
@@ -96,8 +97,11 @@ var fs_write = func(fd, buf, sz) {
         # write block to disk
         blkwrite(blknum);
 
+        if (sz > write && nextblknum == blknum) kpanic("write: nextblknum == blknum");
+
         # if we allocated a new block, initialise its header and refresh "nextfreeblk"
         if (nextblknum == nextfreeblk) {
+            blksetused(nextblknum, 1);
             blkfindfree();
 
             blksettype(TYPE_FILE);
