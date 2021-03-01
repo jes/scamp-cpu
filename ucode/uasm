@@ -147,8 +147,6 @@ emit_ucode(@ucode) for ($opcode+1 .. $MAX_OPCODE);
 sub encode {
     my ($uinstr) = @_;
 
-    # TODO: better syntax for specifying ALU flags (i.e. "X+Y" instead of "EX EY F")
-
     my @bits = split / /, $uinstr;
 
     my $have_busin;
