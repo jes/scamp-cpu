@@ -14,10 +14,61 @@ sys_cmdargs = asm {
     ret
 };
 
-sys_exit    = func() unimpl("exit");
-sys_system  = func() unimpl("system");
+sys_exit = func() {
+    kpanic("exit");
+};
 
-# example: sys_exec(["/bin/ls", "/etc", 0])
+# example: sys_system(0x8000, ["/bin/ls", "-l"])
+sys_system  = func(top, args) {
+    var err = catch();
+    if (err) return err;
+
+    # create filenames
+    var userfile = "/proc/0.user";
+    var kernelfile = "/proc/0.kernel";
+    *(userfile+6) = pid+'0';
+    *(kernelfile+6) = pid+'0';
+
+    # open "/proc/$pid.user" for writing
+    var ufd = sys_open(userfile, O_WRITE|O_CREAT);
+    if (ufd < 0) return ufd;
+
+    # copy bytes from 0x100..top
+    var n = sys_write(ufd, 0x100, top-0x100);
+    sys_close(ufd);
+    if (n < 0) throw(n);
+    if (n != top-0x100) kpanic("system(): write() didn't write enough");
+
+    # open "/proc/$pid.kernel" for writing
+    var kfd = sys_open(kernelfile, O_WRITE|O_CREAT);
+    if (kfd < 0) return kfd;
+
+    # copy into $pid.kernel:
+    #  - stack pointer
+    #  - return address
+    #  - CWDBLK
+    #  - fdtable
+    #  - cmdargs
+    # TODO: error checking
+    sys_write(kfd, 0, 1); # TODO: stack pointer
+    sys_write(kfd, 0, 1); # TODO: return address
+    sys_write(kfd, &CWDBLK, 1);
+    sys_write(kfd, fdtable, 128);
+    sys_write(kfd, cmdargs, cmdargs_sz);
+    sys_close(kfd);
+
+    # execute the "child" process
+    pid++;
+    err = sys_exec(args);
+    pid--;
+
+    # if sys_exec() returned, there was an error
+
+    # TODO: unlink $pid.user, $pid.kernel?
+    return err;
+};
+
+# example: sys_exec(["/bin/ls", "/etc"])
 sys_exec = func(args) {
     var err = catch();
     if (err) return err;

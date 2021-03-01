@@ -104,3 +104,6 @@ var O_WRITE   = 0x02;
 var O_CREAT   = 0x04;
 var O_NOTRUNC = 0x08;
 var O_APPEND  = 0x10;
+
+# "process id"
+var pid = 0;

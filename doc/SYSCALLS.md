@@ -40,7 +40,7 @@ Replace the current process with a new one.
 ### 0xfefd: system(TOP, [cmd, args])
 
     Return: rc of child process, or -ERR on error
-    Implemented: no
+    Implemented: partially
     Errors: NOTFOUND
 
 Suspend the current process, start a child. When the child calls `exit(rc)`, resume the
