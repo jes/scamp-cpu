@@ -38,6 +38,3 @@ while (*args) {
 };
 
 exit(0);
-
-outp(3,0);
-while(1);
