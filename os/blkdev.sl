@@ -46,7 +46,7 @@ var blklen = func() return BLKBUF[0] & 0x01ff;
 var blknext = func() return BLKBUF[1];
 
 # set the "type"/"length"/"next" field of the current block
-var blksettype = func(typ) *(BLKBUF+0) = blklen() | typ;
+var blksettype = func(typ) *(BLKBUF+0) = typ | blklen();
 var blksetlen = func(len) *(BLKBUF+0) = blktype() | len;
 var blksetnext = func(blk) *(BLKBUF+1) = blk;
 
@@ -58,7 +58,7 @@ var blkfindfree = func() {
     var blkgroup;
 
     while (bitmapblk != 16) {
-        blkread(bitmapblk);
+        blkread(SKIP_BLOCKS + bitmapblk);
 
         blkgroup = 0;
         while (blkgroup != BLKSZ) {
@@ -77,6 +77,9 @@ var blkfindfree = func() {
     var i = 0;
     while (BLKBUF[blkgroup] & shl(1, i)) i++;
 
+    # upper 8 bits refer to lower 8 block numbers: swap them
+    i = i^8;
+
     # so now bit i in BLKBUF[blkgroup] is 0, so the free block number is:
     #    (bitmapblk*4096 + blkgroup*16 + i)
     nextfreeblk = shl(bitmapblk, 12) + shl(blkgroup, 4) + i;
@@ -84,6 +87,7 @@ var blkfindfree = func() {
 
 # Mark the given block as used/unused ("used" should be 0 or 1)
 # If using "nextfreeblk", make sure to call blkfindfree() straight away
+# note this function clobbers the block buffer
 var blksetused = func(blk, used) {
     # block "blk" corresponds to:
     #   bitmapblk = blk / 4096
@@ -93,10 +97,13 @@ var blksetused = func(blk, used) {
     var blkgroup  = byteshr4(blk & 0x0fff);
     var i         = blk & 0x0f;
 
-    blkread(bitmapblk);
+    # upper 8 bits refer to lower 8 block numbers: swap them
+    i = i^8;
+
+    blkread(SKIP_BLOCKS + bitmapblk);
     if (used) *(BLKBUF+blkgroup) = BLKBUF[blkgroup] |  shl(1,i)
     else      *(BLKBUF+blkgroup) = BLKBUF[blkgroup] & ~shl(1,i);
-    blkwrite(bitmapblk);
+    blkwrite(SKIP_BLOCKS + bitmapblk);
 };
 
 # initialise nextfreeblk
