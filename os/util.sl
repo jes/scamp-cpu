@@ -57,10 +57,34 @@ var unimpl = func(s) {
     khalt();
 };
 
-var memcpy = func(dest, src, len) {
-    var dd = dest;
-    while (len--) *(dest++) = *(src++);
-    return dd;
+#var memcpy = func(dest, src, len) {
+#    var dd = dest;
+#    while (len--) *(dest++) = *(src++);
+#    return dd;
+#};
+
+# usage: memcpy(dest, src, len)
+var memcpy = asm {
+    pop x
+    ld r1, x # len
+    pop x
+    ld r2, x # src
+    pop x
+    ld r3, x # dest
+    ld r0, x # return
+
+    test r1
+    jnz memcpy_loop
+    ret
+
+    memcpy_loop:
+        ld x, (r2++)
+        ld (r3++), x
+        dec r1
+        jnz memcpy_loop
+
+    memcpy_ret:
+    ret
 };
 
 # >>8 1 arg from the stack and return the result in r0
