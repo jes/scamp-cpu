@@ -8,9 +8,8 @@ include "sys.sl";
 var sbrk = func(sz) {
     var oldtop = TOP;
     TOP = TOP + sz;
-    # TODO: this should compare to osbase() or something instead of 0xff00
-    if (TOP ge 0xff00) {
-        puts("out of memory\n");
+    if (TOP ge osbase()) {
+        fputs(2, "out of memory\n");
         exit(1);
     };
     return oldtop;
