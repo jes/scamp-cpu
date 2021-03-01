@@ -46,7 +46,7 @@ sys_open = func(name, mode) {
 
     # truncate the file if O_WRITE && !O_APPEND && !O_NOTRUNC
     if ((mode & O_WRITE) && !(mode & O_APPEND) && !(mode & O_NOTRUNC))
-        unimpl("file truncation");
+        fs_trunc(fd);
 
     return fd;
 };

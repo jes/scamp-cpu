@@ -20,7 +20,7 @@ include "os_proc.sl";
 
 kputs("loading init...\n");
 
-var fd = sys_open("/etc/motd", O_WRITE|O_NOTRUNC);
+var fd = sys_open("/etc/motd", O_WRITE);
 if (fd >= 0) {
     sys_write(fd, "    HELLO", 9);
     sys_close(fd);
