@@ -27,6 +27,10 @@ sys_open = func(name, mode) {
         if (!location) return NOTFOUND;
     };
 
+    # return NOTFILE if it's not a file
+    blkread(location[0]);
+    if(blktype() != TYPE_FILE) return NOTFILE;
+
     # allocate an fd, or return BADFD if they're all taken
     var fd = fdalloc();
     if (fd == -1) return BADFD;

@@ -137,7 +137,7 @@ Create a directory at the given path.
 ### 0xfef2: opendir(path)
 
     Return: new file descriptor, or -ERR on error
-    Implemented: no
+    Implemented: yes
     Errors: NOTFOUND, NOTDIR
 
 Open the directory at the given path for reading.
@@ -145,7 +145,7 @@ Open the directory at the given path for reading.
 ### 0xfef1: readdir(fd, buf, sz)
 
     Return: number of entries read, or -ERR on error
-    Implemented: no
+    Implemented: yes
     Errors: BADFD
 
 Read entries from the given directory fd into buf. Each directory entry is a nul-terminated
