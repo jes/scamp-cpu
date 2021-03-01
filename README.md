@@ -47,9 +47,9 @@ Other work includes:
  - [ ] work out how to interface with storage and serial
  - [ ] assemble the computer inside a convenient case
  - [ ] write the bootloader ROM
- - [ ] write the "kernel"
+ - [ ] write the "kernel" (WIP: see `os/`)
  - [x] write a compiler
- - [ ] write system utilities
+ - [ ] write system utilities (WIP: see `sys/`)
  - [ ] write an editor
  - [ ] make it self-host
 
