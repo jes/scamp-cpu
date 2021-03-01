@@ -21,8 +21,10 @@ sys_open = func(name, mode) {
 
     # if it doesn't exist, either create it or error
     if (!location) {
-        if (mode & O_CREAT) unimpl("O_CREAT")
-        else return NOTFOUND;
+        if (!(mode & O_CREAT)) return NOTFOUND;
+
+        location = dirmkname(startblk, name, TYPE_FILE);
+        if (!location) return NOTFOUND;
     };
 
     # allocate an fd, or return BADFD if they're all taken

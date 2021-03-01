@@ -86,35 +86,128 @@ var dirwalk = func(dirblk, cb) {
 #    dirent_offset, # the word offset of the dirent for this name
 #  ]
 # return a null pointer if not found
-var dfr_offset;
-var dfr_findname;
-var dfr_blknum;
+var dir_offset;
+var dir_name;
+var dir_blknum;
 var dirfindname = func(dirblk, findname) {
-    dfr_findname = findname;
-    while (*dfr_findname == '/') dfr_findname++;
+    dir_name = findname;
+    while (*dir_name == '/') dir_name++;
 
     while (1) {
-        dfr_blknum = 0;
+        dir_blknum = 0;
 
         dirwalk(dirblk, func(name, blknum, dirblknum, dirent_offset) {
-            if (*name && pathbegins(dfr_findname, name)) {
-                while (*dfr_findname && *dfr_findname != '/') dfr_findname++;
-                dfr_blknum = blknum;
+            if (*name && pathbegins(dir_name, name)) {
+                while (*dir_name && *dir_name != '/') dir_name++;
+                dir_blknum = blknum;
+                dir_offset = dirent_offset;
                 return 0; # found it
             } else {
                 return 1; # keep searching
             };
         });
 
-        if (dfr_blknum == 0) return 0;
+        if (dir_blknum == 0) return 0; # doesn't exist
 
-        while (*dfr_findname == '/') dfr_findname++;
-        if (*dfr_findname == 0) break;
+        while (*dir_name == '/') dir_name++;
+        if (*dir_name == 0) break;
 
-        dirblk = dfr_blknum;
+        dirblk = dir_blknum;
     };
 
-    return [dfr_blknum, dirblk, dfr_offset];
+    return [dir_blknum, dirblk, dir_offset];
 };
 
+# create the given name in dirblk, traversing directories as necessary
+# return a pointer to a static list:
+#  [
+#    blknum,        # the block number that the name links to
+#    dirblknum,     # the block number that the name was created in
+#    dirent_offset, # the word offset of the dirent for this name
+#  ]
+# return a null pointer if intermediate path components are not found, or if
+# the file already exists
+var dir_lastblk;
+var dirmkname = func(dirblk, mkname, mktype) {
+    dir_name = mkname;
+    while (*dir_name == '/') dir_name++;
 
+    while (1) {
+        dir_blknum = 0;
+
+        dirwalk(dirblk, func(name, blknum, dirblknum, dirent_offset) {
+            if (*name && pathbegins(dir_name, name)) {
+                while (*dir_name && *dir_name != '/') dir_name++;
+                dir_blknum = blknum;
+                return 0; # found it
+            } else {
+                return 1; # keep searching
+            };
+        });
+
+        while (*dir_name == '/') dir_name++;
+        if (*dir_name == 0) return 0; # file already exists
+
+        if (dir_blknum == 0) break; # doesn't exist
+
+        dirblk = dir_blknum;
+    };
+
+    # "dirblk" is the directory that "dir_name" should be created in
+
+    # if "dir_name" has slashes in, then some intermediate path components don't exist
+    var p = dir_name;
+    while (*p && *p != '/') p++;
+    if (*p) return 0; # intermediate components don't exist
+
+    # allocate a block for our new file
+    var blknum = nextfreeblk;
+    blksetused(blknum, 1);
+    blkfindfree();
+
+    # initialise the new file
+    blksettype(mktype);
+    blksetlen(0);
+    blksetnext(0);
+    blkwrite(blknum);
+
+    # find an empty dirent and stick a link in
+    dir_blknum = 0;
+    dir_lastblk = 0;
+    dirwalk(dirblk, func(name, blknum, dirblknum, dirent_offset) {
+        dir_lastblk = dirblknum;
+        if (*name) return 1; # keep searching until we find an unused dirent
+
+        # save the location of the unused dirent and stop searching
+        dir_blknum = dirblknum;
+        dir_offset = dirent_offset;
+        return 0;
+    });
+
+    if (dir_blknum == 0) {
+        # allocate a new block for this directory
+        dir_blknum = nextfreeblk;
+        blksetused(dir_blknum, 1);
+        blkfindfree();
+
+        # write a header
+        blksettype(TYPE_DIR);
+        blksetnext(0);
+        blkwrite(dir_blknum);
+
+        # link it in to the directory
+        blkread(dir_lastblk);
+        blksetnext(dir_blknum);
+        blkwrite(dir_lastblk);
+
+        dir_offset = 0;
+    };
+
+    # now the dirent we should write to is at "dir_offset" into block number "dir_blknum"
+    # and the new name is "dir_name" with contents starting at block "blknum"
+    blkread(dir_blknum);
+    dirent(BLKBUF+dir_offset, dir_name, blknum);
+    blkwrite(dir_blknum);
+
+    return [blknum, dir_blknum, dir_offset];
+};
