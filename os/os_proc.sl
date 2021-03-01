@@ -30,6 +30,7 @@ sys_exit = func(rc) {
     var err = catch();
     if (err) kpanic("exit() panics");
 
+    if (pid == 0) kpanic("init exits.");
     pid--;
 
     # make sure there's at least 1 free fd slot

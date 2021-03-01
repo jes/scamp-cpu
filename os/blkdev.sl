@@ -5,12 +5,38 @@
 # from to avoid confusing and annoying bugs. Or maybe a separate buffer for
 # each device?
 
+var asm_blkread = asm {
+    ld r0, 256 # number of words to read
+    ld r1, (_blkdataport) # block data port
+    ld r3, (_BLKBUF) # pointer to write to
+    asm_blkread_loop:
+        in x, r1 # high byte
+        shl3 x
+        shl3 x
+        shl2 x
+        ld r2, x
+        in x, r1 # low byte
+        or x, r2
+
+        # now have 1 word from device in x
+
+        ld (r3++), x
+        dec r0
+
+        jnz asm_blkread_loop
+    ret
+};
+
 # read the given block number into the BLKBUF
 var blkread = func(num) {
     if (BLKBUFNUM == num) return 0;
 
     BLKBUFNUM = num;
     outp(blkselectport, num);
+
+    # XXX: asm_blkread() is a *much* faster implementation of
+    # the (dead) loop below
+    return asm_blkread();
 
     var i = 0;
     var high;

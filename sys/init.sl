@@ -8,4 +8,3 @@ puts("init: ls /proc:\n");
 system(["/bin/ls", "/proc"]);
 
 puts("init halts.\n");
-while (1);
