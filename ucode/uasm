@@ -210,8 +210,7 @@ sub emit_ucode {
     # pad the rest of the ucode with "reset t-state" microcode
     push @ucode, encode("RT") while @ucode < $T_STATES;
 
-    # TODO: say which opcode it is
-    die "too many microinstructions for some instruction" if @ucode > $T_STATES;
+    die "line $.: too many microinstructions: $mnemonic" if @ucode > $T_STATES;
 
     print sprintf("%04x\n", $_) for @ucode;
 }
