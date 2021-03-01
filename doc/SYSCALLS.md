@@ -30,7 +30,7 @@ Exit the current process and return `rc` to the parent.
 ### 0xfefe: exec([cmd, args])
 
     Return: -ERR on error
-    Implemented: partially
+    Implemented: mostly
     Errors: NOTFOUND
 
 Replace the current process with a new one.
@@ -57,7 +57,7 @@ current process and return `rc`.
 ### 0xfefb: write(fd, buf, sz)
 
     Return: 0, or -ERR on error
-    Implemented: only for serial
+    Implemented: yes
     Errors: BADFD
 
 Write multiple characters to the given file descriptor.
@@ -79,7 +79,7 @@ Read multiple characters from the given file descriptor.
 ### 0xfef8: open(name, mode)
 
     Return: new file descriptor, or -ERR on error
-    Implemented: partially
+    Implemented: mostly
     Errors: NOTFOUND
 
 Open the file at the given path with the given mode.
