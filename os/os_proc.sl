@@ -14,7 +14,7 @@ sys_cmdargs = asm {
     ret
 };
 
-# usage: return_to_caller(sp, ret, rc)
+# usage: return_to_parent(sp, ret, rc)
 # restore stack pointer and return address, and return rc
 var return_to_parent = asm {
     pop x
