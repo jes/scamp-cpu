@@ -1,6 +1,6 @@
 SOURCES = *.sl
 
-.PHONY: all prof test clean userspace
+.PHONY: all prof test clean
 
 all: os.disk os.anhex
 
@@ -11,10 +11,7 @@ prof: os.prof os.anhex
 os.prof: os.disk
 	../emulator/scamp -i os.disk -c -p os.prof
 
-userspace:
-	make -C ../sys/
-
-os.disk: os.hex fs.in userspace
+os.disk: os.hex fs.in
 	../util/hex2disk --start 0xd000 os.hex | ../fs/mkfs > os.disk.tmp
 	../util/unix2scamp motd > motd.scamp
 	../fs/fs os.disk.tmp < fs.in
