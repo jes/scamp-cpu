@@ -23,6 +23,7 @@ var ls = func(name) {
         n = readdir(fd, buf, bufsz);
         if (n == 0) break;
         if (n < 0) {
+            puts("\n");
             fprintf(2, "ls: readdir %s: %s\n", [name, strerror(fd)]);
             rc = 1;
             break;
@@ -32,8 +33,10 @@ var ls = func(name) {
         while (n--)
             while (*p)
                 putchar(*(p++));
+        puts("  ");
     };
     close(fd);
+    puts("\n");
 };
 
 var args = cmdargs()+1;
@@ -44,7 +47,7 @@ if (!*args) {
     while (*args) {
         printf("%s:\n", [*args]); # TODO: only if multiple arguments
         ls(*args);
-        ls++;
+        args++;
     };
 };
 

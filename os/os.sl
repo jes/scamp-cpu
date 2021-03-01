@@ -19,6 +19,10 @@ include "os_io.sl";
 include "os_proc.sl";
 include "kprintf.sl";
 
+kputs("ls /...\n");
+sys_exec(["/bin/ls", "/"]);
+kpanic("return from exec\n");
+
 kputs("loading init...\n");
 
 if (sys_mkdir("/lol") != 0) kpanic("mkdir fail");

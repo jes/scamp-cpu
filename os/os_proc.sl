@@ -44,6 +44,7 @@ sys_exec = func(args) {
         *(cmdargp++) = 0;
         i++;
     };
+    *(cmdargs+i) = 0;
 
     # load file from disk
     var fd = sys_open(args[0], O_READ);

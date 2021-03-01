@@ -25,6 +25,7 @@ var copyfd  = sys_copyfd;
 var unlink  = sys_unlink;
 var stat    = sys_stat;
 var readdir = sys_readdir;
+var opendir = sys_opendir;
 var mkdir   = sys_mkdir;
 var chdir   = sys_chdir;
 var tell    = sys_tell;

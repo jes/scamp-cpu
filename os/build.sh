@@ -13,4 +13,5 @@ echo -ne | ../fs/fs os.disk <<END
     put ../sys/init.bin /bin/init
     put ../sys/cat.bin /bin/cat
     put ../sys/mkdir.bin /bin/mkdir
+    put ../sys/ls.bin /bin/ls
 END
