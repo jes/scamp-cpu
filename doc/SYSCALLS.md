@@ -22,7 +22,7 @@ arguments. `r254` must be left alone. Other pseudoregs can be trashed at will.
 ### 0xfeff: exit(rc)
 
     Return: n/a
-    Implemented: no
+    Implemented: yes
     Errors: n/a
 
 Exit the current process and return `rc` to the parent.
@@ -40,7 +40,7 @@ Replace the current process with a new one.
 ### 0xfefd: system(TOP, [cmd, args])
 
     Return: rc of child process, or -ERR on error
-    Implemented: partially
+    Implemented: yes
     Errors: NOTFOUND
 
 Suspend the current process, start a child. When the child calls `exit(rc)`, resume the

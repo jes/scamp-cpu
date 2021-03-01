@@ -14,12 +14,68 @@ sys_cmdargs = asm {
     ret
 };
 
-sys_exit = func() {
-    kpanic("exit");
+# usage: return_to_caller(sp, ret, rc)
+# restore stack pointer and return address, and return rc
+var return_to_parent = asm {
+    pop x
+    ld r0, x
+    pop x
+    ld r254, x
+    pop x
+    ld sp, x
+    ret
+};
+
+sys_exit = func(rc) {
+    var err = catch();
+    if (err) kpanic("exit() panics");
+
+    pid--;
+
+    # make sure there's at least 1 free fd slot
+    # XXX: is this right? should we be doing more? less?
+    sys_close(nfds-1);
+
+    # create filenames
+    var userfile = "/proc/0.user";
+    var kernelfile = "/proc/0.kernel";
+    *(userfile+6) = pid+'0';
+    *(kernelfile+6) = pid+'0';
+
+    # 1. restore user program
+    var ufd = sys_open(userfile, O_READ);
+    if (ufd < 0) throw(ufd);
+    var n;
+    var p = 0x100;
+    while (1) {
+        n = sys_read(ufd, p, 254);
+        if (n == 0) break;
+        if (n < 0) throw(n);
+        p = p + n;
+    };
+    sys_close(ufd);
+
+    # 2. restore kernel state
+    # TODO: error checking
+    var kfd = sys_open(kernelfile, O_READ);
+    if (kfd < 0) throw(kfd);
+
+    var sp;
+    var ret;
+
+    sys_read(kfd, &sp, 1);
+    sys_read(kfd, &ret, 1);
+    sys_read(kfd, &CWDBLK, 1);
+    sys_read(kfd, fdtable, 128);
+    sys_read(kfd, cmdargs, cmdargs_sz);
+    sys_close(kfd);
+
+    return_to_parent(sp, ret, rc);
+    kpanic("return_to_parent() returned to exit()");
 };
 
 # example: sys_system(0x8000, ["/bin/ls", "-l"])
-sys_system  = func(top, args) {
+var sys_system_impl  = func(top, args, sp, ret) {
     var err = catch();
     if (err) return err;
 
@@ -50,8 +106,8 @@ sys_system  = func(top, args) {
     #  - fdtable
     #  - cmdargs
     # TODO: error checking
-    sys_write(kfd, 0, 1); # TODO: stack pointer
-    sys_write(kfd, 0, 1); # TODO: return address
+    sys_write(kfd, &sp, 1);
+    sys_write(kfd, &ret, 1);
     sys_write(kfd, &CWDBLK, 1);
     sys_write(kfd, fdtable, 128);
     sys_write(kfd, cmdargs, cmdargs_sz);
@@ -66,6 +122,35 @@ sys_system  = func(top, args) {
 
     # TODO: unlink $pid.user, $pid.kernel?
     return err;
+};
+
+# copy the return address, stack pointer, and system() arguments into the
+# kernel stack, switch to the kernel stack, and call sys_system_impl()
+sys_system = asm {
+    pop x
+    ld r0, x # args
+    pop x
+    ld r1, x # top
+    ld r2, sp # stack pointer
+    ld r3, r254 # return address
+    ld sp, INITIAL_SP
+    ld x, r1 # top
+    push x
+    ld x, r0 # args
+    push x
+    ld x, r2 # stack pointer
+    push x
+    ld x, r3 # return address
+    push x
+    call (_sys_system_impl)
+
+    # TODO: handle errors from sys_system_impl()
+
+    ld x, system_panic_s
+    push x
+    call (_kpanic)
+
+    system_panic_s: .str "system() return an error\0"
 };
 
 # example: sys_exec(["/bin/ls", "/etc"])
