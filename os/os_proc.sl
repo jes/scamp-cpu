@@ -26,7 +26,7 @@ var return_to_parent = asm {
     ret
 };
 
-sys_exit = func(rc) {
+var sys_exit_impl = func(rc) {
     var err = catch();
     if (err) kpanic("exit() panics");
 
@@ -73,6 +73,16 @@ sys_exit = func(rc) {
 
     return_to_parent(sp, ret, rc);
     kpanic("return_to_parent() returned to exit()");
+};
+
+# copy the rc, switch to the kernel stack, and call sys_exit_impl()
+sys_exit = asm {
+    pop x
+    ld sp, INITIAL_SP
+    push x
+    call (_sys_exit_impl)
+
+    jr- 1 # XXX: sys_exit_impl() shoudln't ever return
 };
 
 # example: sys_system(0x8000, ["/bin/ls", "-l"])
@@ -127,6 +137,8 @@ var sys_system_impl  = func(top, args, sp, ret) {
 
 # copy the return address, stack pointer, and system() arguments into the
 # kernel stack, switch to the kernel stack, and call sys_system_impl()
+var system_sp;
+var system_ret;
 sys_system = asm {
     pop x
     ld r0, x # args
@@ -134,7 +146,11 @@ sys_system = asm {
     ld r1, x # top
     ld r2, sp # stack pointer
     ld r3, r254 # return address
-    ld sp, INITIAL_SP
+    ld sp, INITIAL_SP # switch to kernel stack
+
+    ld (_system_sp), r2
+    ld (_system_ret), r3
+
     ld x, r1 # top
     push x
     ld x, r0 # args
@@ -145,13 +161,10 @@ sys_system = asm {
     push x
     call (_sys_system_impl)
 
-    # TODO: handle errors from sys_system_impl()
-
-    ld x, system_panic_s
-    push x
-    call (_kpanic)
-
-    system_panic_s: .str "system() return an error\0"
+    # if system() returned there was an error: restore user stack
+    # TODO: how can we distinguish a system() error from a return code from the child?
+    ld sp, (_system_sp)
+    jmp (_system_ret)
 };
 
 # example: sys_exec(["/bin/ls", "/etc"])
