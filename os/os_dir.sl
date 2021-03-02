@@ -95,4 +95,22 @@ sys_mkdir = func(name) {
     return 0;
 };
 
-sys_chdir = func() unimpl("chdir");
+sys_chdir = func(name) {
+    var startblk = CWDBLK;
+    if (*name == '/') startblk = ROOTBLOCK;
+
+    var err = catch();
+    if (err) return err;
+
+    # try to find the name
+    var location = dirfindname(startblk, name);
+    if (!location) return NOTFOUND;
+
+    # return NOTDIR if it's not a directory
+    blkread(location[0]);
+    if(blktype() != TYPE_DIR) return NOTDIR;
+
+    CWDBLK = location[0];
+
+    return 0;
+};

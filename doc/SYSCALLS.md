@@ -121,7 +121,7 @@ Return the current position on the given file descriptor.
 ### 0xfef4: chdir(path)
 
     Return: 0, or -ERR on error
-    Implemented: no
+    Implemented: yes
     Errors: NOTFOUND, NOTDIR
 
 Change the current working directory.

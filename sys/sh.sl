@@ -41,9 +41,23 @@ var search = func(name) {
     s = try("/bin", name);
     if (s) return s;
 
-    # TODO: take path from configuration instead of hardcoding as only "/bin"
+    # TODO: take path from $PATH?
 
     return 0;
+};
+
+var internal = func(args) {
+    var n;
+
+    if (strcmp(args[0], "cd") == 0) {
+        if (!args[1]) *(args+1) = '/'; # TODO: take from $HOME?
+        n = chdir(args[1]);
+        if (n < 0) fprintf(2, "%s: %s\n", [args[1], strerror(n)]);
+    } else {
+        return 0;
+    };
+
+    return 1;
 };
 
 var buf = malloc(256);
@@ -77,6 +91,8 @@ while (1) {
         };
         i++;
     };
+
+    if (internal(args)) continue;
 
     path = search(args[0]);
 
