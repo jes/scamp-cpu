@@ -164,5 +164,7 @@ var getcwd_level = func(buf, sz, dirblk, bufp) {
 };
 
 sys_getcwd = func(buf, sz) {
+    var err = catch();
+    if (err) return err;
     return getcwd_level(buf, sz, CWDBLK, 0);
 };
