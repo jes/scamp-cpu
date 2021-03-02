@@ -124,8 +124,8 @@ var fs_write = func(fd, buf, sz) {
 var fs_tell = func(fd) return *(fdbaseptr(fd)+FDDATA+1);
 var fs_seek = func() unimpl("fs_seek");
 
-# we don't need to do anything to close the file, just forget everything
-var fs_close = fdfree;
+# we don't need to do anything to close the file
+var fs_close = func(fd);
 
 # truncate the given fd at the current seek position
 var fs_trunc = func(fd) {

@@ -66,6 +66,8 @@ sys_close = func(fd) {
     if (err) return err;
     var fdbase = fdbaseptr(fd);
     var closeimpl = fdbase[CLOSEFD];
-    if (closeimpl) return closeimpl(fd);
-    return BADFD;
+    var n = 0;
+    if (closeimpl) n = closeimpl(fd);
+    fdfree(fd);
+    return n;
 };

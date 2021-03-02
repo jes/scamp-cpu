@@ -17,7 +17,6 @@ include "os_fs.sl";
 include "os_dir.sl";
 include "os_io.sl";
 include "os_proc.sl";
-include "kprintf.sl";
 
 kputs("loading init...\n");
 

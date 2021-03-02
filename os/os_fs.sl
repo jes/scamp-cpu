@@ -34,9 +34,16 @@ sys_open = func(name, mode) {
     # allocate an fd, or return BADFD if they're all taken
     var fd = fdalloc();
     if (fd == -1) return BADFD;
-    var fdbase = fdbaseptr(fd);
+
+    # free the fd if we have any errors now
+    err = catch();
+    if (err) {
+        fdfree(fd);
+        return err;
+    };
 
     # attach read/write/seek/tell
+    var fdbase = fdbaseptr(fd);
     if (mode & O_READ)  *(fdbase+READFD)  = fs_read;
     if (mode & O_WRITE) *(fdbase+WRITEFD) = fs_write;
     *(fdbase+TELLFD)  = fs_tell;
