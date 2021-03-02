@@ -88,8 +88,6 @@ void load_disk(char *file) {
         fprintf(stderr, "can't mmap %s: %s\n", file, strerror(errno));
         exit(1);
     }
-
-    printf("disk starts: %02x %02x\n", disk[0], disk[1]);
 }
 
 void open_profile(char *file) {
