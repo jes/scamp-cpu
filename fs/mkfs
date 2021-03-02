@@ -33,4 +33,4 @@ $fs->{disk} = \@d;
 $fs->add_dirent(80, ".", 80);
 $fs->add_dirent(80, "..", 80);
 
-print sprintf("%02x\n", $_) for @d;
+print chr($_) for @d;

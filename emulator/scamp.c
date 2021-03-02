@@ -4,13 +4,17 @@
 */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <getopt.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -30,7 +34,7 @@ uint8_t JZ, JLT, JGT;
 uint8_t T, Z, LT;
 
 uint16_t diskptr = 0;
-uint16_t disk[655360]; /* TODO: read/write disk directly to file, not a massive buffer in memory */
+uint8_t *disk;
 uint16_t blknum = 0;
 uint16_t blkidx = 0;
 
@@ -73,7 +77,19 @@ void load_ram(uint16_t addr, char *file) {
 }
 
 void load_disk(char *file) {
-    load_hex(disk, 655360, file);
+    int fd = open(file, O_RDWR, 0);
+    if (fd < 0) {
+        fprintf(stderr, "can't open %s: %s\n", file, strerror(errno));
+        exit(1);
+    }
+
+    disk = mmap(NULL, 65536 * 512, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+    if (disk == MAP_FAILED) {
+        fprintf(stderr, "can't mmap %s: %s\n", file, strerror(errno));
+        exit(1);
+    }
+
+    printf("disk starts: %02x %02x\n", disk[0], disk[1]);
 }
 
 void open_profile(char *file) {

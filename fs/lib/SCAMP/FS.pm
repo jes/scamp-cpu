@@ -534,14 +534,10 @@ sub load {
 
     open(my $fh, '<', $self->{file})
         or die "can't read $self->{file}: $!\n";
-    my @d;
-    while (<$fh>) {
-        chomp;
-        push @d, hex($_);
-    }
+    my $data = join('', <$fh>);
     close $fh;
 
-    $self->{disk} = \@d;
+    $self->{disk} = [ map { ord($_) } split //, $data ];
 }
 
 sub save {
@@ -549,7 +545,7 @@ sub save {
 
     open(my $fh, '>', $self->{file})
         or die "can't write $self->{file}: $!\n";
-    print $fh sprintf("%02x\n", $_) for @{ $self->{disk} };
+    print $fh chr($_) for @{ $self->{disk} };
     close $fh;
 }
 
