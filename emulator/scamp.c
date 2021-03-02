@@ -83,7 +83,7 @@ void load_disk(char *file) {
         exit(1);
     }
 
-    disk = mmap(NULL, 65536 * 512, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+    disk = mmap(NULL, 65536 * 512, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
     if (disk == MAP_FAILED) {
         fprintf(stderr, "can't mmap %s: %s\n", file, strerror(errno));
         exit(1);
