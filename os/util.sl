@@ -214,6 +214,9 @@ var setjmp = asm {
     ld r1, x # r1 = jmpbuf
     ld r2, 1(sp) # r2 = caller's stashed return address
     ld x, r1 # x = jmpbuf
+
+do_setjmp: # x = jmpbuf pointer, r2 = stashed return
+
     ld (x), r254 # return address
     inc x
     ld (x), sp # stack pointer
@@ -223,10 +226,19 @@ var setjmp = asm {
     ret
 };
 
+# return 0 on first call, and update state for throw();
+# when throw() is called, return the value that was thrown
+# ("catch()" is equivalent to "setjmp(throw_jmpbuf)")
+var catch = asm {
+    ld r2, 1(sp) # r2 = caller's stashed return address
+    ld x, (_throw_jmpbuf) # x = jmpbuf pointer
+    jmp do_setjmp
+};
+
 # restore control and stack pointer to the addresses in jmpbuf,
 # as if setjmp() had returned "val"
 # example:
-#   longjmp(jmpbuf, NOTFOUND);
+#   longjmp(jmpbuf, val);
 var longjmp = asm {
     pop x
     ld r0, x # return val
@@ -235,8 +247,8 @@ var longjmp = asm {
     inc x
     ld sp, (x) # stack pointer
     inc x
-    ld x, (x) # stashed return address
-    push x
+    ld r2, (x) # stashed return address
+    ld 1(sp), r2
     ret
 };
 
@@ -244,21 +256,6 @@ var throw_jmpbuf = [0,0,0];
 
 # use setjmp/longjmp to return the error to the last place that called catch()
 var throw = func(n) longjmp(throw_jmpbuf, n);
-
-# return 0 on first call, and update state for throw();
-# when throw() is called, return the value that was thrown
-# ("catch()" is equivalent to "setjmp(throw_jmpbuf)")
-var catch = asm {
-    ld r2, 1(sp) # caller's stashed return address
-    ld x, (_throw_jmpbuf)
-    ld (x), r254 # return address
-    inc x
-    ld (x), sp # stack pointer
-    inc x
-    ld (x), r2 # stashed return
-    ld r0, 0 # return 0 this time
-    ret
-};
 
 var powers_of_2 = asm {
     powers_of_2:
