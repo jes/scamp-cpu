@@ -87,6 +87,10 @@ var memcpy = asm {
     ret
 };
 
+var memset = func(s, c, n) {
+    while (n--) *(s++) = c;
+};
+
 # >>8 1 arg from the stack and return the result in r0
 var shr8 = asm {
     pop x

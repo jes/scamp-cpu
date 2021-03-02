@@ -57,7 +57,7 @@ var undirent = func(dirent, pname, pblknum) {
 #   dirent_offset: word offset of the dirent for this name in "dirblknum"
 # cb() should return 1 to continue searching or 0 to bail early
 var dirwalk = func(dirblk, cb) {
-    var off = 2;
+    var off;
     var name;
     var blknum;
     var next;
@@ -66,6 +66,7 @@ var dirwalk = func(dirblk, cb) {
         if (blktype() != TYPE_DIR) throw(NOTDIR);
         next = blknext();
 
+        off = 2;
         while (off < BLKSZ) {
             undirent(BLKBUF+off, &name, &blknum);
             if (cb(name, blknum, dirblk, off) == 0) return 0;
@@ -190,6 +191,7 @@ var dirmkname = func(dirblk, mkname, mktype) {
         return 0;
     });
 
+    var i;
     if (dir_blknum == 0) {
         # allocate a new block for this directory
         dir_blknum = nextfreeblk;
@@ -199,7 +201,7 @@ var dirmkname = func(dirblk, mkname, mktype) {
         # write a header
         blksettype(TYPE_DIR);
         blksetnext(0);
-        # TODO: 0 out the filenames
+        memset(BLKBUF+2, 254, 0); # zero out the filenames
         blkwrite(dir_blknum);
 
         # link it in to the directory
