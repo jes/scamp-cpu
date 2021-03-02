@@ -52,7 +52,7 @@ var internal = func(args) {
     if (strcmp(args[0], "cd") == 0) {
         if (!args[1]) *(args+1) = '/'; # TODO: take from $HOME?
         n = chdir(args[1]);
-        if (n < 0) fprintf(2, "%s: %s\n", [args[1], strerror(n)]);
+        if (n < 0) fprintf(2, "sh: %s: %s\n", [args[1], strerror(n)]);
     } else if (strcmp(args[0], "exit") == 0) {
         n = 0;
         if (args[1]) n = atoi(args[1]);
@@ -101,14 +101,12 @@ while (1) {
     path = search(args[0]);
 
     if (!path) {
-        fprintf(2, "%s: not found in path\n", [args[0]]);
+        fprintf(2, "sh: %s: not found in path\n", [args[0]]);
         continue;
     };
 
     *args = path;
 
     i = system(args);
-    if (i < 0) {
-        fprintf(2, "%s: %s\n", [args[0], strerror(i)]);
-    };
+    if (i < 0) fprintf(2, "sh: %s: %s\n", [args[0], strerror(i)]);
 };
