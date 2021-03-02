@@ -27,7 +27,7 @@ inc (_TOP)
 .def _sys_read    0xfef9
 .def _sys_UNUSED1 0xfefa
 .def _sys_write   0xfefb
-.def _sys_UNUSED2 0xfefc
+.def _sys_getcwd  0xfefc
 .def _sys_system  0xfefd
 .def _sys_exec    0xfefe
 .def _sys_exit    0xfeff

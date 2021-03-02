@@ -48,11 +48,15 @@ current process and return `rc`.
 
 `cmd` should be a filename. `args` should be terminated with a 0.
 
-### 0xfefc: UNUSED
+### 0xfefc: getcwd(buf, sz)
 
-    Return: ??
-    Implemented: ??
-    Errors: ??
+    Return: 0, or -ERR on error
+    Implemented: yes
+    Errors: TOOLONG
+
+Work out the current working directory and store it in `buf`. Behaviour is undefined
+if the current working directory or one of its parents has been deleted. Return `TOOLONG`
+if the path is too long to fit in `buf` with a trailing 0.
 
 ### 0xfefb: write(fd, buf, sz)
 

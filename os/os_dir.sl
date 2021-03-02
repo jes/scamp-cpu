@@ -6,6 +6,7 @@ extern sys_readdir;
 extern sys_opendir;
 extern sys_mkdir;
 extern sys_chdir;
+extern sys_getcwd;
 
 var readdir_buf;
 var readdir_sz;
@@ -122,4 +123,46 @@ sys_chdir = func(name) {
     CWDBLK = location[0];
 
     return 0;
+};
+
+var getcwd_name;
+var getcwd_dirblk;
+var getcwd_level = func(buf, sz, dirblk, bufp) {
+    var dotdot = dirfindname(dirblk, "..");
+    if (!dotdot) return NOTFOUND;
+
+    var parentblk = dotdot[0];
+
+    # found root
+    if (parentblk == dirblk) {
+        *(buf++) = '/';
+        *buf = 0;
+        *bufp = buf;
+        return 0;
+    };
+
+    # get the parent directory in buf
+    var next_bufp;
+    var n = getcwd_level(buf, sz, parentblk, &next_bufp);
+    if (n < 0) return n;
+
+    # work out the name of this directory
+    getcwd_dirblk = dirblk;
+    dirwalk(parentblk, func(name, blknum, dirblknum, dirent_offset) {
+        if (*name && blknum == getcwd_dirblk) {
+            getcwd_name = name;
+            return 0;
+        };
+        return 1;
+    });
+
+    while (*getcwd_name) *(next_bufp++) = *(getcwd_name++);
+    *next_bufp = 0;
+    *bufp = next_bufp;
+
+    return 0;
+};
+
+sys_getcwd = func(buf, sz) {
+    return getcwd_level(buf, sz, CWDBLK, 0);
 };

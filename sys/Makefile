@@ -1,5 +1,5 @@
 LIBS = lib/*.sl
-BINS = cat.bin init.bin ls.bin mkdir.bin sh.bin
+BINS = cat.bin init.bin ls.bin mkdir.bin sh.bin pwd.bin
 
 .PHONY: all test clean
 

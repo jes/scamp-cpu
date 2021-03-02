@@ -15,6 +15,7 @@ extern sys_close;
 extern sys_open;
 extern sys_read;
 extern sys_write;
+extern sys_getcwd;
 extern sys_system;
 extern sys_exec;
 extern sys_exit;
@@ -34,6 +35,7 @@ var close   = sys_close;
 var open    = sys_open;
 var read    = sys_read;
 var write   = sys_write;
+var getcwd  = sys_getcwd;
 var exec    = sys_exec;
 var exit    = sys_exit;
 

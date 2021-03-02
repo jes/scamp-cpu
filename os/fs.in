@@ -6,5 +6,5 @@ put ../sys/cat.bin /bin/cat
 put ../sys/mkdir.bin /bin/mkdir
 put ../sys/ls.bin /bin/ls
 put ../sys/sh.bin /bin/sh
+put ../sys/pwd.bin /bin/pwd
 mkdir proc
-
