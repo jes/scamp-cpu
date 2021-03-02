@@ -151,6 +151,7 @@ uint16_t in(uint16_t addr) {
         r = disk[diskptr++];
     }
     if (addr == 2) {
+        /* TODO: don't block */
         r = getchar();
     }
     if (addr == 5) {
