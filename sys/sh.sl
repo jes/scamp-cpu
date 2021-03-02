@@ -50,7 +50,7 @@ var internal = func(args) {
     var n;
 
     if (strcmp(args[0], "cd") == 0) {
-        if (!args[1]) *(args+1) = '/'; # TODO: take from $HOME?
+        if (!args[1]) *(args+1) = "/"; # TODO: take from $HOME?
         n = chdir(args[1]);
         if (n < 0) fprintf(2, "sh: %s: %s\n", [args[1], strerror(n)]);
     } else if (strcmp(args[0], "exit") == 0) {
