@@ -178,11 +178,12 @@ Remove the file at the given path.
 
 ### 0xfeee: copyfd(destfd, srcfd)
 
-    Return: the old mapping of fd, or -ERR on error
+    Return: the new fd, or -ERR on error
     Implemented: yes, but dubious
     Errors: BADFD
 
-Make `destfd` go to/from the same place as `srcfd`.
+Make `destfd` go to/from the same place as `srcfd`. If the passed `destfd` is negative, then
+a new fd will be allocated.
 
 By convention programs should take input from fd *0*, output to fd *1*, and send error messages
 to fd *2*. Fds *3..n* should be permanently mapped to serial ports, with fd *3* being the

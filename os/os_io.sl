@@ -18,9 +18,15 @@ extern sys_close;
 #       maybe it should be swapfd instead? but then fd 3 wouldn't always be
 #       the console. hmm.
 sys_copyfd  = func(destfd, srcfd) {
+    if (destfd >= nfds || srcfd >= nfds || srcfd < 0) return BADFD;
+
+    if (destfd < 0) destfd = fdalloc();
+    if (destfd < 0) return destfd;
+
     var srcbase = fdbaseptr(srcfd);
     var destbase = fdbaseptr(destfd);
     memcpy(destbase, srcbase, 8);
+    return destfd;
 };
 
 # The following calls dispatch to their implementations based on the fd table
