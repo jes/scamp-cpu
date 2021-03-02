@@ -167,14 +167,22 @@ sys_system = asm {
     jmp (_system_ret)
 };
 
+var jmp_to_user = asm {
+    # put sp below kernel so that a misbehaving program is less likely to trash the kernel
+    ld sp, OSBASE
+    dec sp
+
+    # jump to program
+    jmp 0x100
+};
+
 # example: sys_exec(["/bin/ls", "/etc"])
-sys_exec = func(args) {
+var sys_exec_impl = func(args) {
     var err = catch();
     if (err) return err;
 
     # TODO: bounds-check args copying
     # TODO: what happens if no fds are available
-    # TODO: put sp somewhere it won't trash the kernel if the program misbehaves? (i.e. osbase()?)
 
     # count the number of arguments
     var nargs = 0;
@@ -203,13 +211,28 @@ sys_exec = func(args) {
     var n;
     while (1) {
         n = sys_read(fd, p, 254);
-        if (n <= 0) break;
+        if (n == 0) break;
+        if (n < 0) {
+            sys_close(fd);
+            return n;
+        };
         p = p + n;
     };
     sys_close(fd);
 
     # jump to it
-    var user = 0x100;
-    user();
+    jmp_to_user();
     kpanic("user program returned to exec() call");
+};
+
+# copy arg pointer, switch to kernel stack, and call sys_exec_impl()
+var exec_sp;
+sys_exec = asm {
+    pop x
+    ld (_exec_sp), sp
+    ld sp, INITIAL_SP
+    push x
+    call (_sys_exec_impl)
+    ld sp, (_exec_sp)
+    ret
 };
