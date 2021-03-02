@@ -65,4 +65,38 @@ sys_open = func(name, mode) {
 };
 
 sys_unlink = func() unimpl("unlink");
-sys_stat   = func() unimpl("stat");
+
+sys_stat = func(name, statbuf) {
+    var startblk = CWDBLK;
+    if (*name == '/') startblk = ROOTBLOCK;
+
+    var err = catch();
+    if (err) return err;
+
+    # try to find the name
+    var location = dirfindname(startblk, name);
+    if (!location) return NOTFOUND;
+
+    var blknum = location[0];
+    var nwords = 0;
+    var nblocks = 0;
+
+    while (blknum) {
+        blkread(blknum);
+        if (blktype() == TYPE_DIR) {
+            *statbuf = 0;
+            nwords = nwords + BLKSZ-2;
+        } else {
+            *statbuf = 1;
+            nwords = nwords + half(blklen()+1);
+        };
+
+        nblocks++;
+        blknum = blknext();
+    };
+
+    *(statbuf+1) = nwords;
+    *(statbuf+2) = nblocks;
+
+    return 0;
+};
