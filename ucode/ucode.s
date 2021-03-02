@@ -657,13 +657,7 @@ ld x, i8h((65535)): # Load the value in <tt>(sp+i8h)</tt> into <tt>x</tt>.
     X+Y AI
     MO XI
 
-ld i8h((65535)), x: # Load <tt>x</tt> into <tt>(sp+i8h)</tt>.
-    -1 AI
-    MO YI
-    IOH XI
-    X+Y AI
-    XO MI
-
+nop:
 nop:
 nop:
 
@@ -801,12 +795,7 @@ ld x, i8l((65535)): # Load the value in <tt>(sp+i8l)</tt> into <tt>x</tt>.
     X+Y AI
     MO XI
 
-ld i8l((65535)), x: # Load <tt>x</tt> into <tt>(sp+i8l)</tt>.
-    -1 AI
-    MO YI
-    IOL XI
-    X+Y AI
-    XO MI
+nop:
 
 ld (i8h), 1((65535)): # Load the value in <tt>(sp+1)</tt> into <tt>r</tt>.
     -1 AI
