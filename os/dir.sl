@@ -31,7 +31,7 @@ var undirent = func(dirent, pname, pblknum) {
     var p = dirent;
     var s = undirent_str;
 
-    while (p != dirent+16) {
+    while (p != dirent+15) {
         *s = shr8(*p); # high byte
         if (!*s) break;
         s++;
@@ -199,6 +199,7 @@ var dirmkname = func(dirblk, mkname, mktype) {
         # write a header
         blksettype(TYPE_DIR);
         blksetnext(0);
+        # TODO: 0 out the filenames
         blkwrite(dir_blknum);
 
         # link it in to the directory
