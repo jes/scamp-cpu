@@ -7,4 +7,5 @@ put ../sys/mkdir.bin /bin/mkdir
 put ../sys/ls.bin /bin/ls
 put ../sys/sh.bin /bin/sh
 put ../sys/pwd.bin /bin/pwd
+put ../sys/echo.bin /bin/echo
 mkdir proc
