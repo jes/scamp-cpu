@@ -24,15 +24,17 @@ var ls = func(name) {
         if (n == 0) break;
         if (n < 0) {
             puts("\n");
-            fprintf(2, "ls: readdir %s: %s\n", [name, strerror(fd)]);
+            fprintf(2, "ls: readdir %s: %s\n", [name, strerror(n)]);
             rc = 1;
             break;
         };
 
         p = buf;
-        while (n--)
+        while (n--) {
             while (*p)
                 putchar(*(p++));
+            p++;
+        };
         puts("  ");
     };
     close(fd);
