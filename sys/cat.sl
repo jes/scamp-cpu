@@ -1,15 +1,23 @@
 include "stdio.sl";
 include "sys.sl";
 include "malloc.sl";
+include "string.sl";
 
 var bufsz = 256;
 var buf = malloc(bufsz);
 
+# TODO: ability to cat a file named "-"
+
 var cat = func(name) {
-    var fd = open(name, O_READ);
-    if (fd < 0) {
-        fprintf(2, "cat: open %s: %s\n", [name, strerror(fd)]);
-        return 0;
+    var fd;
+    if (strcmp(name, "-") == 0) {
+        fd = 1;
+    } else {
+        fd = open(name, O_READ);
+        if (fd < 0) {
+            fprintf(2, "cat: open %s: %s\n", [name, strerror(fd)]);
+            return 0;
+        };
     };
 
     var n;
@@ -28,8 +36,8 @@ var cat = func(name) {
 var args = cmdargs()+1;
 
 if (!*args) {
-    fputs(2, "usage: cat FILES...\n");
-    exit(1);
+    cat("-");
+    exit(0);
 };
 
 while (*args) {
