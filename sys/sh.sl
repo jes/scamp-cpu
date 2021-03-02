@@ -80,6 +80,7 @@ while (1) {
     p = buf;
     i = 0;
     while (*p && iswhite(*p)) p++;
+    if (!*p) continue;
 
     *args = p;
     i = 1;
