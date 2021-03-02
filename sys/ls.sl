@@ -41,11 +41,15 @@ var ls = func(name) {
 
 var args = cmdargs()+1;
 
-if (!*args) {
+var nargs = 0;
+var p = args;
+while (*(p++)) nargs++;
+
+if (nargs == 0) {
     ls(".");
 } else {
     while (*args) {
-        printf("%s:\n", [*args]); # TODO: only if multiple arguments
+        if (nargs > 1) printf("%s:\n", [*args]);
         ls(*args);
         args++;
     };
