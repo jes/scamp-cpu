@@ -7,11 +7,16 @@ extern sys_opendir;
 extern sys_mkdir;
 extern sys_chdir;
 
-var readdir_minoffset;
 var readdir_buf;
 var readdir_sz;
 var readdir_blknum;
+var readdir_minoffset;
+var readdir_ndirents;
 sys_readdir = func(fd, buf, sz) {
+    var err;
+    err = catch();
+    if (err) return err;
+
     var fdbase = fdbaseptr(fd);
 
     readdir_buf = buf;
@@ -19,11 +24,13 @@ sys_readdir = func(fd, buf, sz) {
 
     readdir_blknum = *(fdbase+FDDATA);
     readdir_minoffset = *(fdbase+FDDATA+1);
+    readdir_ndirents = 0;
 
     dirwalk(readdir_blknum, func(name, blknum, dirblknum, dirent_offset) {
-        if (dirent_offset < readdir_minoffset) return 1; # already seen this one
+        if (dirent_offset < readdir_minoffset && dirblknum == readdir_blknum) return 0;
 
-        if (*name) { # copy the name into readdir_buf
+        if (*name) {
+            # copy the name into readdir_buf
             while (*name && readdir_sz) {
                 *(readdir_buf++) = *(name++);
                 readdir_sz--;
@@ -32,16 +39,18 @@ sys_readdir = func(fd, buf, sz) {
 
             *(readdir_buf++) = 0; # terminate the name
             readdir_sz--;
+            readdir_ndirents++;
         };
 
         readdir_blknum = dirblknum;
         readdir_minoffset = dirent_offset+1;
+        return 1;
     });
 
     *(fdbase+FDDATA) = readdir_blknum;
     *(fdbase+FDDATA+1) = readdir_minoffset;
 
-    return (sz - readdir_sz);
+    return readdir_ndirents;
 };
 
 sys_opendir = func(name) {
