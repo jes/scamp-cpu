@@ -57,10 +57,12 @@ var BADFD = -5;
 var TOOLONG = -6;
 
 var strerror = func(err) {
+    if (err == 0) return "success";
     if (err == EOF) return "end-of-file";
     if (err == NOTFOUND) return "not found";
     if (err == NOTFILE) return "not a file";
     if (err == NOTDIR) return "not a directory";
     if (err == BADFD) return "bad file descriptor";
     if (err == TOOLONG) return "path component too long";
+    return "<unknown error>";
 };
