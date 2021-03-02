@@ -53,6 +53,10 @@ var internal = func(args) {
         if (!args[1]) *(args+1) = '/'; # TODO: take from $HOME?
         n = chdir(args[1]);
         if (n < 0) fprintf(2, "%s: %s\n", [args[1], strerror(n)]);
+    } else if (strcmp(args[0], "exit") == 0) {
+        n = 0;
+        if (args[1]) n = atoi(args[1]);
+        exit(n);
     } else {
         return 0;
     };
