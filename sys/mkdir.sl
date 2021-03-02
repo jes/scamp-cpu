@@ -14,5 +14,3 @@ while (*args) {
     mkdir(*args);
     args++;
 };
-
-exit(0);
