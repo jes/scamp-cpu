@@ -207,7 +207,7 @@ var dirmkname = func(dirblk, mkname, mktype) {
         blksetnext(dir_blknum);
         blkwrite(dir_lastblk);
 
-        dir_offset = 0;
+        dir_offset = 2; # skip header
     };
 
     # now the dirent we should write to is at "dir_offset" into block number "dir_blknum"
