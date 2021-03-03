@@ -441,7 +441,7 @@ sub CharacterLiteral {
 
 sub escapedchar {
     my ($c) = @_;
-    my %map = (n => "\n", r => "\r", t => "\r", 0 => "\0", "]" => "\]");
+    my %map = (n => "\n", r => "\r", t => "\t", 0 => "\0", "]" => "\]");
     return $map{$c}||$c;
 }
 
