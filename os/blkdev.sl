@@ -38,15 +38,15 @@ var blkread = func(num) {
     # the (dead) loop below
     return asm_blkread();
 
-    var i = 0;
-    var high;
-    var low;
-    while (i != BLKSZ) {
-        high = inp(blkdataport);
-        low = inp(blkdataport);
-        *(BLKBUF+i) = shl(high,8) | low;
-        i++;
-    };
+    #var i = 0;
+    #var high;
+    #var low;
+    #while (i != BLKSZ) {
+    #    high = inp(blkdataport);
+    #    low = inp(blkdataport);
+    #    *(BLKBUF+i) = shl(high,8) | low;
+    #    i++;
+    #};
 };
 
 var asm_blkwrite = asm {
@@ -83,16 +83,16 @@ var blkwrite = func(num) {
     # the (dead) loop below
     return asm_blkwrite();
 
-    var i = 0;
-    var high;
-    var low;
-    while (i != BLKSZ) {
-        high = shr8(*(BLKBUF+i));
-        low = *(BLKBUF+i) & 0xff;
-        outp(blkdataport, high);
-        outp(blkdataport, low);
-        i++;
-    };
+    #var i = 0;
+    #var high;
+    #var low;
+    #while (i != BLKSZ) {
+    #    high = shr8(*(BLKBUF+i));
+    #    low = *(BLKBUF+i) & 0xff;
+    #    outp(blkdataport, high);
+    #    outp(blkdataport, low);
+    #    i++;
+    #};
 };
 
 # get the "type"/"length"/"next" field of the current block
