@@ -19,7 +19,7 @@ The first 4 bytes of each block are decoded as follows:
 1 (file) are assigned; the upper 5 bits are currently unused).
 
 "length" is 9 bits, indicating how much of the current block is to be used for
-this node, not including the header. I.e. a file containing 1 byte would look like:
+this node, not including the header.
 
 "next block pointer" contains the number of the next block that forms part of this
 file or directory, or 0 if this is the last block.
