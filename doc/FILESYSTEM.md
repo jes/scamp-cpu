@@ -15,7 +15,7 @@ The first 4 bytes of each block are decoded as follows:
     |    type     |    length       |       next block pointer      |
     |. . . . . . . .|. . . . . . . .|. . . . . . . .|. . . . . . . .|
 
-(Although 6 bits are currently allocated for "type", only types 0 (directory) and
+(Although 7 bits are currently allocated for "type", only types 0 (directory) and
 1 (file) are assigned; the upper 5 bits are currently unused).
 
 "length" is 9 bits, indicating how much of the current block is to be used for

@@ -59,7 +59,6 @@ var fs_write = func(fd, buf, sz) {
     var startat;
     var remain;
     var write;
-    var needfindfree;
 
     while (sz) {
         blknum = nextblknum;
