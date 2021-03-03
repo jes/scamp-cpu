@@ -11,7 +11,7 @@ var showstat = func(name) {
 
     var typch = 'f';
     if (*statbuf == 0) typch = 'd';
-    printf("%c %d %d %s\n", [typch, statbuf[1], statbuf[2], name]);
+    printf("%c %d\t%d\t%s\n", [typch, statbuf[1], statbuf[2], name]);
 };
 
 var args = cmdargs()+1;

@@ -32,7 +32,7 @@ var ls = func(name) {
         while (n--) {
             while (*p)
                 putchar(*(p++));
-            puts("  ");
+            putchar('\t');
             p++;
         };
     };
