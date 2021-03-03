@@ -148,6 +148,7 @@ var getcwd_level = func(buf, sz, dirblk, bufp) {
 
     # work out the name of this directory
     getcwd_dirblk = dirblk;
+    getcwd_name = 0;
     dirwalk(parentblk, func(name, blknum, dirblknum, dirent_offset) {
         if (*name && blknum == getcwd_dirblk) {
             getcwd_name = name;
@@ -155,6 +156,7 @@ var getcwd_level = func(buf, sz, dirblk, bufp) {
         };
         return 1;
     });
+    if (!getcwd_name) return NOTFOUND;
 
     while (*getcwd_name) *(next_bufp++) = *(getcwd_name++);
     *next_bufp = 0;
