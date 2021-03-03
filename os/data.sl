@@ -1,5 +1,5 @@
 # Data storage and related functions
-# TODO: we should probably aim to move some of this into the middle of the top
+# TODO: [nice] we should probably aim to move some of this into the middle of the top
 # page so that the kernel is smaller. Maybe leave 16/32 pseudoregs free at the
 # bottom, and some more at the top, and use the rest for kernel data.
 

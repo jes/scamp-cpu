@@ -158,7 +158,7 @@ var getcwd_level = func(buf, sz, dirblk, bufp) {
     });
     if (!getcwd_name) return NOTFOUND;
 
-    # TODO: bounds-checking
+    # TODO: [bug] bounds-checking
     while (*getcwd_name) *(next_bufp++) = *(getcwd_name++);
     *(next_bufp++) = '/';
     *next_bufp = 0;

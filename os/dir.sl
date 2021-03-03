@@ -94,7 +94,7 @@ var dirfindname = func(dirblk, findname) {
     dir_name = findname;
     while (*dir_name == '/') dir_name++;
 
-    # TODO: what should "dirblknum" and "dirent_offset" be in this case?
+    # TODO: [nice] what should "dirblknum" and "dirent_offset" be in this case?
     # should we recurse into the parent dir and try to find the dirent with
     # block number "dirblk"?
     if (!*dir_name) return [dirblk, 0, 0];

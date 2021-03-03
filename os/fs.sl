@@ -18,7 +18,7 @@ var fs_read = func(fd, buf, sz) {
 
         # 254 words per block, so the position within the block contents is seekpos%254
         #   startat = seekpos % 254;
-        # TODO: abstract out this divmod into some other function?
+        # TODO: [nice] abstract out this divmod into some other function?
         divmod(seekpos, BLKSZ-2, 0, &startat);
 
         # blklen() is counted in bytes, so the number of words remaining is:
@@ -64,7 +64,7 @@ var fs_write = func(fd, buf, sz) {
         blknum = nextblknum;
 
         # read the current block of the file
-        # TODO: we can skip this if we know we're writing at the end of the
+        # TODO: [perf] we can skip this if we know we're writing at the end of the
         # file and startat==0, because we don't need length, next pointer, or
         # block contents.
         blkread(blknum);

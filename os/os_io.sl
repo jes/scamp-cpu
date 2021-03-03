@@ -10,7 +10,7 @@ extern sys_read;
 extern sys_write;
 extern sys_close;
 
-# TODO: is this sound in the general case? what about seek/tell offsets?
+# TODO: [nice] is this sound in the general case? what about seek/tell offsets?
 #       buffers? maybe we just tell people not to use it if they're not sure;
 #       the intended purpose is for remapping stdin/stdout/stderr, so as long
 #       as srcfd is never used again, it's not a problem; but what happens if

@@ -57,7 +57,6 @@ var sys_exit_impl = func(rc) {
     sys_close(ufd);
 
     # 2. restore kernel state
-    # TODO: error checking
     var kfd = sys_open(kernelfile, O_READ);
     if (kfd < 0) throw(kfd);
 
@@ -116,7 +115,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
     #  - CWDBLK
     #  - fdtable
     #  - cmdargs
-    # TODO: error checking
+    # TODO: [bug] error checking
     sys_write(kfd, &sp, 1);
     sys_write(kfd, &ret, 1);
     sys_write(kfd, &CWDBLK, 1);
@@ -131,7 +130,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
 
     # if sys_exec() returned, there was an error
 
-    # TODO: unlink $pid.user, $pid.kernel?
+    # TODO: [nice] unlink $pid.user, $pid.kernel?
     return err;
 };
 
@@ -162,7 +161,7 @@ sys_system = asm {
     call (_sys_system_impl)
 
     # if system() returned there was an error: restore user stack
-    # TODO: how can we distinguish a system() error from a return code from the child?
+    # TODO: [nice] how can we distinguish a system() error from a return code from the child?
     ld sp, (_system_sp)
     jmp (_system_ret)
 };
@@ -181,8 +180,8 @@ var sys_exec_impl = func(args) {
     var err = catch();
     if (err) return err;
 
-    # TODO: bounds-check args copying
-    # TODO: what happens if no fds are available
+    # TODO: [bug] bounds-check args copying
+    # TODO: [nice] what happens if no fds are available
 
     # count the number of arguments
     var nargs = 0;

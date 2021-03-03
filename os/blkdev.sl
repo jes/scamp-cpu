@@ -106,7 +106,7 @@ var blksetlen = func(len) *(BLKBUF+0) = blktype() | len;
 var blksetnext = func(blk) *(BLKBUF+1) = blk;
 
 # find a free block and update "blknextfree"
-# TODO: start searching from the current "blknextfree" to avoid the long
+# TODO: [perf] start searching from the current "blknextfree" to avoid the long
 # linear search in the case where the start of the disk is all used
 var blkfindfree = func() {
     var bitmapblk = 0;
@@ -124,7 +124,7 @@ var blkfindfree = func() {
         bitmapblk++;
     };
 
-    # TODO: don't kernel panic when disk is full
+    # TODO: [nice] don't kernel panic when disk is full
     if (bitmapblk == 16) kpanic("block device full");
 
     # we now know that BLKBUF[blkgroup] != 0xffff, which means at least one of
