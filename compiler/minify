@@ -22,8 +22,10 @@ sub handle {
         return if $INCLUDED{$file};
         $INCLUDED{$file} = 1;
 
-        open(my $fh, '<', $file)
-            or die "can't read $file: $!\n";
+        my $fh;
+        open($fh, '<', $file)
+            or open($fh, '<', "lib/$file")
+                or die "can't read $file: $!\n";
         while (<$fh>) {
             chomp;
             handle($_);
