@@ -3,10 +3,10 @@
 # A list consists of a head element pointer and a tail element pointer.
 # An element consists of a value and a next element pointer.
 #
-# TODO: make it doubly-linked so that lstpop() is O(1)?
-# TODO: insert element at given index
-# TODO: retrieve element at given index
-# TODO: delete element at given index
+# TODO: [perf] make it doubly-linked so that lstpop() is O(1)?
+# TODO: [nice] insert element at given index
+# TODO: [nice] retrieve element at given index
+# TODO: [nice] delete element at given index
 
 include "malloc.sl";
 

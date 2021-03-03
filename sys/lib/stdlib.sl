@@ -209,7 +209,7 @@ var stridx = func(alphabet, ch) {
     return 0;
 };
 
-# TODO: negative values?
+# TODO: [nice] negative values?
 var atoibase = func(s, base) {
     var v = 0;
     while (*s) {
@@ -219,7 +219,7 @@ var atoibase = func(s, base) {
     return v;
 };
 
-# TODO: negative values?
+# TODO: [nice] negative values?
 var atoi = func(s) return atoibase(s, 10);
 
 # usage: inp(addr)

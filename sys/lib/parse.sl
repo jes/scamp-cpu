@@ -1,6 +1,6 @@
 # Parsing routines
 #
-# TODO: better-namespaced globals
+# TODO: [nice] better-namespaced globals
 
 var pos;
 var readpos;

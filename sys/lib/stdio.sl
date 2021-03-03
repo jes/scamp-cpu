@@ -55,10 +55,11 @@ var puts = func(s) return fputs(1,s);
 #   %s -> string
 #   %d -> decimal integer
 #   %x -> hex integer
-# TODO: signed vs unsigned integers? padding?
-# TODO: show (null) for null pointers
-# TODO: show arrays? lists?
-# TODO: return the number of chars output
+# TODO: [nice] signed vs unsigned integers? padding?
+# TODO: [nice] show (null) for null pointers
+# TODO: [nice] show arrays? lists?
+# TODO: [nice] return the number of chars output
+# TODO: [nice] padding with zeroes/spaces
 var fprintf = func(fd, fmt, args) {
     var p = fmt;
     var argidx = 0;

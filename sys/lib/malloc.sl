@@ -97,7 +97,7 @@ var realloc = func(p, sz) {
     var bp = p-2;
     var oldsz = bp[1];
 
-    # TODO: if there's free space immediately after p, just grow into it
+    # TODO: [perf] if there's free space immediately after p, just grow into it
 
     var newp = malloc(sz);
     var copysz = oldsz;
