@@ -88,6 +88,7 @@ void load_disk(char *file) {
         fprintf(stderr, "can't mmap %s: %s\n", file, strerror(errno));
         exit(1);
     }
+    close(fd);
 }
 
 void open_profile(char *file) {
