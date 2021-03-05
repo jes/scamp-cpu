@@ -1,9 +1,8 @@
 # SCAMP CPU
 
-I want to make a CPU out of TTL chips.
+I am building a 16-bit CPU.
 
-This repo is likely to be a loosely-connected collection of Verilog source, KiCad files, text notes,
-and software.
+This repo is a loosely-connected collection of Verilog source, FreeCAD files, KiCad files, text notes, and software.
 
 It's called "SCAMP" which means something like "Simple Computing and Arithmetic Microcoded Processor".
 
@@ -21,15 +20,19 @@ that if step 4 needs to happen substantially more than once that it will never g
 
 ## Current status
 
-I've finished writing Verilog and think I've settled on the overall CPU architecture (see diagram below).
+I've finished writing Verilog and have settled on the overall CPU architecture (see diagram below).
 
-I'm quite happy with the instruction set, see [doc/table.html](doc/table.html), available online at https://incoherency.co.uk/interest/table.html - but the instruction set is implemented with microcode, so changes are relatively cheap.
+I'm happy with the instruction set, see [doc/table.html](doc/table.html), available online at https://incoherency.co.uk/interest/table.html - but the instruction set is implemented with microcode, so changes are relatively cheap.
 
 I have some blog posts here: https://incoherency.co.uk/blog/tags/cpu.html
 
 I have created an emulator (see in `emulator/`) and a compiler (`compiler/`). Although there is still useful
 work to be done on the compiler, it can now compile itself from within the emulator, provided the `include`
 lines are preprocessed outside.
+
+I have written quite a lot of the kernel (see `os/`). It can do most of the system calls. It needs more error-checking,
+bounds-checking, etc.. It can load programs off a filesystem stored on a block device and execute them, but obviously
+only in the emulator since the real CPU doesn't exist yet.
 
 I'm currently designing the PCBs:
 
@@ -45,8 +48,8 @@ Other work includes:
 
  - [x] get the PCBs manufactured
  - [ ] work out how to interface with storage and serial
- - [ ] assemble the computer inside a convenient case
- - [ ] write the bootloader ROM
+ - [ ] assemble the computer inside a convenient case (WIP: see `case/` and `front-panels/`)
+ - [ ] write the bootloader ROM (WIP: see `bootrom.s`)
  - [ ] write the "kernel" (WIP: see `os/`)
  - [x] write a compiler
  - [ ] write system utilities (WIP: see `sys/`)
@@ -75,15 +78,10 @@ is, and without going through all the lectures, you can play https://nandgame.co
 Ben Eater's videos on 8-bit CPU design are excellent and heavily influenced
 the design of my CPU.
 
-I plan to go through the [YouTube playlist](https://www.youtube.com/playlist?list=PLOech0kWpH8-njQpmSNGSiQBPUvl8v3IM) for Nicolas Laurent's [compiler class](https://norswap.com/compilers/)
+I found the [YouTube playlist](https://www.youtube.com/playlist?list=PLOech0kWpH8-njQpmSNGSiQBPUvl8v3IM) for Nicolas Laurent's [compiler class](https://norswap.com/compilers/) quite helpful
+in writing the parser for the compiler.
 
 ## Contact
 
-I can't imagine why it would, but if anything in this repo causes you to want to communicate with
-the person who wrote it, you can email me:
-
-    James Stanley <james@incoherency.co.uk>
-
-or read my blog:
-
-    https://incoherency.co.uk/
+If anything in this repo causes you to want to communicate with the person who wrote it, you can email me on [james@incoherency.co.uk](mailto:james@incoherency.co.uk)
+or read my blog: [https://incoherency.co.uk/].
