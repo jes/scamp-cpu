@@ -132,8 +132,6 @@ var sys_system_impl  = func(top, args, sp, ret) {
     err = sys_exec(args);
     pid--;
 
-    kprintf("exec failed! need to return to user! %d\n", [err]);
-
     # if sys_exec() returned, there was an error
 
     # TODO: [nice] unlink $pid.user, $pid.kernel?
