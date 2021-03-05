@@ -4,6 +4,8 @@ include "util.sl";
 include "os_io.sl";
 include "os_fs.sl";
 
+include "fsck.sl";
+
 extern sys_cmdargs;
 extern sys_system;
 extern sys_exec;
@@ -36,6 +38,8 @@ var sys_exit_impl = func(rc) {
     # make sure there's at least 1 free fd slot
     # XXX: is this right? should we be doing more? less?
     sys_close(nfds-1);
+
+    fsck();
 
     # create filenames
     var userfile = "/proc/0.user";

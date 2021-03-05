@@ -18,6 +18,9 @@ include "os_dir.sl";
 include "os_io.sl";
 include "os_proc.sl";
 
+kputs("fsck...\n");
+fsck();
+
 kputs("loading init...\n");
 
 # We just need to start init to boot the system.
