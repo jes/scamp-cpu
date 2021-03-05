@@ -201,7 +201,7 @@ var dirmkname = func(dirblk, mkname, mktype) {
         # write a header
         blksettype(TYPE_DIR);
         blksetnext(0);
-        memset(BLKBUF+2, BLKSZ-2, 0); # zero out the filenames
+        memset(BLKBUF+2, 0, BLKSZ-2); # zero out the filenames
         blkwrite(dir_blknum);
 
         # link it in to the directory

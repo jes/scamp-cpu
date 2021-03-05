@@ -142,6 +142,14 @@ var byteshr4 = asm {
     ld r0, x
     ld r1, r254 # stash return address
     ld r254, 0
+    tbsz r0, 0x800
+    sb r254, 0x80
+    tbsz r0, 0x400
+    sb r254, 0x40
+    tbsz r0, 0x200
+    sb r254, 0x20
+    tbsz r0, 0x100
+    sb r254, 0x10
     tbsz r0, 0x80
     sb r254, 0x8
     tbsz r0, 0x40
