@@ -67,7 +67,7 @@ var dirwalk = func(dirblk, cb) {
         next = blknext();
 
         off = 2;
-        while (off < BLKSZ) {
+        while ((off+DIRENTSZ) <= BLKSZ) {
             undirent(BLKBUF+off, &name, &blknum);
             if (cb(name, blknum, dirblk, off) == 0) return 0;
             off = off + DIRENTSZ;
