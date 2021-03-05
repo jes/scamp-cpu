@@ -97,6 +97,7 @@ sys_stat = func(name, statbuf) {
 
     *(statbuf+1) = nwords;
     *(statbuf+2) = nblocks;
+    *(statbuf+3) = location[0];
 
     return 0;
 };

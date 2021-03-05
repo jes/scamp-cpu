@@ -172,6 +172,7 @@ Fields are:
     0: file type (0 = dir, 1 = file)
     1: length of file in blocks
     2: length of file in words
+    3: block number of start of file
 
 ### 0xfeef: unlink(path)
 

@@ -2,7 +2,7 @@ include "stdio.sl";
 include "sys.sl";
 
 var showstat = func(name) {
-    var statbuf = [0,0,0];
+    var statbuf = [0,0,0,0];
     var n = stat(name, statbuf);
     if (n < 0) {
         fprintf(2, "stat: %s: %s\n", [name, strerror(n)]);
@@ -11,7 +11,7 @@ var showstat = func(name) {
 
     var typch = 'f';
     if (*statbuf == 0) typch = 'd';
-    printf("%c %d\t%d\t%s\n", [typch, statbuf[1], statbuf[2], name]);
+    printf("%c %d\t%d\t%d\t%s\n", [typch, statbuf[1], statbuf[2], statbuf[3], name]);
 };
 
 var args = cmdargs()+1;
