@@ -83,9 +83,9 @@ sys_exit = asm {
     pop x
     ld sp, INITIAL_SP
     push x
-    call (_sys_exit_impl)
+    jmp (_sys_exit_impl)
 
-    jr- 1 # XXX: sys_exit_impl() shoudln't ever return
+    jr- 1 # XXX: sys_exit_impl() shouldn't ever return
 };
 
 # example: sys_system(0x8000, ["/bin/ls", "-l"])
@@ -132,42 +132,24 @@ var sys_system_impl  = func(top, args, sp, ret) {
     err = sys_exec(args);
     pid--;
 
+    kprintf("exec failed! need to return to user! %d\n", [err]);
+
     # if sys_exec() returned, there was an error
 
     # TODO: [nice] unlink $pid.user, $pid.kernel?
     return err;
 };
 
-# copy the return address, stack pointer, and system() arguments into the
-# kernel stack, switch to the kernel stack, and call sys_system_impl()
-var system_sp;
-var system_ret;
+# call sys_system_impl() with the return address, stack pointer, and system() arguments
 sys_system = asm {
-    pop x
-    ld r0, x # args
-    pop x
-    ld r1, x # top
-    ld r2, sp # stack pointer
-    ld r3, r254 # return address
-    ld sp, INITIAL_SP # switch to kernel stack
+    ld x, sp # stack pointer
+    add x, 2 # pop past the 2 args to system()
+    push x
+    ld x, r254 # return address
+    push x
+    jmp (_sys_system_impl)
 
-    ld (_system_sp), r2
-    ld (_system_ret), r3
-
-    ld x, r1 # top
-    push x
-    ld x, r0 # args
-    push x
-    ld x, r2 # stack pointer
-    push x
-    ld x, r3 # return address
-    push x
-    call (_sys_system_impl)
-
-    # if system() returned there was an error: restore user stack
     # TODO: [nice] how can we distinguish a system() error from a return code from the child?
-    ld sp, (_system_sp)
-    jmp (_system_ret)
 };
 
 var jmp_to_user = asm {
@@ -230,12 +212,17 @@ var sys_exec_impl = func(args) {
 
 # copy arg pointer, switch to kernel stack, and call sys_exec_impl()
 var exec_sp;
+var exec_ret;
 sys_exec = asm {
     pop x
+    ld (_exec_ret), r254
     ld (_exec_sp), sp
+
     ld sp, INITIAL_SP
     push x
     call (_sys_exec_impl)
+
     ld sp, (_exec_sp)
+    ld r254, (_exec_ret)
     ret
 };
