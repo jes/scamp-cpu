@@ -93,6 +93,7 @@ sys_mkdir = func(name) {
 
     var location = dirmkname(startblk, name, TYPE_DIR);
     if (!location) return NOTFOUND;
+    if (location == -1) return EXISTS;
     var dirblk = location[0];
     var parentdirblk = location[3];
 

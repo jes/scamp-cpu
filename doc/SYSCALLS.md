@@ -261,3 +261,7 @@ File descriptor not allocated, or requested operation not available on this fd.
 ### -6: TOOLONG
 
 A path component was too long.
+
+### -7: EXISTS
+
+Path already exists.

@@ -33,6 +33,7 @@ sys_open = func(name, mode) {
 
         location = dirmkname(startblk, name, TYPE_FILE);
         if (!location) return NOTFOUND;
+        if (location == -1) return EXISTS;
     };
 
     # return NOTFILE if it's not a file

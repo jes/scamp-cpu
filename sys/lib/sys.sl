@@ -57,6 +57,7 @@ var NOTFILE = -3;
 var NOTDIR = -4;
 var BADFD = -5;
 var TOOLONG = -6;
+var EXISTS = -7;
 
 var strerror = func(err) {
     if (err == 0) return "success";
@@ -66,5 +67,6 @@ var strerror = func(err) {
     if (err == NOTDIR) return "not a directory";
     if (err == BADFD) return "bad file descriptor";
     if (err == TOOLONG) return "path component too long";
+    if (err == EXISTS) return "path exists";
     return "<unknown error>";
 };

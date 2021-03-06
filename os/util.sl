@@ -7,6 +7,7 @@ var NOTFILE = -3;
 var NOTDIR = -4;
 var BADFD = -5;
 var TOOLONG = -6;
+var EXISTS = -7;
 
 # usage: inp(addr)
 var inp = asm {

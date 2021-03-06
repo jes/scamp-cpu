@@ -129,8 +129,8 @@ var dirfindname = func(dirblk, findname) {
 #    dirent_offset, # the word offset of the dirent for this name
 #    parent_blknum, # the block number of the start of the parent directory
 #  ]
-# return a null pointer if intermediate path components are not found, or if
-# the file already exists
+# return a null pointer if intermediate path components are not found, or
+# -1 if # the file already exists
 var dir_lastblk;
 var dirmkname = func(dirblk, mkname, mktype) {
     dir_name = mkname;
@@ -150,7 +150,7 @@ var dirmkname = func(dirblk, mkname, mktype) {
         });
 
         while (*dir_name == '/') dir_name++;
-        if (*dir_name == 0) return 0; # file already exists
+        if (*dir_name == 0) return -1; # file already exists
 
         if (dir_blknum == 0) break; # doesn't exist
 
