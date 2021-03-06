@@ -238,10 +238,25 @@ do_setjmp: # x = jmpbuf pointer, r2 = stashed return
     ret
 };
 
+# only the top-most catch() in each system call needs to be allowed;
+# when system calls call other system calls, any throw()s created
+# in the sub-calls need to go tot he top one instead
+var catch_allowed = 1;
+var denycatch = func() catch_allowed = 0;
+var allowcatch = func() catch_allowed = 1;
+
 # return 0 on first call, and update state for throw();
 # when throw() is called, return the value that was thrown
 # ("catch()" is equivalent to "setjmp(throw_jmpbuf)")
 var catch = asm {
+    # first check if catch() is allowed, and no-op if not
+    test (_catch_allowed)
+    jnz catch_ok
+    ld r0, 0
+    ret
+
+    catch_ok:
+    # ok, now setjmp()
     ld r2, 1(sp) # r2 = caller's stashed return address
     ld x, (_throw_jmpbuf) # x = jmpbuf pointer
     jmp do_setjmp

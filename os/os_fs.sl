@@ -13,8 +13,16 @@ sys_open = func(name, mode) {
     var startblk = CWDBLK;
     if (*name == '/') startblk = ROOTBLOCK;
 
+    var fd = -1;
+
     var err = catch();
-    if (err) return err;
+    if (err) {
+        # TODO: [bug] fd leak if sys_open() is called under denycatch() (think
+        #       there is actually no code path that triggers this currently, but
+        #       there may be in the future)
+        if (fd != -1) fdfree(fd);
+        return err;
+    };
 
     # try to find the name
     var location = dirfindname(startblk, name);
@@ -32,15 +40,8 @@ sys_open = func(name, mode) {
     if(blktype() != TYPE_FILE) return NOTFILE;
 
     # allocate an fd, or return BADFD if they're all taken
-    var fd = fdalloc();
+    fd = fdalloc();
     if (fd == -1) return BADFD;
-
-    # free the fd if we have any errors now
-    err = catch();
-    if (err) {
-        fdfree(fd);
-        return err;
-    };
 
     # attach read/write/seek/tell
     var fdbase = fdbaseptr(fd);

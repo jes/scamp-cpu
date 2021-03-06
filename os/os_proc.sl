@@ -30,6 +30,7 @@ var return_to_parent = asm {
 
 var sys_exit_impl = func(rc) {
     var err = catch();
+    denycatch();
     if (err) kpanic("exit() panics");
 
     if (pid == 0) kpanic("init exits.");
@@ -74,6 +75,9 @@ var sys_exit_impl = func(rc) {
     sys_read(kfd, cmdargs, cmdargs_sz);
     sys_close(kfd);
 
+    # TODO: [nice] unlink $pid.user, $pid.kernel?
+
+    allowcatch();
     return_to_parent(sp, ret, rc);
     kpanic("return_to_parent() returned to exit()");
 };
@@ -91,7 +95,11 @@ sys_exit = asm {
 # example: sys_system(0x8000, ["/bin/ls", "-l"])
 var sys_system_impl  = func(top, args, sp, ret) {
     var err = catch();
-    if (err) return err;
+    denycatch();
+    if (err) {
+        allowcatch();
+        return err;
+    };
 
     # create filenames
     var userfile = "/proc/0.user";
@@ -101,7 +109,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
 
     # open "/proc/$pid.user" for writing
     var ufd = sys_open(userfile, O_WRITE|O_CREAT);
-    if (ufd < 0) return ufd;
+    if (ufd < 0) throw(ufd);
 
     # copy bytes from 0x100..top
     var n = sys_write(ufd, 0x100, top-0x100);
@@ -111,7 +119,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
 
     # open "/proc/$pid.kernel" for writing
     var kfd = sys_open(kernelfile, O_WRITE|O_CREAT);
-    if (kfd < 0) return kfd;
+    if (kfd < 0) throw(kfd);
 
     # copy into $pid.kernel:
     #  - stack pointer
@@ -135,6 +143,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
     # if sys_exec() returned, there was an error
 
     # TODO: [nice] unlink $pid.user, $pid.kernel?
+    allowcatch();
     return err;
 };
 
@@ -161,8 +170,14 @@ var jmp_to_user = asm {
 
 # example: sys_exec(["/bin/ls", "/etc"])
 var sys_exec_impl = func(args) {
+    var fd = -1;
     var err = catch();
-    if (err) return err;
+    denycatch();
+    if (err) {
+        if (fd >= 0) sys_close(fd);
+        allowcatch();
+        return err;
+    };
 
     # TODO: [bug] bounds-check args copying
     # TODO: [nice] what happens if no fds are available
@@ -188,22 +203,20 @@ var sys_exec_impl = func(args) {
     *(cmdargs+i) = 0;
 
     # load file from disk
-    var fd = sys_open(args[0], O_READ);
-    if (fd < 0) return fd;
+    fd = sys_open(args[0], O_READ);
+    if (fd < 0) throw(fd);
     var p = 0x100;
     var n;
     while (1) {
         n = sys_read(fd, p, 16384);
         if (n == 0) break;
-        if (n < 0) {
-            sys_close(fd);
-            return n;
-        };
+        if (n < 0) throw(n);
         p = p + n;
     };
     sys_close(fd);
 
     # jump to it
+    allowcatch();
     jmp_to_user();
     kpanic("user program returned to exec() call");
 };

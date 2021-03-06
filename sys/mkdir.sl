@@ -10,7 +10,9 @@ if (!*args) {
     exit(1);
 };
 
+var n;
 while (*args) {
-    mkdir(*args);
+    n = mkdir(*args);
+    if (n < 0) fprintf(2, "mkdir: %s: %s\n", [*args, strerror(n)]);
     args++;
 };

@@ -23,9 +23,6 @@ fsck();
 
 kputs("loading init...\n");
 
-# TODO: [bug] we should make separate kernel vs user entry points for system
-#       calls, so that we only catch() once each time!
-
 # We just need to start init to boot the system.
 sys_exec(["/bin/init"]);
 
