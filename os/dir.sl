@@ -130,7 +130,7 @@ var dirfindname = func(dirblk, findname) {
 #    parent_blknum, # the block number of the start of the parent directory
 #  ]
 # return a null pointer if intermediate path components are not found, or
-# -1 if # the file already exists
+# -1 if the file already exists
 var dir_lastblk;
 var dirmkname = func(dirblk, mkname, mktype) {
     dir_name = mkname;

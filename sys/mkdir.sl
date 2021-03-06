@@ -1,7 +1,7 @@
 include "sys.sl";
 include "stdio.sl";
 
-# TODO: implement"-p"
+# TODO: [nice] implement "-p"
 
 var args = cmdargs()+1;
 

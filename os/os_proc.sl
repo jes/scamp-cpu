@@ -71,7 +71,8 @@ var sys_exit_impl = func(rc) {
     sys_read(kfd, cmdargs, cmdargs_sz);
     sys_close(kfd);
 
-    # TODO: [nice] unlink $pid.user, $pid.kernel?
+    sys_unlink(userfile);
+    sys_unlink(kernelfile);
 
     allowcatch();
     return_to_parent(sp, ret, rc);
@@ -138,7 +139,9 @@ var sys_system_impl  = func(top, args, sp, ret) {
 
     # if sys_exec() returned, there was an error
 
-    # TODO: [nice] unlink $pid.user, $pid.kernel?
+    sys_unlink(userfile);
+    sys_unlink(kernelfile);
+
     allowcatch();
     return err;
 };

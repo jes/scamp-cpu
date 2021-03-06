@@ -7,6 +7,7 @@ extern sys_opendir;
 extern sys_mkdir;
 extern sys_chdir;
 extern sys_getcwd;
+extern sys_unlink;
 
 var readdir_buf;
 var readdir_sz;
@@ -172,4 +173,42 @@ sys_getcwd = func(buf, sz) {
     var err = catch();
     if (err) return err;
     return getcwd_level(buf, sz, CWDBLK, 0);
+};
+
+sys_unlink = func(name) {
+    var startblk = CWDBLK;
+    if (*name == '/') startblk = ROOTBLOCK;
+
+    var err = catch();
+    if (err) return err;
+
+    # try to find the name
+    var location = dirfindname(startblk, name);
+    if (!location) return NOTFOUND;
+
+    var blknum = location[0];
+    var dirblk = location[1];
+    var dir_offset = location[2];
+
+    # don't unlink the empty string file, or "."
+    # TODO: [bug] don't unlink ".."
+    if (dirblk == 0 || dirblk == blknum) return NOTFOUND;
+
+    # delete it from the directory
+    dirent(BLKBUF+dir_offset, "", 0);
+    blkwrite(dirblk);
+
+    # TODO: [bug] this leaves inaccessible-but-not-freed files when
+    #       unlinking a non-empty directory
+
+    # free the rest of the blocks in the file
+    blktrunc(blknum, 0);
+
+    # free the first block
+    blksetused(blknum, 0);
+
+    # TODO: [nice] if the directory block is now empty, we should unlink it
+    #       from the linked list of blocks in the directory
+
+    return 0;
 };

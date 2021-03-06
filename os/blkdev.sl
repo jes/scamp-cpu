@@ -161,6 +161,27 @@ var blksetused = func(blk, used) {
     blkwrite(SKIP_BLOCKS + bitmapblk);
 };
 
+# recursively truncate the file from the given block number
+# and offset into the block contents
+var blktrunc = func(blknum, startat) {
+    var nextblknum;
+
+    # 1. truncate the current block at the current point
+    blkread(blknum);
+    nextblknum = blknext();
+    blksetnext(0);
+    blksetlen(shl(startat,1));
+    blkwrite(blknum);
+
+    # 2. free all the remaining blocks
+    while (nextblknum) {
+        blknum = nextblknum;
+        blkread(blknum);
+        nextblknum = blknext();
+        blksetused(blknum, 0);
+    };
+};
+
 # initialise nextfreeblk
 kputs("finding free block...");
 blkfindfree();

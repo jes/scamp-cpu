@@ -5,7 +5,6 @@ include "util.sl";
 include "fs.sl";
 
 extern sys_open;
-extern sys_unlink;
 extern sys_stat;
 
 # open the given name in the given mode
@@ -65,8 +64,6 @@ sys_open = func(name, mode) {
 
     return fd;
 };
-
-sys_unlink = func() unimpl("unlink");
 
 sys_stat = func(name, statbuf) {
     var startblk = CWDBLK;

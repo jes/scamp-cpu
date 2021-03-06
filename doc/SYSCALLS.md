@@ -177,7 +177,7 @@ Fields are:
 ### 0xfeef: unlink(path)
 
     Return: 0, or -ERR on error
-    Implemented: no
+    Implemented: partially
     Errors: NOTFOUND
 
 Remove the file at the given path.
