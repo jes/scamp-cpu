@@ -178,7 +178,6 @@ var sys_exec_impl = func(args) {
         return err;
     };
 
-    # TODO: [bug] bounds-check args copying
     # TODO: [nice] what happens if no fds are available
 
     # count the number of arguments
@@ -187,6 +186,7 @@ var sys_exec_impl = func(args) {
 
     # copy the args into cmdargs
     var cmdargp = cmdargs + nargs + 1;
+    var max_cmdargp = cmdargs + cmdargs_sz - 2;
     var i = 0;
     var j;
     while (args[i]) {
@@ -194,6 +194,7 @@ var sys_exec_impl = func(args) {
         j = 0;
         while (args[i][j]) {
             *(cmdargp++) = args[i][j];
+            if (cmdargp == max_cmdargp) throw(TOOLONG);
             j++;
         };
         *(cmdargp++) = 0;

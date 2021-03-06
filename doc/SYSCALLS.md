@@ -30,7 +30,7 @@ Exit the current process and return `rc` to the parent.
 ### 0xfefe: exec([cmd, args])
 
     Return: -ERR on error
-    Implemented: mostly
+    Implemented: yes
     Errors: NOTFOUND
 
 Replace the current process with a new one.
@@ -134,7 +134,7 @@ Change the current working directory.
 
     Return: 0, or -ERR on error
     Implemented: yes
-    Errors: NOTFOUND, NOTDIR
+    Errors: NOTFOUND, NOTDIR, EXISTS
 
 Create a directory at the given path.
 
@@ -177,10 +177,10 @@ Fields are:
 ### 0xfeef: unlink(path)
 
     Return: 0, or -ERR on error
-    Implemented: partially
-    Errors: NOTFOUND
+    Implemented: yes
+    Errors: NOTFOUND, EXISTS
 
-Remove the file at the given path.
+Remove the file at the given path. Return `EXISTS` if the path is a non-empty directory.
 
 ### 0xfeee: copyfd(destfd, srcfd)
 
