@@ -116,7 +116,7 @@ Seek to the given position on the given file descriptor.
 ### 0xfef5: tell(fd)
 
     Return: current position, or -ERR on error
-    Implemented: no
+    Implemented: partially
     Errors: BADFD
     TODO: how do we give >16-bit positions?
 
@@ -162,7 +162,7 @@ It is not sound to add or remove files to the directory while the directory is o
 ### 0xfef0: stat(path, buf)
 
     Return: 0, or -ERR on error
-    Implemented: no
+    Implemented: yes
     Errors: NOTFOUND
 
 Fill in `buf` with information about the file at the given path.
