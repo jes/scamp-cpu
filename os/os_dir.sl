@@ -175,6 +175,7 @@ sys_getcwd = func(buf, sz) {
     return getcwd_level(buf, sz, CWDBLK, 0);
 };
 
+var unlink_count;
 sys_unlink = func(name) {
     var startblk = CWDBLK;
     if (*name == '/') startblk = ROOTBLOCK;
@@ -191,15 +192,25 @@ sys_unlink = func(name) {
     var dir_offset = location[2];
 
     # don't unlink the empty string file, or "."
-    # TODO: [bug] don't unlink ".."
     if (dirblk == 0 || dirblk == blknum) return NOTFOUND;
 
+    blkread(blknum);
+    # don't unlink non-empty directories
+    if (blktype() == TYPE_DIR) {
+        unlink_count = 0;
+        dirwalk(blknum, func(name, blknum, dirblknum, dirent_offset) {
+            if (*name) unlink_count++;
+            return 1;
+        });
+
+        # an empty directory has just "." and ".."
+        if (unlink_count != 2) return EXISTS;
+    };
+
     # delete it from the directory
+    blkread(dirblk);
     dirent(BLKBUF+dir_offset, "", 0);
     blkwrite(dirblk);
-
-    # TODO: [bug] this leaves inaccessible-but-not-freed files when
-    #       unlinking a non-empty directory
 
     # free the rest of the blocks in the file
     blktrunc(blknum, 0);
