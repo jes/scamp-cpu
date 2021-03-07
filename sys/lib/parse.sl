@@ -151,11 +151,23 @@ var NotChar = func(ch) {
 # accept any character from s
 var AnyChar = func(s) {
     var ch = nextchar();
+    if (ch == EOF) return 0;
     while (*s) {
         if (ch == *s) return 1;
         s++;
     };
     return 0;
+};
+
+# accept any character not from s
+var NotAnyChar = func(s) {
+    var ch = nextchar();
+    if (ch == EOF) return 0;
+    while (*s) {
+        if (ch == *s) return 0;
+        s++;
+    };
+    return 1;
 };
 
 # accept precisely the string s
