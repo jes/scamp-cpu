@@ -34,6 +34,11 @@ var grpush = func(gr, el) {
 
 var grbase = func(gr) return gr[2];
 
+var grset = func(gr, i, el) {
+    var p = gr[2];
+    *(p+i) = el;
+};
+
 var grget = func(gr, i) {
     var p = gr[2];
     return p[i];
@@ -49,7 +54,7 @@ var grwalk = func(gr, cb) {
     var max = gr[0];
     var p = gr[2];
 
-    while (i < max) {
+    while (i != max) {
         cb(p[i]);
         i++;
     };
@@ -63,7 +68,7 @@ var grfind = func(gr, findval, cb) {
     var max = gr[0];
     var p = gr[2];
 
-    while (i < max) {
+    while (i != max) {
         if (cb(findval, p[i])) return p[i];
         i++;
     };

@@ -1,5 +1,6 @@
 # SCAMP shell
 
+include "grarr.sl";
 include "malloc.sl";
 include "stdio.sl";
 include "string.sl";
@@ -64,50 +65,53 @@ var internal = func(args) {
     return 1;
 };
 
-var buf = malloc(256);
-
-var args = malloc(32);
-var i;
-var p;
-var path;
-
-while (1) {
-    fputs(2, "$ ");
-
-    i = gets(buf, 256);
-    if (i == 0) break;
-
-    p = buf;
-    i = 0;
+var execute = func(str) {
+    var p = str;
     while (*p && iswhite(*p)) p++;
-    if (!*p) continue;
+    if (!*p) return 0;
 
-    *args = p;
-    i = 1;
+    var args = grnew();
+
+    grpush(args, p);
     while (*p) {
         while (*p && !iswhite(*p)) p++;
         if (*p) {
             *(p++) = 0;
             while (*p && iswhite(*p)) p++;
-            if (*p) *(args+i) = p
-            else *(args+i) = 0;
-        } else {
-            *(args+i) = 0;
+            if (*p) grpush(args, p);
         };
-        i++;
+    };
+    grpush(args, 0);
+
+    # handle internal commands
+    if (internal(grbase(args))) {
+        grfree(args);
+        return 0;
     };
 
-    if (internal(args)) continue;
-
-    path = search(args[0]);
+    # search for binaries
+    var path = search(grget(args,0));
 
     if (!path) {
-        fprintf(2, "sh: %s: not found in path\n", [args[0]]);
-        continue;
+        fprintf(2, "sh: %s: not found in path\n", [grget(args,0)]);
+        grfree(args);
+        return 0;
     };
 
-    *args = path;
+    grset(args, 0, path);
 
-    i = system(args);
-    if (i < 0) fprintf(2, "sh: %s: %s\n", [args[0], strerror(i)]);
+    # execute binaries
+    var n = system(grbase(args));
+    if (n < 0) fprintf(2, "sh: %s: %s\n", [grget(args,0), strerror(n)]);
+
+    grfree(args);
+};
+
+# TODO: [nice] if "-c", then just execute() the cmdargs()?
+
+var buf = malloc(256);
+while (1) {
+    fputs(2, "$ "); # TODO: [nice] not if stderr is not a terminal
+    if (gets(buf, 256) == 0) break;
+    execute(buf);
 };
