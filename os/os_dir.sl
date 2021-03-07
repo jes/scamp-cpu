@@ -193,7 +193,7 @@ sys_unlink = func(name) {
 
     var blknum = location[0];
     var dirblk = location[1];
-    var dir_offset = location[2];
+    var unlink_offset = location[2];
 
     # don't unlink the empty string file, or "."
     if (dirblk == 0 || dirblk == blknum) return NOTFOUND;
@@ -213,7 +213,7 @@ sys_unlink = func(name) {
 
     # delete it from the directory
     blkread(dirblk);
-    dirent(BLKBUF+dir_offset, "", 0);
+    dirent(BLKBUF+unlink_offset, "", 0);
     blkwrite(dirblk);
 
     # free the rest of the blocks in the file
