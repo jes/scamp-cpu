@@ -28,6 +28,10 @@ var freep = [0, 0];
 *freep = freep;
 
 var free = func(ap) {
+    if (ap lt &TOP) {
+        fprintf(2, "free'd static pointer: %x\n", [ap]);
+        exit(1);
+    };
     var bp = ap-2; # point to block header
 
     var p = freep;
