@@ -969,7 +969,7 @@ STRINGS = grnew();
 EXTERNS = grnew();
 GLOBALS = grnew();
 
-parse_init();
+parse_init(getchar);
 parse(Program,0);
 
 if (nextchar() != EOF) die("garbage after end of program",0);

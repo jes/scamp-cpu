@@ -5,6 +5,7 @@
 var pos;
 var readpos;
 var line;
+var parse_getchar;
 
 var ringbufsz = 256; # check the "too much backtrack" test, and peekchar(), before changing this
 var ringbuf = malloc(ringbufsz);
@@ -18,10 +19,11 @@ var die = func(fmt, args) {
 };
 
 # setup parser state ready to parse the given string
-var parse_init = func() {
+var parse_init = func(getchar_func) {
     pos = 0;
     readpos = 0;
     line = 1;
+    parse_getchar = getchar_func;
 };
 
 # call a parsing function and return whatever it returned
@@ -97,7 +99,7 @@ var parse = asm_parse;
 var peekchar = func() {
     var lookpos = pos&0xff; # 0xff == ringbufsz-1
     if (lookpos == readpos) {
-        *(ringbuf+readpos) = getchar();
+        *(ringbuf+readpos) = parse_getchar();
         readpos = (readpos+1)&0xff; # 0xff == ringbufsz-1
     };
     return ringbuf[lookpos];
