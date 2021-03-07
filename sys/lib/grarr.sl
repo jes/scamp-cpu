@@ -17,7 +17,10 @@ var grnew = func() {
     return gr;
 };
 
-var grfree = free;
+var grfree = func(gr) {
+    free(gr[2]);
+    free(gr);
+};
 
 var grpush = func(gr, el) {
     var n;
