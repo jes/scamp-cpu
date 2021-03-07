@@ -2,6 +2,7 @@
 
 include "grarr.sl";
 include "malloc.sl";
+include "parse.sl";
 include "stdio.sl";
 include "string.sl";
 include "sys.sl";
@@ -28,6 +29,7 @@ var try = func(path, name) {
 };
 
 # search for path to "name"
+# return pointer to static buffer
 var search = func(name) {
     var s;
 
@@ -65,29 +67,84 @@ var internal = func(args) {
     return 1;
 };
 
-# parse the input string and return an array of args
-# caller needs to free the returned array
-var parse_input = func(str) {
-    var p = str;
-    while (*p && iswhite(*p)) p++;
-    if (!*p) return 0;
+# TODO: [bug] make "die" non-fatal
+# TODO: [nice] communicate parse errors better
 
-    var args = grnew();
+var parse_strp;
+var parse_args;
 
-    grpush(args, p);
-    while (*p) {
-        while (*p && !iswhite(*p)) p++;
-        if (*p) {
-            *(p++) = 0;
-            while (*p && iswhite(*p)) p++;
-            if (*p) grpush(args, p);
+var maxargument = 256;
+var ARGUMENT = malloc(maxargument);
+var BareWord = func(x) {
+    *ARGUMENT = peekchar();
+    if (!parse(NotAnyChar, "<> \t\r\n`'\"")) return 0;
+    var i = 1;
+    while (i < maxargument) {
+        *(ARGUMENT+i) = peekchar();
+        if (!parse(NotAnyChar, "<> \t\r\n`'\"")) {
+            *(ARGUMENT+i) = 0;
+            skip();
+            return 1;
+        };
+        if (ARGUMENT[i] == '\\') *(ARGUMENT+i) = nextchar();
+        i++;
+    };
+    die("argument too long",0);
+};
+
+var Backticks = func(x) { return 0; };
+var SingleQuotes = func(x) { return 0; };
+var DoubleQuotes = func(x) { return 0; };
+
+var Argument = func(x) {
+    if (parse(BareWord,0)) return 1;
+    if (parse(Backticks,0)) return 1;
+    if (parse(SingleQuotes,0)) return 1;
+    if (parse(DoubleQuotes,0)) return 1;
+    return 0;
+};
+
+var IORedirection = func(x) { return 0; };
+
+var CommandLine = func(x) {
+    while (1) {
+        if (parse(Argument,0)) {
+            grpush(parse_args, strdup(ARGUMENT));
+        } else if (parse(IORedirection,0)) {
+            # ...
+        } else {
+            return 1;
         };
     };
-    grpush(args, 0);
+};
 
-    var args_arr = malloc(grlen(args));
-    memcpy(args_arr, grbase(args), grlen(args));
-    grfree(args);
+# parse the input string and return an array of args
+# caller needs to free the returned array and each of
+# the strings in it
+var parse_input = func(str) {
+    parse_strp = str;
+    parse_args = grnew();
+
+    parse_init(func() {
+        if (*parse_strp) return *(parse_strp++);
+        return EOF;
+    });
+
+    skip();
+    if (!parse(CommandLine,0)) {
+        grfree(parse_args);
+        return 0;
+    };
+    if (nextchar() != EOF) {
+        grfree(parse_args);
+        return 0;
+    };
+
+    grpush(parse_args, 0);
+
+    var args_arr = malloc(grlen(parse_args));
+    memcpy(args_arr, grbase(parse_args), grlen(parse_args));
+    grfree(parse_args);
 
     return args_arr;
 };
@@ -95,9 +152,17 @@ var parse_input = func(str) {
 # parse & execute the given string
 var execute = func(str) {
     var args = parse_input(str);
+    if (!args) {
+        fprintf(2, "sh: parse error\n", 0);
+        return 0;
+    };
+    if (!args[0]) return 0;
 
     # handle internal commands
+    var p;
     if (internal(args)) {
+        p = args;
+        while (*p) free(*(p++));
         free(args);
         return 0;
     };
@@ -106,15 +171,21 @@ var execute = func(str) {
     var path = search(args[0]);
     if (!path) {
         fprintf(2, "sh: %s: not found in path\n", [args[0]]);
+        p = args;
+        while (*p) free(*(p++));
         free(args);
         return 0;
     };
-    *args = path;
+    var oldargs0 = args[0];
+    *args = strdup(path);
+    free(oldargs0);
 
     # execute binaries
     var n = system(args);
     if (n < 0) fprintf(2, "sh: %s: %s\n", [args[0], strerror(n)]);
 
+    p = args;
+    while (*p) free(*(p++));
     free(args);
 };
 
