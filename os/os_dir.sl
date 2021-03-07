@@ -147,6 +147,7 @@ var getcwd_level = func(buf, sz, dirblk, bufp) {
     var next_bufp;
     var n = getcwd_level(buf, sz, parentblk, &next_bufp);
     if (n < 0) return n;
+    sz = sz - (next_bufp - buf);
 
     # work out the name of this directory
     getcwd_dirblk = dirblk;
@@ -160,8 +161,11 @@ var getcwd_level = func(buf, sz, dirblk, bufp) {
     });
     if (!getcwd_name) return NOTFOUND;
 
-    # TODO: [bug] bounds-checking
-    while (*getcwd_name) *(next_bufp++) = *(getcwd_name++);
+    while (*getcwd_name) {
+        *(next_bufp++) = *(getcwd_name++);
+        sz--;
+        if (sz < 2) return TOOLONG;
+    };
     *(next_bufp++) = '/';
     *next_bufp = 0;
     *bufp = next_bufp;
