@@ -11,7 +11,7 @@ var ringbuf = malloc(ringbufsz);
 
 var die = func(fmt, args) {
     printf("error: line %d: ", [line]);
-    if (args) printf(fmt, args);
+    printf(fmt, args);
     putchar('\n');
     exit(1);
 };
