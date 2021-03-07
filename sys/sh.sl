@@ -65,7 +65,9 @@ var internal = func(args) {
     return 1;
 };
 
-var execute = func(str) {
+# parse the input string and return an array of args
+# caller needs to free the returned array
+var parse_input = func(str) {
     var p = str;
     while (*p && iswhite(*p)) p++;
     if (!*p) return 0;
@@ -83,31 +85,41 @@ var execute = func(str) {
     };
     grpush(args, 0);
 
+    var args_arr = malloc(grlen(args));
+    memcpy(args_arr, grbase(args), grlen(args));
+    grfree(args);
+
+    return args_arr;
+};
+
+# parse & execute the given string
+var execute = func(str) {
+    var args = parse_input(str);
+
     # handle internal commands
-    if (internal(grbase(args))) {
-        grfree(args);
+    if (internal(args)) {
+        free(args);
         return 0;
     };
 
-    # search for binaries
-    var path = search(grget(args,0));
-
+    # search for binaries and set absolute path
+    var path = search(args[0]);
     if (!path) {
-        fprintf(2, "sh: %s: not found in path\n", [grget(args,0)]);
-        grfree(args);
+        fprintf(2, "sh: %s: not found in path\n", [args[0]]);
+        free(args);
         return 0;
     };
-
-    grset(args, 0, path);
+    *args = path;
 
     # execute binaries
-    var n = system(grbase(args));
-    if (n < 0) fprintf(2, "sh: %s: %s\n", [grget(args,0), strerror(n)]);
+    var n = system(args);
+    if (n < 0) fprintf(2, "sh: %s: %s\n", [args[0], strerror(n)]);
 
-    grfree(args);
+    free(args);
 };
 
 # TODO: [nice] if "-c", then just execute() the cmdargs()?
+# TODO: [nice] execute files passed in cmdargs()
 
 var buf = malloc(256);
 while (1) {
