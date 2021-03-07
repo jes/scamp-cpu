@@ -72,7 +72,7 @@ var p;
 var path;
 
 while (1) {
-    puts("$ ");
+    fputs(2, "$ ");
 
     i = gets(buf, 256);
     if (i == 0) break;
