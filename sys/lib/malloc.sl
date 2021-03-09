@@ -28,6 +28,8 @@ var freep = [0, 0];
 *freep = freep;
 
 var free = func(ap) {
+    if (ap == 0) return 0;
+
     if (ap lt &TOP) {
         fprintf(2, "free'd static pointer: %x\n", [ap]);
         exit(1);
