@@ -31,8 +31,7 @@ I'm happy with the instruction set, see [doc/table.html](doc/table.html), availa
 I have some blog posts here: https://incoherency.co.uk/blog/tags/cpu.html
 
 I have created an emulator (see in `emulator/`) and a compiler (`compiler/`). Although there is still useful
-work to be done on the compiler, it can now compile itself from within the emulator, provided the `include`
-lines are preprocessed outside.
+work to be done on the compiler, it can now compile itself from within the emulator.
 
 I have written quite a lot of the kernel (see `os/`). It can do most of the system calls. It needs more error-checking,
 bounds-checking, etc.. It can load programs off a filesystem stored on a block device and execute them, but obviously
