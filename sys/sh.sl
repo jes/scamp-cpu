@@ -69,11 +69,39 @@ var internal = func(args) {
     return 1;
 };
 
+# redirect "name" to "fd" with the given "mode"; return an fd that stores
+# the previous state, suitable for use with "unredirect()";
+# if "name" is a null pointer, do nothing and return -1
+var redirect = func(fd, name, mode) {
+    if (name == 0) return -1;
+
+    var filefd = open(name, mode);
+    if (filefd < 0) die("can't open %s: %s", [name, strerror(filefd)]);
+
+    var prev = copyfd(-1, fd);
+    copyfd(fd, filefd);
+
+    return prev;
+};
+
+# close the "fd" and restore "prev"
+# if "fd" is -1, do nothing
+var unredirect = func(fd, prev) {
+    if (prev == -1) return 0;
+
+    close(fd);
+    copyfd(fd, prev);
+};
+
 # TODO: [bug] make "die" non-fatal
 # TODO: [nice] communicate parse errors better
 
 var parse_strp;
 var parse_args;
+
+var in_redirect;
+var out_redirect;
+var err_redirect;
 
 var maxargument = 256;
 var ARGUMENT = malloc(maxargument);
@@ -91,7 +119,7 @@ var BareWord = func(x) {
         if (ARGUMENT[i] == '\\') *(ARGUMENT+i) = nextchar();
         i++;
     };
-    die("argument too long",0);
+    die("argument too long:%d,%d,%d",[ARGUMENT[0],ARGUMENT[4], ARGUMENT[7]]);
 };
 
 var Backticks = func(x) { return 0; };
@@ -106,7 +134,24 @@ var Argument = func(x) {
     return 0;
 };
 
-var IORedirection = func(x) { return 0; };
+# TODO: [nice] support appending
+var IORedirection = func(x) {
+    if (parse(CharSkip,'<')) {
+        if (!parse(Argument,0)) die("< needs argument",0);
+        in_redirect = strdup(ARGUMENT);
+        return 1;
+    } else if (parse(CharSkip,'>')) {
+        if (!parse(Argument,0)) die("> needs argument",0);
+        out_redirect = strdup(ARGUMENT);
+        return 1;
+    } else if (parse(String,"2>")) { # TODO: [nice] should support more generic fd redirection
+        skip();
+        if (!parse(Argument,0)) die("2> needs argument",0);
+        err_redirect = strdup(ARGUMENT);
+        return 1;
+    };
+    return 0;
+};
 
 var Pipe = func(x) {
     if (parse(CharSkip,'|')) return 1;
@@ -135,6 +180,10 @@ var CommandLine = func(x) {
 var parse_input = func(str) {
     parse_strp = str;
     parse_args = grnew();
+
+    in_redirect = 0;
+    out_redirect = 0;
+    err_redirect = 0;
 
     parse_init(func() {
         if (*parse_strp) return *(parse_strp++);
@@ -191,13 +240,29 @@ var execute = func(str) {
     *args = strdup(path);
     free(oldargs0);
 
+    # setup io redirection
+    var prev_in = redirect(0, in_redirect, O_READ);
+    var prev_out = redirect(1, out_redirect, O_WRITE|O_CREAT);
+    var prev_err = redirect(2, err_redirect, O_WRITE|O_CREAT);
+
     # execute binaries
     var n = system(args);
+
+    # undo io redirection
+    unredirect(0, prev_in);
+    unredirect(1, prev_out);
+    unredirect(2, prev_err);
+
     if (n < 0) fprintf(2, "sh: %s: %s\n", [args[0], strerror(n)]);
 
     p = args;
     while (*p) free(*(p++));
     free(args);
+
+    # free names of redirection filenames
+    free(in_redirect);
+    free(out_redirect);
+    free(err_redirect);
 };
 
 # TODO: [nice] if "-c", then just execute() the cmdargs()?
