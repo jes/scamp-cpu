@@ -4,7 +4,7 @@ include "kprintf.sl";
 
 # check that the start of the disk is a valid boot header
 var check_boot = func() {
-    kputs("check boot header...\n");
+    kputs("check boot header...\r\n");
     blkread(0);
 
     if (BLKBUF[0] != 0x5343) kprintf("boot header: b[0] = %x, expected 0x5343", [BLKBUF[0]]);
@@ -43,12 +43,12 @@ var blkisfree = func(blk) {
 #  - files with length != 508 and next != 0
 #  - linked blocks not marked as used
 var filewalk = func(blknum) {
-    if (blkisfree(blknum)) kprintf("\nblock %d is linked but free\n", [blknum]);
+    if (blkisfree(blknum)) kprintf("\r\nblock %d is linked but free\r\n", [blknum]);
     while (blknum) {
         kputs(".");
         blkread(blknum);
 
-        if (blknext() && blklen() != 508) kprintf("\nblock %d has next block %d but length=%d (should be 508)\n", [blknum, blknext(), blklen()]);
+        if (blknext() && blklen() != 508) kprintf("\r\nblock %d has next block %d but length=%d (should be 508)\r\n", [blknum, blknext(), blklen()]);
 
         blknum = blknext();
     };
@@ -102,22 +102,22 @@ var check_file = func(blk) {
 
     if (blktype() == TYPE_DIR) {
         kputs("D");
-        if (blkisfree(blk)) kprintf("\nblock %d is linked but free\n", [blk]);
+        if (blkisfree(blk)) kprintf("\r\nblock %d is linked but free\r\n", [blk]);
         dirwalk(blk, func(name, blknum, dirblknum, dirent_offset) {
             if (dirent_offset == 2) kputs(".");
             if (strcmp(name, ".") == 0) {
-                if (blknum != dirblknum) kprintf("\nin dir block %d, '.' links to %d\n", [dirblknum,blknum]);
+                if (blknum != dirblknum) kprintf("\r\nin dir block %d, '.' links to %d\r\n", [dirblknum,blknum]);
                 return 1;
             } else if (strcmp(name, "..") == 0) {
                 # TODO: [nice] check that it actually links to the parent dir
                 return 1;
             };
             if (*name) {
-                if (blknum < 80) kprintf("\nin dir block %d, %s links to %d\n", [dirblknum, name, blknum]);
+                if (blknum < 80) kprintf("\r\nin dir block %d, %s links to %d\r\n", [dirblknum, name, blknum]);
                 check_file(blknum);
                 blkread(dirblknum); # XXX: restore block for this dirwalk()
             } else if (blknum) {
-                #kprintf("\nin dir block %d, empty filename links to block %d\n", [dirblknum,blknum]);
+                #kprintf("\r\nin dir block %d, empty filename links to block %d\r\n", [dirblknum,blknum]);
             };
             return 1;
         });
@@ -126,21 +126,21 @@ var check_file = func(blk) {
 
         filewalk(blk);
     } else {
-        kprintf("\nblock %d has illegal file type (%x)\n", [blk, blktype()]);
+        kprintf("\r\nblock %d has illegal file type (%x)\r\n", [blk, blktype()]);
     };
 };
 
 # load free-space bitmap and start recursively checking directors starting at /
 var check_dirs = func() {
-    kputs("load free-space bitmap into memory...\n");
+    kputs("load free-space bitmap into memory...\r\n");
     load_usedmap();
 
-    kputs("check directories...\n");
+    kputs("check directories...\r\n");
     check_file(ROOTBLOCK);
 };
 
 var fsck = func() {
     check_boot();
     check_dirs();
-    kputs(" fsck done\n");
+    kputs(" fsck done\r\n");
 };

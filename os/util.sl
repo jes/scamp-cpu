@@ -47,14 +47,14 @@ var khalt = func() {
 var kpanic = func(s) {
     kputs("panic: ");
     kputs(s);
-    kputs("\n");
+    kputs("\r\n");
     khalt();
 };
 
 var unimpl = func(s) {
     kputs("panic: unimplemented: ");
     kputs(s);
-    kputs("\n");
+    kputs("\r\n");
     khalt();
 };
 

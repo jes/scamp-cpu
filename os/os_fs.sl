@@ -3,9 +3,7 @@
 include "data.sl";
 include "util.sl";
 include "fs.sl";
-
-extern sys_open;
-extern sys_stat;
+include "sys.sl";
 
 # open the given name in the given mode
 sys_open = func(name, mode) {

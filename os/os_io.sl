@@ -2,13 +2,7 @@
 
 include "util.sl";
 include "data.sl";
-
-extern sys_copyfd;
-extern sys_tell;
-extern sys_seek;
-extern sys_read;
-extern sys_write;
-extern sys_close;
+include "sys.sl";
 
 # TODO: [nice] is this sound in the general case? what about seek/tell offsets?
 #       buffers? maybe we just tell people not to use it if they're not sure;

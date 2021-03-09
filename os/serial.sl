@@ -2,10 +2,16 @@
 
 include "util.sl";
 include "data.sl";
-include "os_io.sl";
+include "sys.sl";
 
 var READPORT = FDDATA;
 var WRITEPORT = FDDATA+1;
+
+var ser_write;
+
+# TODO: [nice] provide a way to turn off "cooked mode" stuff, per-device
+#       (maybe just by switching the "read"/"write" functions in the fd table
+#       between a "ser_rawread" and "ser_cookedread" for example)
 
 var ser_read = func(fd, buf, sz) {
     var p = fdbaseptr(fd);
@@ -15,18 +21,31 @@ var ser_read = func(fd, buf, sz) {
     sz = 0;
     while (i--) {
         ch = inp(readport);
-        if (ch == EOF) break;
+        if (ch == 3) sys_exit(0); # ctrl-c
+        if (ch == 4) break; # ctrl-d
+        # TODO: [nice] if (ch == 17) ... # ctrl-q
+        # TODO: [nice] if (ch == 19) ... # ctrl-s
+
+        if (ch == '\r') ch = '\n'; # turn enter key into '\n'
+
+        ser_write(fd, &ch, 1); # echo
+
         *(buf++) = ch;
         sz++;
     };
     return sz;
 };
 
-var ser_write = func(fd, buf, sz) {
+ser_write = func(fd, buf, sz) {
     var p = fdbaseptr(fd);
     var writeport = p[WRITEPORT];
-    while (sz--)
-        outp(writeport, *(buf++));
+    var ch;
+    while (sz--) {
+        ch = *(buf++);
+        if (ch == '\n') outp(writeport, '\r'); # put \r before \n
+        outp(writeport, ch);
+    };
+    return sz;
 };
 
 # store read/write port number in fd field 6/7
@@ -50,4 +69,3 @@ var ser_init = func() {
     sys_copyfd(1, ser_fds[0]);
     sys_copyfd(2, ser_fds[0]);
 };
-ser_init();

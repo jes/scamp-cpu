@@ -3,11 +3,7 @@
 include "util.sl";
 include "os_io.sl";
 include "os_fs.sl";
-
-extern sys_cmdargs;
-extern sys_system;
-extern sys_exec;
-extern sys_exit;
+include "sys.sl";
 
 sys_cmdargs = asm {
     ld r0, cmdargs

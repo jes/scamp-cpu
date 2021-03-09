@@ -15,11 +15,13 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <termios.h>
 #include <time.h>
 #include <unistd.h>
 
 int test, debug, stacktrace, cyclecount, show_help, test_fail, freq, watch=-1;
 int halt;
+struct termios orig_termios;
 
 uint8_t DI, DO, AI, MI, MO, II, IOH, IOL, JMP, PO, PP, XI, EO, YI, RT;
 uint8_t EX, NX, EY, NY, F, NO;
@@ -154,6 +156,7 @@ uint16_t in(uint16_t addr) {
     if (addr == 2) {
         /* TODO: don't block */
         r = getchar();
+        if (r == 28) halt = 1; /* halt on ctrl-\ */
     }
     if (addr == 5) {
         r = disk[512*blknum + blkidx];
@@ -350,6 +353,31 @@ void sighandler(int sig) {
     halt = 1;
 }
 
+void unrawmode(void) {
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+}
+
+/* https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html */
+void rawmode(void) {
+    if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) {
+        fprintf(stderr, "tcgetattr: %s\n", strerror(errno));
+        exit(1);
+    }
+
+    atexit(unrawmode);
+
+    struct termios raw = orig_termios;
+    raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+    raw.c_oflag &= ~(OPOST);
+    raw.c_cflag |= (CS8);
+    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
+        fprintf(stderr, "tcsetattr: %s\n", strerror(errno));
+        exit(1);
+    }
+}
+
 int main(int argc, char **argv) {
     int steps = 0;
     int jmp0x100 = 0;
@@ -405,7 +433,7 @@ int main(int argc, char **argv) {
     }
 
     signal(SIGINT, sighandler);
-
+    rawmode();
     gettimeofday(&starttime, NULL);
 
     /* run the clock */

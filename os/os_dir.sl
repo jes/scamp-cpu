@@ -1,13 +1,7 @@
 # Directories syscalls
 
 include "util.sl";
-
-extern sys_readdir;
-extern sys_opendir;
-extern sys_mkdir;
-extern sys_chdir;
-extern sys_getcwd;
-extern sys_unlink;
+include "sys.sl";
 
 var readdir_buf;
 var readdir_sz;
