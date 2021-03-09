@@ -49,6 +49,8 @@ var search = func(name) {
     return 0;
 };
 
+# see if args[0] is an internal command - if so, run it and return 1;
+# if not, return 0
 var internal = func(args) {
     var n;
 
@@ -77,11 +79,11 @@ var maxargument = 256;
 var ARGUMENT = malloc(maxargument);
 var BareWord = func(x) {
     *ARGUMENT = peekchar();
-    if (!parse(NotAnyChar, "<> \t\r\n`'\"")) return 0;
+    if (!parse(NotAnyChar, "|<> \t\r\n`'\"")) return 0;
     var i = 1;
     while (i < maxargument) {
         *(ARGUMENT+i) = peekchar();
-        if (!parse(NotAnyChar, "<> \t\r\n`'\"")) {
+        if (!parse(NotAnyChar, "|<> \t\r\n`'\"")) {
             *(ARGUMENT+i) = 0;
             skip();
             return 1;
@@ -106,12 +108,21 @@ var Argument = func(x) {
 
 var IORedirection = func(x) { return 0; };
 
+var Pipe = func(x) {
+    if (parse(CharSkip,'|')) return 1;
+    return 0;
+};
+
 var CommandLine = func(x) {
     while (1) {
         if (parse(Argument,0)) {
             grpush(parse_args, strdup(ARGUMENT));
         } else if (parse(IORedirection,0)) {
             # ...
+        } else if (parse(Pipe,0)) {
+            # TODO: execute what we have, with output going to a tmp file,
+            #       then clear out parse_args, set input from the tmp file,
+            #       and continue?
         } else {
             return 1;
         };
