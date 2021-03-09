@@ -359,6 +359,9 @@ void unrawmode(void) {
 
 /* https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html */
 void rawmode(void) {
+    if (!isatty(STDIN_FILENO))
+        return;
+
     if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) {
         fprintf(stderr, "tcgetattr: %s\n", strerror(errno));
         exit(1);
