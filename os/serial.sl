@@ -21,7 +21,7 @@ var ser_read = func(fd, buf, sz) {
     sz = 0;
     while (i--) {
         ch = inp(readport);
-        if (ch == 3) sys_exit(0); # ctrl-c
+        if (ch == 3) sys_exit(255); # ctrl-c
         if (ch == 4) break; # ctrl-d
         # TODO: [nice] if (ch == 17) ... # ctrl-q
         # TODO: [nice] if (ch == 19) ... # ctrl-s
