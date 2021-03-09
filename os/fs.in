@@ -25,4 +25,16 @@ put -t ../sys/lib/stdlib.sl /lib/stdlib.sl
 put -t ../sys/lib/string.sl /lib/string.sl
 put -t ../sys/lib/sys.sl /lib/sys.sl
 
+mkdir src
+put -t ../sys/cat.sl /src/cat.sl
+put -t ../sys/echo.sl /src/echo.sl
+put -t ../sys/init.sl /src/init.sl
+put -t ../sys/ls.sl /src/ls.sl
+put -t ../sys/mkdir.sl /src/mkdir.sl
+put -t ../sys/pwd.sl /src/pwd.sl
+put -t ../sys/rm.sl /src/rm.sl
+put -t ../sys/sh.sl /src/sh.sl
+put -t ../sys/slangc.sl /src/slangc.sl
+put -t ../sys/stat.sl /src/stat.sl
+
 mkdir proc
