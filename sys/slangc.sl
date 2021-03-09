@@ -69,6 +69,7 @@ var literal_buf = malloc(maxliteral);
 var maxidentifier = maxliteral;
 var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 
+var INCLUDED;
 var STRINGS;
 var ARRAYS;
 # EXTERNS and GLOBALS are grarrs of pointers to variable names
@@ -372,7 +373,10 @@ Include = func(x) {
     var file = StringLiteralText();
 
     # TODO: [nice] show filename in error messages
-    # TODO: [bug] if already included, just return 1
+
+    # don't include the same file twice
+    if (grfind(INCLUDED, file, func(a,b) { return strcmp(a,b)==0 })) return 1;
+    grpush(INCLUDED, strdup(file));
 
     # save parser state
     var pos0 = pos;
@@ -1011,6 +1015,7 @@ Identifier = func(x) {
     die("identifier too long",0);
 };
 
+INCLUDED = grnew();
 ARRAYS = grnew();
 STRINGS = grnew();
 EXTERNS = grnew();
@@ -1056,6 +1061,9 @@ grwalk(ARRAYS, func(tuple) {
     #free(tuple);
 });
 
+#grwalk(INCLUDED, free);
+
+#grfree(INCLUDED);
 #grfree(ARRAYS);
 #grfree(STRINGS);
 #grfree(EXTERNS);
