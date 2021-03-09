@@ -390,10 +390,10 @@ Include = func(x) {
     include_fd = open(file, O_READ);
     var include_path;
     if (include_fd < 0) {
-        # search "lib/" for file
-        include_path = malloc(4+strlen(file)+1);
-        strcpy(include_path, "lib/");
-        strcpy(include_path+4, file);
+        # search "/lib/" for file
+        include_path = malloc(5+strlen(file)+1);
+        strcpy(include_path, "/lib/");
+        strcpy(include_path+5, file);
         include_fd = open(include_path, O_READ);
         free(include_path);
     };
