@@ -12,6 +12,7 @@ var ser_write;
 # TODO: [nice] provide a way to turn off "cooked mode" stuff, per-device
 #       (maybe just by switching the "read"/"write" functions in the fd table
 #       between a "ser_rawread" and "ser_cookedread" for example)
+var cooked_mode = 1;
 
 var ser_read = func(fd, buf, sz) {
     var p = fdbaseptr(fd);
@@ -21,16 +22,19 @@ var ser_read = func(fd, buf, sz) {
     sz = 0;
     while (i--) {
         ch = inp(readport);
-        if (ch == 3) sys_exit(255); # ctrl-c
-        if (ch == 4) break; # ctrl-d
-        # TODO: [nice] if (ch == 17) ... # ctrl-q
-        # TODO: [nice] if (ch == 19) ... # ctrl-s
-        # TODO: [nice] what about arrow keys? backspace? delete? we should do
-        #       line-buffering when serial is in cooked mode
 
-        if (ch == '\r') ch = '\n'; # turn enter key into '\n'
+        if (cooked_mode) {
+            if (ch == 3) sys_exit(255); # ctrl-c
+            if (ch == 4) break; # ctrl-d
+            # TODO: [nice] if (ch == 17) ... # ctrl-q
+            # TODO: [nice] if (ch == 19) ... # ctrl-s
+            # TODO: [nice] what about arrow keys? backspace? delete? we should do
+            #       line-buffering when serial is in cooked mode
 
-        ser_write(fd, &ch, 1); # echo
+            if (ch == '\r') ch = '\n'; # turn enter key into '\n'
+
+            ser_write(fd, &ch, 1); # echo
+        };
 
         *(buf++) = ch;
         sz++;
@@ -44,7 +48,11 @@ ser_write = func(fd, buf, sz) {
     var ch;
     while (sz--) {
         ch = *(buf++);
-        if (ch == '\n') outp(writeport, '\r'); # put \r before \n
+
+        if (cooked_mode) {
+            if (ch == '\n') outp(writeport, '\r'); # put \r before \n
+        };
+
         outp(writeport, ch);
     };
     return sz;
