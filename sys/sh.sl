@@ -224,6 +224,9 @@ var execute = func(str) {
         p = args;
         while (*p) free(*(p++));
         free(args);
+        free(in_redirect);
+        free(out_redirect);
+        free(err_redirect);
         return 0;
     };
 
@@ -234,6 +237,9 @@ var execute = func(str) {
         p = args;
         while (*p) free(*(p++));
         free(args);
+        free(in_redirect);
+        free(out_redirect);
+        free(err_redirect);
         return 0;
     };
     var oldargs0 = args[0];
