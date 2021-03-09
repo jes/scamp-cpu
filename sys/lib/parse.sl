@@ -17,6 +17,12 @@ var die = func(fmt, args) {
     exit(1);
 };
 
+var warn = func(fmt, args) {
+    fprintf(2, "warning: line %d: ", [line]);
+    fprintf(2, fmt, args);
+    putchar('\n');
+};
+
 # setup parser state ready to parse the given string
 var parse_init = func(getchar_func) {
     pos = 0;

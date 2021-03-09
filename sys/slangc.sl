@@ -16,16 +16,14 @@
 # TODO: optionally annotate generated assembly code with the source code that
 #       generated it
 # TODO: fix &/| precedence
-# TODO: only backup return address once per function?
-# TODO: some way to include files
+# TODO: only backup return address once per function? (profile it)
+# TODO: search paths for "include"
 
 include "stdio.sl";
 include "stdlib.sl";
 include "string.sl";
 include "grarr.sl";
 include "parse.sl";
-
-var Reject = func(x) { return 0; };
 
 var Program;
 var Statements;
@@ -367,8 +365,58 @@ Statement = func(x) {
     return 0;
 };
 
-# TODO: we can't implement "include" until we have a filesystem
-Include = Reject;
+var include_fd;
+Include = func(x) {
+    if (!parse(Keyword,"include")) return 0;
+    if (!parse(Char,'"')) return 0;
+    var file = StringLiteralText();
+
+    # TODO: [nice] show filename in error messages
+    # TODO: [bug] if already included, just return 1
+
+    # save parser state
+    var pos0 = pos;
+    var readpos0 = readpos;
+    var line0 = line;
+    var parse_getchar0 = parse_getchar;
+    var include_fd0 = include_fd;
+    var ringbuf0 = malloc(ringbufsz);
+    memcpy(ringbuf0, ringbuf, ringbufsz);
+
+    include_fd = open(file, O_READ);
+    var include_path;
+    if (include_fd < 0) {
+        # search "lib/" for file
+        include_path = malloc(4+strlen(file)+1);
+        strcpy(include_path, "lib/");
+        strcpy(include_path+4, file);
+        include_fd = open(include_path, O_READ);
+        free(include_path);
+    };
+    if (include_fd < 0) die("can't open %s: %s", [file, strerror(include_fd)]);
+
+    parse_init(func() {
+        var ch = fgetc(include_fd);
+        if (ch < 0) return EOF; # collapse all types of error to "EOF"
+        return ch;
+    });
+
+    # parse the included file
+    if (!parse(Program,0)) die("expected statements",0);
+
+    close(include_fd);
+
+    # restore parser state
+    pos = pos0;
+    readpos = readpos0;
+    line = line0;
+    parse_getchar = parse_getchar0;
+    include_fd = include_fd0;
+    memcpy(ringbuf, ringbuf0, ringbufsz);
+    free(ringbuf0);
+
+    return 1;
+};
 
 Block = func(x) {
     if (!parse(CharSkip,'{')) return 0;
@@ -391,8 +439,7 @@ Declaration = func(x) {
     if (!LOCALS) {
         addglobal(name);
     } else {
-        # TODO: if (findglobal(name)) warn("local var overrides global");
-        # once we can write to stderr separately from stdout
+        if (findglobal(name)) warn("local var %s overrides global",[name]);
         addlocal(name, BP_REL--);
         puts("# allocate space for "); puts(name); puts("\n");
         puts("dec sp\n");

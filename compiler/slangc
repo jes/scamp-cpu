@@ -18,7 +18,7 @@
 # TODO: optionally annotate generated assembly code with the source code that
 #       generated it
 # TODO: fix &/| precedence
-# TODO: only backup return address once per function?
+# TODO: only backup return address once per function? (profile it)
 # TODO: search paths for "include"
 
 use strict;
