@@ -12,15 +12,11 @@ Here's a picture of the memory card:
 
 ## Plan
 
-1. Create the CPU in Verilog, with a testbench for each part.
+1. Create the CPU in Verilog, with a testbench for each part. **[done]**
 2. Replace the raw Verilog with Verilog that only uses 74xx-compatible primitives
-   (e.g. https://github.com/TimRudy/ice-chips-verilog), but still passes the testbenches.
-3. Convert the 74xx-Verilog into KiCad schematics.
-4. Build the CPU
-
-It is likely that steps 1 to 3 will go through several iterations while I figure out how
-the CPU is actually going to work, but hopefully step 4 will only happen once. It is likely
-that if step 4 needs to happen substantially more than once that it will never get completed.
+   (e.g. https://github.com/TimRudy/ice-chips-verilog), but still passes the testbenches. **[done]**
+3. Convert the 74xx-Verilog into KiCad schematics. **[done]**
+4. Build the CPU **[still working on this]**
 
 ## Current status
 
