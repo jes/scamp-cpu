@@ -11,7 +11,7 @@ var buf = malloc(bufsz);
 var cat = func(name) {
     var fd;
     if (strcmp(name, "-") == 0) {
-        fd = 1;
+        fd = 0;
     } else {
         fd = open(name, O_READ);
         if (fd < 0) {
