@@ -1,10 +1,14 @@
 # SCAMP CPU
 
-I am building a 16-bit CPU.
+I am building a simple 16-bit CPU.
 
 This repo is a loosely-connected collection of Verilog source, FreeCAD files, KiCad files, text notes, and software.
 
 It's called "SCAMP" which means something like "Simple Computing and Arithmetic Microcoded Processor".
+
+Here's a picture of the memory card:
+
+![](doc/memory-card.jpeg)
 
 ## Plan
 
@@ -49,8 +53,8 @@ Other work includes:
  - [x] get the PCBs manufactured
  - [ ] work out how to interface with storage and serial
  - [ ] assemble the computer inside a convenient case (WIP: see `case/` and `front-panels/`)
- - [ ] write the bootloader ROM (WIP: see `bootrom.s`)
- - [ ] write the "kernel" (WIP: see `os/`)
+ - [x] write the bootloader ROM (mostly done: see `bootrom.s`)
+ - [x] write the "kernel" (mostly done: see `os/`)
  - [x] write a compiler
  - [ ] write system utilities (WIP: see `sys/`)
  - [ ] write an editor
@@ -60,7 +64,8 @@ Other work includes:
 
 It is a 16-bit CPU. The bus is 16-bit, registers are 16-bit, addresses are 16-bit, and memory contents are
 16-bit. The upper 8 bits of an instruction select the opcode, and the lower 8 bits are available
-for small immediate values.
+for small immediate values. There is no support for: cache, interrupts, virtual memory, DMA, privilege rings,
+floating point, and ~anything else that is not strictly necessary.
 
 Here is a diagram of the architecture I currently have in mind:
 
