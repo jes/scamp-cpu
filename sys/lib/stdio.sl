@@ -27,13 +27,13 @@ var fgets = func(fd, s, size) {
     var ch = 0;
     var len = 0;
 
-    while (ch != EOF && ch != '\n' && len < size) {
-        ch = getchar();
-        if (ch != EOF)
+    while (ch >= 0 && ch != '\n' && len < size) {
+        ch = fgetc(fd);
+        if (ch >= 0)
             *(s+(len++)) = ch;
     };
 
-    if (ch == EOF && len == 0)
+    if (ch < 0 && len == 0)
         return 0;
 
     *(s+len) = 0;
