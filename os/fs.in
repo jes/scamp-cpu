@@ -1,5 +1,6 @@
 mkdir etc
-put motd.scamp /etc/motd
+put -t motd /etc/motd
+
 mkdir bin
 put ../sys/init.bin /bin/init
 put ../sys/cat.bin /bin/cat
@@ -11,4 +12,17 @@ put ../sys/echo.bin /bin/echo
 put ../sys/stat.bin /bin/stat
 put ../sys/rm.bin /bin/rm
 put ../sys/slangc.bin /bin/slangc
+
+mkdir lib
+put -t ../sys/lib/head.s /lib/head.s
+put -t ../sys/lib/foot.s /lib/foot.s
+put -t ../sys/lib/grarr.sl /lib/grarr.sl
+put -t ../sys/lib/list.sl /lib/list.sl
+put -t ../sys/lib/malloc.sl /lib/malloc.sl
+put -t ../sys/lib/parse.sl /lib/parse.sl
+put -t ../sys/lib/stdio.sl /lib/stdio.sl
+put -t ../sys/lib/stdlib.sl /lib/stdlib.sl
+put -t ../sys/lib/string.sl /lib/string.sl
+put -t ../sys/lib/sys.sl /lib/sys.sl
+
 mkdir proc

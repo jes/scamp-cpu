@@ -13,7 +13,6 @@ os.prof: os.disk
 
 os.disk: os.hex fs.in ../sys/*.bin motd
 	../util/hex2disk --start 0xd000 os.hex | ../fs/mkfs > os.disk.tmp
-	../util/unix2scamp motd > motd.scamp
 	../fs/fs os.disk.tmp < fs.in
 	mv os.disk.tmp os.disk
 
@@ -34,4 +33,4 @@ os.s: $(SOURCES)
 	mv os.s.tmp os.s
 
 clean:
-	rm -f os.disk os.prof os.hex os.anhex os.opt.s os.s *.tmp os.prof.html motd.scamp
+	rm -f os.disk os.prof os.hex os.anhex os.opt.s os.s *.tmp os.prof.html

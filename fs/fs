@@ -77,10 +77,13 @@ sub help {
     pwd       show current directory
     cat FILE  show contents of a file
     get FILE [HOSTFILE] get a file from the image into the host fs
-    put HOSTFILE [FILE] put a file into the image from the host fs
+    put [-t] HOSTFILE [FILE] put a file into the image from the host fs
     free      show number of free blocks
     exit      save the disk contents and quit
     abort     quit without saving contents
+
+"-t" means the file should be converted between Unix text (1 byte per char)
+and SCAMP text (2 bytes per char).
 };
 }
 
@@ -130,6 +133,7 @@ sub cat {
 }
 
 sub get {
+    # TODO: [nice] support -t
     my ($file, $hostfile) = @_;
     my $str = $fs->get($file);
 
@@ -140,12 +144,22 @@ sub get {
 }
 
 sub put {
+    my $txt = 0;
+    if ($_[0] eq '-t') {
+        $txt = 1;
+        shift @_;
+    }
+
     my ($hostfile, $file) = @_;
 
     open(my $fh, '<', $hostfile)
         or die "can't read $hostfile: $!\n";
     my $str = join('',<$fh>);
     close $fh;
+
+    if ($txt) {
+        $str = join(chr(0), '', split(//, $str));
+    };
 
     $file ||= basename($hostfile);
     $fs->put($file, $str);
