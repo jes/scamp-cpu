@@ -10,4 +10,5 @@ put ../sys/pwd.bin /bin/pwd
 put ../sys/echo.bin /bin/echo
 put ../sys/stat.bin /bin/stat
 put ../sys/rm.bin /bin/rm
+put ../sys/slangc.bin /bin/slangc
 mkdir proc
