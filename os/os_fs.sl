@@ -38,7 +38,8 @@ sys_open = func(name, mode) {
     if(blktype() != TYPE_FILE) return NOTFILE;
 
     # allocate an fd, or return BADFD if they're all taken
-    fd = fdalloc();
+    if (mode & O_KERNELFD) fd = KERNELFD
+    else                   fd = fdalloc();
     if (fd == -1) return BADFD;
 
     # attach read/write/seek/tell

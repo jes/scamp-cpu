@@ -11,7 +11,7 @@
 #   2: tell function pointer
 #   3: seek function pointer
 #   4: close function pointer
-#   5..8: device-specific reserved space
+#   5..7: device-specific reserved space
 var READFD =  0;
 var WRITEFD = 1;
 var TELLFD =  2;
@@ -27,6 +27,7 @@ var FDDATA =  5;
 #   2: stderr (change with copyfd)
 #   3: serial port 0 (console)
 var nfds = 16;
+var KERNELFD = nfds-1;
 var fdtable = asm {
     fdtable: .gap 128 # space for 16 fds
 };
@@ -42,7 +43,8 @@ var fdalloc = func() {
     var fd = 0;
     var i;
 
-    while (fd != nfds) {
+    # leave 1 fd free for kernel use
+    while (fd != KERNELFD) {
         i = 0;
         while (i != 8) {
             if (*(fdbaseptr(fd)+i) != 0)
@@ -99,11 +101,12 @@ var undirent_str = asm { .gap 32 };
 var CWDBLK = ROOTBLOCK;
 
 # file modes
-var O_READ    = 0x01;
-var O_WRITE   = 0x02;
-var O_CREAT   = 0x04;
-var O_NOTRUNC = 0x08;
-var O_APPEND  = 0x10;
+var O_READ     = 0x01;
+var O_WRITE    = 0x02;
+var O_CREAT    = 0x04;
+var O_NOTRUNC  = 0x08;
+var O_APPEND   = 0x10;
+var O_KERNELFD = 0x20;
 
 # "process id"
 var pid = 0;

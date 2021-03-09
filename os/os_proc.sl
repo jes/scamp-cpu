@@ -30,10 +30,6 @@ var sys_exit_impl = func(rc) {
     if (pid == 0) kpanic("init exits.");
     pid--;
 
-    # make sure there's at least 1 free fd slot
-    # XXX: is this right? should we be doing more? less?
-    sys_close(nfds-1);
-
     # create filenames
     var userfile = "/proc/0.user";
     var kernelfile = "/proc/0.kernel";
@@ -41,7 +37,7 @@ var sys_exit_impl = func(rc) {
     *(kernelfile+6) = pid+'0';
 
     # 1. restore user program
-    var ufd = sys_open(userfile, O_READ);
+    var ufd = sys_open(userfile, O_READ|O_KERNELFD);
     if (ufd < 0) throw(ufd);
     var n;
     var p = 0x100;
@@ -54,7 +50,7 @@ var sys_exit_impl = func(rc) {
     sys_close(ufd);
 
     # 2. restore kernel state
-    var kfd = sys_open(kernelfile, O_READ);
+    var kfd = sys_open(kernelfile, O_READ|O_KERNELFD);
     if (kfd < 0) throw(kfd);
 
     var sp;
@@ -95,13 +91,14 @@ var sys_system_impl  = func(top, args, sp, ret) {
     };
 
     # create filenames
+    # TODO: [bug] should support more than 1 digit in filenames
     var userfile = "/proc/0.user";
     var kernelfile = "/proc/0.kernel";
     *(userfile+6) = pid+'0';
     *(kernelfile+6) = pid+'0';
 
     # open "/proc/$pid.user" for writing
-    var ufd = sys_open(userfile, O_WRITE|O_CREAT);
+    var ufd = sys_open(userfile, O_WRITE|O_CREAT|O_KERNELFD);
     if (ufd < 0) throw(ufd);
 
     # copy bytes from 0x100..top
@@ -111,7 +108,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
     if (n != top-0x100) kpanic("system(): write() didn't write enough");
 
     # open "/proc/$pid.kernel" for writing
-    var kfd = sys_open(kernelfile, O_WRITE|O_CREAT);
+    var kfd = sys_open(kernelfile, O_WRITE|O_CREAT|O_KERNELFD);
     if (kfd < 0) throw(kfd);
 
     # copy into $pid.kernel:
