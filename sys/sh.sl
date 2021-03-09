@@ -91,6 +91,7 @@ var unredirect = func(fd, prev) {
 
     close(fd);
     copyfd(fd, prev);
+    close(prev);
 };
 
 # TODO: [bug] make "die" non-fatal
