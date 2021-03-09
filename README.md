@@ -85,6 +85,9 @@ the design of my CPU.
 I found the [YouTube playlist](https://www.youtube.com/playlist?list=PLOech0kWpH8-njQpmSNGSiQBPUvl8v3IM) for Nicolas Laurent's [compiler class](https://norswap.com/compilers/) quite helpful
 in writing the parser for the compiler.
 
+The [Build Your Own Text Editor](https://viewsourcecode.org/snaptoken/kilo/) tutorial walks you through implementing
+[antirez](https://github.com/antirez)'s [kilo](https://github.com/antirez/kilo) editor.
+
 ## Contact
 
 If anything in this repo causes you to want to communicate with the person who wrote it, you can email me on [james@incoherency.co.uk](mailto:james@incoherency.co.uk)
