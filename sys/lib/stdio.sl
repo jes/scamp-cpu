@@ -13,7 +13,11 @@ var fputc = func(fd, ch) {
     return write(fd,&ch,1);
 };
 
-var getchar = func() return fgetc(0);
+var getchar = func() {
+    var ch = fgetc(0);
+    if (ch < 0) return EOF; # collapse all types of error to "EOF"
+    return ch;
+};
 var putchar = func(ch) return fputc(1, ch);
 
 # read at most size-1 characters into s, and terminate with a 0
