@@ -25,6 +25,9 @@ var ser_read = func(fd, buf, sz) {
         if (ch == 4) break; # ctrl-d
         # TODO: [nice] if (ch == 17) ... # ctrl-q
         # TODO: [nice] if (ch == 19) ... # ctrl-s
+        # TODO: [nice] what about arrow keys? backspace? delete? should we do
+        #       line-buffering when serial is in cooked mode? or just make a
+        #       user library for line editing?
 
         if (ch == '\r') ch = '\n'; # turn enter key into '\n'
 
