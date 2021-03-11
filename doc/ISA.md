@@ -157,15 +157,6 @@ Example:
 
     msg: .str "Hello, world!\n"
 
-### .pstr "TEXT"
-
-Generates a "packed string", with 2 characters per word, with the first character of the string in
-the upper 8 bits of the first word (i.e. big endian).
-
-Example:
-
-    msg: .pstr "Hello, world!\n";
-
 ### .word VALUE
 
 Generate a literal word.
@@ -188,7 +179,7 @@ i.e. begin with uppercase, lowercase, or underscore, and then contain only upper
 
 Values are decimal by default.
 
-Hex values are written starting with "0x", and binary values starting with "0b".
+Hex values are written starting with "0x".
 
 All numeric values are 16 bits long, but in special cases the assembler may put them in an i8l
 or i8h where possible.
@@ -208,6 +199,4 @@ Example values:
 
     .word 100
     .word 0x123
-    .word 0b1010111100000101
     .str "ABC\wffffDEFG\r\n\0"
-    .pstr "ABCD\x1b\n\0"

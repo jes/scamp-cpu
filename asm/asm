@@ -50,8 +50,6 @@ while (my $line = <>) {
 
     # resolve hex
     $line =~ s/\b0x([0-9a-f]+)\b/hex($1)/gei;
-    # resolve binary
-    $line =~ s/\b(0b[01]+)\b/oct($1)/gei;
 
     # store labels
     while ($line =~ s/^([a-z_][a-z_0-9]*):\s*//i) {
@@ -110,8 +108,6 @@ while (my $line = <>) {
         $str =~ s/\\\\/\\/g;
         my @c = split //, $str;
         emit(ord($_)) for @c;
-    } elsif ($op eq '.pstr') {
-        die "error: line $.: .pstr not implemented\n";
     } else {
         # turn the arguments into a pattern
         my @argpattern;
