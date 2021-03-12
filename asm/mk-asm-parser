@@ -7,8 +7,7 @@
 # "i16" can be any constant, or a label
 #
 # TODO: [nice] Whitespace just turns into "skip()"?
-# TODO: [perf] we could collapse all the "ld" together, all the "add" together, etc.
-#       to reduce the amount of backtracking
+# TODO: [perf] generate more efficient code!
 
 use strict;
 use warnings;

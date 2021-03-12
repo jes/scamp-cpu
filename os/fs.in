@@ -12,6 +12,7 @@ put ../sys/echo.bin /bin/echo
 put ../sys/stat.bin /bin/stat
 put ../sys/rm.bin /bin/rm
 put ../sys/slangc.bin /bin/slangc
+put ../sys/asm.bin /bin/asm
 
 mkdir lib
 put -t ../sys/lib/head.s /lib/head.s
@@ -36,5 +37,7 @@ put -t ../sys/rm.sl /src/rm.sl
 put -t ../sys/sh.sl /src/sh.sl
 put -t ../sys/slangc.sl /src/slangc.sl
 put -t ../sys/stat.sl /src/stat.sl
+put -t ../sys/asm.sl /src/asm.sl
+put -t ../sys/asmparser.sl /src/asmparser.sl
 
 mkdir proc

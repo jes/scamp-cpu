@@ -44,6 +44,10 @@ asm/instructions.json: ucode/ucode.s
 	./ucode/mk-instructions-json < ucode/ucode.s > asm/instructions.json.tmp
 	mv ./asm/instructions.json.tmp ./asm/instructions.json
 
+sys/asmparser.sl: asm/instructions.json
+	./asm/mk-asm-parser > ./sys/asmparser.sl.tmp
+	mv ./sys/asmparser.sl.tmp ./sys/asmparser.sl
+
 doc/table.html: asm/instructions.json
 	./asm/mk-table-html > doc/table.html.tmp
 	mv ./doc/table.html.tmp ./doc/table.html
@@ -61,7 +65,7 @@ burn: ttlcpu.bin
 	iceFUNprog ttlcpu.bin
 
 clean:
-	rm -f *.asc *.bin *blif verilog/a.out verilog/ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex bootrom.hex testrom.hex testrom-low.hex testrom-high.hex *.tmp asm/instructions.json ttlcpu.json
+	rm -f *.asc *.bin *blif verilog/a.out verilog/ttl-*_tb.v ucode.hex ucode-low.hex ucode-high.hex bootrom.hex testrom.hex testrom-low.hex testrom-high.hex *.tmp asm/instructions.json sys/asmparser.sl ttlcpu.json
 	make -C emulator/ clean
 	make -C os/ clean
 	make -C sys/ clean
