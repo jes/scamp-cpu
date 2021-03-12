@@ -133,23 +133,39 @@ I16 = func(x) {
     return 0;
 };
 
+var set_indirection = func(val,width) {
+    if (width == 8) {
+        asm_i8 = val & 0xff;
+    } else if (width == 16) {
+        asm_i16 = val;
+    };
+};
+
 # "sp" or "rN" or "(i8h)"
-Pseudoreg = func(x) {
+Indirection = func(width) {
     if (parse(String,"sp")) {
-        asm_i8 = 0xff;
+        set_indirection(0xffff, width);
         return 1;
     };
     if (parse(Char,'r')) {
         if (parse(DecimalLiteral,0)) {
-            asm_i8 = asm_constant;
+            set_indirection(0xff00 | asm_constant, width);
             return 1;
         } else {
             return 0;
         };
     };
+
     if (!parse(Char,'(')) return 0;
-    if (!parse(I8h,0)) return 0;
+    if (width == 8) {
+        if (!parse(I8h,0)) return 0;
+    } else if (width == 16) {
+        if (!parse(I16,0)) return 0;
+    } else {
+        die("invalid indirection width: %d",[width]);
+    };
     if (!parse(CharSkip,')')) return 0;
+
     return 1;
 };
 
