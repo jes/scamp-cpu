@@ -958,7 +958,6 @@ Identifier = func(x) {
             skip();
             return 1;
         };
-        if (IDENTIFIER[i] == '\\') *(IDENTIFIER+i) = escapedchar(nextchar());
         i++;
     };
     die("identifier too long",0);

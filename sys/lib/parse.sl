@@ -2,6 +2,8 @@
 #
 # TODO: [nice] better-namespaced globals
 
+include "malloc.sl";
+
 var pos;
 var readpos;
 var line;
