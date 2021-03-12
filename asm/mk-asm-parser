@@ -8,6 +8,8 @@
 #
 # TODO: [nice] Whitespace just turns into "skip()"?
 # TODO: [perf] generate more efficient code!
+# TODO: [perf] collapse all the identical argument parsing functions together,
+#       and take the opcode as the function argument
 
 use strict;
 use warnings;
