@@ -9,8 +9,6 @@ include "stdio.sl";
 include "string.sl";
 include "asmparser.sl";
 
-var Reject = func(x) { return 0; };
-
 var asm_i16;
 var i16_identifier;
 var asm_constant;
@@ -190,7 +188,16 @@ var At = func(x) {
     return 1;
 };
 
-var Gap = Reject;
+var Gap = func(x) {
+    if (!parse(String,".gap")) return 0;
+    skip();
+    if (!parse(Constant,0)) die(".gap needs constant",0);
+    skip();
+
+    while (asm_constant--) emit(0);
+
+    return 1;
+};
 
 var escapedchar = func(ch) {
     if (ch == 'r') return '\r';
@@ -219,7 +226,16 @@ var Str = func(x) {
     };
 };
 
-var Word = Reject;
+var Word = func(x) {
+    if (!parse(String,".word")) return 0;
+    skip();
+    if (!parse(I16,0)) return 0;
+    skip();
+
+    emit_i16();
+
+    return 1;
+};
 
 var Label = func(x) {
     if (!parse(Identifier,0)) return 0;
