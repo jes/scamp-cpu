@@ -8,8 +8,6 @@
 #
 # TODO: [nice] Whitespace just turns into "skip()"?
 # TODO: [perf] generate more efficient code!
-# TODO: [perf] collapse all the identical argument parsing functions together,
-#       and take the opcode as the function argument
 
 use strict;
 use warnings;
@@ -22,6 +20,8 @@ my $instructions = load_instructions();
 print parser_header() . "\n";
 
 my %mnemonic;
+my %argparser;
+my $argparsernum = 0;
 
 for my $instr (keys %$instructions) {
     my $opcode = $instructions->{$instr}{opcode};
@@ -37,12 +37,22 @@ for my $mnem (keys %mnemonic) {
 print parser_footer() . "\n";
 
 sub mkargparser {
-    my ($args, $opcode, $mnem) = @_;
+    my ($args, $opcode) = @_;
+
+    return '' if $argparser{$args};
+
+    my $name = "Instr_" . $args . "_" . $argparsernum++;
+    $name =~ s/\+/p/g;
+    $name =~ s/\-/m/g;
+    $name =~ s/[^a-zA-Z0-9]/_/g;
+    $name =~ s/_+/_/g;
+
+    $argparser{$args} = $name;
 
     my $src = '';
 
-    $src .= "# $mnem $args\n";
-    $src .= "var Instr_".safemnem($mnem)."_$opcode = func(x) {\n";
+    $src .= "# $args\n";
+    $src .= "var $name = func(opcode) {\n";
 
     my $i16 = 0;
     my $i8 = 0;
@@ -88,9 +98,9 @@ sub mkargparser {
     $src .= "    skip();\n";
 
     if ($i8) {
-        $src .= "    emit(0x" . sprintf("%04x",($opcode<<8)) . " | asm_i8);\n";
+        $src .= "    emit(opcode | asm_i8);\n";
     } else {
-        $src .= "    emit(0x" . sprintf("%04x",($opcode<<8)) . ");\n";
+        $src .= "    emit(opcode);\n";
     }
 
     if ($i16) {
@@ -103,6 +113,11 @@ sub mkargparser {
     return $src;
 }
 
+sub argparser {
+    my ($args) = @_;
+    return $argparser{$args}||die "no parser for: $args";
+}
+
 sub mkparser {
     my ($mnem, @instrs) = @_;
 
@@ -113,12 +128,15 @@ sub mkparser {
 
     for my $mode (@instrs) {
         my ($instr, $opcode, $cycles) = @$mode;
-        $src .= mkargparser($instr, $opcode, $mnem);
+        $src .= mkargparser($instr, $opcode);
     }
 
     $src .= "var Instr_".safemnem($mnem)." = func(x) {\n";
     $src .= "    if (!parse(Keyword,\"$mnem\")) return 0;\n";
-    $src .= "    if (parse(Instr_".safemnem($mnem)."_$_,0)) return 1;\n" for map { $_->[1] } @instrs;
+    for my $mode (@instrs) {
+        my ($instr, $opcode, $cycles) = @$mode;
+        $src .= "    if (parse(" . argparser($instr) . ",0x".sprintf("%04x",$opcode<<8).")) return 1;\n";
+    }
     $src .= "    die(\"illegal $mnem instruction\",0);\n";
     $src .= "};\n";
 
