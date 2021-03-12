@@ -2,6 +2,8 @@
 #
 # TODO: [nice] -v "annotated hex" mode
 # TODO: [nice] tidy up variable names and code layout, comment stuff that's not clear
+# TODO: [bug] the assembler can't currently assemble its own code because it runs out of
+#       memory - maybe move "CODE" onto the disk?
 
 include "grarr.sl";
 include "stdlib.sl";

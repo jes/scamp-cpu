@@ -10,7 +10,7 @@ var sbrk = func(sz) {
     var oldtop = TOP;
     TOP = TOP + sz;
     # TODO: this should compare to osbase() or something instead of 0xff00
-    if (TOP ge 0xff00) {
+    if (TOP ge 0xff00 || TOP lt oldtop) {
         puts("out of memory\n");
         exit(1);
     };
