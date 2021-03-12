@@ -142,7 +142,9 @@ sub mkparser {
     }
 
     $src .= "var Instr_".safemnem($mnem)." = func(x) {\n";
-    $src .= "    if (!parse(Keyword,\"$mnem\")) return 0;\n";
+    $src .= "    if (!parse(String,\"$mnem\")) return 0;\n";
+    $src .= "    if (parse(NotAnyChar,\" \\t\\r\\n\")) return 0;\n"; # mnemonic name must end on word boundary
+    $src .= "    while(parse(AnyChar,\" \\t\\r\"));\n"; # skip spaces
     for my $mode (@instrs) {
         my ($instr, $opcode, $cycles) = @$mode;
         $src .= "    if (parse(" . argparser($instr) . ",0x".sprintf("%04x",$opcode<<8).")) return 1;\n";
