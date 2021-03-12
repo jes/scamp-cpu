@@ -13,9 +13,9 @@
 .def DISKBLK   4
 .def DISKDEV   5
 .def SERIALDEV 2
-.def STARTREG  r1
-.def POINTREG  r2
-.def LENGTHREG r3
+.def START 0xff01
+.def POINT 0xff02
+.def LENGTH 0xff03
 
 call serial_init
 
@@ -38,8 +38,8 @@ jr- 1
 # 3. read start address from disk
 read_startaddr:
     call inword
-    ld STARTREG, r0
-    ld POINTREG, r0
+    ld (START), r0
+    ld (POINT), r0
     ld x, r0
     and x, 0xff00
     jnz read_length
@@ -51,7 +51,7 @@ read_startaddr:
 # 4. read length from disk
 read_length:
     call inword
-    ld LENGTHREG, r0
+    ld (LENGTH), r0
     jnz read_data
 
     ld r0, zerolength_s
@@ -62,15 +62,15 @@ read_length:
 read_data:
     call inword
     ld x, r0
-    ld (POINTREG++), x
-    dec LENGTHREG
+    ld ((POINT)++), x
+    dec (LENGTH)
     jnz read_data
 
 ld r0, ok_s
 call print
 
 # 6. jump to the loaded code
-jmp STARTREG
+jmp (START)
 
 # print the nul-terminated string pointed to by r0
 print:
@@ -86,14 +86,14 @@ serial_init:
     # TODO: initialise serial
     ret
 
-.def BLKNUMREG r10
-.def BLKIDXREG r11
+.def BLKNUM 0xff0a
+.def BLKIDX 0xff0b
 storage_init:
     # TODO: initialise a real storage device
     ld x, 0
     out DISKBLK, x
-    ld BLKNUMREG, 0
-    ld BLKIDXREG, 0
+    ld (BLKNUM), 0
+    ld (BLKIDX), 0
     ret
 
 # read the next 1 word from the disk device and return it in r0
@@ -101,24 +101,24 @@ storage_init:
 inword:
     # high byte
     in x, DISKDEV
-    inc BLKIDXREG
+    inc (BLKIDX)
     shl3 x
     shl3 x
     shl2 x
     # low byte
     in r0, DISKDEV
     or r0, x
-    inc BLKIDXREG
+    inc (BLKIDX)
     # do we need to go to the next block?
-    ld x, BLKIDXREG
+    ld x, (BLKIDX)
     sub x, 512
     jz nextblk
     ret
 
     nextblk:
-    inc BLKNUMREG
-    ld BLKIDXREG, 0
-    out DISKBLK, BLKNUMREG
+    inc (BLKNUM)
+    ld (BLKIDX), 0
+    out DISKBLK, (BLKNUM)
 
     ld x, 0x2e # '.'
     out SERIALDEV, x
