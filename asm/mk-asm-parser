@@ -107,6 +107,7 @@ sub mkparser {
     $src .= "var Instr_".safemnem($mnem)." = func(x) {\n";
     $src .= "    if (!parse(Keyword,\"$mnem\")) return 0;\n";
     $src .= "    if (parse(Instr_".safemnem($mnem)."_$_,0)) return 1;\n" for map { $_->[1] } @instrs;
+    $src .= "    return 0;\n";
     $src .= "};\n";
 
     return $src;
