@@ -61,9 +61,9 @@ sub mkargparser {
 
     my $str = '';
 
-    while ($args =~ /(i8l|i8h|i16|\(i8h\)|\(i16\)|.)/g) {
+    while ($args =~ /(i8l|i8h|i16|\(i8h\)|\(i16\)|\(\d+\)|.)/g) {
         my $bit = $1;
-        if ($bit =~ /(i8l|i8h|i16|\(i8h\)|\(i16\))/) {
+        if ($bit =~ /i8l|i8h|i16|\(i8h\)|\(i16\)|\(\d+\)/) {
             if ($str) {
                 if (length($str) == 1) {
                     $src .= "    if (!parse(Char,'$str')) return 0;\n";
@@ -88,6 +88,14 @@ sub mkargparser {
             } elsif ($bit eq '(i16)') {
                 $i16 = 1;
                 $src .= "    if (!parse(Indirection,16)) return 0;\n";
+            } elsif ($bit =~ /^\(\d+\)$/) {
+                # indirection on a constant - abuse Indirection(16)
+                $bit =~ /(\d+)/;
+                my $val = $1;
+                $src .= "    var asm_i16_bak = asm_i16;\n";
+                $src .= "    if (!parse(Indirection,16)) return 0;\n";
+                $src .= "    if (i16_identifier || asm_i16 != $val) return 0;\n";
+                $src .= "    asm_i16 = asm_i16_bak;\n";
             } else {
                 die "unrecognised bit: $bit";
             }
@@ -163,6 +171,8 @@ sub parser_header {
     $src .= "var emit;\n";
     $src .= "var emit_i16;\n";
     $src .= "var asm_i8;\n";
+    $src .= "var asm_i16;\n";
+    $src .= "var i16_identifier;\n";
 
     return $src;
 }

@@ -9,8 +9,6 @@ include "stdio.sl";
 include "string.sl";
 include "asmparser.sl";
 
-var asm_i16;
-var i16_identifier;
 var asm_constant;
 var pc_start = 0;
 var asm_pc;
@@ -141,19 +139,16 @@ var set_indirection = func(val,width) {
     };
 };
 
-# "sp" or "rN" or "(i8h)"
+# "sp" or "rN" or "(i8h)" or "(i16)"
 Indirection = func(width) {
     if (parse(String,"sp")) {
         set_indirection(0xffff, width);
         return 1;
     };
     if (parse(Char,'r')) {
-        if (parse(DecimalLiteral,0)) {
-            set_indirection(0xff00 | asm_constant, width);
-            return 1;
-        } else {
-            return 0;
-        };
+        if (!parse(DecimalLiteral,0)) return 0;
+        set_indirection(0xff00 | asm_constant, width);
+        return 1;
     };
 
     if (!parse(Char,'(')) return 0;
