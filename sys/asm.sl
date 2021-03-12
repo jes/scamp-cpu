@@ -283,5 +283,5 @@ grwalk(UNBOUNDS, func(tuple) {
 
 # emit code
 grwalk(CODE, func(word) {
-    printf("%x\n", [word]);
+    putchar(word);
 });
