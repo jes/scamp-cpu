@@ -7,9 +7,6 @@
 # "i16" can be any constant, or a label
 #
 # TODO: [nice] Whitespace just turns into "skip()"?
-# TODO: [perf] generate more efficient code!
-# TODO: [bug] can't parse "ret i8l" because bare "ret" matches first
-# TODO: [bug] can't parse "sb r254, ..." because "r254" isn't literally "(65534)"
 
 use strict;
 use warnings;
@@ -103,11 +100,11 @@ sub mkargparser {
             $str .= $bit;
         }
     }
-
     if ($str) {
         $src .= "    if (!parse(String,\"$str\")) return 0;\n";
     }
 
+    $src .= "    if (!parse(Endline,0)) return 0;\n";
     $src .= "    skip();\n";
 
     if ($i8) {
@@ -167,6 +164,7 @@ sub parser_header {
     $src .= "var I8l;\n";
     $src .= "var I8h;\n";
     $src .= "var I16;\n";
+    $src .= "var Endline;\n";
     $src .= "var Indirection;\n";
     $src .= "var emit;\n";
     $src .= "var emit_i16;\n";

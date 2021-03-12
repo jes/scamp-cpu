@@ -57,7 +57,6 @@ var Identifier = func(x) {
         if (!parse(AlphanumUnderChar,0)) {
             *(IDENTIFIER+i) = 0;
             if (reserved(IDENTIFIER)) return 0;
-            skip();
             return 1;
         };
         i++;
@@ -75,7 +74,6 @@ var NumLiteral = func(alphabet,base,neg) {
             *(literal_buf+i) = 0;
             if (neg) asm_constant = -atoibase(literal_buf,base)
             else     asm_constant =  atoibase(literal_buf,base);
-            skip();
             return 1;
         };
         i++;
@@ -131,6 +129,17 @@ I16 = func(x) {
     return 0;
 };
 
+# "Endline" is similar to "skip" except it doesn't match if it stops before
+# reaching the end of the line
+Endline = func(x) {
+    while (parse(AnyChar," \t\r")); # skip over whitespace
+    if (parse(Char,'#')) { # skip comment
+        while (parse(NotChar,'\n'));
+    };
+    if (parse(Char,'\n')) return 1;
+    return 0;
+};
+
 var set_indirection = func(val,width) {
     if (width == 8) {
         asm_i8 = val & 0xff;
@@ -159,7 +168,7 @@ Indirection = func(width) {
     } else {
         die("invalid indirection width: %d",[width]);
     };
-    if (!parse(CharSkip,')')) return 0;
+    if (!parse(Char,')')) return 0;
 
     return 1;
 };
