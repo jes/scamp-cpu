@@ -24,7 +24,6 @@ my %macro = (
 
 my %label = ();
 my $pc = 0;
-my $start = 0;
 my @code;
 
 # add macros for ".def r0 (0xff00)" for 0..255
@@ -78,13 +77,11 @@ while (my $line = <>) {
     } elsif ($op eq '.at') {
         params($op, 1, @args);
         my $at = numarg($args[0]);
-        if ($pc == 0) {
-            $start = $at;
-        } else {
+        if ($pc != 0) {
             die "error: line $.: .at $at but we're already at $pc\n" if $at < $pc;
             emit(0x0000) for ($pc+1 .. $at);
         }
-        $pc = numarg($args[0]);
+        $pc = $at;
     } elsif ($op eq '.gap') {
         params($op, 1, @args);
         emit(0x0000) for (1 .. numarg($args[0]));
