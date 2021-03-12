@@ -22,14 +22,14 @@ my %mnemonic;
 my %argparser;
 my $argparsernum = 0;
 
-for my $instr (keys %$instructions) {
+for my $instr (sort keys %$instructions) {
     my $opcode = $instructions->{$instr}{opcode};
 
     my ($mnem, $args) = split / /, $instr, 2;
     push @{ $mnemonic{$mnem} }, [ $args||'', $opcode, $instructions->{$instr}{cycles} ];
 };
 
-for my $mnem (keys %mnemonic) {
+for my $mnem (sort keys %mnemonic) {
     print mkparser($mnem, @{ $mnemonic{$mnem} }) . "\n";
 }
 
@@ -181,7 +181,7 @@ sub parser_footer {
     $src .= "var Instr = func(x) {\n";
     $src .= "    skip();\n";
 
-    for my $mnem (keys %mnemonic) {
+    for my $mnem (sort keys %mnemonic) {
         $src .= "    if (parse(Instr_".safemnem($mnem).",0)) return 1;\n";
     }
 
