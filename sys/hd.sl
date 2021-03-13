@@ -75,8 +75,6 @@ var hd = func(name) {
     close(fd);
 
     if ((pos & 7) != 0) show_text_line();
-
-    putchar('\n');
 };
 
 var args = cmdargs()+1;

@@ -2,8 +2,8 @@
 #
 # TODO: [nice] -v "annotated hex" mode
 # TODO: [nice] tidy up variable names and code layout, comment stuff that's not clear
-# TODO: [bug] the assembler can't currently assemble its own code because it runs out of
-#       memory - maybe move "CODE" onto the disk?
+# TODO: [bug] the assembler can't currently assemble its own code because once it goes
+#       past 64K input words, the parse lib gets confused, I think?
 
 include "grarr.sl";
 include "stdlib.sl";
@@ -22,7 +22,8 @@ var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 
 var IDENTIFIERS;
 var UNBOUNDS;
-var CODE;
+var code_filename;
+var code_fd;
 
 var lookup = func(name) {
     return grfind(IDENTIFIERS, name, func(findname,tuple) { return strcmp(findname,car(tuple))==0; });
@@ -147,6 +148,8 @@ var set_indirection = func(val,width) {
         asm_i8 = val & 0xff;
     } else if (width == 16) {
         asm_i16 = val;
+    } else {
+        die("invalid indirection width: %d",[width]);
     };
 };
 
@@ -286,40 +289,85 @@ var Assembly = func(x) {
 };
 
 emit = func(v) {
-    grpush(CODE,v);
+    # TODO: [perf] buffer writes
+    fputc(code_fd, v);
     asm_pc++;
 };
 
 emit_i16 = func() {
+    var v;
     if (i16_identifier) {
-        add_unbound(i16_identifier, asm_pc);
-        emit(0);
+        v = lookup(i16_identifier);
+        if (v) {
+            emit(cdr(v));
+        } else {
+            add_unbound(i16_identifier, asm_pc);
+            emit(0);
+        };
     } else {
         emit(asm_i16);
     };
 };
 
+# read code from "code_filename", resolve unbound names, and write resulting
+# code to stdout
+var resolve_unbounds = func() {
+    # "UNBOUNDS" are created in-order, so we can just keep track of the current
+    # index and increment it every time we reach the address of the next unbound
+    var idx = 0;
+    var tuple;
+    var name;
+    var addr;
+    var v;
+    var val;
+
+    tuple = grget(UNBOUNDS,idx++);
+    if (tuple) {
+        name = car(tuple);
+        addr = cdr(tuple);
+    };
+
+    var fd = open(code_filename, O_READ);
+    if (fd < 0) die("open %s: %s", [code_filename, strerror(code_fd)]);
+
+    var n;
+    var w;
+    var pc = pc_start;
+    while (1) {
+        n = read(fd, &w, 1);
+        if (n == 0) break;
+        if (n < 0) die("read %s: %s", [code_filename, strerror(n)]);
+
+        if (pc == addr) { # resolve an unbound address here
+            v = lookup(name);
+            if (!v) die("unrecognised name %s at addr %x", [name, addr]);
+            val = cdr(v);
+            w = val;
+
+            tuple = grget(UNBOUNDS,idx++);
+            if (tuple) {
+                name = car(tuple);
+                addr = cdr(tuple);
+            };
+        };
+
+        putchar(w);
+        pc++;
+    };
+    close(fd);
+};
+
 IDENTIFIERS = grnew();
 UNBOUNDS = grnew();
-CODE = grnew();
+
+code_filename = strdup(tmpnam());
+code_fd = open(code_filename, O_WRITE|O_CREAT);
+if (code_fd < 0) die("open %s: %s", [code_filename, strerror(code_fd)]);
 
 parse_init(getchar);
 parse(Assembly,0);
 
 if (nextchar() != EOF) die("garbage after end",0);
 
-# resolve unbounds
-var codebase = grbase(CODE)-pc_start;
-grwalk(UNBOUNDS, func(tuple) {
-    var name = car(tuple);
-    var addr = cdr(tuple);
-    var v = lookup(name);
-    if (!v) die("unrecognised name %s at addr %x", [name, addr]);
-    var val = cdr(v);
-    *(codebase+addr) = val;
-});
-
-# emit code
-grwalk(CODE, func(word) {
-    putchar(word);
-});
+close(code_fd);
+resolve_unbounds();
