@@ -371,3 +371,4 @@ if (nextchar() != EOF) die("garbage after end",0);
 
 close(code_fd);
 resolve_unbounds();
+unlink(code_filename);
