@@ -135,6 +135,7 @@ var printf = func(fmt, args) return fprintf(1, fmt, args);
 # with X's changed to digits, naming a file that did not previously exist;
 # also, create the (empty) file
 # in the event that creating the file fails (e.g. the system is out of fds), exit(256)
+# TODO: [nice] use application-specific names instead of always "tmpfile"
 var tmpnam_buf = "/tmp/tmpfileXX";
 var tmpnam_x = tmpnam_buf+12; # address of first "X"
 var tmpnam = func() {
