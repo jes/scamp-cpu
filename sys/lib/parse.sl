@@ -13,8 +13,8 @@ var ringbufsz = 256; # check the "too much backtrack" test, and peekchar(), befo
 var ringbuf = malloc(ringbufsz);
 
 var die = func(fmt, args) {
-    printf("error: line %d: ", [line]);
-    printf(fmt, args);
+    fprintf(2, "error: line %d: ", [line]);
+    fprintf(2, fmt, args);
     putchar('\n');
     exit(1);
 };
