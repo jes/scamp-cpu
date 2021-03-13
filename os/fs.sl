@@ -19,6 +19,8 @@ var fs_read = func(fd, buf, sz) {
         # 254 words per block, so the position within the block contents is seekpos%254
         #   startat = seekpos % 254;
         # TODO: [nice] abstract out this divmod into some other function?
+        # TODO: [perf] abolish seek/tell, and have "seekpos" always be the
+        #       position within the current block, instead of within the file
         divmod(seekpos, BLKSZ-2, 0, &startat);
 
         # blklen() is counted in bytes, so the number of words remaining is:
@@ -53,16 +55,14 @@ var fs_read = func(fd, buf, sz) {
 var fs_write = func(fd, buf, sz) {
     var fdbase = fdbaseptr(fd);
     var writesz = 0;
-    var blknum;
-    var nextblknum = *(fdbase+FDDATA);
+    var blknum = *(fdbase+FDDATA);
     var seekpos = *(fdbase+FDDATA+1);
+    var nextblknum;
     var startat;
     var remain;
     var write;
 
     while (sz) {
-        blknum = nextblknum;
-
         # read the current block of the file
         # TODO: [perf] we can skip this if we know we're writing at the end of the
         # file and startat==0, because we don't need length, next pointer, or
@@ -81,7 +81,7 @@ var fs_write = func(fd, buf, sz) {
         else             write = remain;
 
         # do we need to update the block length?
-        if (startat+write > half(blklen()+1)) blksetlen(shl(startat+write,1));
+        if (shl(startat+write,1) > blklen()) blksetlen(shl(startat+write,1));
 
         # do we need to move to the next block?
         if (startat+write == BLKSZ-2) {
@@ -112,6 +112,9 @@ var fs_write = func(fd, buf, sz) {
         writesz = writesz + write;
         sz = sz - write;
         seekpos = seekpos + write;
+
+        # move to the next block
+        if (startat+write == BLKSZ-2) blknum = nextblknum;
     };
 
     *(fdbase+FDDATA) = blknum;
