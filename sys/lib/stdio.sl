@@ -149,7 +149,7 @@ var tmpnam = func() {
         *tmpnam_x = y+'0';
         x = 0;
         while (x < 10 && !ok) {
-            *(tmpnam_x+1) = y+'0';
+            *(tmpnam_x+1) = x+'0';
             n = stat(tmpnam_buf, statbuf);
             if (n == NOTFOUND) ok=1;
             x++;
