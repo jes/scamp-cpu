@@ -56,6 +56,7 @@ var kprintf = func(fmt, args) {
                 kputs("<???>");
             }
         } else {
+            if (*p == '\n') outp(2, '\r');
             outp(2, *p);
         };
         p++;
