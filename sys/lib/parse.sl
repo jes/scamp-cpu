@@ -15,14 +15,14 @@ var ringbuf = malloc(ringbufsz);
 var die = func(fmt, args) {
     fprintf(2, "error: line %d: ", [line]);
     fprintf(2, fmt, args);
-    putchar('\n');
+    fputc(2, '\n');
     exit(1);
 };
 
 var warn = func(fmt, args) {
     fprintf(2, "warning: line %d: ", [line]);
     fprintf(2, fmt, args);
-    putchar('\n');
+    fputc(2, '\n');
 };
 
 # setup parser state ready to parse the given string
