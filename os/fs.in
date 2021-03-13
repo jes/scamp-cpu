@@ -39,5 +39,6 @@ put -t ../sys/slangc.sl /src/slangc.sl
 put -t ../sys/stat.sl /src/stat.sl
 put -t ../sys/asm.sl /src/asm.sl
 put -t ../sys/asmparser.sl /src/asmparser.sl
+put -t ../sys/asm.opt.s /src/asm.s
 
 mkdir proc
