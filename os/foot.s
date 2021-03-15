@@ -21,12 +21,12 @@ _sys_readdir: .word 0
 _sys_opendir: .word 0
 _sys_mkdir:   .word 0
 _sys_chdir:   .word 0
-_sys_tell:    .word 0
-_sys_seek:    .word 0
+_sys_UNUSED1: .word 0
+_sys_UNUSED2: .word 0
 _sys_close:   .word 0
 _sys_open:    .word 0
 _sys_read:    .word 0
-_sys_UNUSED1: .word 0
+_sys_UNUSED3: .word 0
 _sys_write:   .word 0
 _sys_getcwd:  .word 0
 _sys_system:  .word 0

@@ -19,8 +19,8 @@ var fs_read = func(fd, buf, sz) {
         # 254 words per block, so the position within the block contents is seekpos%254
         #   startat = seekpos % 254;
         # TODO: [nice] abstract out this divmod into some other function?
-        # TODO: [perf] abolish seek/tell, and have "seekpos" always be the
-        #       position within the current block, instead of within the file
+        # TODO: [perf] have "seekpos" always be the position within the current
+        #       block, instead of within the file
         divmod(seekpos, BLKSZ-2, 0, &startat);
 
         # blklen() is counted in bytes, so the number of words remaining is:
@@ -122,9 +122,6 @@ var fs_write = func(fd, buf, sz) {
 
     return writesz;
 };
-
-var fs_tell = func(fd) return *(fdbaseptr(fd)+FDDATA+1);
-var fs_seek = func() unimpl("fs_seek");
 
 # we don't need to do anything to close the file
 var fs_close = func(fd);

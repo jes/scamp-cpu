@@ -8,16 +8,12 @@
 # Each file descriptor contains 8 words:
 #   0: read function pointer
 #   1: write function pointer
-#   2: tell function pointer
-#   3: seek function pointer
-#   4: close function pointer
-#   5..7: device-specific reserved space
+#   2: close function pointer
+#   3..7: device-specific reserved space
 var READFD =  0;
 var WRITEFD = 1;
-var TELLFD =  2;
-var SEEKFD =  3;
-var CLOSEFD = 4;
-var FDDATA =  5;
+var CLOSEFD = 2;
+var FDDATA =  3;
 #
 # Unallocated fds should have all pointers set to 0
 #

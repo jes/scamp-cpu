@@ -42,12 +42,10 @@ sys_open = func(name, mode) {
     else                   fd = fdalloc();
     if (fd == -1) return BADFD;
 
-    # attach read/write/seek/tell
+    # attach read/write/close
     var fdbase = fdbaseptr(fd);
     if (mode & O_READ)  *(fdbase+READFD)  = fs_read;
     if (mode & O_WRITE) *(fdbase+WRITEFD) = fs_write;
-    *(fdbase+TELLFD)  = fs_tell;
-    *(fdbase+SEEKFD)  = fs_seek;
     *(fdbase+CLOSEFD) = fs_close;
 
     # initialise block number and seek location

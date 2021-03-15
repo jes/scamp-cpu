@@ -104,23 +104,17 @@ Mode flags are:
 
 Close the given file descriptor.
 
-### 0xfef6: seek(fd, pos)
+### 0xfef6: UNUSED
 
-    Return: old position, or -ERR on error
-    Implemented: no
-    Errors: BADFD
-    TODO: how do we take >16-bit positions?
+    Return: ??
+    Implemented: ??
+    Errors: ??
 
-Seek to the given position on the given file descriptor.
+### 0xfef5: UNUSED
 
-### 0xfef5: tell(fd)
-
-    Return: current position, or -ERR on error
-    Implemented: partially
-    Errors: BADFD
-    TODO: how do we give >16-bit positions?
-
-Return the current position on the given file descriptor.
+    Return: ??
+    Implemented: ??
+    Errors: ??
 
 ### 0xfef4: chdir(path)
 

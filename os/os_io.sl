@@ -4,7 +4,7 @@ include "util.sl";
 include "data.sl";
 include "sys.sl";
 
-# TODO: [nice] is this sound in the general case? what about seek/tell offsets?
+# TODO: [nice] is this sound in the general case? what about
 #       buffers? maybe we just tell people not to use it if they're not sure;
 #       the intended purpose is for remapping stdin/stdout/stderr, so as long
 #       as srcfd is never used again, it's not a problem; but what happens if
@@ -24,24 +24,6 @@ sys_copyfd  = func(destfd, srcfd) {
 };
 
 # The following calls dispatch to their implementations based on the fd table
-
-sys_tell = func(fd) {
-    var err = catch();
-    if (err) return err;
-    var fdbase = fdbaseptr(fd);
-    var tellimpl = fdbase[TELLFD];
-    if (tellimpl) return tellimpl(fd);
-    return BADFD;
-};
-
-sys_seek = func(fd, pos) {
-    var err = catch();
-    if (err) return err;
-    var fdbase = fdbaseptr(fd);
-    var seekimpl = fdbase[SEEKFD];
-    if (seekimpl) return seekimpl(fd, pos);
-    return BADFD;
-};
 
 sys_read = func(fd, buf, sz) {
     var err = catch();
