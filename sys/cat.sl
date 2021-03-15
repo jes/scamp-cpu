@@ -44,5 +44,3 @@ while (*args) {
     cat(*args);
     args++;
 };
-
-exit(0);

@@ -37,6 +37,19 @@ var strcmp = asm {
     ret
 };
 
+# same as strcmp, but only look at up to n chars
+var strncmp = func(s1,s2,n) {
+    while (*s1 && *s2 && n) {
+        if (*s1 != *s2) return *s1-*s2;
+        s1++;
+        s2++;
+        n--;
+    };
+
+    if (n == 0) return 0;
+    return *s1-*s2;
+};
+
 var strlen = func(s) {
     var ss = s;
     while (*ss) ss++;
