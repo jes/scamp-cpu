@@ -8,22 +8,25 @@ var fs_read = func(fd, buf, sz) {
     var readsz = 0;
     var blknum = *(fdbase+FDDATA);
     var posinblk = *(fdbase+FDDATA+1);
+    var blkbuf = *(fdbase+FDDATA+2);
     var remain;
     var read;
 
+    if (!blkbuf) blkbuf = BLKBUF;
+
     while (sz) {
         # read the current block of the file
-        blkread(blknum);
+        blkread(blknum, blkbuf);
 
         # blklen() is counted in bytes, so the number of words remaining is:
         #   ceil(blklen/2) - posinblk
-        remain = half(blklen()+1) - posinblk;
+        remain = half(blklen(blkbuf)+1) - posinblk;
         if (remain == 0) {
             break; # EOF
         } else if (remain <= sz) {
             # consume the entire block
             read = remain;
-            if (blknext()) blknum = blknext();
+            if (blknext(blkbuf)) blknum = blknext(blkbuf);
         } else {
             # don't consume the entire block
             read = sz;
@@ -31,7 +34,7 @@ var fs_read = func(fd, buf, sz) {
 
         # copy data to user buffer
         # "posinblk+2" skips over the block header
-        memcpy(buf+readsz, BLKBUF+posinblk+2, read);
+        memcpy(buf+readsz, blkbuf+posinblk+2, read);
 
         readsz = readsz + read;
         sz = sz - read;
@@ -50,16 +53,19 @@ var fs_write = func(fd, buf, sz) {
     var writesz = 0;
     var blknum = *(fdbase+FDDATA);
     var posinblk = *(fdbase+FDDATA+1);
+    var blkbuf = *(fdbase+FDDATA+2);
     var nextblknum;
     var remain;
     var write;
+
+    if (!blkbuf) blkbuf = BLKBUF;
 
     while (sz) {
         # read the current block of the file
         # TODO: [perf] we can skip this if we know we're writing at the end of the
         # file and posinblk==0, because we don't need length, next pointer, or
         # block contents.
-        blkread(blknum);
+        blkread(blknum, blkbuf);
 
         # how much space remains in this block?
         remain = (BLKSZ-2)-posinblk;
@@ -69,20 +75,20 @@ var fs_write = func(fd, buf, sz) {
         else             write = remain;
 
         # do we need to update the block length?
-        if (shl(posinblk+write,1) > blklen()) blksetlen(shl(posinblk+write,1));
+        if (shl(posinblk+write,1) > blklen(blkbuf)) blksetlen(shl(posinblk+write,1), blkbuf);
 
         # do we need to move to the next block?
         if (posinblk+write == BLKSZ-2) {
             # use the "nextfreeblk" if we need a free block
-            if (!blknext()) blksetnext(nextfreeblk);
-            nextblknum = blknext();
+            if (!blknext(blkbuf)) blksetnext(nextfreeblk, blkbuf);
+            nextblknum = blknext(blkbuf);
         };
 
         # copy data to block
-        memcpy(BLKBUF+posinblk+2, buf+writesz, write);
+        memcpy(blkbuf+posinblk+2, buf+writesz, write);
 
         # write block to disk
-        blkwrite(blknum);
+        blkwrite(blknum, blkbuf);
 
         if (sz > write && nextblknum == blknum) kpanic("write: nextblknum == blknum");
 
@@ -91,10 +97,10 @@ var fs_write = func(fd, buf, sz) {
             blksetused(nextblknum, 1);
             blkfindfree();
 
-            blksettype(TYPE_FILE);
-            blksetlen(0);
-            blksetnext(0);
-            blkwrite(nextblknum);
+            blksettype(TYPE_FILE, blkbuf);
+            blksetlen(0, blkbuf);
+            blksetnext(0, blkbuf);
+            blkwrite(nextblknum, blkbuf);
         };
 
         writesz = writesz + write;
@@ -114,8 +120,9 @@ var fs_write = func(fd, buf, sz) {
     return writesz;
 };
 
-# we don't need to do anything to close the file
-var fs_close = func(fd);
+var fs_close = func(fd) {
+    # TODO: [bug] we need to sync the blkbuf if it is dirty
+};
 
 # truncate the given fd at the current position
 var fs_trunc = func(fd) {

@@ -5,7 +5,7 @@ include "kprintf.sl";
 # check that the start of the disk is a valid boot header
 var check_boot = func() {
     kputs("check boot header...\r\n");
-    blkread(0);
+    blkread(0, 0);
 
     if (BLKBUF[0] != 0x5343) kprintf("boot header: b[0] = %x, expected 0x5343", [BLKBUF[0]]);
     if (BLKBUF[1] < 0xa000) kprintf("boot header: b[1] = %x, seems unlikely; expected >= 0xa000", [BLKBUF[1]]);
@@ -17,7 +17,7 @@ var load_usedmap = func() {
     var p = 0x100;
 
     while (i < 16) {
-        blkread(SKIP_BLOCKS+i);
+        blkread(SKIP_BLOCKS+i, 0);
         memcpy(p, BLKBUF, BLKSZ);
         p = p + BLKSZ;
         i++;
@@ -46,11 +46,11 @@ var filewalk = func(blknum) {
     if (blkisfree(blknum)) kprintf("\r\nblock %d is linked but free\r\n", [blknum]);
     while (blknum) {
         kputs(".");
-        blkread(blknum);
+        blkread(blknum, 0);
 
-        if (blknext() && blklen() != 508) kprintf("\r\nblock %d has next block %d but length=%d (should be 508)\r\n", [blknum, blknext(), blklen()]);
+        if (blknext(0) && blklen(0) != 508) kprintf("\r\nblock %d has next block %d but length=%d (should be 508)\r\n", [blknum, blknext(0), blklen(0)]);
 
-        blknum = blknext();
+        blknum = blknext(0);
     };
 };
 
@@ -98,9 +98,9 @@ var strcmp = asm {
 #  - linked blocks not marked as used
 #  - [TODO] blocks marked as used but not linked
 var check_file = func(blk) {
-    blkread(blk);
+    blkread(blk, 0);
 
-    if (blktype() == TYPE_DIR) {
+    if (blktype(0) == TYPE_DIR) {
         kputs("D");
         if (blkisfree(blk)) kprintf("\r\nblock %d is linked but free\r\n", [blk]);
         dirwalk(blk, func(name, blknum, dirblknum, dirent_offset) {
@@ -115,18 +115,18 @@ var check_file = func(blk) {
             if (*name) {
                 if (blknum < 80) kprintf("\r\nin dir block %d, %s links to %d\r\n", [dirblknum, name, blknum]);
                 check_file(blknum);
-                blkread(dirblknum); # XXX: restore block for this dirwalk()
+                blkread(dirblknum, 0); # XXX: restore block for this dirwalk()
             } else if (blknum) {
                 #kprintf("\r\nin dir block %d, empty filename links to block %d\r\n", [dirblknum,blknum]);
             };
             return 1;
         });
-    } else if (blktype() == TYPE_FILE) {
+    } else if (blktype(0) == TYPE_FILE) {
         kputs("F");
 
         filewalk(blk);
     } else {
-        kprintf("\r\nblock %d has illegal file type (%x)\r\n", [blk, blktype()]);
+        kprintf("\r\nblock %d has illegal file type (%x)\r\n", [blk, blktype(0)]);
     };
 };
 

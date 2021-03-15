@@ -67,9 +67,8 @@ var fdfree = func(fd) {
 # Block device state
 var BLKSZ = 256; # 256 words, 512 bytes
 var BLKBUF = asm {
-    BLKBUF: .gap 256
+    BLKBUF: .gap 257
 };
-var BLKBUFNUM;
 var TYPE_DIR = 0;
 var TYPE_FILE = 0x200;
 var DIRENTSZ = 16;

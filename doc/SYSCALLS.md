@@ -66,11 +66,15 @@ if the path is too long to fit in `buf` with a trailing 0.
 
 Write multiple characters to the given file descriptor.
 
-### 0xfefa: UNUSED
+### 0xfefa: setbuf(fd, buf)
 
-    Return: ??
-    Implemented: ??
-    Errors: ??
+    Return: 0, or -ERR on error
+    Implemented: yes
+    Errors: BADFD
+
+Set the buffer to use for the given `fd`. If `buf` is 0, the `fd` will be unbuffered, and all
+writes and reads will go directly to disk. If `buf` is nonzero, it should point to a buffer of
+at least **257** words.
 
 ### 0xfef9: read(fd, buf, sz)
 

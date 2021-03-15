@@ -34,8 +34,8 @@ sys_open = func(name, mode) {
     };
 
     # return NOTFILE if it's not a file
-    blkread(location[0]);
-    if(blktype() != TYPE_FILE) return NOTFILE;
+    blkread(location[0], 0);
+    if(blktype(0) != TYPE_FILE) return NOTFILE;
 
     # allocate an fd, or return BADFD if they're all taken
     if (mode & O_KERNELFD) fd = KERNELFD
@@ -78,22 +78,34 @@ sys_stat = func(name, statbuf) {
     var nblocks = 0;
 
     while (blknum) {
-        blkread(blknum);
-        if (blktype() == TYPE_DIR) {
+        blkread(blknum, 0);
+        if (blktype(0) == TYPE_DIR) {
             *statbuf = 0;
             nwords = nwords + BLKSZ-2;
         } else {
             *statbuf = 1;
-            nwords = nwords + half(blklen()+1);
+            nwords = nwords + half(blklen(0)+1);
         };
 
         nblocks++;
-        blknum = blknext();
+        blknum = blknext(0);
     };
 
     *(statbuf+1) = nwords;
     *(statbuf+2) = nblocks;
     *(statbuf+3) = location[0];
+
+    return 0;
+};
+
+sys_setbuf = func(fd, buf) {
+    var fdbase = fdbaseptr(fd);
+    var closefunc = *(fdbase+CLOSEFD);
+
+    # setbuf() only works for files on disk
+    if (closefunc != fs_close) return BADFD;
+
+    *(fdbase+FDDATA+2) = buf;
 
     return 0;
 };

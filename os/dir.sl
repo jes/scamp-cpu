@@ -62,9 +62,9 @@ var dirwalk = func(dirblk, cb) {
     var blknum;
     var next;
     while (1) {
-        blkread(dirblk);
-        if (blktype() != TYPE_DIR) throw(NOTDIR);
-        next = blknext();
+        blkread(dirblk, 0);
+        if (blktype(0) != TYPE_DIR) throw(NOTDIR);
+        next = blknext(0);
 
         off = 2;
         while ((off+DIRENTSZ) <= BLKSZ) {
@@ -170,10 +170,10 @@ var dirmkname = func(dirblk, mkname, mktype) {
     blkfindfree();
 
     # initialise the new file
-    blksettype(mktype);
-    blksetlen(0);
-    blksetnext(0);
-    blkwrite(blknum);
+    blksettype(mktype, 0);
+    blksetlen(0, 0);
+    blksetnext(0, 0);
+    blkwrite(blknum, 0);
 
     # find an empty dirent and stick a link in
     dir_blknum = 0;
@@ -196,24 +196,24 @@ var dirmkname = func(dirblk, mkname, mktype) {
         blkfindfree();
 
         # write a header
-        blksettype(TYPE_DIR);
-        blksetnext(0);
+        blksettype(TYPE_DIR, 0);
+        blksetnext(0, 0);
         memset(BLKBUF+2, 0, BLKSZ-2); # zero out the filenames
-        blkwrite(dir_blknum);
+        blkwrite(dir_blknum, 0);
 
         # link it in to the directory
-        blkread(dir_lastblk);
-        blksetnext(dir_blknum);
-        blkwrite(dir_lastblk);
+        blkread(dir_lastblk, 0);
+        blksetnext(dir_blknum, 0);
+        blkwrite(dir_lastblk, 0);
 
         dir_offset = 2; # skip header
     };
 
     # now the dirent we should write to is at "dir_offset" into block number "dir_blknum"
     # and the new name is "dir_name" with contents starting at block "blknum"
-    blkread(dir_blknum);
+    blkread(dir_blknum, 0);
     dirent(BLKBUF+dir_offset, dir_name, blknum);
-    blkwrite(dir_blknum);
+    blkwrite(dir_blknum, 0);
 
     return [blknum, dir_blknum, dir_offset, dirblk];
 };

@@ -61,8 +61,8 @@ sys_opendir = func(name) {
     if (!location) return NOTFOUND;
 
     # return NOTDIR if it's not a directory
-    blkread(location[0]);
-    if(blktype() != TYPE_DIR) return NOTDIR;
+    blkread(location[0], 0);
+    if(blktype(0) != TYPE_DIR) return NOTDIR;
 
     # allocate an fd, or return BADFD if they're all taken
     var fd = fdalloc();
@@ -93,10 +93,11 @@ sys_mkdir = func(name) {
     var parentdirblk = location[3];
 
     # make "." and ".."
-    blkread(dirblk);
+    blkread(dirblk, 0);
+    memset(BLKBUF+2, 0, BLKSZ-2); # zero out the filenames
     dirent(BLKBUF+2, ".", dirblk);
     dirent(BLKBUF+18, "..", parentdirblk);
-    blkwrite(dirblk);
+    blkwrite(dirblk, 0);
 
     return 0;
 };
@@ -113,8 +114,8 @@ sys_chdir = func(name) {
     if (!location) return NOTFOUND;
 
     # return NOTDIR if it's not a directory
-    blkread(location[0]);
-    if(blktype() != TYPE_DIR) return NOTDIR;
+    blkread(location[0], 0);
+    if(blktype(0) != TYPE_DIR) return NOTDIR;
 
     CWDBLK = location[0];
 
@@ -192,9 +193,9 @@ sys_unlink = func(name) {
     # don't unlink the empty string file, or "."
     if (dirblk == 0 || dirblk == blknum) return NOTFOUND;
 
-    blkread(blknum);
+    blkread(blknum, 0);
     # don't unlink non-empty directories
-    if (blktype() == TYPE_DIR) {
+    if (blktype(0) == TYPE_DIR) {
         unlink_count = 0;
         dirwalk(blknum, func(name, blknum, dirblknum, dirent_offset) {
             if (*name) unlink_count++;
@@ -206,9 +207,9 @@ sys_unlink = func(name) {
     };
 
     # delete it from the directory
-    blkread(dirblk);
+    blkread(dirblk, 0);
     dirent(BLKBUF+unlink_offset, "", 0);
-    blkwrite(dirblk);
+    blkwrite(dirblk, 0);
 
     # free the rest of the blocks in the file
     blktrunc(blknum, 0);

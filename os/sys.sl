@@ -12,6 +12,7 @@ extern sys_chdir;
 extern sys_close;
 extern sys_open;
 extern sys_read;
+extern sys_setbuf;
 extern sys_write;
 extern sys_getcwd;
 extern sys_system;

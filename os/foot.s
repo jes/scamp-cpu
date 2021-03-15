@@ -26,7 +26,7 @@ _sys_UNUSED2: .word 0
 _sys_close:   .word 0
 _sys_open:    .word 0
 _sys_read:    .word 0
-_sys_UNUSED3: .word 0
+_sys_setbuf:  .word 0
 _sys_write:   .word 0
 _sys_getcwd:  .word 0
 _sys_system:  .word 0
