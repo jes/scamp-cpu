@@ -108,11 +108,13 @@ Mode flags are:
 
 Close the given file descriptor.
 
-### 0xfef6: UNUSED
+### 0xfef6: sync(fd)
 
-    Return: ??
-    Implemented: ??
-    Errors: ??
+    Return: 0, or -ERR on error
+    Implemented: yes
+    Errors: BADFD
+
+Sync the buffer for the given `fd`. If `fd` is -1, sync all `fd`s.
 
 ### 0xfef5: UNUSED
 

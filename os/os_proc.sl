@@ -30,6 +30,9 @@ var sys_exit_impl = func(rc) {
     if (pid == 0) kpanic("init exits.");
     pid--;
 
+    # sync buffers
+    sys_sync(-1);
+
     # create filenames
     var userfile = "/proc/0.user";
     var kernelfile = "/proc/0.kernel";
@@ -89,6 +92,9 @@ var sys_system_impl  = func(top, args, sp, ret) {
         allowcatch();
         return err;
     };
+
+    # sync buffers
+    sys_sync(-1);
 
     # create filenames
     # TODO: [bug] should support more than 1 digit in filenames

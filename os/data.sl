@@ -9,11 +9,13 @@
 #   0: read function pointer
 #   1: write function pointer
 #   2: close function pointer
-#   3..7: device-specific reserved space
+#   3: sync function pointer
+#   4..7: device-specific reserved space
 var READFD =  0;
 var WRITEFD = 1;
 var CLOSEFD = 2;
-var FDDATA =  3;
+var SYNCFD  = 3;
+var FDDATA  = 4;
 #
 # Unallocated fds should have all pointers set to 0
 #

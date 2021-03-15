@@ -2,6 +2,9 @@
 
 include "data.sl";
 include "util.sl";
+include "sys.sl";
+
+var fs_sync;
 
 var fs_read = func(fd, buf, sz) {
     var fdbase = fdbaseptr(fd);
@@ -88,7 +91,7 @@ var fs_write = func(fd, buf, sz) {
         memcpy(blkbuf+posinblk+2, buf+writesz, write);
 
         # write block to disk
-        blkwrite(blknum, blkbuf);
+        if (blkbuf == BLKBUF) blkwrite(blknum, blkbuf);
 
         if (sz > write && nextblknum == blknum) kpanic("write: nextblknum == blknum");
 
@@ -97,10 +100,10 @@ var fs_write = func(fd, buf, sz) {
             blksetused(nextblknum, 1);
             blkfindfree();
 
-            blksettype(TYPE_FILE, blkbuf);
-            blksetlen(0, blkbuf);
-            blksetnext(0, blkbuf);
-            blkwrite(nextblknum, blkbuf);
+            blksettype(TYPE_FILE, 0);
+            blksetlen(0, 0);
+            blksetnext(0, 0);
+            blkwrite(nextblknum, 0);
         };
 
         writesz = writesz + write;
@@ -109,7 +112,9 @@ var fs_write = func(fd, buf, sz) {
 
         # move to the next block
         if (posinblk == BLKSZ-2) {
+            fs_sync(fd);
             blknum = nextblknum;
+            *(fdbase+FDDATA) = blknum;
             posinblk = 0;
         };
     };
@@ -120,8 +125,17 @@ var fs_write = func(fd, buf, sz) {
     return writesz;
 };
 
+fs_sync = func(fd) {
+    var fdbase = fdbaseptr(fd);
+    var writefunc = *(fdbase+WRITEFD);
+    var blknum = *(fdbase+FDDATA);
+    var blkbuf = *(fdbase+FDDATA+2);
+
+    if (writefunc && blkbuf) blkwrite(blknum, blkbuf);
+};
+
 var fs_close = func(fd) {
-    # TODO: [bug] we need to sync the blkbuf if it is dirty
+    fs_sync(fd);
 };
 
 # truncate the given fd at the current position

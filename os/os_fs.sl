@@ -45,7 +45,10 @@ sys_open = func(name, mode) {
     # attach read/write/close
     var fdbase = fdbaseptr(fd);
     if (mode & O_READ)  *(fdbase+READFD)  = fs_read;
-    if (mode & O_WRITE) *(fdbase+WRITEFD) = fs_write;
+    if (mode & O_WRITE) {
+        *(fdbase+WRITEFD) = fs_write;
+        *(fdbase+SYNCFD) = fs_sync;
+    };
     *(fdbase+CLOSEFD) = fs_close;
 
     # initialise block number and seek location
@@ -105,7 +108,25 @@ sys_setbuf = func(fd, buf) {
     # setbuf() only works for files on disk
     if (closefunc != fs_close) return BADFD;
 
+    sys_sync(fd);
+
     *(fdbase+FDDATA+2) = buf;
 
     return 0;
+};
+
+sys_sync = func(fd) {
+    var i;
+
+    if (fd == -1) {
+        # sync all fds
+        i = 0;
+        while (i != nfds) sys_sync(i++);
+        return 0;
+    };
+
+    var fdbase = fdbaseptr(fd);
+    var syncimpl = *(fdbase+SYNCFD);
+    if (syncimpl) return syncimpl(fd);
+    return BADFD;
 };
