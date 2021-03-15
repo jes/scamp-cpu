@@ -1020,6 +1020,9 @@ STRINGS = grnew();
 EXTERNS = grnew();
 GLOBALS = grnew();
 
+# use dedicated output buffer, for performance
+setbuf(1, malloc(257));
+
 parse_init(getchar);
 parse(Program,0);
 
