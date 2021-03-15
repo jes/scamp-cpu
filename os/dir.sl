@@ -133,8 +133,10 @@ var dirfindname = func(dirblk, findname) {
 #  ]
 # return a null pointer if intermediate path components are not found, or
 # -1 if the file already exists
+# if "firstblock" is 0, "mktype" should set the type of block to allocate
+# if "firstblock" is nonzero, "mktype" is ignored
 var dir_lastblk;
-var dirmkname = func(dirblk, mkname, mktype) {
+var dirmkname = func(dirblk, mkname, mktype, firstblock) {
     dir_name = mkname;
     while (*dir_name == '/') dir_name++;
 
@@ -166,16 +168,19 @@ var dirmkname = func(dirblk, mkname, mktype) {
     while (*p && *p != '/') p++;
     if (*p) return 0; # intermediate components don't exist
 
-    # allocate a block for our new file
-    var blknum = nextfreeblk;
-    blksetused(blknum, 1);
-    blkfindfree();
+    # allocate a block for our new file, if we don't already have one
+    var blknum = firstblock;
+    if (blknum == 0) {
+        blknum = nextfreeblk;
+        blksetused(blknum, 1);
+        blkfindfree();
 
-    # initialise the new file
-    blksettype(mktype, 0);
-    blksetlen(0, 0);
-    blksetnext(0, 0);
-    blkwrite(blknum, 0);
+        # initialise the new file
+        blksettype(mktype, 0);
+        blksetlen(0, 0);
+        blksetnext(0, 0);
+        blkwrite(blknum, 0);
+    };
 
     # find an empty dirent and stick a link in
     dir_blknum = 0;
