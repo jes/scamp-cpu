@@ -50,7 +50,7 @@ sys_open = func(name, mode) {
 
     # initialise block number and seek location
     *(fdbase+FDDATA) = location[0]; # block number
-    *(fdbase+FDDATA+1) = 0; # seek location
+    *(fdbase+FDDATA+1) = 0; # position within block
 
     # seek to end if O_APPEND
     if (mode & O_APPEND) unimpl("O_APPEND");

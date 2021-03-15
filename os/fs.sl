@@ -7,8 +7,7 @@ var fs_read = func(fd, buf, sz) {
     var fdbase = fdbaseptr(fd);
     var readsz = 0;
     var blknum = *(fdbase+FDDATA);
-    var seekpos = *(fdbase+FDDATA+1);
-    var startat;
+    var posinblk = *(fdbase+FDDATA+1);
     var remain;
     var read;
 
@@ -16,16 +15,9 @@ var fs_read = func(fd, buf, sz) {
         # read the current block of the file
         blkread(blknum);
 
-        # 254 words per block, so the position within the block contents is seekpos%254
-        #   startat = seekpos % 254;
-        # TODO: [nice] abstract out this divmod into some other function?
-        # TODO: [perf] have "seekpos" always be the position within the current
-        #       block, instead of within the file
-        divmod(seekpos, BLKSZ-2, 0, &startat);
-
         # blklen() is counted in bytes, so the number of words remaining is:
-        #   ceil(blklen/2) - startat
-        remain = half(blklen()+1) - startat;
+        #   ceil(blklen/2) - posinblk
+        remain = half(blklen()+1) - posinblk;
         if (remain == 0) {
             break; # EOF
         } else if (remain <= sz) {
@@ -38,16 +30,17 @@ var fs_read = func(fd, buf, sz) {
         };
 
         # copy data to user buffer
-        # "startat+2" skips over the block header
-        memcpy(buf+readsz, BLKBUF+startat+2, read);
+        # "posinblk+2" skips over the block header
+        memcpy(buf+readsz, BLKBUF+posinblk+2, read);
 
         readsz = readsz + read;
         sz = sz - read;
-        seekpos = seekpos + read;
+        posinblk = posinblk + read;
+        if (posinblk == BLKSZ-2) posinblk = 0;
     };
 
     *(fdbase+FDDATA) = blknum;
-    *(fdbase+FDDATA+1) = seekpos;
+    *(fdbase+FDDATA+1) = posinblk;
 
     return readsz;
 };
@@ -56,42 +49,37 @@ var fs_write = func(fd, buf, sz) {
     var fdbase = fdbaseptr(fd);
     var writesz = 0;
     var blknum = *(fdbase+FDDATA);
-    var seekpos = *(fdbase+FDDATA+1);
+    var posinblk = *(fdbase+FDDATA+1);
     var nextblknum;
-    var startat;
     var remain;
     var write;
 
     while (sz) {
         # read the current block of the file
         # TODO: [perf] we can skip this if we know we're writing at the end of the
-        # file and startat==0, because we don't need length, next pointer, or
+        # file and posinblk==0, because we don't need length, next pointer, or
         # block contents.
         blkread(blknum);
 
-        # 254 words per block, so the position within the block contents is seekpos%254
-        #   startat = seekpos % 254;
-        divmod(seekpos, BLKSZ-2, 0, &startat);
-
         # how much space remains in this block?
-        remain = (BLKSZ-2)-startat;
+        remain = (BLKSZ-2)-posinblk;
 
         # how much can we write into this block?
         if (sz < remain) write = sz
         else             write = remain;
 
         # do we need to update the block length?
-        if (shl(startat+write,1) > blklen()) blksetlen(shl(startat+write,1));
+        if (shl(posinblk+write,1) > blklen()) blksetlen(shl(posinblk+write,1));
 
         # do we need to move to the next block?
-        if (startat+write == BLKSZ-2) {
+        if (posinblk+write == BLKSZ-2) {
             # use the "nextfreeblk" if we need a free block
             if (!blknext()) blksetnext(nextfreeblk);
             nextblknum = blknext();
         };
 
         # copy data to block
-        memcpy(BLKBUF+startat+2, buf+writesz, write);
+        memcpy(BLKBUF+posinblk+2, buf+writesz, write);
 
         # write block to disk
         blkwrite(blknum);
@@ -111,14 +99,17 @@ var fs_write = func(fd, buf, sz) {
 
         writesz = writesz + write;
         sz = sz - write;
-        seekpos = seekpos + write;
+        posinblk = posinblk + write;
 
         # move to the next block
-        if (startat+write == BLKSZ-2) blknum = nextblknum;
+        if (posinblk == BLKSZ-2) {
+            blknum = nextblknum;
+            posinblk = 0;
+        };
     };
 
     *(fdbase+FDDATA) = blknum;
-    *(fdbase+FDDATA+1) = seekpos;
+    *(fdbase+FDDATA+1) = posinblk;
 
     return writesz;
 };
@@ -126,15 +117,11 @@ var fs_write = func(fd, buf, sz) {
 # we don't need to do anything to close the file
 var fs_close = func(fd);
 
-# truncate the given fd at the current seek position
+# truncate the given fd at the current position
 var fs_trunc = func(fd) {
     var fdbase = fdbaseptr(fd);
     var blknum = *(fdbase+FDDATA);
-    var seekpos = *(fdbase+FDDATA+1);
-    var startat;
+    var posinblk = *(fdbase+FDDATA+1);
 
-    # 254 words per block, so the position within the block contents is seekpos%254
-    #   startat = seekpos % 254;
-    divmod(seekpos, BLKSZ-2, 0, &startat);
-    blktrunc(blknum, startat);
+    blktrunc(blknum, posinblk);
 };
