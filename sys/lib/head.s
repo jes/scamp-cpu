@@ -20,7 +20,7 @@ inc (_TOP)
 .def _sys_opendir 0xfef2
 .def _sys_mkdir   0xfef3
 .def _sys_chdir   0xfef4
-#                 0xfef5
+.def _sys_rename  0xfef5
 .def _sys_sync    0xfef6
 .def _sys_close   0xfef7
 .def _sys_open    0xfef8
