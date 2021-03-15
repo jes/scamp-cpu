@@ -116,11 +116,15 @@ Close the given file descriptor.
 
 Sync the buffer for the given `fd`. If `fd` is -1, sync all `fd`s.
 
-### 0xfef5: UNUSED
+### 0xfef5: rename(oldname, newname)
 
-    Return: ??
-    Implemented: ??
-    Errors: ??
+    Return: 0, or -ERR on error
+    Implemented: yes
+    Errors: BADFD, NOTFOUND, NOTDIR, EXISTS
+
+Rename the file from `oldname` to `newname`, moving it to a different directory
+if required. In the event that we ever support mounting filesystems from multiple
+devices, this call will not permit moving the file across devices.
 
 ### 0xfef4: chdir(path)
 

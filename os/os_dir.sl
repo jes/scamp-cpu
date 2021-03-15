@@ -86,7 +86,7 @@ sys_mkdir = func(name) {
     var err = catch();
     if (err) return err;
 
-    var location = dirmkname(startblk, name, TYPE_DIR);
+    var location = dirmkname(startblk, name, TYPE_DIR, 0);
     if (!location) return NOTFOUND;
     if (location == -1) return EXISTS;
     var dirblk = location[0];
@@ -221,4 +221,42 @@ sys_unlink = func(name) {
     #       from the linked list of blocks in the directory
 
     return 0;
+};
+
+sys_rename = func(oldname, newname) {
+    var oldstartblk = CWDBLK;
+    if (*oldname == '/') oldstartblk = ROOTBLOCK;
+    var newstartblk = CWDBLK;
+    if (*newname == '/') newstartblk = ROOTBLOCK;
+
+    var err = catch();
+    if (err) return err;
+
+    # try to find the name
+    var oldlocation = dirfindname(oldstartblk, oldname);
+    if (!oldlocation) return NOTFOUND;
+
+    var blknum = oldlocation[0];
+    var dirblk = oldlocation[1];
+    var unlink_offset = oldlocation[2];
+
+    # don't rename the empty string file, or "."
+    # TODO: [bug] don't rename ".."
+    if (dirblk == 0 || dirblk == blknum) return NOTFOUND;
+
+    # create the new name, linked to the existing file
+    var newlocation = dirmkname(newstartblk, newname, 0, blknum);
+    if (!newlocation) return NOTFOUND;
+    if (newlocation == -1) return EXISTS;
+
+    # delete it from the old directory
+    blkread(dirblk, 0);
+    dirent(BLKBUF+unlink_offset, "", 0);
+    blkwrite(dirblk, 0);
+
+    # TODO: [nice] if the old directory block is now empty, we should unlink it
+    #       from the linked list of blocks in the directory
+
+    return 0;
+
 };

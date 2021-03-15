@@ -21,7 +21,7 @@ _sys_readdir: .word 0
 _sys_opendir: .word 0
 _sys_mkdir:   .word 0
 _sys_chdir:   .word 0
-_sys_UNUSED1: .word 0
+_sys_rename:  .word 0
 _sys_sync:    .word 0
 _sys_close:   .word 0
 _sys_open:    .word 0

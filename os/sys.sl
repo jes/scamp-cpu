@@ -9,6 +9,7 @@ extern sys_readdir;
 extern sys_opendir;
 extern sys_mkdir;
 extern sys_chdir;
+extern sys_rename;
 extern sys_sync;
 extern sys_close;
 extern sys_open;

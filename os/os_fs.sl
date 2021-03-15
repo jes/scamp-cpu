@@ -28,7 +28,7 @@ sys_open = func(name, mode) {
     if (!location) {
         if (!(mode & O_CREAT)) return NOTFOUND;
 
-        location = dirmkname(startblk, name, TYPE_FILE);
+        location = dirmkname(startblk, name, TYPE_FILE, 0);
         if (!location) return NOTFOUND;
         if (location == -1) return EXISTS;
     };
