@@ -90,6 +90,7 @@ var dirwalk = func(dirblk, cb) {
 var dir_offset;
 var dir_name;
 var dir_blknum;
+var dir_dirblknum;
 var dirfindname = func(dirblk, findname) {
     dir_name = findname;
     while (*dir_name == '/') dir_name++;
@@ -103,6 +104,7 @@ var dirfindname = func(dirblk, findname) {
             if (*name && pathbegins(dir_name, name)) {
                 while (*dir_name && *dir_name != '/') dir_name++;
                 dir_blknum = blknum;
+                dir_dirblknum = dirblknum;
                 dir_offset = dirent_offset;
                 return 0; # found it
             } else {
@@ -118,7 +120,7 @@ var dirfindname = func(dirblk, findname) {
         dirblk = dir_blknum;
     };
 
-    return [dir_blknum, dirblk, dir_offset];
+    return [dir_blknum, dir_dirblknum, dir_offset];
 };
 
 # create the given name in dirblk, traversing directories as necessary
