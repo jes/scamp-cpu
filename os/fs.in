@@ -15,6 +15,7 @@ put ../sys/slangc.bin /bin/slangc
 put ../sys/asm.bin /bin/asm
 put ../sys/hd.bin /bin/hd
 put ../sys/grep.bin /bin/grep
+put ../sys/more.bin /bin/more
 
 mkdir lib
 put -t ../sys/lib/head.s /lib/head.s
@@ -44,5 +45,6 @@ put -t ../sys/asmparser.sl /src/asmparser.sl
 put -t ../sys/asm.opt.s /src/asm.s
 put -t ../sys/hd.sl /src/hd.sl
 put -t ../sys/grep.sl /src/grep.sl
+put -t ../sys/more.sl /src/more.sl
 
 mkdir proc
