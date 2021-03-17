@@ -166,53 +166,86 @@ var jmp_to_user = asm {
     jmp 0x100
 };
 
-# example: sys_exec(["/bin/ls", "/etc"])
-var sys_exec_impl = func(args) {
-    var fd = -1;
-    var err = catch();
-    denycatch();
-    if (err) {
-        if (fd >= 0) sys_close(fd);
-        allowcatch();
-        return err;
-    };
-
-    # TODO: [nice] what happens if no fds are available
-
+var cmdargp;
+var cmdarg_idx;
+var build_cmdargs = func(firstarg, args) {
     # count the number of arguments
     var nargs = 0;
+    if (firstarg) nargs++;
     while (args[nargs]) nargs++;
 
-    # copy the args into cmdargs
-    var cmdargp = cmdargs + nargs + 1;
-    var max_cmdargp = cmdargs + cmdargs_sz - 2;
-    var i = 0;
-    var j;
-    while (args[i]) {
-        *(cmdargs+i) = cmdargp;
-        j = 0;
-        while (args[i][j]) {
-            *(cmdargp++) = args[i][j];
+    var addarg = func(arg) {
+        var max_cmdargp = cmdargs + cmdargs_sz - 2;
+
+        *(cmdargs+cmdarg_idx++) = cmdargp;
+        var i = 0;
+        while (arg[i]) {
+            *(cmdargp++) = arg[i];
             if (cmdargp == max_cmdargp) throw(TOOLONG);
-            j++;
+            i++;
         };
         *(cmdargp++) = 0;
-        i++;
     };
-    *(cmdargs+i) = 0;
 
+    # copy the args into cmdargs
+    cmdargp = cmdargs + nargs + 1;
+    cmdarg_idx = 0;
+    var i = 0;
+    if (firstarg) addarg(firstarg);
+    while (args[i]) addarg(args[i++]);
+
+    *(cmdargs+cmdarg_idx) = 0;
+};
+
+var load_program = func(name) {
     # load file from disk
-    fd = sys_open(args[0], O_READ);
+    var fd = sys_open(name, O_READ|O_KERNELFD);
     if (fd < 0) throw(fd);
     var p = 0x100;
     var n;
     while (1) {
         n = sys_read(fd, p, 16384);
         if (n == 0) break;
-        if (n < 0) throw(n);
+        if (n < 0) {
+            sys_close(fd);
+            throw(n);
+        };
         p = p + n;
     };
     sys_close(fd);
+};
+
+# example: sys_exec(["/bin/ls", "/etc"])
+var sys_exec_impl = func(args) {
+    var err = catch();
+    denycatch();
+    if (err) {
+        allowcatch();
+        return err;
+    };
+
+    # load the program
+    build_cmdargs(0, args);
+    load_program(args[0]);
+
+    # if it's a script, we need to load an interpreter instead
+    var name;
+    var len_name;
+    if (*0x100 == '#' && *0x101 == '!') {
+        # work out the name of the interpreter
+        name = 0x102;
+        len_name = 0;
+        while (*name != '\n') {
+            name++;
+            len_name++;
+        };
+        *name = 0;
+        name = 0x102;
+
+        # load the interpreter
+        build_cmdargs(name, args);
+        load_program(name);
+    };
 
     # jump to it
     allowcatch();

@@ -285,12 +285,18 @@ var execute = func(str) {
     free(err_redirect);
 };
 
+var in_fd = 0; # stdin
+
 # TODO: [nice] if "-c", then just execute() the cmdargs()?
-# TODO: [nice] execute files passed in cmdargs()
+var args = cmdargs()+1;
+if (*args) {
+    in_fd = open(*args, O_READ);
+    if (in_fd < 0) die("sh: open %s: %s", [*args, strerror(in_fd)]);
+};
 
 var buf = malloc(256);
 while (1) {
-    fputs(2, "$ "); # TODO: [nice] not if stderr is not a terminal
-    if (gets(buf, 256) == 0) break;
+    if (in_fd == 0) fputs(2, "$ "); # TODO: [nice] not if stderr is not a terminal
+    if (fgets(in_fd, buf, 256) == 0) break;
     execute(buf);
 };
