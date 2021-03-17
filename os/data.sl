@@ -86,9 +86,9 @@ var nextfreeblk = 0;
 #
 # Starts out with a 0-terminated list of pointers to strings; the strings
 # immediately follow, with a 0 word after each one
-var cmdargs_sz = 128; # words, including pointers, characters, and nuls
+var cmdargs_sz = 256; # words, including pointers, characters, and nuls
 var cmdargs = asm {
-    cmdargs: .gap 128
+    cmdargs: .gap 256
 };
 
 # Space to build names for undirent()
