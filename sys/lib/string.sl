@@ -1,4 +1,5 @@
 include "malloc.sl";
+include "xprintf.sl";
 
 # usage: strcmp(s1,s2)
 # return a value:
@@ -79,4 +80,28 @@ var strdup = func(s) {
     var ss = malloc(strlen(s)+1);
     strcpy(ss, s);
     return ss;
+};
+
+# allocate a string and format "args" into it according to "fmt"
+var sprintf_len;
+var sprintf_output;
+var sprintf_p;
+var sprintf = func(fmt, args) {
+    sprintf_len = 16;
+    sprintf_output = malloc(sprintf_len);
+    sprintf_p = sprintf_output;
+
+    xprintf(fmt, args, func(ch) {
+        var l = sprintf_p - sprintf_output;
+        if (l == sprintf_len) {
+            sprintf_len = l+l;
+            sprintf_output = realloc(sprintf_output, sprintf_len);
+            sprintf_p = sprintf_output + l;
+        };
+
+        *(sprintf_p++) = ch;
+        *sprintf_p = 0;
+    });
+
+    return sprintf_output;
 };
