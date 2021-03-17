@@ -29,7 +29,6 @@ var fs_read = func(fd, buf, sz) {
         } else if (remain <= sz) {
             # consume the entire block
             read = remain;
-            if (blknext(blkbuf)) blknum = blknext(blkbuf);
         } else {
             # don't consume the entire block
             read = sz;
@@ -42,7 +41,10 @@ var fs_read = func(fd, buf, sz) {
         readsz = readsz + read;
         sz = sz - read;
         posinblk = posinblk + read;
-        if (posinblk == BLKSZ-2) posinblk = 0;
+        if (posinblk == BLKSZ-2 && blknext(blkbuf)) {
+            blknum = blknext(blkbuf);
+            posinblk = 0;
+        };
     };
 
     *(fdbase+FDDATA) = blknum;
