@@ -131,7 +131,7 @@ fs_sync = func(fd) {
     var blknum = *(fdbase+FDDATA);
     var blkbuf = *(fdbase+FDDATA+2);
 
-    if (writefunc && blkbuf) blkwrite(blknum, blkbuf);
+    if (writefunc && blkbuf && blkbuf[256] != 0) blkwrite(blknum, blkbuf);
 };
 
 var fs_close = func(fd) {

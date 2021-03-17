@@ -111,6 +111,7 @@ sys_setbuf = func(fd, buf) {
     sys_sync(fd);
 
     *(fdbase+FDDATA+2) = buf;
+    buf[256] = 0;
 
     return 0;
 };
