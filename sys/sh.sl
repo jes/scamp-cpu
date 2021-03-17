@@ -106,6 +106,95 @@ var err_redirect;
 
 var maxargument = 256;
 var ARGUMENT = malloc(maxargument);
+var GLOB = malloc(maxargument);
+
+# return 1 if "name" matches "pattern", 0 otherwise
+var glob_match = func(pattern, name) {
+    while (*name && *pattern) {
+        if (*pattern == '*') {
+            # skip over whatever the "*" could match and recurse to try to match the rest
+            pattern++;
+            while (*name) {
+                if (*name == *pattern) {
+                    if (glob_match(pattern, name)) return 1;
+                };
+                name++;
+            };
+            break;
+        } else if (*pattern == '?' || *name == *pattern) {
+            name++;
+            pattern++;
+        } else {
+            return 0;
+        };
+    };
+
+    if (*name || *pattern) return 0;
+    return 1;
+};
+
+# expand "pattern"; return pointer to "pattern", or to static buffer
+var glob = func(pattern) {
+    var p = pattern;
+    var has_star = 0;
+    var last_slash = 0;
+    while (*p && !has_star) {
+        if (*p == '*') has_star = 1;
+        if (*p == '/') last_slash = p;
+        p++;
+    };
+    # if "pattern" doesn't contain "*", then we don't need to expand anything
+    if (!has_star) return pattern;
+
+    # TODO: [nice] support "*" in directory names
+    var fd;
+    if (last_slash) {
+        # open the directory specified
+        *last_slash = 0;
+        fd = opendir(pattern);
+        *last_slash = '/';
+        pattern = last_slash+1;
+    } else {
+        # open the current working directory
+        fd = opendir(".");
+    };
+    if (fd < 0) die("sh: opendir: %s", [strerror(fd)]);
+
+    var outp = GLOB;
+
+    var dirbuf = malloc(254);
+    var n;
+    var i;
+    while (1) {
+        n = readdir(fd, dirbuf, 254);
+        if (n < 0) die("sh: readdir: %s", [strerror(n)]);
+        if (n == 0) break;
+
+        i = 0;
+        p = dirbuf;
+        while (i != n) {
+            if (glob_match(pattern, p)) {
+                # copy the name into the GLOB buffer
+                while (*p && outp lt (GLOB + maxargument))
+                    *(outp++) = *(p++);
+                *(outp++) = ' '; p++;
+                if (outp ge (GLOB + maxargument)) die("sh: glob expansion too long",0);
+            } else {
+                # skip to the next name
+                p = p + strlen(p) + 1;
+            };
+            i++;
+        };
+    };
+
+    close(fd);
+
+    if (outp gt GLOB) outp--; # remove trailing space
+    *outp = 0;
+
+    return GLOB;
+};
+
 var BareWord = func(x) {
     *ARGUMENT = peekchar();
     if (!parse(NotAnyChar, "|<> \t\r\n`'\"")) return 0;
@@ -114,6 +203,7 @@ var BareWord = func(x) {
         *(ARGUMENT+i) = peekchar();
         if (!parse(NotAnyChar, "|<> \t\r\n`'\"")) {
             *(ARGUMENT+i) = 0;
+            strcpy(ARGUMENT, glob(ARGUMENT));
             skip();
             return 1;
         };
@@ -162,6 +252,8 @@ var Pipe = func(x) {
 var CommandLine = func(x) {
     while (1) {
         if (parse(Argument,0)) {
+            # TODO: [bug] if the Argument was a Bareword, we need to re-parse it
+            #       to maybe get more Barewords
             grpush(parse_args, strdup(ARGUMENT));
         } else if (parse(IORedirection,0)) {
             # ...
