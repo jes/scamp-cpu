@@ -12,7 +12,6 @@ include "stdlib.sl";
 #   %5d -> decimal integer, padded with spaces in front to make at least 5 chars
 #   %05d -> decimal integer, padded with zeroes in front to make at least 5 chars
 # TODO: [nice] signed vs unsigned integers? padding?
-# TODO: [nice] show (null) for null pointers
 # TODO: [nice] show arrays? lists?
 # TODO: [nice] return the number of chars output
 # TODO: [nice] padding at right-hand-side with negative padlen (%-5d)
@@ -56,6 +55,7 @@ var xprintf = func(fmt, args, putc_cb) {
                 str = [args[argidx++]];
             } else if (*p == 's') {
                 str = args[argidx++];
+                if (!str) str = "(null)";
             } else if (*p == 'd') {
                 str = itoa(args[argidx++]);
             } else if (*p == 'x') {
