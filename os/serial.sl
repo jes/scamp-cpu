@@ -10,10 +10,11 @@ var READYPORT = FDDATA+2;
 var BUFPTR = FDDATA+3;
 
 var ser_bufsz = 128;
-var ser_buf = asm {
+var ser_buflen = ser_bufsz - 3;
+var ser_buf_area = asm {
     # BUFSPACE needs to be bufsz multiplied by no. of devices
     .def CONSOLE_BUFSPACE 128
-    ser_buf: .gap CONSOLE_BUFSPACE
+    ser_buf_area: .gap CONSOLE_BUFSPACE
 
     _ser_bufspace: .word CONSOLE_BUFSPACE
 };
@@ -26,65 +27,77 @@ var ser_write;
 #       between a "ser_rawread" and "ser_cookedread" for example)
 var cooked_mode = 1;
 
+var ser_readpos = func(bufp) return bufp[0];
+var ser_readmaxpos = func(bufp) return bufp[1];
+var ser_writepos = func(bufp) return bufp[2];
+var ser_nextwritepos = func(bufp) {
+    if (ser_writepos(bufp) == ser_buflen-1) return 0;
+    return ser_writepos(bufp)+1;
+};
+var ser_buf = func(bufp) return bufp+3;
+var ser_setreadpos = func(bufp,pos) *(bufp+0) = pos;
+var ser_setreadmaxpos = func(bufp,pos) *(bufp+1) = pos;
+var ser_setwritepos = func(bufp,pos) *(bufp+2) = pos;
+
 # return 1 if the buffer is full, 0 otherwise
 var ser_buffull = func(bufp) {
-    var readpos = bufp[0];
-    var writepos = bufp[1];
-    var buf = bufp+2;
-    var buflen = ser_bufsz-2;
-
-    var nextwritepos = writepos+1;
-    if (nextwritepos == buflen) nextwritepos = 0;
-
-    return (nextwritepos == readpos);
+    return (ser_nextwritepos(bufp) == ser_readpos(bufp));
 };
 
 # return 1 if the buffer is empty, 0 otherwise
 var ser_bufempty = func(bufp) {
-    var readpos = bufp[0];
-    var writepos = bufp[1];
-    var buf = bufp+2;
-    var buflen = ser_bufsz-2;
-
-    return (readpos == writepos);
+    return (ser_readpos(bufp) == ser_readmaxpos(bufp));
 };
 
 # return a character from the buffer, or -1 if none
 var ser_bufget = func(bufp) {
-    var readpos = bufp[0];
-    var writepos = bufp[1];
-    var buf = bufp+2;
-    var buflen = ser_bufsz-2;
-
     if (ser_bufempty(bufp)) return -1;
 
-    var ch = buf[readpos++];
-    if (readpos == buflen) readpos = 0;
+    var buf = ser_buf(bufp);
+    var readpos = ser_readpos(bufp);
 
-    *(bufp+0) = readpos;
+    var ch = buf[readpos++];
+    if (readpos == ser_buflen) readpos = 0;
+
+    ser_setreadpos(bufp, readpos);
 
     return ch;
 };
 
 # add "ch" to the buffer, or do nothing if the buffer is full
 var ser_bufput = func(bufp, ch) {
-    var readpos = bufp[0];
-    var writepos = bufp[1];
-    var buf = bufp+2;
-    var buflen = ser_bufsz-2;
+    var buf = ser_buf(bufp);
+    var writepos = ser_writepos(bufp);
 
     if (ser_buffull(bufp)) return 0;
 
     *(buf+(writepos++)) = ch;
-    if (writepos == buflen) writepos = 0;
+    if (writepos == ser_buflen) writepos = 0;
+    if (ch == '\n' || ch == 4) ser_setreadmaxpos(bufp, writepos); # '\n' or ^D
 
-    *(bufp+1) = writepos;
+    ser_setwritepos(bufp, writepos);
+};
+
+# remove last char from "fd"'s buffer and console
+var ser_backspace = func(fd, bufp) {
+    var writepos = ser_writepos(bufp);
+
+    if (writepos == ser_readpos(bufp)) return 0;
+
+    ser_write(fd, [8], 1); # move left 1 char
+    ser_write(fd, [0x1b,'[','K'], 3); # clear to end of line
+
+    writepos--;
+    if (writepos < 0) writepos = ser_buflen-1;
+
+    ser_setwritepos(bufp, writepos);
 };
 
 # check for available data on the given fd and stick it in the buffer;
 # if in cooked mode, also handle ^C,^S,^Q,'\r', and echo;
 # ^D is kind of a special case; it gets put in the buffer even though it's a control
 # character, because it needs to be able to interrupt a read call;
+# already been consumed from the buffer
 # if the buffer is full, do nothing;
 # TODO: [nice] should we instead drop incoming characters if the buffer is full?
 #       how can we make sure to handle ^C even if the user did a bunch of typing?
@@ -104,11 +117,15 @@ var ser_poll = func(fd) {
             if (ch == 3) sys_exit(255); # ctrl-c
             # TODO: [nice] if (ch == 17) ... # ctrl-q
             # TODO: [nice] if (ch == 19) ... # ctrl-s
-            # TODO: [nice] what about backspace?
 
             if (ch == '\r') ch = '\n'; # turn enter key into '\n'
 
-            ser_write(fd, &ch, 1); # echo
+            if (ch == 127) { # backspace
+                ser_backspace(fd, bufp);
+                continue;
+            } else {
+                ser_write(fd, &ch, 1); # echo
+            };
         };
 
         ser_bufput(bufp, ch);
@@ -167,7 +184,7 @@ var ser_init = func() {
     var ser_readyports = [6];
     var i = 0;
     var p;
-    var bufp = ser_buf;
+    var bufp = ser_buf_area;
     while (ser_fds[i]) {
         # set functions for fd ser_fds[i]
         p = fdbaseptr(ser_fds[i]);
@@ -177,8 +194,13 @@ var ser_init = func() {
         *(p+READPORT) = ser_readports[i];
         *(p+WRITEPORT) = ser_writeports[i];
         *(p+READYPORT) = ser_readyports[i];
+
         *(p+BUFPTR) = bufp;
-        if (bufp ge (ser_buf + ser_bufspace)) kpanic("insufficient ser_bufspace");
+        if (bufp ge (ser_buf_area + ser_bufspace)) kpanic("insufficient ser_bufspace");
+        ser_setreadpos(bufp, 0);
+        ser_setreadmaxpos(bufp, 0);
+        ser_setwritepos(bufp, 0);
+
         bufp = bufp + ser_bufsz;
         i++;
     };
