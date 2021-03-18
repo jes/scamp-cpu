@@ -6,6 +6,7 @@ include "sys.sl";
 
 var READPORT = FDDATA;
 var WRITEPORT = FDDATA+1;
+var READYPORT = FDDATA+2;
 
 var ser_write;
 
@@ -17,10 +18,13 @@ var cooked_mode = 1;
 var ser_read = func(fd, buf, sz) {
     var p = fdbaseptr(fd);
     var readport = p[READPORT];
+    var readyport = p[READYPORT];
     var i = sz;
     var ch = 0;
     sz = 0;
     while (i--) {
+        while (!inp(readyport)); # block until input is ready
+
         ch = inp(readport);
 
         if (cooked_mode) {
@@ -58,11 +62,11 @@ ser_write = func(fd, buf, sz) {
     return sz;
 };
 
-# store read/write port number in fd field 6/7
 var ser_init = func() {
     var ser_fds = [3];
     var ser_readports = [2];
     var ser_writeports = [2];
+    var ser_readyports = [6];
     var i = 0;
     var p;
     while (ser_fds[i]) {
@@ -72,6 +76,7 @@ var ser_init = func() {
         *(p+WRITEFD) = ser_write;
         *(p+READPORT) = ser_readports[i];
         *(p+WRITEPORT) = ser_writeports[i];
+        *(p+READYPORT) = ser_readyports[i];
         i++;
     };
     # use primary serial port for console:

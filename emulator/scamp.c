@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <poll.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -147,6 +148,26 @@ uint16_t alu(uint16_t argx, uint16_t argy) {
     return val;
 }
 
+/* return 1 if data available on stdin, 0 if not, -1 if poll error */
+int console_ready() {
+    struct pollfd pfd;
+
+    pfd.fd = STDIN_FILENO;
+    pfd.events = POLLIN;
+
+    return poll(&pfd, 1, 0);
+}
+
+/* read a character from stdin, or 0 if none available */
+uint8_t console_getchar() {
+    uint8_t ch;
+
+    if (!console_ready()) return 0;
+    if (read(STDIN_FILENO, &ch, 1) != 1) halt = 1;
+
+    return ch;
+}
+
 /* input a word from addr */
 uint16_t in(uint16_t addr) {
     uint16_t r = 0;
@@ -154,13 +175,16 @@ uint16_t in(uint16_t addr) {
         r = disk[diskptr++];
     }
     if (addr == 2) {
-        /* TODO: don't block */
-        r = getchar();
+        r = console_getchar();
+        /* TODO: [nice] halt on ctrl-\ even if the program is not reading input */
         if (r == 28) halt = 1; /* halt on ctrl-\ */
     }
     if (addr == 5) {
         r = disk[512*blknum + blkidx];
         blkidx = (blkidx+1)%512;
+    }
+    if (addr == 6) {
+        r = console_ready();
     }
     return r;
 }
