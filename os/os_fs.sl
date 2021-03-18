@@ -7,6 +7,8 @@ include "sys.sl";
 
 # open the given name in the given mode
 sys_open = func(name, mode) {
+    ser_poll(3);
+
     var startblk = CWDBLK;
     if (*name == '/') startblk = ROOTBLOCK;
 
@@ -66,6 +68,8 @@ sys_open = func(name, mode) {
 };
 
 sys_stat = func(name, statbuf) {
+    ser_poll(3);
+
     var startblk = CWDBLK;
     if (*name == '/') startblk = ROOTBLOCK;
 
@@ -102,6 +106,8 @@ sys_stat = func(name, statbuf) {
 };
 
 sys_setbuf = func(fd, buf) {
+    ser_poll(3);
+
     var fdbase = fdbaseptr(fd);
     var closefunc = *(fdbase+CLOSEFD);
 
@@ -117,6 +123,8 @@ sys_setbuf = func(fd, buf) {
 };
 
 sys_sync = func(fd) {
+    ser_poll(3);
+
     var i;
 
     if (fd == -1) {

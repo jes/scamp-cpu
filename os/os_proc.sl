@@ -23,6 +23,8 @@ var return_to_parent = asm {
 };
 
 var sys_exit_impl = func(rc) {
+    ser_poll(3);
+
     var err = catch();
     denycatch();
     if (err) kpanic("exit() panics");
@@ -86,6 +88,8 @@ sys_exit = asm {
 
 # example: sys_system(0x8000, ["/bin/ls", "-l"])
 var sys_system_impl  = func(top, args, sp, ret) {
+    ser_poll(3);
+
     var err = catch();
     denycatch();
     if (err) {
@@ -217,6 +221,8 @@ var load_program = func(name) {
 
 # example: sys_exec(["/bin/ls", "/etc"])
 var sys_exec_impl = func(args) {
+    ser_poll(3);
+
     var err = catch();
     denycatch();
     if (err) {

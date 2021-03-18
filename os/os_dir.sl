@@ -9,6 +9,8 @@ var readdir_blknum;
 var readdir_minoffset;
 var readdir_ndirents;
 sys_readdir = func(fd, buf, sz) {
+    ser_poll(3);
+
     var err;
     err = catch();
     if (err) return err;
@@ -50,6 +52,8 @@ sys_readdir = func(fd, buf, sz) {
 };
 
 sys_opendir = func(name) {
+    ser_poll(3);
+
     var startblk = CWDBLK;
     if (*name == '/') startblk = ROOTBLOCK;
 
@@ -80,6 +84,8 @@ sys_opendir = func(name) {
 };
 
 sys_mkdir = func(name) {
+    ser_poll(3);
+
     var startblk = CWDBLK;
     if (*name == '/') startblk = ROOTBLOCK;
 
@@ -103,6 +109,8 @@ sys_mkdir = func(name) {
 };
 
 sys_chdir = func(name) {
+    ser_poll(3);
+
     var startblk = CWDBLK;
     if (*name == '/') startblk = ROOTBLOCK;
 
@@ -169,6 +177,8 @@ var getcwd_level = func(buf, sz, dirblk, bufp) {
 };
 
 sys_getcwd = func(buf, sz) {
+    ser_poll(3);
+
     var err = catch();
     if (err) return err;
     return getcwd_level(buf, sz, CWDBLK, 0);
@@ -176,6 +186,8 @@ sys_getcwd = func(buf, sz) {
 
 var unlink_count;
 sys_unlink = func(name) {
+    ser_poll(3);
+
     var startblk = CWDBLK;
     if (*name == '/') startblk = ROOTBLOCK;
 
@@ -224,6 +236,8 @@ sys_unlink = func(name) {
 };
 
 sys_rename = func(oldname, newname) {
+    ser_poll(3);
+
     var oldstartblk = CWDBLK;
     if (*oldname == '/') oldstartblk = ROOTBLOCK;
     var newstartblk = CWDBLK;

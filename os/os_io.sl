@@ -12,6 +12,8 @@ include "sys.sl";
 #       maybe it should be swapfd instead? but then fd 3 wouldn't always be
 #       the console. hmm.
 sys_copyfd  = func(destfd, srcfd) {
+    ser_poll(3);
+
     if (destfd >= nfds || srcfd >= nfds || srcfd < 0) return BADFD;
 
     if (destfd < 0) destfd = fdalloc();
@@ -26,6 +28,8 @@ sys_copyfd  = func(destfd, srcfd) {
 # The following calls dispatch to their implementations based on the fd table
 
 sys_read = func(fd, buf, sz) {
+    ser_poll(3);
+
     var err = catch();
     if (err) return err;
     var fdbase = fdbaseptr(fd);
@@ -35,6 +39,8 @@ sys_read = func(fd, buf, sz) {
 };
 
 sys_write = func(fd, buf, sz) {
+    ser_poll(3);
+
     var err = catch();
     if (err) return err;
     var fdbase = fdbaseptr(fd);
@@ -44,6 +50,8 @@ sys_write = func(fd, buf, sz) {
 };
 
 sys_close = func(fd) {
+    ser_poll(3);
+
     var err = catch();
     if (err) return err;
     var fdbase = fdbaseptr(fd);
