@@ -118,17 +118,22 @@ var ser_poll = func(fd) {
 
         if (cooked_mode) {
             if (ch == 3) sys_exit(255); # ctrl-c
-            # TODO: [nice] if (ch == 17) ... # ctrl-q
-            # TODO: [nice] if (ch == 19) ... # ctrl-s
-
-            if (ch == '\r') ch = '\n'; # turn enter key into '\n'
-
+            if (ch == 19) { # ctrl-s
+                # block the entire system until they type ctrl-q
+                while (1) {
+                    if (inp(readyport)) {
+                        if (inp(readport) == 17) break; # ctrl-q
+                    };
+                };
+                continue;
+            };
             if (ch == 127) { # backspace
                 ser_backspace(fd, bufp);
                 continue;
-            } else {
-                ser_write(fd, &ch, 1); # echo
             };
+            if (ch == '\r') ch = '\n'; # turn enter key into '\n'
+
+            ser_write(fd, &ch, 1); # echo
         };
 
         ser_bufput(bufp, ch);
