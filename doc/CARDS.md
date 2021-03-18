@@ -112,6 +112,23 @@ Unused microcode decodings can be exposed on the backplane via jumpers. The avai
 
 Microcode bit 0 is exposed on backplane pin 32 without a jumper, even though it is currently unused.
 
+### Errata
+
+ZIF socket holes are too small. My solution was to solder some clipped-off LED legs onto the ZIF socket
+pins and then solder these to the PCB.
+
+U8 and U9 (bus_in/out decode) should have pins 4 and 5 (chip enable) tied to VCC instead of GND.
+
+U9 (bus_in decode) should have pin 6 (chip enable) tied to VCC instead of EO_bar.
+
+## Memory
+
+### Errata
+
+ZIF socket holes are too small. Initially I just forced them into the holes, but this bent the legs of the
+"high byte" ROM socket, and I had to replace it. Better solution is to solder clipped-off LED legs onto the
+socket pins and then solder these to the PCB.
+
 ## Backplane
 
 I plan to (at least attempt to) make the backplane on the CNC machine.
