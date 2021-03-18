@@ -79,8 +79,9 @@ var redirect = func(fd, name, mode) {
     var filefd = open(name, mode);
     if (filefd < 0) die("can't open %s: %s", [name, strerror(filefd)]);
 
-    var prev = copyfd(-1, fd);
-    copyfd(fd, filefd);
+    var prev = copyfd(-1, fd); # backup the current configuration of "fd"
+    copyfd(fd, filefd); # overwrite it with the new file
+    close(filefd);
 
     return prev;
 };
