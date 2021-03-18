@@ -58,7 +58,7 @@ emulator:
 os:
 	make -C os/
 
-sys:
+sys: sys/asmparser.sl
 	make -C sys/
 
 burn: ttlcpu.bin
