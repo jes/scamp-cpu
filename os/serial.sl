@@ -104,6 +104,9 @@ var ser_backspace = func(fd, bufp) {
 #       maybe only drop them in cooked mode?
 var ser_poll = func(fd) {
     var p = fdbaseptr(fd);
+    var writeimpl = p[WRITEFD];
+    if (writeimpl != ser_write) return 0; # don't try to ser_poll() on non-serial devices
+
     var readport = p[READPORT];
     var readyport = p[READYPORT];
     var bufp = p[BUFPTR];
