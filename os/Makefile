@@ -12,7 +12,7 @@ os.prof: os.disk
 	../emulator/scamp -i os.disk -c -p os.prof
 
 os.disk: os.hex fs.in ../sys/*.bin motd
-	../util/hex2disk --start 0xd000 os.hex | ../fs/mkfs > os.disk.tmp
+	../util/hex2disk --start 0xc800 os.hex | ../fs/mkfs > os.disk.tmp
 	../fs/fs os.disk.tmp < fs.in
 	mv os.disk.tmp os.disk
 
