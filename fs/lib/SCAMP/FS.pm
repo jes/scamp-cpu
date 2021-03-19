@@ -21,6 +21,7 @@ sub new {
 
     $self->{file} = $diskfile;
     $self->{cwd} = '';
+    $self->{lastfreeblk} = 0;
 
     $self->load($diskfile);
 
@@ -339,7 +340,8 @@ sub findfreeblk {
     my ($self) = @_;
     my @block;
     my $readblk = -1;
-    for my $blknum (0 .. 65535) {
+    for my $b (0 .. 65535) {
+        my $blknum = ($b+$self->{lastfreeblk})&0xffff;
         my $blkblk = $SKIP_BLOCKS + int($blknum / ($BLKSZ * 8));
         my $byteinblk = int($blknum/8) % $BLKSZ;
         my $bitinbyte = $blknum % 8;
@@ -351,7 +353,10 @@ sub findfreeblk {
         my $byte = $block[$byteinblk];
         my $bit = $byte & (1 << $bitinbyte);
 
-        return $blknum if $bit == 0;
+        if ($bit == 0) {
+            $self->{lastfreeblk} = $blknum;
+            return $blknum;
+        }
     }
     die "filesystem full\n";
 }
