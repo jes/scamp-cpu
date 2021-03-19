@@ -335,6 +335,27 @@ sub freefile {
     }
 }
 
+sub findfreeblk {
+    my ($self) = @_;
+    my @block;
+    my $readblk = -1;
+    for my $blknum (0 .. 65535) {
+        my $blkblk = $SKIP_BLOCKS + int($blknum / ($BLKSZ * 8));
+        my $byteinblk = int($blknum/8) % $BLKSZ;
+        my $bitinbyte = $blknum % 8;
+
+        if ($blkblk != $readblk) {
+            @block = $self->readblock($blkblk);
+            $readblk = $blkblk;
+        }
+        my $byte = $block[$byteinblk];
+        my $bit = $byte & (1 << $bitinbyte);
+
+        return $blknum if $bit == 0;
+    }
+    die "filesystem full\n";
+}
+
 sub blkisfree {
     my ($self, $blknum) = @_;
 
@@ -476,13 +497,9 @@ sub blknext {
 
 sub allocate_block {
     my ($self) = @_;
-    for my $blknum (0 .. 65535) {
-        if ($self->blkisfree($blknum)) {
-            $self->setblkused($blknum, 1);
-            return $blknum;
-        }
-    }
-    die "filesystem full\n";
+    my $blknum = $self->findfreeblk;
+    $self->setblkused($blknum, 1);
+    return $blknum;
 }
 
 sub new_directory {
