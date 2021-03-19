@@ -32,6 +32,7 @@ my %cmd = (
     free => \&free,
     exit => \&done,
     abort => \&abort,
+    kernel => \&kernel,
 );
 
 info("\$ ");
@@ -81,6 +82,9 @@ sub help {
     free      show number of free blocks
     exit      save the disk contents and quit
     abort     quit without saving contents
+    kernel HEXFILE STARTADDR write HEXFILE to the disk, to be loaded at STARTADDR
+
+STARTADDR should be hex beginning "0x"
 
 "-t" means the file should be converted between Unix text (1 byte per char)
 and SCAMP text (2 bytes per char).
@@ -163,6 +167,41 @@ sub put {
 
     $file ||= basename($hostfile);
     $fs->put($file, $str);
+}
+
+sub kernel {
+    my ($file, $start) = @_;
+    die "usage: kernel HEXFILE STARTADDR\n" if !$file || !$start;
+    die "expected hex start address beginning 0x" if $start !~ /^0x/;
+    $start = hex($start);
+
+    my @kernel;
+
+    open(my $fh, '<', $file)
+        or die "can't read $file: $!\n";
+    while (<$fh>) {
+        die "illegal hex file: $_\n" unless /^([0-9a-f]{2})([0-9a-f]{2})$/i;
+        push @kernel, hex($1), hex($2);
+    }
+    close $fh;
+
+    my $length = @kernel/2;
+
+    my @block = (0x53, 0x43, int($start/256), $start%256, int($length/256), $length%256);
+    my $blknum = 0;
+    while (defined (my $byte = shift @kernel)) {
+        push @block, $byte;
+        if (@block == 512) {
+            $fs->writeblock($blknum, @block);
+            $blknum++;
+            @block = ();
+        }
+    }
+
+    if (@block) {
+        push @block, 0 while @block < 512;
+        $fs->writeblock($blknum, @block);
+    }
 }
 
 sub free {
