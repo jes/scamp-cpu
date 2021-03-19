@@ -554,7 +554,7 @@ sub load {
     my $data = join('', <$fh>);
     close $fh;
 
-    $self->{disk} = [ map { ord($_) } split //, $data ];
+    $self->{disk} = [ unpack("C*", $data) ];
 }
 
 sub save {
@@ -562,7 +562,7 @@ sub save {
 
     open(my $fh, '>', $self->{file})
         or die "can't write $self->{file}: $!\n";
-    print $fh join('', map { chr($_) } @{ $self->{disk} });
+    print $fh pack("C*", @{ $self->{disk} });
     close $fh;
 }
 
