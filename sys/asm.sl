@@ -364,6 +364,9 @@ code_filename = strdup(tmpnam());
 code_fd = open(code_filename, O_WRITE|O_CREAT);
 if (code_fd < 0) die("open %s: %s", [code_filename, strerror(code_fd)]);
 
+setbuf(0,malloc(257));
+setbuf(1,malloc(257));
+
 parse_init(getchar);
 parse(Assembly,0);
 

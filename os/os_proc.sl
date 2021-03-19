@@ -100,6 +100,8 @@ var sys_system_impl  = func(top, args, sp, ret) {
     # sync buffers
     sys_sync(-1);
 
+    # TODO: [bug] need to setbuf(fd, 0) for all fds instead of just sync(-1)!
+
     # create filenames
     # TODO: [bug] should support more than 1 digit in filenames
     var userfile = "/proc/0.user";
