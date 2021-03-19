@@ -341,7 +341,7 @@ sub findfreeblk {
     my @block;
     my $readblk = -1;
     for my $b (0 .. 65535) {
-        my $blknum = ($b+$self->{lastfreeblk})&0xffff;
+        my $blknum = ($b+$self->{lastfreeblk}+1)&0xffff;
         my $blkblk = $SKIP_BLOCKS + int($blknum / ($BLKSZ * 8));
         my $byteinblk = int($blknum/8) % $BLKSZ;
         my $bitinbyte = $blknum % 8;
