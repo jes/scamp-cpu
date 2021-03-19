@@ -545,7 +545,7 @@ sub save {
 
     open(my $fh, '>', $self->{file})
         or die "can't write $self->{file}: $!\n";
-    print $fh chr($_) for @{ $self->{disk} };
+    print $fh join('', map { chr($_) } @{ $self->{disk} });
     close $fh;
 }
 
