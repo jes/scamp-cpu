@@ -121,6 +121,12 @@ U8 and U9 (bus_in/out decode) should have pins 4 and 5 (chip enable) tied to VCC
 
 U9 (bus_in decode) should have pin 6 (chip enable) tied to VCC instead of EO_bar.
 
+U17 should have pin 3 output inverted:
+
+ * pop pin 3 out of socket
+ * connect pin 3 of IC to pins 9+10
+ * connect pin 8 of IC to pin 3 of socket
+
 ## Memory
 
 ### Errata
