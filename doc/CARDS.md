@@ -127,6 +127,11 @@ U17 should have pin 3 output inverted:
  * connect pin 3 of IC to pins 9+10
  * connect pin 8 of IC to pin 3 of socket
 
+`RT` needs to come directly from a microcode bit rather than being decoded. To match current generated microcode:
+
+ * pop pins 4+5 of U5 out of socket
+ * connect pins 4+5 of U5 to the "u1" pin of "spare decodings"
+
 ## Memory
 
 ### Errata

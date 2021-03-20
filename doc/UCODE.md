@@ -138,7 +138,7 @@ Provisionally, the microcode instruction word encodes the control bits as follow
 |    14 | EO ? EX : bus_out[2] |
 |    13 | EO ? NX : bus_out[1] |
 |    12 | EO ? EY : bus_out[0] |
-|    11 | EO ? NY : RT |
+|    11 | EO ? NY : (unused) |
 |    10 | EO ? F  : P+ |
 |     9 | EO ? NO : (unused) |
 |     8 | (unused) |
@@ -148,7 +148,7 @@ Provisionally, the microcode instruction word encodes the control bits as follow
 |     4 | JZ |
 |     3 | JGT |
 |     2 | JLT |
-|     1 | (unused) |
+|     1 | RT |
 |     0 | (unused) |
 
 This uses 14 bits, leaving 1 bit spare to add an extra ALU flag (e.g. 2 more functions),
