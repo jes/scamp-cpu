@@ -145,7 +145,7 @@ ld x, 42
 call double
 out 0, r0
 
-# 21: xor subroutine call
+# 21: shr8 subroutine call
 ld x, 0x1500 # (21 << 8)
 push x
 call shr8
