@@ -114,7 +114,7 @@ out 0, x
 
 # 18: relative jump
 ld r0, 18
-jr+ 1
+jr+ 2
 ld r0, 0
 out 0, r0
 
