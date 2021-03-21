@@ -191,6 +191,7 @@ var build_cmdargs = func(firstarg, args) {
             i++;
         };
         *(cmdargp++) = 0;
+        if (cmdargp == max_cmdargp) throw(TOOLONG);
     };
 
     # copy the args into cmdargs
