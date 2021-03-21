@@ -51,6 +51,11 @@ var ser_bufempty = func(bufp) {
 
 # return a character from the buffer, or -1 if none
 var ser_bufget = func(bufp) {
+    # TODO: [bug] if ser_buffull() then we should return the next character
+    #       even though it exceeds readmaxpos, because we need to free up
+    #       space in the buffer for new characters to be typed? or, if not
+    #       that solution, we at least need to do *something* to stop a
+    #       full buffer from blocking all subsequent input
     if (ser_bufempty(bufp)) return -1;
 
     var buf = ser_buf(bufp);
