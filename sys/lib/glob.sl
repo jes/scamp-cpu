@@ -25,6 +25,9 @@ var glob_match = func(pattern, name) {
         };
     };
 
+    # "*" can happily match 0 characters
+    while (*pattern == '*') pattern++;
+
     if (*name || *pattern) return 0;
     return 1;
 };
