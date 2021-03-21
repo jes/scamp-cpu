@@ -6,9 +6,9 @@ This repo is a loosely-connected collection of Verilog source, FreeCAD files, Ki
 
 It's called "SCAMP" which means something like "Simple Computing and Arithmetic Microcoded Processor".
 
-Here's a picture of the memory card:
+Here are some pictures:
 
-![](doc/memory-card.jpeg)
+<img src="doc/front-panels.jpeg" height="500"> <img src="doc/card-cage.jpeg" height="500">
 
 ## Plan
 
