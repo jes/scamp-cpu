@@ -181,6 +181,4 @@ var blktrunc = func(blknum, startat) {
 };
 
 # initialise nextfreeblk
-kputs("finding free block...");
 blkfindfree();
-kputs(" ok\r\n");
