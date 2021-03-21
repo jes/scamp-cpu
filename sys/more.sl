@@ -10,6 +10,8 @@ var buf = malloc(bufsz);
 var l = 0;
 var ch;
 
+# TODO: [nice] put terminal in raw mode so the user doesn't have to press enter
+
 while (gets(buf, bufsz)) {
     puts(buf);
     l++;
