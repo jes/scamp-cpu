@@ -84,6 +84,8 @@ in writing the parser for the compiler.
 The [Build Your Own Text Editor](https://viewsourcecode.org/snaptoken/kilo/) tutorial walks you through implementing
 [antirez](https://github.com/antirez)'s [kilo](https://github.com/antirez/kilo) editor.
 
+[Balasz Markus](https://github.com/bazsimarkus)'s [8250 UART example](https://github.com/bazsimarkus/Simple-8250-UART-System-with-Arduino) should be helpful.
+
 ## Contact
 
 If anything in this repo causes you to want to communicate with the person who wrote it, you can email me on [james@incoherency.co.uk](mailto:james@incoherency.co.uk)
