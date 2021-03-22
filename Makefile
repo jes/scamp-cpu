@@ -24,6 +24,10 @@ bootrom.hex: bootrom.s asm/instructions.json
 	util/pad-lines 256 0000 < bootrom.hex.tmp > bootrom.hex
 	rm bootrom.hex.tmp
 
+test8250.hex: test8250.s
+	./asm/asm < test8250.s > test8250.hex.tmp
+	mv test8250.hex.tmp test8250.hex
+
 ucode-low.hex: ucode.hex
 	sed 's/^..//' ucode.hex > ucode-low.hex
 ucode-high.hex: ucode.hex
@@ -33,6 +37,11 @@ testrom-low.hex: testrom.hex
 	sed 's/^..//' testrom.hex > testrom-low.hex
 testrom-high.hex: testrom.hex
 	sed 's/..$$//' testrom.hex > testrom-high.hex
+
+test8250-low.hex: test8250.hex
+	sed 's/^..//' test8250.hex > test8250-low.hex
+test8250-high.hex: test8250.hex
+	sed 's/..$$//' test8250.hex > test8250-high.hex
 
 test: ucode-low.hex ucode-high.hex testrom-low.hex testrom-high.hex emulator
 	make -C emulator/ test
