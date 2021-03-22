@@ -13,9 +13,9 @@ out 1, x
 ld x, 1
 out 0, x
 
-# select data register instead of divisor latches:
-# write 0x00 to line control register (addr 3)
-ld x, 0x80
+# select data register instead of divisor latches, and set 8-bit words, no parity, 1 stop:
+# write 0x03 to line control register (addr 3)
+ld x, 0x03
 out 3, x
 
 # write A's
