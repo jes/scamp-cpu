@@ -5,6 +5,8 @@ use warnings;
 
 use Time::HiRes qw(usleep);
 
+$| = 1;
+
 my $dev = shift or die "usage: dump-eeprom DEVICE\ne.g. \$ dump-eeprom /dev/ttyACM0\n";
 
 # configure serial port
