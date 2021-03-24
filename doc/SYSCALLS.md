@@ -238,6 +238,22 @@ Example:
 
     cmdargs() returns ["/bin/ls", "-l", "/home", 0]
 
+### 0xfeeb: serflags(fd, flags)
+
+    Return: previous `flags`, or -ERR on error
+    Implemented: yes
+    Errors: BADFD
+
+If `fd` refers to a serial port, set the flags to `flags`. `flags` is a bitmask of:
+
+    SER_COOKED = 1; # enable cooked mode
+
+To find out what `flags` is set to without changing it, just set it to 0 and then back
+to the previous value:
+
+    var flags = serflags(fd, 0);
+    serflags(fd, flags);
+
 ## Errors
 
 Errors are generally returned from system calls as `-ERR`, with the following meanings:

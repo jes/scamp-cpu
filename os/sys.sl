@@ -1,5 +1,6 @@
 # system call declarations
 
+extern sys_serflags;
 extern sys_cmdargs;
 extern sys_osbase;
 extern sys_copyfd;

@@ -4,11 +4,6 @@ include "util.sl";
 include "data.sl";
 include "sys.sl";
 
-var READPORT = FDDATA;
-var WRITEPORT = FDDATA+1;
-var READYPORT = FDDATA+2;
-var BUFPTR = FDDATA+3;
-
 var ser_bufsz = 128;
 var ser_buflen = ser_bufsz - 3;
 var ser_buf_area = asm {
@@ -21,11 +16,6 @@ var ser_buf_area = asm {
 extern ser_bufspace;
 
 var ser_write;
-
-# TODO: [nice] provide a way to turn off "cooked mode" stuff, per-device
-#       (maybe just by switching the "read"/"write" functions in the fd table
-#       between a "ser_rawread" and "ser_cookedread" for example)
-var cooked_mode = 1;
 
 var ser_readpos = func(bufp) return bufp[0];
 var ser_readmaxpos = func(bufp) return bufp[1];
@@ -113,8 +103,9 @@ var ser_poll = func(fd) {
     var writeimpl = p[WRITEFD];
     if (writeimpl != ser_write) return 0; # don't try to ser_poll() on non-serial devices
 
-    var readport = p[READPORT];
-    var readyport = p[READYPORT];
+    var readport = p[BASEPORT];
+    var readyport = readport+4;
+    var flags = p[SERFLAGS];
     var bufp = p[BUFPTR];
     var ch;
 
@@ -122,7 +113,7 @@ var ser_poll = func(fd) {
     while (inp(readyport) && !ser_buffull(bufp)) {
         ch = inp(readport);
 
-        if (cooked_mode) {
+        if (flags & SER_COOKED) {
             if (ch == 3) sys_exit(255); # ctrl-c
             if (ch == 19) { # ctrl-s
                 # block the entire system until they type ctrl-q
@@ -143,12 +134,18 @@ var ser_poll = func(fd) {
         };
 
         ser_bufput(bufp, ch);
+        if (!(flags & SER_COOKED)) {
+            # in raw mode, no line-buffering: we can always read every character
+            # that we've written
+            ser_setreadmaxpos(bufp, ser_writepos(bufp));
+        };
     };
 };
 
 var ser_read = func(fd, buf, sz) {
     var p = fdbaseptr(fd);
     var bufp = p[BUFPTR];
+    var flags = p[SERFLAGS];
     var i = sz;
     var ch = 0;
     sz = 0;
@@ -161,7 +158,7 @@ var ser_read = func(fd, buf, sz) {
             continue; # otherwise wait for some input
         };
 
-        if (cooked_mode) {
+        if (flags & SER_COOKED) {
             if (ch == 4) break; # ctrl-d
         };
 
@@ -174,14 +171,15 @@ var ser_read = func(fd, buf, sz) {
 
 ser_write = func(fd, buf, sz) {
     var p = fdbaseptr(fd);
-    var writeport = p[WRITEPORT];
+    var writeport = p[BASEPORT];
+    var flags = p[SERFLAGS];
     var ch;
     while (sz--) {
         ch = *(buf++);
 
         # TODO: [nice] maybe we need to block and wait for the serial device to be ready?
 
-        if (cooked_mode) {
+        if (flags & SER_COOKED) {
             if (ch == '\n') outp(writeport, '\r'); # put \r before \n
         };
 
@@ -192,9 +190,7 @@ ser_write = func(fd, buf, sz) {
 
 var ser_init = func() {
     var ser_fds = [3];
-    var ser_readports = [2];
-    var ser_writeports = [2];
-    var ser_readyports = [6];
+    var ser_baseports = [2];
     var i = 0;
     var p;
     var bufp = ser_buf_area;
@@ -202,13 +198,10 @@ var ser_init = func() {
         # set functions for fd ser_fds[i]
         p = fdbaseptr(ser_fds[i]);
         *(p+READFD) = ser_read;
-        if (ser_fds[i] == 3) *(p+READFD) = ser_read;
         *(p+WRITEFD) = ser_write;
-        *(p+READPORT) = ser_readports[i];
-        *(p+WRITEPORT) = ser_writeports[i];
-        *(p+READYPORT) = ser_readyports[i];
-
+        *(p+BASEPORT) = ser_baseports[i];
         *(p+BUFPTR) = bufp;
+        *(p+SERFLAGS) = SER_COOKED;
         if (bufp ge (ser_buf_area + ser_bufspace)) kpanic("insufficient ser_bufspace");
         ser_setreadpos(bufp, 0);
         ser_setreadmaxpos(bufp, 0);

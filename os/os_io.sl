@@ -61,3 +61,21 @@ sys_close = func(fd) {
     fdfree(fd);
     return n;
 };
+
+sys_serflags = func(fd, flags) {
+    ser_poll(3);
+
+    var err = catch();
+    if (err) return err;
+
+    var fdbase = fdbaseptr(fd);
+    var readfunc = fdbase[READFD];
+
+    # serflags() only works for serial ports
+    if (readfunc != ser_read) return BADFD;
+
+    var oldflags = fdbase[SERFLAGS];
+    *(fdbase+SERFLAGS) = flags;
+
+    return oldflags;
+};

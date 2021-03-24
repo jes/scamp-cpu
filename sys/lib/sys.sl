@@ -1,5 +1,6 @@
 # System calls
 
+extern sys_serflags;
 extern sys_cmdargs;
 extern sys_osbase;
 extern sys_copyfd;
@@ -21,25 +22,26 @@ extern sys_system;
 extern sys_exec;
 extern sys_exit;
 
-var cmdargs = sys_cmdargs;
-var osbase  = sys_osbase;
-var copyfd  = sys_copyfd;
-var unlink  = sys_unlink;
-var stat    = sys_stat;
-var readdir = sys_readdir;
-var opendir = sys_opendir;
-var mkdir   = sys_mkdir;
-var chdir   = sys_chdir;
-var rename  = sys_rename;
-var sync    = sys_sync;
-var close   = sys_close;
-var open    = sys_open;
-var read    = sys_read;
-var setbuf  = sys_setbuf;
-var write   = sys_write;
-var getcwd  = sys_getcwd;
-var exec    = sys_exec;
-var exit    = sys_exit;
+var serflags = sys_serflags;
+var cmdargs  = sys_cmdargs;
+var osbase   = sys_osbase;
+var copyfd   = sys_copyfd;
+var unlink   = sys_unlink;
+var stat     = sys_stat;
+var readdir  = sys_readdir;
+var opendir  = sys_opendir;
+var mkdir    = sys_mkdir;
+var chdir    = sys_chdir;
+var rename   = sys_rename;
+var sync     = sys_sync;
+var close    = sys_close;
+var open     = sys_open;
+var read     = sys_read;
+var setbuf   = sys_setbuf;
+var write    = sys_write;
+var getcwd   = sys_getcwd;
+var exec     = sys_exec;
+var exit     = sys_exit;
 
 # example: system(["/bin/ls", "-l"])
 extern TOP;

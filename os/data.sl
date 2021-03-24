@@ -66,6 +66,14 @@ var fdfree = func(fd) {
     };
 };
 
+# serial port fd fields
+var BASEPORT = FDDATA;
+var BUFPTR = FDDATA+1;
+var SERFLAGS = FDDATA+2;
+
+# serial port flags
+var SER_COOKED = 1;
+
 # Block device state
 var BLKSZ = 256; # 256 words, 512 bytes
 var BLKBUF = asm {
