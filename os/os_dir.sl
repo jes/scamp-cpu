@@ -255,8 +255,12 @@ sys_rename = func(oldname, newname) {
     var unlink_offset = oldlocation[2];
 
     # don't rename the empty string file, or "."
-    # TODO: [bug] don't rename ".."
     if (dirblk == 0 || dirblk == blknum) return NOTFOUND;
+
+    # don't rename ".."
+    var name;
+    undirent(BLKBUF+unlink_offset, &name, 0);
+    if (name[0] == '.' && name[1] == '.' && name[2] == 0) return NOTFOUND;
 
     # create the new name, linked to the existing file
     var newlocation = dirmkname(newstartblk, newname, 0, blknum);
