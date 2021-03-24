@@ -97,10 +97,8 @@ var sys_system_impl  = func(top, args, sp, ret) {
         return err;
     };
 
-    # sync buffers
+    # sync buffers (before writing fdtable to disk)
     sys_sync(-1);
-
-    # TODO: [bug] need to setbuf(fd, 0) for all fds instead of just sync(-1)!
 
     # create filenames
     # TODO: [bug] should support more than 1 digit in filenames
@@ -232,6 +230,10 @@ var sys_exec_impl = func(args) {
         allowcatch();
         return err;
     };
+
+    # stop using buffers
+    var i = 0;
+    while (i != nfds) sys_setbuf(i++, 0);
 
     # load the program
     build_cmdargs(0, args);
