@@ -51,20 +51,21 @@ var ser_bufempty = func(bufp) {
 
 # return a character from the buffer, or -1 if none
 var ser_bufget = func(bufp) {
-    # TODO: [bug] if ser_buffull() then we should return the next character
-    #       even though it exceeds readmaxpos, because we need to free up
-    #       space in the buffer for new characters to be typed? or, if not
-    #       that solution, we at least need to do *something* to stop a
-    #       full buffer from blocking all subsequent input
-    if (ser_bufempty(bufp)) return -1;
+    # need to check "!ser_buffull(bufp)" so that a single long line doesn't block
+    # the entire stream
+    if (ser_bufempty(bufp) && !ser_buffull(bufp)) return -1;
 
     var buf = ser_buf(bufp);
     var readpos = ser_readpos(bufp);
+    var readmaxpos = ser_readmaxpos(bufp);
+
+    if (readpos == readmaxpos) readmaxpos++;
 
     var ch = buf[readpos++];
     if (readpos == ser_buflen) readpos = 0;
 
     ser_setreadpos(bufp, readpos);
+    ser_setreadmaxpos(bufp, readmaxpos);
 
     return ch;
 };
@@ -154,12 +155,11 @@ var ser_read = func(fd, buf, sz) {
     while (i) {
         ser_poll(fd);
 
-        if (ser_bufempty(bufp)) {
+        ch = ser_bufget(bufp);
+        if (ch == -1) {
             if (sz != 0) break; # return what we have, if any
             continue; # otherwise wait for some input
         };
-
-        ch = ser_bufget(bufp);
 
         if (cooked_mode) {
             if (ch == 4) break; # ctrl-d
