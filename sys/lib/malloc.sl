@@ -38,8 +38,9 @@ var free = func(ap) {
 
     var p = freep;
     while (!((bp gt p) && (bp lt p[0]))) {
-        if ((p ge p[0]) && ((bp gt p) || (bp lt p[0]))) # freed block at start or end of arena
-            break;
+        if (p ge p[0]) # next block wraps around to start
+            if ((bp gt p) || (bp lt p[0])) # freed block at start or end of arena
+                break;
         p = p[0];
     };
 
