@@ -600,6 +600,17 @@ processkey = func() {
         quit(0);
     } else if (c == CTRL_KEY('s')) {
         savefile();
+    } else if (c == CTRL_KEY('f')) {
+        # TODO: [nice] search
+    } else if (c == CTRL_KEY('h')) {
+        # TODO: [nice] show a full help screen
+    } else if (c == CTRL_KEY('k')) {
+        # TODO: [nice] delete from cursor to end of line
+    } else if (c == CTRL_KEY('z')) {
+        unrawmode();
+        if (dirty) puts("[No write since last change]\n");
+        system(["/bin/sh"]);
+        rawmode();
     } else if (c == PAGE_UP) {
         cy = rowoff;
         n = ROWS;
@@ -621,7 +632,8 @@ processkey = func() {
         if (c == DEL_KEY) move(ARROW_RIGHT);
         delchar();
     } else if (c == CTRL_KEY('l') || c == ESC) {
-        # TODO
+        # TODO: [nice] in future, when we don't do a full redraw on every keypress, ctrl-l
+        #       should do a full redraw
     } else {
         insertchar(c);
     };
@@ -632,7 +644,7 @@ processkey = func() {
 ### INIT
 
 rawmode();
-setstatusmsg("HELP: Ctrl-S = save | Ctrl-Q = quit", 0);
+setstatusmsg("HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-Z = shell", 0);
 
 var args = cmdargs()+1;
 if (*args) openfile(*args);
