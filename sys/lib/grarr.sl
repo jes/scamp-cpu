@@ -35,6 +35,20 @@ var grpush = func(gr, el) {
     *gr = *gr+1;
 };
 
+var grpop = func(gr) {
+    var p = gr[2];
+    var len = gr[0];
+    if (len == 0) return 0; # TODO: [nice] what value should we return if there are none??
+    var val = p[len-1]; # grab final value
+    *gr = (*gr)-1; # decrement length
+    return val;
+};
+
+var grtrunc = func(gr, at) {
+    var len = gr[0];
+    if (at lt len) *gr = at;
+};
+
 var grbase = func(gr) return gr[2];
 
 var grset = func(gr, i, el) {
