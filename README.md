@@ -52,7 +52,7 @@ Other work includes:
  - [x] write the "kernel" (mostly done: see `os/`)
  - [x] write a compiler
  - [ ] write system utilities (WIP: see `sys/`)
- - [ ] write an editor
+ - [x] write an editor (mostly done: see `sys/kilo.sl`)
  - [ ] make it self-host
 
 ## Architecture
