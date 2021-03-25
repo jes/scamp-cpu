@@ -427,7 +427,6 @@ writeesc = func(s) {
 };
 
 refresh = func() {
-    # TODO: [bug] fix flickering
     scroll();
     writeesc("[?25l"); # hide cursor
     writeesc("[H"); # position cursor
