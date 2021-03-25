@@ -105,7 +105,7 @@ var ser_poll = func(fd) {
 
     var readport = p[BASEPORT];
     var readyport = readport+4;
-    var flags = p[SERFLAGS];
+    var cooked_mode = p[SERFLAGS] & SER_COOKED;
     var bufp = p[BUFPTR];
     var ch;
 
@@ -113,7 +113,7 @@ var ser_poll = func(fd) {
     while (inp(readyport) && !ser_buffull(bufp)) {
         ch = inp(readport);
 
-        if (flags & SER_COOKED) {
+        if (cooked_mode) {
             if (ch == 3) sys_exit(255); # ctrl-c
             # if (ch == 12) # TODO: [nice] clear screen on ctrl-l
             if (ch == 19) { # ctrl-s
@@ -137,7 +137,7 @@ var ser_poll = func(fd) {
         };
 
         ser_bufput(bufp, ch);
-        if (!(flags & SER_COOKED)) {
+        if (!cooked_mode) {
             # in raw mode, no line-buffering: we can always read every character
             # that we've written
             ser_setreadmaxpos(bufp, ser_writepos(bufp));
@@ -148,7 +148,7 @@ var ser_poll = func(fd) {
 var ser_read = func(fd, buf, sz) {
     var p = fdbaseptr(fd);
     var bufp = p[BUFPTR];
-    var flags = p[SERFLAGS];
+    var cooked_mode = p[SERFLAGS] & SER_COOKED;
     var i = sz;
     var ch = 0;
     sz = 0;
@@ -161,7 +161,7 @@ var ser_read = func(fd, buf, sz) {
             continue; # otherwise wait for some input
         };
 
-        if (flags & SER_COOKED) {
+        if (cooked_mode) {
             if (ch == 4) break; # ctrl-d
         };
 
@@ -175,14 +175,14 @@ var ser_read = func(fd, buf, sz) {
 ser_write = func(fd, buf, sz) {
     var p = fdbaseptr(fd);
     var writeport = p[BASEPORT];
-    var flags = p[SERFLAGS];
+    var cooked_mode = p[SERFLAGS] & SER_COOKED;
     var ch;
     while (sz--) {
         ch = *(buf++);
 
         # TODO: [nice] maybe we need to block and wait for the serial device to be ready?
 
-        if (flags & SER_COOKED) {
+        if (cooked_mode) {
             if (ch == '\n') outp(writeport, '\r'); # put \r before \n
         };
 
