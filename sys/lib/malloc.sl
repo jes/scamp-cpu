@@ -31,7 +31,7 @@ var free = func(ap) {
     if (ap == 0) return 0;
 
     if (ap lt &TOP) {
-        fprintf(2, "free'd static pointer: %x\n", [ap]);
+        fprintf(2, "free'd static pointer: 0x%x\n", [ap]);
         exit(1);
     };
     var bp = ap-2; # point to block header

@@ -93,7 +93,7 @@ var sprintf = func(fmt, args) {
 
     xprintf(fmt, args, func(ch) {
         var l = sprintf_p - sprintf_output;
-        if (l == sprintf_len) {
+        if (l == sprintf_len-1) {
             sprintf_len = l+l;
             sprintf_output = realloc(sprintf_output, sprintf_len);
             sprintf_p = sprintf_output + l;
