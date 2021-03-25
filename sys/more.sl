@@ -10,8 +10,7 @@ var buf = malloc(bufsz);
 var l = 0;
 var ch;
 
-# put stdin and console in raw mode
-serflags(0, 0);
+# put console in raw mode
 serflags(3, 0);
 
 while (gets(buf, bufsz)) {
