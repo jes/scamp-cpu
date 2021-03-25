@@ -101,7 +101,7 @@ void open_profile(char *file) {
     }
 }
 
-void write_profile(int argc, char **argv, int cycles, uint64_t elapsed_us) {
+void write_profile(int argc, char **argv, unsigned long cycles, uint64_t elapsed_us) {
     int i;
 
     fprintf(profile_fp, "scamp-profile\n");
@@ -110,7 +110,7 @@ void write_profile(int argc, char **argv, int cycles, uint64_t elapsed_us) {
     for (i = 1; i < argc; i++)
         fprintf(profile_fp, " %s", argv[i]);
     fprintf(profile_fp, "\n");
-    fprintf(profile_fp, "cycles: %d\n", cycles);
+    fprintf(profile_fp, "cycles: %lu\n", cycles);
     fprintf(profile_fp, "elapsed_us: %lu\n", elapsed_us);
     fprintf(profile_fp, "pc_cycles:\n");
     for (i = 0; i < 65536; i++)
@@ -406,7 +406,7 @@ void rawmode(void) {
 }
 
 int main(int argc, char **argv) {
-    int steps = 0;
+    unsigned long steps = 0;
     int jmp0x100 = 0;
     struct timeval starttime, curtime;
     uint64_t elapsed_us, target_us;
@@ -482,7 +482,7 @@ int main(int argc, char **argv) {
     }
 
     if (cyclecount)
-        fprintf(stderr, "[cycles] Halted after %d cycles.\n", steps);
+        fprintf(stderr, "[cycles] Halted after %lu cycles.\n", steps);
 
     if (profile_fp)
         write_profile(argc, argv, steps, elapsed_us);
