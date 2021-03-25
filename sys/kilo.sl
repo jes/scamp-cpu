@@ -1,5 +1,7 @@
 # Text editor
 # Based on https://viewsourcecode.org/snaptoken/kilo/
+#
+# TODO: [bug] use less memory - currently can't open slangc.sl
 
 include "grarr.sl";
 include "stdio.sl";
@@ -110,6 +112,8 @@ rawmode = func() {
     stdinflags = serflags(0, 0);
     stdoutflags = serflags(1, 0);
     consoleflags = serflags(3, 0);
+
+    writeesc("[2J"); # clear screen
 };
 
 unrawmode = func() {
