@@ -649,6 +649,7 @@ var args = cmdargs()+1;
 if (*args) openfile(*args);
 
 while (1) {
+    # TODO: [perf] only refresh() when there are no pending keypresses
     refresh();
     processkey();
 };
