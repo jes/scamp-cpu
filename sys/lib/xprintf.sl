@@ -13,7 +13,6 @@ include "stdlib.sl";
 #   %05d -> decimal integer, padded with zeroes in front to make at least 5 chars
 # TODO: [nice] signed vs unsigned integers? padding?
 # TODO: [nice] show arrays? lists?
-# TODO: [nice] return the number of chars output
 # TODO: [nice] padding at right-hand-side with negative padlen (%-5d)
 var xprintf = func(fmt, args, putc_cb) {
     var p = fmt;
@@ -22,6 +21,7 @@ var xprintf = func(fmt, args, putc_cb) {
     var padlen;
     var str;
     var len;
+    var total = 0;
 
     # TODO: [nice] how do we use the one from string.s without creating a circular dependency?
     var strlen = func(s) {
@@ -34,18 +34,18 @@ var xprintf = func(fmt, args, putc_cb) {
         if (*p == '%') {
             padchar = ' ';
             padlen = 0;
-            p++; if (!*p) return 0;
+            p++; if (!*p) return total;
 
             # use "0" for padding?
             if (*p == '0') {
                 padchar = '0';
-                p++; if (!*p) return 0;
+                p++; if (!*p) return total;
             };
 
             # padding size?
             while (isdigit(*p)) {
                 padlen = mul(padlen,10) + (*p - '0');
-                p++; if (!*p) return 0;
+                p++; if (!*p) return total;
             };
 
             # format type
@@ -71,12 +71,16 @@ var xprintf = func(fmt, args, putc_cb) {
                 while (padlen--) putc_cb(padchar);
             };
 
-            while (*str) putc_cb(*(str++));
+            while (*str) {
+                putc_cb(*(str++));
+                total++;
+            };
         } else {
             putc_cb(*p);
+            total++;
         };
         p++;
     };
 
-    return 0;
+    return total;
 };

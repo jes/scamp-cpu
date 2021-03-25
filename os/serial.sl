@@ -115,6 +115,7 @@ var ser_poll = func(fd) {
 
         if (flags & SER_COOKED) {
             if (ch == 3) sys_exit(255); # ctrl-c
+            # if (ch == 12) # TODO: [nice] clear screen on ctrl-l
             if (ch == 19) { # ctrl-s
                 # block the entire system until they type ctrl-q
                 while (1) {
@@ -130,6 +131,8 @@ var ser_poll = func(fd) {
             };
             if (ch == '\r') ch = '\n'; # turn enter key into '\n'
 
+            # TODO: [bug] be a bit sensible about echoing control characters
+            #       (arrow keys etc. shouldn't move the cursor around the screen)
             ser_write(fd, &ch, 1); # echo
         };
 

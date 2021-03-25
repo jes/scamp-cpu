@@ -62,6 +62,11 @@ sys_close = func(fd) {
     return n;
 };
 
+# TODO: [bug] this will kind of behave weird if, for example, you turn off
+#       cooked mode on stdin but not on fd 3 - ^C still still kill the process
+#       etc. when any syscall calls ser_poll(3) because fd 3 will still have
+#       cooked mode - I think the flags should be a property of the input
+#       buffer perhaps?
 sys_serflags = func(fd, flags) {
     ser_poll(3);
 

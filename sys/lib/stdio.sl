@@ -56,10 +56,10 @@ var puts = func(s) return fputs(1,s);
 var fprintf_fd;
 var fprintf = func(fd, fmt, args) {
     fprintf_fd = fd;
-    xprintf(fmt, args, func(ch) { fputc(fprintf_fd, ch) });
+    return xprintf(fmt, args, func(ch) { fputc(fprintf_fd, ch) });
 };
 
-var printf = func(fmt, args) xprintf(fmt, args, putchar);
+var printf = func(fmt, args) return xprintf(fmt, args, putchar);
 
 # return a pointer to a static buffer containing the string "/tmp/tmpfileXX",
 # with X's changed to digits, naming a file that did not previously exist;

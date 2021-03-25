@@ -22,7 +22,7 @@ put ../sys/wc.bin /bin/wc
 put ../sys/head.bin /bin/head
 put ../sys/mv.bin /bin/mv
 put ../sys/slc.bin /bin/slc
-put ../sys/rawcat.bin /bin/rawcat
+put ../sys/kilo.bin /bin/kilo
 
 mkdir lib
 put -t ../sys/lib/head.s /lib/head.s
@@ -59,7 +59,7 @@ put -t ../sys/wc.sl /src/wc.sl
 put -t ../sys/head.sl /src/head.sl
 put -t ../sys/mv.sl /src/mv.sl
 put -t ../sys/slc.sl /src/slc.sl
-put -t ../sys/rawcat.sl /src/rawcat.sl
+put -t ../sys/kilo.sl /src/kilo.sl
 
 mkdir proc
 mkdir tmp
