@@ -36,18 +36,22 @@ var unredirect = func(fd, prev) {
 
 # TODO: [nice] option parsing
 
+var rc;
+
 # direct stdout to "/tmp/1.s" and run slangc
 var prev_out = redirect(1, "/tmp/1.s", O_WRITE|O_CREAT);
-system(["/bin/slangc"]);
+rc = system(["/bin/slangc"]);
+if (rc != 0) exit(rc);
 unredirect(1, prev_out);
 
 # cat "/lib/head.s /tmp/1.s /lib/foot.s" into "/tmp/2.s"
 prev_out = redirect(1, "/tmp/2.s", O_WRITE|O_CREAT);
 var prev_in = redirect(0, "/tmp/1.s", O_READ);
-system(["/bin/cat", "/lib/head.s", "/tmp/1.s", "/lib/foot.s"]);
+rc = system(["/bin/cat", "/lib/head.s", "/tmp/1.s", "/lib/foot.s"]);
+if (rc != 0) exit(rc);
 unredirect(1, prev_out);
 unredirect(0, prev_in);
 
 # assemble "/tmp/2.s" to stdout
 prev_in = redirect(0, "/tmp/2.s", O_READ);
-system(["/bin/asm"]);
+exec(["/bin/asm"]);
