@@ -614,10 +614,8 @@ move = func(k) {
             cx = rowlen(row);
         };
     } else if (cx > maxcol) {
-        # TODO: [bug] if we hit "cx > maxcol" because of ARROW_UP/DOWN instead of
-        #       ARROW_RIGHT, then just set cx=maxcol, instead of moving down a row
         cx = maxcol;
-        if (cy != maxrow) {
+        if ((k == ARROW_RIGHT || k == ARROW_LEFT) && cy != maxrow) {
             cx = 0;
             move(ARROW_DOWN);
         };
