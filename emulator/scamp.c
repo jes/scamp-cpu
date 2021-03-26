@@ -48,6 +48,11 @@ uint64_t addr_reads[65536];
 uint64_t addr_writes[65536];
 FILE *profile_fp;
 
+#define INPUT_BUFSZ 256
+
+int input_buffer[INPUT_BUFSZ];
+int input_pos = 0;
+
 void load_hex(uint16_t *buf, int maxlen, char *name) {
     FILE *fp;
     int i = 0;
@@ -158,12 +163,31 @@ int console_ready() {
     return poll(&pfd, 1, 0);
 }
 
-/* read a character from stdin, or 0 if none available */
+/* read stdin into input buffer, and set halt flag on ctrl-\ */
+void console_poll() {
+    while (console_ready() && input_pos < INPUT_BUFSZ) {
+        if (read(STDIN_FILENO, input_buffer+input_pos, 1) != 1) {
+            halt = 1;
+            break;
+        }
+        if (input_buffer[input_pos] == 28) halt = 1; /* halt on ctrl-\ */
+        input_pos++;
+    }
+}
+
+/* return next char from input buffer */
 uint8_t console_getchar() {
     uint8_t ch;
 
-    if (!console_ready()) return 0;
-    if (read(STDIN_FILENO, &ch, 1) != 1) halt = 1;
+    console_poll();
+
+    if (!input_pos) return 0;
+
+    ch = input_buffer[0];
+
+    /* XXX: awful for performance, should use a ring buffer instead, but meh */
+    memmove(input_buffer, input_buffer+1, input_pos);
+    input_pos--;
 
     return ch;
 }
@@ -176,15 +200,13 @@ uint16_t in(uint16_t addr) {
     }
     if (addr == 2) {
         r = console_getchar();
-        /* TODO: [nice] halt on ctrl-\ even if the program is not reading input */
-        if (r == 28) halt = 1; /* halt on ctrl-\ */
     }
     if (addr == 5) {
         r = disk[512*blknum + blkidx];
         blkidx = (blkidx+1)%512;
     }
     if (addr == 6) {
-        r = console_ready();
+        r = (input_pos != 0);
     }
     return r;
 }
@@ -465,6 +487,8 @@ int main(int argc, char **argv) {
 
     /* run the clock */
     while (!halt) {
+        if ((steps & 0xffff) == 0) /* console_poll() is slow, only call it very occasionally */
+            console_poll();
         negedge();
         posedge();
         steps++;
