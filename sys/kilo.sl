@@ -38,10 +38,9 @@ var DEL_KEY = 1008;
 var cx = 0;
 var rx = 0;
 var cy = 0;
-# "rows" is a grarr of rows in the file; each row is a cons(grarr, str) where
-# the grarr is the characters on that line, and the str is a string describing
-# how to render it
-var rows = grnew(); # grarr of rows; each row is a cons(grarr, str) where the grarr is the
+# "rows" is a grarr of rows in the file; each row is a grarr of the characters
+# on that line
+var rows = grnew();
 var rowoff = 0;
 var coloff = 0;
 var openfilename = 0;
@@ -59,9 +58,7 @@ var readkey;
 # row operations
 var rowlen;
 var row2chars;
-var row2render;
 var cx2rx;
-var updaterow;
 var appendrow;
 var insertrow;
 var rowinsertchar;
@@ -175,9 +172,8 @@ readkey = func() {
 
 ### ROW OPERATIONS
 
-rowlen = func(r) return grlen(car(r));
-row2chars = func(r) return grbase(car(r));
-row2render = func(r) return cdr(r);
+rowlen = func(r) return grlen(r);
+row2chars = func(r) return grbase(r);
 
 cx2rx = func(row, cx) {
     var s = row2chars(row);
@@ -189,32 +185,6 @@ cx2rx = func(row, cx) {
         i++;
     };
     return x;
-};
-
-updaterow = func(row) {
-    var s = row2render(row);
-    if (s) free(s);
-
-    var r = grnew();
-    var p = row2chars(row);
-    var ch;
-    var n;
-    while (*p) {
-        ch = *(p++);
-        if (ch == '\t') {
-            grpush(r, ' ');
-            while (grlen(r) & (TABSTOP-1))
-                grpush(r, ' ');
-        } else {
-            grpush(r, ch);
-        };
-    };
-    grpush(r, 0);
-
-    var render = strdup(grbase(r));
-    grfree(r);
-
-    setcdr(row, render);
 };
 
 appendrow = func(gr) {
@@ -230,54 +200,45 @@ insertrow = func(at, gr) {
         grset(rows, n, grget(rows, n-1));
         n--;
     };
-    grset(rows, at, cons(gr, 0));
-    updaterow(grget(rows, at));
+    grset(rows, at, gr);
     dirty = 1;
 };
 
 rowinsertchar = func(row, at, c) {
     if (at < 0 || at > rowlen(row)) at = rowlen(row);
-    var gr = car(row);
     var n = rowlen(row);
-    grpush(gr, 0);
+    grpush(row, 0);
     while (n != at) {
-        grset(gr, n, grget(gr, n-1));
+        grset(row, n, grget(row, n-1));
         n--;
     };
-    grset(gr, at, c);
-    updaterow(row);
+    grset(row, at, c);
     dirty = 1;
 };
 
 rowappendstr = func(row, s) {
-    var gr = car(row);
-    grpop(gr); # pop trailing nul
+    grpop(row); # pop trailing nul
     while (*s) {
-        grpush(gr, *s);
+        grpush(row, *s);
         s++;
     };
-    grpush(gr, 0); # add new trailing nul
-    updaterow(row);
+    grpush(row, 0); # add new trailing nul
     dirty = 1;
 };
 
 rowdelchar = func(row, at) {
     if (at < 0 || at > rowlen(row)) return 0;
-    var gr = car(row);
     var len = rowlen(row);
     while (at != len) {
-        grset(gr, at, grget(gr, at+1));
+        grset(row, at, grget(row, at+1));
         at++;
     };
-    grpop(gr);
-    updaterow(row);
+    grpop(row);
     dirty = 1;
 };
 
 freerow = func(row) {
-    grfree(car(row));
-    free(cdr(row));
-    free(row);
+    grfree(row);
 };
 
 delrow = func(at) {
@@ -330,9 +291,8 @@ insertnewline = func() {
     insertrow(cy+1, gr);
 
     # truncate old row
-    grtrunc(car(row), cx);
-    grpush(car(row), 0);
-    updaterow(row);
+    grtrunc(row, cx);
+    grpush(row, 0);
 
     cy++;
     cx = 0;
@@ -404,13 +364,13 @@ savefile = func() {
     if (fd < 0) die("open %s: %s", [openfilename, strerror(fd)]);
 
     var i = 0;
-    var rowgr;
+    var row;
     var chars = 0;
     while (i < grlen(rows)) {
-        rowgr = car(grget(rows, i));
-        write(fd, grbase(rowgr), grlen(rowgr)-1);
+        row = grget(rows, i);
+        write(fd, row2chars(row), rowlen(row)-1);
         write(fd, "\n", 1);
-        chars = chars + grlen(rowgr);
+        chars = chars + rowlen(row);
         i++;
     };
     close(fd);
@@ -437,13 +397,38 @@ refresh = func() {
     writeesc("[?25h"); # show cursor
 };
 
-drawrow = func(filerow) {
-    var row = grget(rows, filerow);
-    var s = row2render(row);
+var rowbuf = malloc(COLS+1);
+var rowbuf_ptr;
+var rowbuf_col;
+drawrow = func(str) {
+    rowbuf_ptr = rowbuf;
+    rowbuf_col = 0;
+    var addchar = func(ch) {
+        if (rowbuf_col >= coloff && rowbuf_col < coloff+COLS)
+            *(rowbuf_ptr++) = ch;
+        rowbuf_col++;
+    };
 
-    var len = strlen(s) - coloff;
-    if (len > COLS) len = COLS;
-    if (len > 0) write(1, s+coloff, len);
+    # turn the chars into something renderable:
+    #  - turn tabs into 4 spaces
+    #  - in future we could turn control characters into "^A" type stuff?
+    var p = str;
+    var ch;
+    while (*p) {
+        ch = *(p++);
+        if (ch == '\t') {
+            addchar(' ');
+            while (rowbuf_col & (TABSTOP-1))
+                addchar(' ');
+        } else {
+            addchar(ch);
+        };
+    };
+
+    *rowbuf_ptr = 0;
+
+    var len = rowbuf_ptr - rowbuf;
+    if (len > 0) write(1, rowbuf, len);
 };
 
 drawrows = func() {
@@ -455,7 +440,7 @@ drawrows = func() {
             if (grlen(rows) == 0 && y == 8) puts(WELCOME)
             else puts("~");
         } else {
-            drawrow(filerow);
+            drawrow(row2chars(grget(rows,filerow)));
         };
 
         writeesc("[K"); # clear to end of line
