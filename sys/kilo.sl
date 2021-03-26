@@ -324,6 +324,8 @@ openfile = func(filename) {
     if (fd < 0) die("open %s: %s", [filename, strerror(fd)]);
 
     var row = grnew();
+    var buf = malloc(257);
+    setbuf(fd, buf);
 
     var ch;
     while (1) {
@@ -338,6 +340,7 @@ openfile = func(filename) {
         };
     };
     close(fd);
+    free(buf);
 
     if (grlen(row)) {
         grpush(row, 0);
@@ -362,6 +365,9 @@ savefile = func() {
     var fd = open(openfilename, O_WRITE|O_CREAT);
     if (fd < 0) die("open %s: %s", [openfilename, strerror(fd)]);
 
+    var buf = malloc(257);
+    setbuf(fd, buf);
+
     var i = 0;
     var row;
     var chars = 0;
@@ -373,6 +379,7 @@ savefile = func() {
         i++;
     };
     close(fd);
+    free(buf);
 
     setstatusmsg("%d characters written to disk", [chars]);
     dirty = 0;
