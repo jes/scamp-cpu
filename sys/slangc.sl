@@ -934,15 +934,18 @@ AddressOf = func(x) {
     if (!parse(CharSkip,'&')) return 0;
     if (!parse(Identifier,0)) die("address-of (&) needs identifier",0);
 
-    var v = findlocal(IDENTIFIER);
+    var v;
     var bp_rel;
-    if (v) {
-        bp_rel = cdr(v);
-        puts("# &"); puts(IDENTIFIER); puts(" (local)\n");
-        puts("ld x, sp\n");
-        puts("add x, "); puts(itoa(bp_rel-SP_OFF)); puts("\n");
-        pushx();
-        return 1;
+    if (LOCALS) {
+        v = findlocal(IDENTIFIER);
+        if (v) {
+            bp_rel = cdr(v);
+            puts("# &"); puts(IDENTIFIER); puts(" (local)\n");
+            puts("ld x, sp\n");
+            puts("add x, "); puts(itoa(bp_rel-SP_OFF)); puts("\n");
+            pushx();
+            return 1;
+        };
     };
 
     v = findglobal(IDENTIFIER);
