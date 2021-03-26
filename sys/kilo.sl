@@ -2,7 +2,6 @@
 # Based on https://viewsourcecode.org/snaptoken/kilo/
 #
 # TODO: [bug] use less memory - currently can't open slangc.sl; stop using grarrs?
-#       stop storing a separate copy of every character for the "render" text?
 # TODO: [perf] needs to be usable at 1 MHz
 # TODO: [perf] stop redrawing the entire screen on every change?
 # TODO: [perf] buffer writes?
