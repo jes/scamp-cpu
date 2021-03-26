@@ -209,8 +209,8 @@ insertrow = func(at, gr) {
 };
 
 rowinsertchar = func(row, at, c) {
-    if (at < 0 || at > rowlen(row)) at = rowlen(row);
-    var n = rowlen(row);
+    if (at < 0 || at > rowlen(row)+1) at = rowlen(row)+1;
+    var n = rowlen(row)+1;
     grpush(row, 0);
     while (n != at) {
         grset(row, n, grget(row, n-1));
@@ -220,13 +220,9 @@ rowinsertchar = func(row, at, c) {
     dirty = 1;
 };
 
-rowappendstr = func(row, s) {
-    grpop(row); # pop trailing nul
-    while (*s) {
-        grpush(row, *s);
-        s++;
-    };
-    grpush(row, 0); # add new trailing nul
+rowappendstr = func(row, s, len) {
+    while (len--)
+        grpush(row, *(s++));
     dirty = 1;
 };
 
@@ -296,7 +292,6 @@ insertchar = func(c) {
     var gr;
     if (cy == grlen(rows)) {
         gr = grnew();
-        grpush(gr, 0);
         appendrow(gr);
     };
 
@@ -310,7 +305,6 @@ insertnewline = func() {
 
     var gr = grnew();
     if (cx == 0) {
-        grpush(gr, 0);
         insertrow(cy, gr);
         cy++;
         return 0;
@@ -320,18 +314,16 @@ insertnewline = func() {
     var chars = row2chars(row);
 
     # copy chars into new row
-    var len = rowlen(row)-1;
+    var len = rowlen(row);
     var at = cx;
     while (at != len) {
         grpush(gr, chars[at]);
         at++;
     };
-    grpush(gr, 0);
     insertrow(cy+1, gr);
 
     # truncate old row
     grtrunc(row, cx);
-    grpush(row, 0);
 
     cy++;
     cx = 0;
@@ -341,10 +333,9 @@ delchar = func() {
     if (cx == 0 && cy == 0) return 0;
     if (cy == grlen(rows)) return 0;
 
-
     var row;
     var row2;
-    if (cx > 0) {
+    if (cx != 0) {
         row = grget(rows, cy);
         rowdelchar(row, cx-1);
         markrowdirty(cy);
@@ -352,8 +343,8 @@ delchar = func() {
     } else {
         row = grget(rows,cy-1);
         row2 = grget(rows,cy);
-        cx = rowlen(row)-1;
-        rowappendstr(row, row2chars(row2));
+        cx = rowlen(row);
+        rowappendstr(row, row2chars(row2), rowlen(row2));
         delrow(cy);
         cy--;
         markbelowdirty(cy);
@@ -375,7 +366,6 @@ openfile = func(filename) {
         ch = fgetc(fd);
         if (ch == EOF) break;
         if (ch == '\n') {
-            grpush(row, 0);
             appendrow(row);
             row = grnew();
         } else {
@@ -385,10 +375,8 @@ openfile = func(filename) {
     close(fd);
     free(buf);
 
-    if (grlen(row)) {
-        grpush(row, 0);
+    if (grlen(row))
         appendrow(row);
-    };
 
     if (openfilename) free(openfilename);
     openfilename = strdup(filename);
@@ -416,9 +404,9 @@ savefile = func() {
     var chars = 0;
     while (i < grlen(rows)) {
         row = grget(rows, i);
-        write(fd, row2chars(row), rowlen(row)-1);
+        write(fd, row2chars(row), rowlen(row));
         write(fd, "\n", 1);
-        chars = chars + rowlen(row);
+        chars = chars + rowlen(row) + 1;
         i++;
     };
     close(fd);
@@ -455,7 +443,7 @@ refresh = func() {
 };
 
 var rowbuf_col;
-drawrow = func(str) {
+drawrow = func(row) {
     rowbuf_col = 0;
     var addchar = func(ch) {
         if (rowbuf_col >= coloff && rowbuf_col < coloff+COLS)
@@ -465,12 +453,15 @@ drawrow = func(str) {
 
     # turn the chars into something renderable:
     #  - turn tabs into 4 spaces
-    #  - in future we could turn control characters into "^A" type stuff?
-    var p = str;
+    #  - turn control characters into "^A" type stuff?
+    var i = 0;
     var ch;
-    while (*p) {
-        ch = *(p++);
-        if (ch == '\t') {
+    while (i != rowlen(row)) {
+        ch = grget(row, i++);
+        if (iscntrl(ch)) {
+            addchar('^');
+            addchar(ch+'A');
+        } else if (ch == '\t') {
             addchar(' ');
             while (rowbuf_col & (TABSTOP-1))
                 addchar(' ');
@@ -492,7 +483,7 @@ drawrows = func() {
             else sbputc(outbuf, '~');
             writeesc("[K"); # clear to end of line
         } else if (rowdirty(filerow)) {
-            drawrow(row2chars(grget(rows,filerow)));
+            drawrow(grget(rows,filerow));
         };
 
         sbputs(outbuf, "\r\n");
@@ -613,16 +604,18 @@ move = func(k) {
 
     var maxcol = 0;
     var row = grget(rows, cy);
-    if (row) maxcol = rowlen(row)-1;
+    if (row) maxcol = rowlen(row);
 
     if (cx < 0) {
         cx = 0;
         if (cy != 0) {
             move(ARROW_UP);
             row = grget(rows, cy);
-            cx = rowlen(row)-1;
+            cx = rowlen(row);
         };
     } else if (cx > maxcol) {
+        # TODO: [bug] if we hit "cx > maxcol" because of ARROW_UP/DOWN instead of
+        #       ARROW_RIGHT, then just set cx=maxcol, instead of moving down a row
         cx = maxcol;
         if (cy != maxrow) {
             cx = 0;
@@ -637,6 +630,7 @@ processkey = func() {
     var n;
     var times_str;
 
+    # TODO: [nice] ctrl- arrow keys to jump left/right a word, and up/down a paragraph (?)
     if (c == CTRL_KEY('q')) {
         if (dirty && quit_times) {
             times_str = "times";
@@ -671,7 +665,7 @@ processkey = func() {
         cx = 0;
     } else if (c == END_KEY) {
         if (cy < grlen(rows))
-            cx = rowlen(grget(rows,cy))-1;
+            cx = rowlen(grget(rows,cy));
     } else if (c == ARROW_UP || c == ARROW_DOWN || c == ARROW_LEFT || c == ARROW_RIGHT) {
         move(c);
     } else if (c == '\r') {
