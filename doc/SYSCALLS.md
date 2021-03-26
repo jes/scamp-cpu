@@ -84,6 +84,10 @@ at least **257** words.
 
 Read multiple characters from the given file descriptor.
 
+If `sz` is 0, returns a number of characters that can be read immediately. For a serial port,
+this means you can read this many characters without blocking. For a file, it means there are at
+least this many characters left in the file.
+
 ### 0xfef8: open(name, mode)
 
     Return: new file descriptor, or -ERR on error

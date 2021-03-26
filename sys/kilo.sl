@@ -698,7 +698,10 @@ var args = cmdargs()+1;
 if (*args) openfile(*args);
 
 while (1) {
-    # TODO: [perf] only refresh() when there are no pending keypresses
-    refresh();
+    # refresh the screen if there are no keystrokes waiting
+    if (read(0, 0, 0) == 0)
+        refresh();
+
+    # handle a keystroke
     processkey();
 };

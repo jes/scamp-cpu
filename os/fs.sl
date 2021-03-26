@@ -15,6 +15,12 @@ var fs_read = func(fd, buf, sz) {
     var remain;
     var read;
 
+    # return number of chars left in this block?
+    if (sz == 0) {
+        blkread(blknum, blkbuf);
+        return blklen(blkbuf) - posinblk;
+    };
+
     if (!blkbuf) blkbuf = BLKBUF;
 
     while (sz) {

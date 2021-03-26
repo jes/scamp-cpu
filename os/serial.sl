@@ -151,6 +151,14 @@ var ser_read = func(fd, buf, sz) {
     var cooked_mode = p[SERFLAGS] & SER_COOKED;
     var i = sz;
     var ch = 0;
+
+    # return number of characters that can be read without blocking
+    if (sz == 0) {
+        sz = ser_readmaxpos(bufp) - ser_readpos(bufp);
+        if (sz < 0) sz = sz + ser_buflen;
+        return sz;
+    };
+
     sz = 0;
     while (i) {
         ser_poll(fd);
