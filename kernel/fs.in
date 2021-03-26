@@ -1,4 +1,4 @@
-kernel os.hex 0xc800
+kernel kernel.hex 0xc800
 
 mkdir etc
 put -t motd /etc/motd

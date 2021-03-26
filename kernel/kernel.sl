@@ -1,6 +1,5 @@
-# OS for SCAMP by jes
+# Kernel for SCAMP by jes
 
-# "Kernel" utilities
 include "util.sl";
 
 kputs("starting kernel...\r\n");
@@ -11,12 +10,12 @@ include "blkdev.sl";
 include "dir.sl";
 include "fs.sl";
 
-# Each of the included os_*.sl modules initialises itself and writes the correct addresses
+# Each of the included sys_*.sl modules initialises itself and writes the correct addresses
 # to the system call vectors that it is responsible for.
-include "os_fs.sl";
-include "os_dir.sl";
-include "os_io.sl";
-include "os_proc.sl";
+include "sys_fs.sl";
+include "sys_dir.sl";
+include "sys_io.sl";
+include "sys_proc.sl";
 
 # setup serial port fds
 ser_init();

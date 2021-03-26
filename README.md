@@ -29,7 +29,7 @@ I have some blog posts here: https://incoherency.co.uk/blog/tags/cpu.html
 I have created an emulator (see in `emulator/`) and a compiler (`compiler/`). Although there is still useful
 work to be done on the compiler, it can now compile itself from within the emulator.
 
-I have written quite a lot of the kernel (see `os/`). It can do most of the system calls. It needs more error-checking,
+I have written quite a lot of the kernel (see `kernel/`). It can do most of the system calls. It needs more error-checking,
 bounds-checking, etc.. It can load programs off a filesystem stored on a block device and execute them, but obviously
 only in the emulator since the real CPU doesn't exist yet.
 
@@ -49,7 +49,7 @@ Other work includes:
  - [ ] work out how to interface with storage and serial
  - [ ] assemble the computer inside a convenient case (WIP: see `case/` and `front-panels/`)
  - [x] write the bootloader ROM (mostly done: see `bootrom.s`)
- - [x] write the "kernel" (mostly done: see `os/`)
+ - [x] write the "kernel" (mostly done: see `kernel/`)
  - [x] write a compiler
  - [ ] write system utilities (WIP: see `sys/`)
  - [x] write an editor (mostly done: see `sys/kilo.sl`)

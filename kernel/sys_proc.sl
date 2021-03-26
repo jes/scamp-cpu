@@ -1,8 +1,8 @@
 # Processes syscalls
 
 include "util.sl";
-include "os_io.sl";
-include "os_fs.sl";
+include "sys_io.sl";
+include "sys_fs.sl";
 include "sys.sl";
 
 sys_cmdargs = asm {
