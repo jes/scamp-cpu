@@ -252,8 +252,7 @@ sub blkadd {
         my @block = $self->readblock($blknum);
         @block[4..4+$len-1] = map { ord($_) } split //, $add;
 
-        $block[0] |= $len>>8;
-        $block[1] = $len&0xff;
+        $block[1] = int(($len+1)/2)&0xff;
 
         if ($str ne '') {
             my $newblk = $self->new_file;
@@ -487,12 +486,12 @@ sub free {
 
 sub blktype {
     my ($self, @data) = @_;
-    return $data[0] >> 1;
+    return $data[0];
 }
 
 sub blklen {
     my ($self, @data) = @_;
-    return (($data[0]&1)<<8)|$data[1];
+    return $data[1];
 }
 
 sub blknext {
@@ -513,7 +512,7 @@ sub new_directory {
     my $blknum = $self->allocate_block();
 
     my @data = (0)x$BLKSZ;
-    $data[0] = $TYPE_DIR << 1;
+    $data[0] = $TYPE_DIR;
 
     $self->writeblock($blknum, @data);
 
@@ -526,7 +525,7 @@ sub new_file {
     my $blknum = $self->allocate_block();
 
     my @data = (0)x$BLKSZ;
-    $data[0] = $TYPE_FILE << 1;
+    $data[0] = $TYPE_FILE;
 
     $self->writeblock($blknum, @data);
 

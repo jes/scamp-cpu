@@ -237,7 +237,7 @@ var sys_exec_impl = func(args) {
 
     # load the program
     build_cmdargs(0, args);
-    load_program(args[0]);
+    load_program(cmdargs[0]);
 
     # if it's a script, we need to load an interpreter instead
     var name;
@@ -254,6 +254,11 @@ var sys_exec_impl = func(args) {
         name = 0x102;
 
         # load the interpreter
+        # TODO: [bug] "args" is a pointer to user memory, which we just overwrote
+        #       with the contents of the script! should instead shift all the
+        #       cmdargs up and stick "name" in at the bottom? or read only the
+        #       first 2 characters to find out if it's a shebang before overwriting
+        #       the rest of the user memory?
         build_cmdargs(name, args);
         load_program(name);
     };

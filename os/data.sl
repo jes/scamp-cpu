@@ -80,7 +80,7 @@ var BLKBUF = asm {
     BLKBUF: .gap 257
 };
 var TYPE_DIR = 0;
-var TYPE_FILE = 0x200;
+var TYPE_FILE = 0x100;
 var DIRENTSZ = 16;
 
 var blkselectport = 4;

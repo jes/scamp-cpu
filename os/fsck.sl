@@ -40,7 +40,7 @@ var blkisfree = func(blk) {
 
 # walk the blocks in a file
 # check for:
-#  - files with length != 508 and next != 0
+#  - files with length != 254 and next != 0
 #  - linked blocks not marked as used
 var filewalk = func(blknum) {
     if (blkisfree(blknum)) kprintf("\r\nblock %d is linked but free\r\n", [blknum]);
@@ -48,7 +48,7 @@ var filewalk = func(blknum) {
         kputs(".");
         blkread(blknum, 0);
 
-        if (blknext(0) && blklen(0) != 508) kprintf("\r\nblock %d has next block %d but length=%d (should be 508)\r\n", [blknum, blknext(0), blklen(0)]);
+        if (blknext(0) && blklen(0) != 254) kprintf("\r\nblock %d has next block %d but length=%d (should be 254)\r\n", [blknum, blknext(0), blklen(0)]);
 
         blknum = blknext(0);
     };

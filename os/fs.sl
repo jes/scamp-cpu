@@ -21,9 +21,7 @@ var fs_read = func(fd, buf, sz) {
         # read the current block of the file
         blkread(blknum, blkbuf);
 
-        # blklen() is counted in bytes, so the number of words remaining is:
-        #   ceil(blklen/2) - posinblk
-        remain = half(blklen(blkbuf)+1) - posinblk;
+        remain = blklen(blkbuf) - posinblk;
         if (remain == 0) {
             break; # EOF
         } else if (remain <= sz) {
@@ -80,7 +78,7 @@ var fs_write = func(fd, buf, sz) {
         else             write = remain;
 
         # do we need to update the block length?
-        if (shl(posinblk+write,1) > blklen(blkbuf)) blksetlen(shl(posinblk+write,1), blkbuf);
+        if (posinblk+write > blklen(blkbuf)) blksetlen(posinblk+write, blkbuf);
 
         # do we need to move to the next block?
         if (posinblk+write == BLKSZ-2) {

@@ -91,7 +91,7 @@ sys_stat = func(name, statbuf) {
             nwords = nwords + BLKSZ-2;
         } else {
             *statbuf = 1;
-            nwords = nwords + half(blklen(0)+1);
+            nwords = nwords + blklen(0);
         };
 
         nblocks++;

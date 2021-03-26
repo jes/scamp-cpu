@@ -78,11 +78,11 @@ var blkwrite = func(num, buf) {
 # get the "type"/"length"/"next" field of the current block
 var blktype = func(buf) {
     if (!buf) buf = BLKBUF;
-    return buf[0] & 0xfe00;
+    return buf[0] & 0xff00;
 };
 var blklen = func(buf) {
     if (!buf) buf = BLKBUF;
-    return buf[0] & 0x01ff;
+    return buf[0] & 0x00ff;
 };
 var blknext = func(buf) {
     if (!buf) buf = BLKBUF;
@@ -131,6 +131,7 @@ var blkfindfree = func() {
     while (BLKBUF[blkgroup] & shl(1, i)) i++;
 
     # upper 8 bits refer to lower 8 block numbers: swap them
+    # TODO: [perf] do this byte-swapping thing in the perl script instead of the kernel
     i = i^8;
 
     # so now bit i in BLKBUF[blkgroup] is 0, so the free block number is:
@@ -168,7 +169,7 @@ var blktrunc = func(blknum, startat) {
     blkread(blknum, 0);
     nextblknum = blknext(0);
     blksetnext(0, 0);
-    blksetlen(shl(startat,1), 0);
+    blksetlen(startat, 0);
     blkwrite(blknum, 0);
 
     # 2. free all the remaining blocks
