@@ -1,7 +1,7 @@
 # Grow-able arrays
 #
-# The array doubles in size every time it needs to grow, such that n insertions
-# only incurs O(lg n) realloc()s.
+# TODO: [perf] provide some way to switch between exponential and geometric
+#       growth strategies
 #
 # gr[0] = number of elements
 # gr[1] = allocated space for elements
@@ -25,7 +25,7 @@ var grfree = func(gr) {
 var grpush = func(gr, el) {
     var n;
     if (gr[0] == gr[1]) { # need more space
-        n = gr[1] + gr[1]; # double the length
+        n = gr[1] + 32; # increase the length
         *(gr+2) = realloc(gr[2], n);
         *(gr+1) = n;
     };
