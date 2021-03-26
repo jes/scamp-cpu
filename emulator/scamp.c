@@ -351,7 +351,7 @@ void posedge(void) {
 }
 
 void help(void) {
-    printf("usage: scamp [-d]\n"
+    printf("usage: scamp [options]\n"
 "\n"
 "Options:\n"
 "  -c,--cycles        Print number of cycles taken\n"
