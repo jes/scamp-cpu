@@ -458,13 +458,13 @@ drawrow = func(row) {
     var ch;
     while (i != rowlen(row)) {
         ch = grget(row, i++);
-        if (iscntrl(ch)) {
-            addchar('^');
-            addchar(ch+'A');
-        } else if (ch == '\t') {
+        if (ch == '\t') {
             addchar(' ');
             while (rowbuf_col & (TABSTOP-1))
                 addchar(' ');
+        } else if (iscntrl(ch)) {
+            addchar('^');
+            addchar(ch+'A');
         } else {
             addchar(ch);
         };
