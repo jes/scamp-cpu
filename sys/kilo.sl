@@ -4,11 +4,11 @@
 # TODO: [bug] use less memory - currently can't open slangc.sl; stop using grarrs?
 # TODO: [perf] needs to be usable at 1 MHz
 # TODO: [perf] stop redrawing the entire screen on every change?
-# TODO: [perf] buffer writes?
 
 include "grarr.sl";
 include "stdio.sl";
 include "stdlib.sl";
+include "strbuf.sl";
 include "string.sl";
 include "sys.sl";
 
@@ -380,9 +380,16 @@ savefile = func() {
 
 ### OUTPUT
 
+var outbuf = sbnew();
+
+var flush = func() {
+    write(1, sbbase(outbuf), sblen(outbuf));
+    sbclear(outbuf);
+};
+
 writeesc = func(s) {
-    putchar(ESC);
-    puts(s);
+    sbputc(outbuf, ESC);
+    sbputs(outbuf, s);
 };
 
 refresh = func() {
@@ -392,19 +399,17 @@ refresh = func() {
     drawrows();
     drawstatus();
     drawstatusmsg();
-    printf("%c[%d;%dH", [ESC, cy-rowoff+1, rx-coloff+1]); # position cursor
+    sbprintf(outbuf, "%c[%d;%dH", [ESC, cy-rowoff+1, rx-coloff+1]); # position cursor
     writeesc("[?25h"); # show cursor
+    flush();
 };
 
-var rowbuf = malloc(COLS+1);
-var rowbuf_ptr;
 var rowbuf_col;
 drawrow = func(str) {
-    rowbuf_ptr = rowbuf;
     rowbuf_col = 0;
     var addchar = func(ch) {
         if (rowbuf_col >= coloff && rowbuf_col < coloff+COLS)
-            *(rowbuf_ptr++) = ch;
+            sbputc(outbuf, ch);
         rowbuf_col++;
     };
 
@@ -423,11 +428,6 @@ drawrow = func(str) {
             addchar(ch);
         };
     };
-
-    *rowbuf_ptr = 0;
-
-    var len = rowbuf_ptr - rowbuf;
-    if (len > 0) write(1, rowbuf, len);
 };
 
 drawrows = func() {
@@ -436,14 +436,14 @@ drawrows = func() {
     while (y < ROWS) {
         filerow = y + rowoff;
         if (filerow >= grlen(rows)) {
-            if (grlen(rows) == 0 && y == 8) puts(WELCOME)
-            else puts("~");
+            if (grlen(rows) == 0 && y == 8) sbputs(outbuf, WELCOME)
+            else sbputc(outbuf, '~');
         } else {
             drawrow(row2chars(grget(rows,filerow)));
         };
 
         writeesc("[K"); # clear to end of line
-        puts("\r\n");
+        sbputs(outbuf, "\r\n");
         y++;
     };
 };
@@ -464,18 +464,18 @@ drawstatus = func() {
 
     writeesc("[7m"); # inverse video
 
-    puts(status);
+    sbputs(outbuf, status);
     while (len < COLS) {
         if (COLS-len == rlen) {
-            puts(rstatus);
+            sbputs(outbuf, rstatus);
             break;
         } else {
-            putchar(' ');
+            sbputc(outbuf, ' ');
             len++;
         };
     };
     writeesc("[m"); # un-inverse video
-    puts("\r\n");
+    sbputs(outbuf, "\r\n");
 
     free(status);
     free(rstatus);
@@ -483,7 +483,7 @@ drawstatus = func() {
 
 drawstatusmsg = func() {
     writeesc("[K"); # clear line
-    if (statusmsg) puts(statusmsg);
+    if (statusmsg) sbputs(outbuf, statusmsg);
 };
 
 setstatusmsg = func(fmt, args) {
