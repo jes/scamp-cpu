@@ -147,6 +147,7 @@ var set_indirection = func(val,width) {
     if (width == 8) {
         asm_i8 = val & 0xff;
     } else if (width == 16) {
+        i16_identifier = 0;
         asm_i16 = val;
     } else {
         die("invalid indirection width: %d",[width]);
