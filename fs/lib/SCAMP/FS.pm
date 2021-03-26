@@ -231,7 +231,7 @@ sub getblk {
 
     my $c = '';
 
-    my $len = $self->blklen(@block);
+    my $len = $self->blklen(@block)*2;
     $c = join('', map { chr($_) } @block[4..4+$len-1]);
 
     my $next = $self->blknext(@block);
