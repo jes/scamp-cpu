@@ -3,7 +3,6 @@
 #
 # TODO: [bug] use less memory - currently can't open slangc.sl; stop using grarrs?
 # TODO: [perf] needs to be usable at 1 MHz
-# TODO: [perf] stop redrawing the entire screen on every change?
 
 include "grarr.sl";
 include "stdio.sl";
@@ -65,6 +64,12 @@ var rowappendstr;
 var rowdelchar;
 var freerow;
 var delrow;
+var rowdirty;
+var markrowdirty;
+var markbelowdirty;
+var markalldirty;
+var markallclean;
+var need_redraw = malloc(ROWS);
 
 ### editor operations
 
@@ -253,6 +258,38 @@ delrow = func(at) {
     dirty = 1;
 };
 
+rowdirty = func(at) {
+    var top = rowoff;
+    var bottom = rowoff+ROWS-1;
+    if (at < top || at > bottom) return 0;
+    return *(need_redraw+at-top);
+};
+
+markrowdirty = func(at) {
+    var top = rowoff;
+    var bottom = rowoff+ROWS-1;
+    if (at < top || at > bottom) return 0;
+    *(need_redraw+at-top) = 1;
+};
+
+markbelowdirty = func(at) {
+    var top = rowoff;
+    var bottom = rowoff+ROWS-1;
+    if (at < top || at > bottom) return 0;
+    while (at != bottom+1) {
+        *(need_redraw+at-top) = 1;
+        at++;
+    };
+};
+
+markalldirty = func() {
+    memset(need_redraw, 1, ROWS);
+};
+
+markallclean = func() {
+    memset(need_redraw, 0, ROWS);
+};
+
 ### EDITOR OPERATIONS
 
 insertchar = func(c) {
@@ -263,11 +300,14 @@ insertchar = func(c) {
         appendrow(gr);
     };
 
+    markrowdirty(cy);
     rowinsertchar(grget(rows,cy), cx, c);
     cx++;
 };
 
 insertnewline = func() {
+    markbelowdirty(cy);
+
     var gr = grnew();
     if (cx == 0) {
         grpush(gr, 0);
@@ -301,11 +341,13 @@ delchar = func() {
     if (cx == 0 && cy == 0) return 0;
     if (cy == grlen(rows)) return 0;
 
+
     var row;
     var row2;
     if (cx > 0) {
         row = grget(rows, cy);
         rowdelchar(row, cx-1);
+        markrowdirty(cy);
         cx--;
     } else {
         row = grget(rows,cy-1);
@@ -314,6 +356,7 @@ delchar = func() {
         rowappendstr(row, row2chars(row2));
         delrow(cy);
         cy--;
+        markbelowdirty(cy);
     };
 };
 
@@ -435,6 +478,8 @@ drawrow = func(str) {
             addchar(ch);
         };
     };
+
+    writeesc("[K"); # clear to end of line
 };
 
 drawrows = func() {
@@ -445,14 +490,15 @@ drawrows = func() {
         if (filerow >= grlen(rows)) {
             if (grlen(rows) == 0 && y == 8) sbputs(outbuf, WELCOME)
             else sbputc(outbuf, '~');
-        } else {
+            writeesc("[K"); # clear to end of line
+        } else if (rowdirty(filerow)) {
             drawrow(row2chars(grget(rows,filerow)));
         };
 
-        writeesc("[K"); # clear to end of line
         sbputs(outbuf, "\r\n");
         y++;
     };
+    markallclean();
 };
 
 drawstatus = func() {
@@ -502,10 +548,22 @@ scroll = func() {
     rx = 0;
     if (cy < grlen(rows)) rx = cx2rx(grget(rows, cy), cx);
 
-    if (rx < coloff) coloff = rx;
-    if (rx >= coloff + COLS) coloff = rx - COLS + 1;
-    if (cy < rowoff) rowoff = cy;
-    if (cy >= rowoff + ROWS) rowoff = cy - ROWS + 1;
+    if (rx < coloff) {
+        coloff = rx;
+        markalldirty();
+    };
+    if (rx >= coloff + COLS) {
+        coloff = rx - COLS + 1;
+        markalldirty();
+    };
+    if (cy < rowoff) {
+        rowoff = cy;
+        markalldirty();
+    };
+    if (cy >= rowoff + ROWS) {
+        rowoff = cy - ROWS + 1;
+        markalldirty();
+    };
 };
 
 ### INPUT
@@ -622,8 +680,7 @@ processkey = func() {
         if (c == DEL_KEY) move(ARROW_RIGHT);
         delchar();
     } else if (c == CTRL_KEY('l') || c == ESC) {
-        # TODO: [nice] in future, when we don't do a full redraw on every keypress, ctrl-l
-        #       should do a full redraw
+        markalldirty();
     } else {
         insertchar(c);
     };
@@ -633,6 +690,7 @@ processkey = func() {
 
 ### INIT
 
+markalldirty();
 rawmode();
 setstatusmsg("HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-Z = shell", 0);
 
