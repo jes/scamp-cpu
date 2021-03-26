@@ -65,3 +65,4 @@ put -t ../sys/reboot.sl /src/reboot.sl
 
 mkdir proc
 mkdir tmp
+mkdir home
