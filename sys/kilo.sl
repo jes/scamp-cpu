@@ -75,6 +75,7 @@ var need_redraw = malloc(ROWS);
 
 var insertchar;
 var insertnewline;
+var truncaterow;
 var delchar;
 
 # file i/o
@@ -327,6 +328,12 @@ insertnewline = func() {
 
     cy++;
     cx = 0;
+};
+
+truncaterow = func() {
+    var row = grget(rows, cy);
+    grtrunc(row, cx);
+    markrowdirty(cy);
 };
 
 delchar = func() {
@@ -652,7 +659,7 @@ processkey = func() {
     } else if (c == CTRL_KEY('h')) {
         # TODO: [nice] show a full help screen
     } else if (c == CTRL_KEY('k')) {
-        # TODO: [nice] delete from cursor to end of line
+        truncaterow();
     } else if (c == CTRL_KEY('z')) {
         unrawmode();
         if (dirty) puts("[No write since last change]\n");
@@ -691,7 +698,7 @@ processkey = func() {
 
 markalldirty();
 rawmode();
-setstatusmsg("HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-Z = shell", 0);
+setstatusmsg("HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-Z = shell | Ctrl-K = clreol", 0);
 
 var args = cmdargs()+1;
 if (*args) openfile(*args);
