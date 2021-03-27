@@ -118,7 +118,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
     while (p != top) {
         writesz = top-p;
         if (writesz gt 16384) writesz = 16384;
-        n = sys_write(ufd, 0x100, writesz);
+        n = sys_write(ufd, p, writesz);
         if (n < 0) throw(n);
         if (n != writesz) kpanic("system(): write() didn't write enough");
         p = p + writesz;
