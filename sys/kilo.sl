@@ -334,6 +334,7 @@ truncaterow = func() {
     var row = grget(rows, cy);
     grtrunc(row, cx);
     markrowdirty(cy);
+    dirty = 1;
 };
 
 delchar = func() {
