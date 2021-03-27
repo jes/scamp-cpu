@@ -6,6 +6,7 @@
 #       past 64K input words, the parse lib gets confused, I think?
 
 include "grarr.sl";
+include "hash.sl";
 include "stdlib.sl";
 include "stdio.sl";
 include "string.sl";
@@ -26,11 +27,11 @@ var code_filename;
 var code_fd;
 
 var lookup = func(name) {
-    return grfind(IDENTIFIERS, name, func(findname,tuple) { return strcmp(findname,car(tuple))==0; });
+    return htget(IDENTIFIERS, name);
 };
 
 var store = func(name,val) {
-    grpush(IDENTIFIERS, cons(name,val));
+    htput(IDENTIFIERS, name, val);
 };
 
 var add_unbound = func(name,addr) {
@@ -360,7 +361,7 @@ var resolve_unbounds = func() {
     close(fd);
 };
 
-IDENTIFIERS = grnew();
+IDENTIFIERS = htnew();
 UNBOUNDS = grnew();
 
 code_filename = strdup(tmpnam());

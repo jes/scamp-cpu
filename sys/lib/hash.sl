@@ -79,10 +79,8 @@ var hashstr = func(str) {
     var h = 0;
     var i = 0;
 
-    while (*str) {
-        h = shl(h, 1) + *str + i++ + 997;
-        str++;
-    };
+    while (*str)
+        h = h+h+h + *(str++) + i++ + 997;
 
     return h;
 };
@@ -100,8 +98,8 @@ var htfind = func(ht, key) {
     # linear probe to find a free slot
     var p = ht[2]+idx;
     var endp = ht[2]+htsize(ht);
-    while (p) {
-        if (strcmp(key, car(p)) == 0) break; # found
+    while (*p) {
+        if (strcmp(key, car(*p)) == 0) break; # found
         p++;
         if (p == endp) p = ht[2];
     };
