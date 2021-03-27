@@ -50,7 +50,7 @@ FILE *profile_fp;
 
 #define INPUT_BUFSZ 256
 
-int input_buffer[INPUT_BUFSZ];
+char input_buffer[INPUT_BUFSZ];
 int input_pos = 0;
 
 void load_hex(uint16_t *buf, int maxlen, char *name) {
@@ -186,8 +186,8 @@ uint8_t console_getchar() {
     ch = input_buffer[0];
 
     /* XXX: awful for performance, should use a ring buffer instead, but meh */
-    memmove(input_buffer, input_buffer+1, input_pos);
     input_pos--;
+    memmove(input_buffer, input_buffer+1, input_pos);
 
     return ch;
 }
