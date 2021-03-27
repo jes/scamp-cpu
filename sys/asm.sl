@@ -372,7 +372,22 @@ setbuf(1,malloc(257));
 setbuf(code_fd,malloc(257));
 
 fprintf(2, "1st pass...\n", 0);
-parse_init(getchar);
+var inbufsz = 1024;
+var inbuf = malloc(inbufsz);
+var inbuflen = 0;
+var inpos = 0;
+parse_init(func() {
+    var n;
+    if (inpos == inbuflen) {
+        n = read(0, inbuf, inbufsz);
+        if (n < 0) die("read stdin: %s", [strerror(n)]);
+        if (n == 0) return EOF;
+        inbuflen = n;
+        inpos = 0;
+    };
+
+    return inbuf[inpos++];
+});
 parse(Assembly,0);
 if (nextchar() != EOF) die("garbage after end",0);
 close(code_fd);
