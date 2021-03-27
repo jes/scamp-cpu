@@ -331,6 +331,8 @@ var resolve_unbounds = func() {
     var fd = open(code_filename, O_READ);
     if (fd < 0) die("open %s: %s", [code_filename, strerror(code_fd)]);
 
+    setbuf(fd, malloc(257));
+
     var n;
     var w;
     var pc = pc_start;
@@ -367,12 +369,14 @@ if (code_fd < 0) die("open %s: %s", [code_filename, strerror(code_fd)]);
 
 setbuf(0,malloc(257));
 setbuf(1,malloc(257));
+setbuf(code_fd,malloc(257));
 
+fprintf(2, "1st pass...\n", 0);
 parse_init(getchar);
 parse(Assembly,0);
-
 if (nextchar() != EOF) die("garbage after end",0);
-
 close(code_fd);
+
+fprintf(2, "2nd pass...\n", 0);
 resolve_unbounds();
 unlink(code_filename);
