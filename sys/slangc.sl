@@ -992,7 +992,8 @@ STRINGS = grnew();
 EXTERNS = grnew();
 GLOBALS = grnew();
 
-# use dedicated output buffer, for performance
+# use dedicated input/output buffers, for performance
+setbuf(0, malloc(257));
 setbuf(1, malloc(257));
 
 parse_init(getchar);
