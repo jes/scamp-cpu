@@ -190,10 +190,8 @@ var NotChar = func(ch) {
 var AnyChar = func(s) {
     var ch = nextchar();
     if (ch == EOF) return 0;
-    while (*s) {
-        if (ch == *s) return 1;
-        s++;
-    };
+    while (*s)
+        if (ch == *(s++)) return 1;
     return 0;
 };
 
@@ -201,18 +199,15 @@ var AnyChar = func(s) {
 var NotAnyChar = func(s) {
     var ch = nextchar();
     if (ch == EOF) return 0;
-    while (*s) {
-        if (ch == *s) return 0;
-        s++;
-    };
+    while (*s)
+        if (ch == *(s++)) return 0;
     return 1;
 };
 
 # accept precisely the string s
 var String = func(s) {
     while (*s)
-        if (nextchar() != *(s++))
-            return 0;
+        if (nextchar() != *(s++)) return 0;
     return 1;
 };
 
