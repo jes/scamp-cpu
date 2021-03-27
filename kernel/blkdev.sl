@@ -128,7 +128,7 @@ var blkfindfree = func() {
     # we now know that BLKBUF[blkgroup] != 0xffff, which means at least one of
     # the 16 bits is 0, corresponding to a free block
     var i = 0;
-    while (BLKBUF[blkgroup] & shl(1, i)) i++;
+    while (BLKBUF[blkgroup] & powers_of_2[i]) i++;
 
     # upper 8 bits refer to lower 8 block numbers: swap them
     # TODO: [perf] do this byte-swapping thing in the perl script instead of the kernel
@@ -155,8 +155,8 @@ var blksetused = func(blk, used) {
     i = i^8;
 
     blkread(SKIP_BLOCKS + bitmapblk, 0);
-    if (used) *(BLKBUF+blkgroup) = BLKBUF[blkgroup] |  shl(1,i)
-    else      *(BLKBUF+blkgroup) = BLKBUF[blkgroup] & ~shl(1,i);
+    if (used) *(BLKBUF+blkgroup) = BLKBUF[blkgroup] |  powers_of_2[i]
+    else      *(BLKBUF+blkgroup) = BLKBUF[blkgroup] & ~powers_of_2[i];
     blkwrite(SKIP_BLOCKS + bitmapblk, 0);
 };
 
