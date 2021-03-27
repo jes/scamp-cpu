@@ -355,6 +355,13 @@ delchar = func() {
 
 openfile = func(filename) {
     var fd = open(filename, O_READ);
+    if (fd == NOTFOUND) {
+        # filename doesn't exist yet
+        if (openfilename) free(openfilename);
+        openfilename = strdup(filename);
+        dirty = 1;
+        return 0;
+    };
     if (fd < 0) die("open %s: %s", [filename, strerror(fd)]);
 
     var row = grnew();
