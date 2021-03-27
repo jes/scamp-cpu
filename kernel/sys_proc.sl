@@ -112,10 +112,18 @@ var sys_system_impl  = func(top, args, sp, ret) {
     if (ufd < 0) throw(ufd);
 
     # copy bytes from 0x100..top
-    var n = sys_write(ufd, 0x100, top-0x100);
+    var p = 0x100;
+    var n;
+    var writesz;
+    while (p != top) {
+        writesz = top-p;
+        if (writesz gt 16384) writesz = 16384;
+        n = sys_write(ufd, 0x100, writesz);
+        if (n < 0) throw(n);
+        if (n != writesz) kpanic("system(): write() didn't write enough");
+        p = p + writesz;
+    };
     sys_close(ufd);
-    if (n < 0) throw(n);
-    if (n != top-0x100) kpanic("system(): write() didn't write enough");
 
     # open "/proc/$pid.kernel" for writing
     var kfd = sys_open(kernelfile, O_WRITE|O_CREAT|O_KERNELFD);
