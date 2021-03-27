@@ -28,15 +28,10 @@ var fs_read = func(fd, buf, sz) {
         blkread(blknum, blkbuf);
 
         remain = blklen(blkbuf) - posinblk;
-        if (remain == 0) {
-            break; # EOF
-        } else if (remain le sz) {
-            # consume the entire block
-            read = remain;
-        } else {
-            # don't consume the entire block
-            read = sz;
-        };
+
+        if (remain == 0) break # EOF
+        else if (sz lt remain) read = sz
+        else                   read = remain;
 
         # copy data to user buffer
         # "posinblk+2" skips over the block header
@@ -81,7 +76,7 @@ var fs_write = func(fd, buf, sz) {
 
         # how much can we write into this block?
         if (sz lt remain) write = sz
-        else             write = remain;
+        else              write = remain;
 
         # do we need to update the block length?
         if (posinblk+write gt blklen(blkbuf)) blksetlen(posinblk+write, blkbuf);
