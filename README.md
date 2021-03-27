@@ -51,7 +51,7 @@ Other work includes:
  - [x] write the bootloader ROM (mostly done: see `bootrom.s`)
  - [x] write the "kernel" (mostly done: see `kernel/`)
  - [x] write a compiler
- - [ ] write system utilities (WIP: see `sys/`)
+ - [x] write system utilities (mostly done: see `sys/`)
  - [x] write an editor (mostly done: see `sys/kilo.sl`)
  - [ ] make it self-host
 
