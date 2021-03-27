@@ -217,8 +217,12 @@ var atoibase = func(s, base) {
         neg = 1;
         s++;
     };
-    while (isdigit(*s)) {
-        v = mul(v, base) + stridx(itoa_alphabet, tolower(*s));
+    var n;
+    while (*s) {
+        n = stridx(itoa_alphabet, tolower(*s));
+        if (n == 0 && *s != *itoa_alphabet) break; # digit doesn't exist
+        if (n >= base) break; # digit out of range for base
+        v = mul(v, base) + n;
         s++;
     };
     if (neg) v = -v;
