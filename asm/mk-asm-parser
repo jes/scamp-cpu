@@ -63,34 +63,34 @@ sub mkargparser {
         if ($bit =~ /i8l|i8h|i16|\(i8h\)|\(i16\)|\(\d+\)/) {
             if ($str) {
                 if (length($str) == 1) {
-                    $src .= "    if (!parse(Char,'$str')) return 0;\n";
+                    $src .= "    if (!Char('$str')) return 0;\n";
                 } else {
-                    $src .= "    if (!parse(String,\"$str\")) return 0;\n";
+                    $src .= "    if (!String(\"$str\")) return 0;\n";
                 }
                 $str = '';
             }
 
             if ($bit eq 'i8l') {
                 $i8 = 1;
-                $src .= "    if (!parse(I8l,0)) return 0;\n";
+                $src .= "    if (!I8l(0)) return 0;\n";
             } elsif ($bit eq 'i8h') {
                 $i8 = 1;
-                $src .= "    if (!parse(I8h,0)) return 0;\n";
+                $src .= "    if (!I8h(0)) return 0;\n";
             } elsif ($bit eq 'i16') {
                 $i16 = 1;
-                $src .= "    if (!parse(I16,0)) return 0;\n";
+                $src .= "    if (!I16(0)) return 0;\n";
             } elsif ($bit eq '(i8h)') {
                 $i8 = 1;
-                $src .= "    if (!parse(Indirection,8)) return 0;\n";
+                $src .= "    if (!Indirection(8)) return 0;\n";
             } elsif ($bit eq '(i16)') {
                 $i16 = 1;
-                $src .= "    if (!parse(Indirection,16)) return 0;\n";
+                $src .= "    if (!Indirection(16)) return 0;\n";
             } elsif ($bit =~ /^\(\d+\)$/) {
                 # indirection on a constant - abuse Indirection(16)
                 $bit =~ /(\d+)/;
                 my $val = $1;
                 $src .= "    var asm_i16_bak = asm_i16;\n";
-                $src .= "    if (!parse(Indirection,16)) return 0;\n";
+                $src .= "    if (!Indirection(16)) return 0;\n";
                 $src .= "    if (i16_identifier || asm_i16 != $val) return 0;\n";
                 $src .= "    asm_i16 = asm_i16_bak;\n";
             } else {
@@ -101,10 +101,10 @@ sub mkargparser {
         }
     }
     if ($str) {
-        $src .= "    if (!parse(String,\"$str\")) return 0;\n";
+        $src .= "    if (!String(\"$str\")) return 0;\n";
     }
 
-    $src .= "    if (!parse(Endline,0)) return 0;\n";
+    $src .= "    if (!Endline(0)) return 0;\n";
     $src .= "    skip();\n";
 
     if ($i8) {
