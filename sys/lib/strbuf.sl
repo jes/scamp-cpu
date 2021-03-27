@@ -4,7 +4,10 @@ include "grarr.sl";
 
 var sbnew = grnew;
 var sbfree = grfree;
-var sbbase = grbase;
+var sbbase = func(sb) {
+    grpush(sb,0); grpop(sb); # make sure string is nul-terminated
+    return grbase(sb);
+};
 var sblen = grlen;
 var sbputc = grpush;
 var sbclear = func(sb) {
