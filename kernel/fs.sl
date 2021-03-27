@@ -30,7 +30,7 @@ var fs_read = func(fd, buf, sz) {
         remain = blklen(blkbuf) - posinblk;
         if (remain == 0) {
             break; # EOF
-        } else if (remain <= sz) {
+        } else if (remain le sz) {
             # consume the entire block
             read = remain;
         } else {
@@ -80,11 +80,11 @@ var fs_write = func(fd, buf, sz) {
         remain = (BLKSZ-2)-posinblk;
 
         # how much can we write into this block?
-        if (sz < remain) write = sz
+        if (sz lt remain) write = sz
         else             write = remain;
 
         # do we need to update the block length?
-        if (posinblk+write > blklen(blkbuf)) blksetlen(posinblk+write, blkbuf);
+        if (posinblk+write gt blklen(blkbuf)) blksetlen(posinblk+write, blkbuf);
 
         # do we need to move to the next block?
         if (posinblk+write == BLKSZ-2) {
@@ -99,7 +99,7 @@ var fs_write = func(fd, buf, sz) {
         # write block to disk
         if (blkbuf == BLKBUF) blkwrite(blknum, blkbuf);
 
-        if (sz > write && nextblknum == blknum) kpanic("write: nextblknum == blknum");
+        if (sz gt write && nextblknum == blknum) kpanic("write: nextblknum == blknum");
 
         # if we allocated a new block, initialise its header and refresh "nextfreeblk"
         if (nextblknum == nextfreeblk) {

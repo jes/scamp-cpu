@@ -75,8 +75,7 @@ var memcpy = asm {
     ld r0, x # return
 
     test r1
-    jnz memcpy_loop
-    ret
+    jz memcpy_ret
 
     memcpy_loop:
         ld x, (r2++)
