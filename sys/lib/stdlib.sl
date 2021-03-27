@@ -210,17 +210,21 @@ var stridx = func(alphabet, ch) {
     return 0;
 };
 
-# TODO: [nice] negative values?
 var atoibase = func(s, base) {
     var v = 0;
-    while (*s) {
+    var neg = 0;
+    if (*s == '-') {
+        neg = 1;
+        s++;
+    };
+    while (isdigit(*s)) {
         v = mul(v, base) + stridx(itoa_alphabet, tolower(*s));
         s++;
     };
+    if (neg) v = -v;
     return v;
 };
 
-# TODO: [nice] negative values?
 var atoi = func(s) return atoibase(s, 10);
 
 # usage: inp(addr)
