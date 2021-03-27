@@ -187,13 +187,43 @@ var NotChar = func(ch) {
 };
 
 # accept any character from s
-var AnyChar = func(s) {
-    var ch = nextchar();
-    if (ch == EOF) return 0;
-    while (*s)
-        if (ch == *(s++)) return 1;
-    return 0;
+#var slang_AnyChar = func(s) {
+#    var ch = nextchar();
+#    if (ch == EOF) return 0;
+#    while (*s)
+#        if (ch == *(s++)) return 1;
+#    return 0;
+#};
+var asm_AnyChar = asm {
+    ld x, r254
+    push x
+    call (_nextchar) # r0 is the character of input
+    pop x
+    ld r254, x
+
+    pop x
+    ld r1, x # r1 is string pointer
+
+    test r0
+    jlt AnyChar_ret0 # EOF?
+
+    AnyChar_loop:
+        ld x, (r1) # x is current character from string
+        test x
+        jz AnyChar_ret0 # end of string?
+        sub x, r0
+        jz AnyChar_ret1 # matched the character?
+        inc r1
+        jmp AnyChar_loop
+
+    AnyChar_ret0:
+    ld r0, 0
+    ret
+    AnyChar_ret1:
+    ld r0, 1
+    ret
 };
+var AnyChar = asm_AnyChar;
 
 # accept any character not from s
 var NotAnyChar = func(s) {
@@ -205,11 +235,43 @@ var NotAnyChar = func(s) {
 };
 
 # accept precisely the string s
-var String = func(s) {
-    while (*s)
-        if (nextchar() != *(s++)) return 0;
-    return 1;
+#var slang_String = func(s) {
+#    while (*s)
+#        if (nextchar() != *(s++)) return 0;
+#    return 1;
+#};
+var asm_String = asm {
+    ld x, r254
+    ld (String_ret), x
+
+    pop x
+    ld (String_str), x # String_str is string pointer
+
+    String_loop:
+        ld x, ((String_str)) # x is current character from string
+        test x
+        jz String_ret1 # end of string?
+
+        push x
+        call (_nextchar) # r0 is next character of input
+        pop x
+        sub x, r0
+        jnz String_ret0 # didn't match the character?
+        inc (String_str)
+        jmp String_loop
+
+    String_ret0:
+    ld r0, 0
+    jmp (String_ret)
+    String_ret1:
+    ld r0, 1
+    jmp (String_ret)
+
+    String_ret: .word 0
+    String_str: .word 0
 };
+var String = asm_String;
+
 
 # skip over whitespace and comments
 var skip = func() {
