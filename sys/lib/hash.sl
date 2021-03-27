@@ -115,9 +115,9 @@ var htget = func(ht, key) {
 
 # "key" is a string
 htput = func(ht, key, val) {
-    # create more space if more than 50% used
+    # create more space if almost full
     var used = htused(ht);
-    if (used+used > htsize(ht))
+    if (used+8 > htsize(ht))
         htgrow(ht);
 
     var p = htfind(ht, key);

@@ -189,6 +189,7 @@ var Def = func(x) {
     skip();
     if (!parse(Constant,0)) die(".def needs constant",0);
     store(name,asm_constant);
+    free(name);
     return 1;
 };
 
@@ -269,8 +270,7 @@ var Label = func(x) {
     skip();
     if (!parse(CharSkip,':')) return 0;
 
-    var label = strdup(IDENTIFIER);
-    store(label, asm_pc);
+    store(IDENTIFIER, asm_pc);
     return 1;
 };
 
