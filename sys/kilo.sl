@@ -666,6 +666,7 @@ processkey = func() {
         if (dirty) puts("[No write since last change]\n");
         system(["/bin/sh"]);
         rawmode();
+        markalldirty();
     } else if (c == PAGE_UP) {
         cy = rowoff;
         n = ROWS;
