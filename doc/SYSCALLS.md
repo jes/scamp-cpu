@@ -66,6 +66,9 @@ if the path is too long to fit in `buf` with a trailing 0.
 
 Write multiple characters to the given file descriptor.
 
+Avoid writes larger than 2^15-1 because the return value will be indistinguishable
+from an error value.
+
 ### 0xfefa: setbuf(fd, buf)
 
     Return: 0, or -ERR on error
@@ -87,6 +90,9 @@ Read multiple characters from the given file descriptor.
 If `sz` is 0, returns a number of characters that can be read immediately. For a serial port,
 this means you can read this many characters without blocking. For a file, it means there are at
 least this many characters left in the file.
+
+Avoid reads larger than 2^15-1 because the return value will be indistinguishable
+from an error value.
 
 ### 0xfef8: open(name, mode)
 
