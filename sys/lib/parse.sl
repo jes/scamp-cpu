@@ -103,14 +103,44 @@ var asm_parse = asm {
 var parse = asm_parse;
 
 # look at the next input char without advancing the cursor
-var peekchar = func() {
-    var lookpos = pos&0xff; # 0xff == ringbufsz-1
-    if (lookpos == readpos) {
-        *(ringbuf+readpos) = parse_getchar();
-        readpos = (readpos+1)&0xff; # 0xff == ringbufsz-1
-    };
-    return ringbuf[lookpos];
+#var slang_peekchar = func() {
+#    var lookpos = pos&0xff; # 0xff == ringbufsz-1
+#    if (lookpos == readpos) {
+#        *(ringbuf+readpos) = parse_getchar();
+#        readpos = (readpos+1)&0xff; # 0xff == ringbufsz-1
+#    };
+#    return ringbuf[lookpos];
+#};
+var asm_peekchar = asm {
+    ld r0, (_pos)
+    and r0, 0xff # 0xff == ringbufsz-1
+    ld (peekchar_lookpos), r0
+    sub r0, (_readpos)
+    jnz peekchar_good
+
+    ld x, r254
+    push x
+    call (_parse_getchar)
+    pop x
+    ld r254, x
+    ld r1, (_ringbuf)
+    ld r2, (_readpos)
+    add r1, r2
+    ld x, r0
+    ld (r1), x
+    inc r2
+    and r2, 0xff # 0xff == ringbufsz-1
+    ld (_readpos), r2
+
+    peekchar_good:
+    ld x, (_ringbuf)
+    add x, (peekchar_lookpos)
+    ld r0, (x)
+    ret
+
+    peekchar_lookpos: .word 0
 };
+var peekchar = asm_peekchar;
 
 #var slang_nextchar = func() {
 #    var ch = peekchar();
