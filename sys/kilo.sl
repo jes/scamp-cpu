@@ -93,6 +93,7 @@ var setstatusmsg;
 var scroll;
 
 # input
+var prompt_cursor = -1;
 var prompt;
 var move;
 var processkey;
@@ -399,7 +400,7 @@ openfile = func(filename) {
 };
 
 savefile = func() {
-    if (!openfilename) openfilename = prompt("Save as: %s (ESC to cancel)");
+    if (!openfilename) openfilename = prompt("Save as: ", " (ESC to cancel)");
     if (!openfilename) {
         setstatusmsg("Save aborted", 0);
         return 0;
@@ -452,7 +453,10 @@ refresh = func() {
     drawrows();
     drawstatus();
     drawstatusmsg();
-    sbprintf(outbuf, "%c[%d;%dH", [ESC, cy-rowoff+1, rx-coloff+1]); # position cursor
+    if (prompt_cursor == -1)
+        sbprintf(outbuf, "%c[%d;%dH", [ESC, cy-rowoff+1, rx-coloff+1]) # position cursor
+    else
+        sbprintf(outbuf, "%c[%d;%dH", [ESC, ROWS+2, prompt_cursor]); # position cursor
     writeesc("[?25h"); # show cursor
     flush();
 };
@@ -574,16 +578,17 @@ scroll = func() {
 
 ### INPUT
 
-prompt = func(msg) {
+prompt = func(beforemsg, aftermsg) {
     var c;
     var gr = grnew();
-    var s;
+    var result = 0;
 
     while (1) {
         grpush(gr, 0);
-        setstatusmsg(msg, [grbase(gr)]);
+        setstatusmsg("%s%s%s", [beforemsg, grbase(gr), aftermsg]);
         grpop(gr);
 
+        prompt_cursor = strlen(beforemsg) + grlen(gr) + 1;
         refresh();
         c = readkey();
         if (c == DEL_KEY || c == CTRL_KEY('h') || c == BACKSPACE) {
@@ -591,19 +596,22 @@ prompt = func(msg) {
         } else if (c == ESC) {
             setstatusmsg("", 0);
             grfree(gr);
-            return 0;
+            break;
         } else if (c == '\r') {
             if (grlen(gr)) {
                 setstatusmsg("", 0);
                 grpush(gr, 0);
-                s = strdup(grbase(gr));
+                result = strdup(grbase(gr));
                 grfree(gr);
-                return s;
+                break;
             };
         } else if (!iscntrl(c) && c < 128) {
             grpush(gr, c);
         };
     };
+
+    prompt_cursor = -1;
+    return result;
 };
 
 move = func(k) {
