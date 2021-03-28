@@ -8,7 +8,8 @@ Example:
     # write(1, "foo", 3);
     .def sys_write 0xfefb
     push 1
-    push foo_s
+    ld x, foo_s
+    push x
     push 3
     call (sys_write)
     # ...
