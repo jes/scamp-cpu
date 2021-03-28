@@ -1,4 +1,4 @@
-# set divisor latches to select 115200 baud
+# 8250 UART test
 
 .def REG0 0
 .def REG1 1
