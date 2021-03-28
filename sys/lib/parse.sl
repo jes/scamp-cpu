@@ -8,19 +8,26 @@ var pos;
 var readpos;
 var line;
 var parse_getchar;
+var parse_filename;
 
 var ringbufsz = 256; # check the "too much backtrack" test, and peekchar(), before changing this
 var ringbuf = malloc(ringbufsz);
 
 var die = func(fmt, args) {
-    fprintf(2, "error: line %d: ", [line]);
+    fprintf(2, "error: ", 0);
+    if (parse_filename)
+        fprintf(2, "%s: ", [parse_filename]);
+    fprintf(2, "line %d: ", [line]);
     fprintf(2, fmt, args);
     fputc(2, '\n');
     exit(1);
 };
 
 var warn = func(fmt, args) {
-    fprintf(2, "warning: line %d: ", [line]);
+    fprintf(2, "warning: ", 0);
+    if (parse_filename)
+        fprintf(2, "%s: ", [parse_filename]);
+    fprintf(2, "line %d: ", [line]);
     fprintf(2, fmt, args);
     fputc(2, '\n');
 };
@@ -31,6 +38,7 @@ var parse_init = func(getchar_func) {
     readpos = 0;
     line = 1;
     parse_getchar = getchar_func;
+    parse_filename = 0;
 };
 
 # call a parsing function and return whatever it returned

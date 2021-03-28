@@ -363,8 +363,6 @@ Include = func(x) {
     if (!parse(Char,'"')) return 0;
     var file = StringLiteralText();
 
-    # TODO: [nice] show filename in error messages
-
     # don't include the same file twice
     if (grfind(INCLUDED, file, func(a,b) { return strcmp(a,b)==0 })) return 1;
     grpush(INCLUDED, strdup(file));
@@ -374,6 +372,7 @@ Include = func(x) {
     var readpos0 = readpos;
     var line0 = line;
     var parse_getchar0 = parse_getchar;
+    var parse_filename0 = parse_filename;
     var include_fd0 = include_fd;
     var ringbuf0 = malloc(ringbufsz);
     memcpy(ringbuf0, ringbuf, ringbufsz);
@@ -395,6 +394,7 @@ Include = func(x) {
         if (ch < 0) return EOF; # collapse all types of error to "EOF"
         return ch;
     });
+    parse_filename = strdup(file);
 
     # parse the included file
     if (!parse(Program,0)) die("expected statements",0);
@@ -406,6 +406,8 @@ Include = func(x) {
     readpos = readpos0;
     line = line0;
     parse_getchar = parse_getchar0;
+    free(parse_filename);
+    parse_filename = parse_filename0;
     include_fd = include_fd0;
     memcpy(ringbuf, ringbuf0, ringbufsz);
     free(ringbuf0);
