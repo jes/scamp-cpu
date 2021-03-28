@@ -18,6 +18,9 @@ solution is to create a blob that contains the generated executable code for the
 library functions, and just include this blob instead of re-compiling the libraries
 every time.
 
+Turning library code into a static pre-compiled blob was the biggest contributor to
+reducing compilation time of "Hello, world" from 27 minutes to 2 minutes at 1 MHz.
+
 ## Creating `lib.o`
 
 See `sys/make-lib` for the script that creates `lib.o`. In short:
