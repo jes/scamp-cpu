@@ -27,28 +27,25 @@ Levels of indirection:
  * 2 trip through RAM with pre-/post- increment/decrement of pointer
  * 2 trip through RAM with pre-/post- increment/decrement of value
 
-We could consider "hiding" the Y register, so that it can always be clobbered without needing
+I wanted to "hide" the Y register, so that it can always be clobbered without needing
 an excuse. And then the opcode space saved by removing instructions that store to Y can for
-example be used for instructions that instead fetch indirect values into Y. It would probably
-be worth writing some simple-ish programs in the instruction set as defined here and seeing if
-there are any obvious candidates for creating instructions that do the job of 2 at once.
+example be used for instructions that instead fetch indirect values into Y. Unfortunately,
+the implementation of the `xor` instruction only fits within 8 cycles if the operands are the
+X and Y registers. That means we also need instructions to load the Y register, and need to
+document what clobbers it. It's a bit inelegant, but mostly fine. Most code is written as if
+the Y register did not exist.
 
-Even if we don't hide "Y", it should be a point of philosophy that instructions will clobber the
+It is a point of philosophy in writing the microcode that instructions will clobber the
 Y register in preference to the X register where there is a free choice.
 
-Apart from instructions that do specifically require an i8h, we should flesh out the instruction
-set with all immediate values as i16, and then add optimised versions later for common
-operations.
-
-We could consider the i8h addresses to be "registers", and make a "r0" .. "r255" syntax for
-addressing them. So then instead of "add x, (0xff00)", you'd be able to write "add x, r0" and
-it all becomes much easier to read. It also clarifies the difference between the (i16) and (i8h)
-addressing modes, and we could potentially make the assembler warn if you use a (i16) that is in
-the top page.
+We can consider the `i8h` addresses (0xff00 .. 0xffff) to be pseudo-registers, and make "r0" .. "r255" syntax for
+addressing them. So instead of "add x, (0xff00)", you can write "add x, r0" and
+it all becomes much easier to read. Where the same instruction syntax exists with both an
+`(i8h)` and `(i16)` argument, the assembler should (normally?) pick the `i8h` version where possible.
 
 ## Instruction table
 
-The instruction set is documented in table.html.
+The instruction set is documented in `doc/table.html`.
 
 It might be nice to add the hex representation of the microcode.
 
@@ -153,6 +150,8 @@ Creates a 256-byte buffer at address 0x200, with the label "buffer".
 Generate the given string, with 1 character per word (i.e. the upper 8 bits of each value is
 always zeroes).
 
+This is not implemented in ASM-in-SLANG, simply because `slangc` does not use it.
+
 Example:
 
     msg: .str "Hello, world!\n"
@@ -166,6 +165,17 @@ Example:
     value: .word 0x1010
 
 Will generate a word containing 0x1010, whose address will be available in the "value" label.
+
+### .blob FILE
+
+Load raw binary data from `FILE`. This directive is only implemented in the ASM-in-SLANG
+assembler, not in the Perl version. Not for any particular reason, other than that the only
+use for it is to support a primitive form of "linking" to reduce compile times by pre-compiling
+the libraries into a blob.
+
+Example:
+
+    .blob /lib/lib.o
 
 ## Labels
 
