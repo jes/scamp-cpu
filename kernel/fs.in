@@ -74,6 +74,8 @@ put -t ../sys/lib/string.sl /src/lib/string.sl
 put -t ../sys/lib/sys.sl /src/lib/sys.sl
 put -t ../sys/lib/xprintf.sl /src/lib/xprintf.sl
 put -t ../sys/lib/glob.sl /src/lib/glob.sl
+put -t ../sys/lib/hash.sl /src/lib/hash.sl
+put -t ../sys/lib/bigint.sl /src/lib/bigint.sl
 
 mkdir proc
 mkdir tmp
