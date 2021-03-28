@@ -1,0 +1,15 @@
+#!/bin/sh
+
+LIBS="grarr.sl malloc.sl parse.sl stdio.sl stdlib.sl string.sl sys.sl xprintf.sl"
+
+for f in $LIBS;
+do
+    echo "include\"$f\";"
+done > lib.sl
+
+../compiler/slangc lib.sl > lib.s.build
+cat lib/libhead.s lib.s.build | ../asm/asm --asm-header lib.s.tmp --slang-header lib.h > lib.hex.tmp
+cat lib.s.head lib.s.tmp > lib.s
+../util/hex2bin lib.hex.tmp > lib.o.tmp
+mv lib.o.tmp lib.o
+cat lib/libhead.s lib.s.build | ../asm/asm -v > lib.anhex

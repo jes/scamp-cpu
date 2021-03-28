@@ -10,9 +10,13 @@ use JSON qw(decode_json);
 use FindBin;
 
 my $verbose = 0;
+my $asm_header;
+my $slang_header;
 
 GetOptions(
     'v|verbose' => \$verbose,
+    'asm-header=s' => \$asm_header,
+    'slang-header=s' => \$slang_header,
     'h|help' => sub { help(0) },
 ) or help(1);
 
@@ -181,6 +185,27 @@ for my $c (@code) {
     $chars_on_line += 5;
 }
 
+# now create the asm header file, if any
+if ($asm_header) {
+    open(my $fh, '>', $asm_header)
+        or die "can't write $asm_header: $!\n";
+    for my $l (sort keys %label) {
+        print $fh ".def $l " . sprintf("0x%04x", $label{$l}) . "\n" if $l =~ /^_/;
+    }
+    close $fh;
+}
+
+# now create the slang header file, if any
+if ($slang_header) {
+    open(my $fh, '>', $slang_header)
+        or die "can't write $slang_header: $!\n";
+    for my $l (sort keys %label) {
+        (my $slang_l = $l) =~ s/^_//;
+        print $fh "extern $slang_l;\n" if $l =~ /^_/;
+    }
+    close $fh;
+}
+
 # examples:
 # x => die
 # (x) => die
@@ -274,6 +299,8 @@ Usage: asm [-v] < source.s > binary.hex
 Options:
 
     -h,--help       Show this help.
+    --asm-header FILE   Write asm label values beginning with underscore into FILE.
+    --slang-header FILE   Write SLANG names beginning with underscore into FILE.
     -v,--verbose    Annotate the generated hex with the source.
 };
     exit($rc);

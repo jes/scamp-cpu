@@ -3,14 +3,13 @@ BINS = cat.bin init.bin ls.bin mkdir.bin sh.bin pwd.bin echo.bin stat.bin rm.bin
 
 .PHONY: all test clean
 
-all: $(BINS)
+all: $(BINS) lib.o
 
 .PRECIOUS: %.bin
 %.bin: %.hex %.anhex
 	../util/hex2bin $*.hex > $*.bin.tmp
 	mv $*.bin.tmp $*.bin
 
-.PRECIOUS: %.hex
 %.hex: lib/head.s %.opt.s lib/foot.s
 	cat lib/head.s $*.opt.s lib/foot.s | ../asm/asm > $*.hex.tmp
 	mv $*.hex.tmp $*.hex
@@ -20,23 +19,16 @@ all: $(BINS)
 	cat lib/head.s $*.opt.s lib/foot.s | ../asm/asm -v > $*.anhex.tmp
 	mv $*.anhex.tmp $*.anhex
 
-.PRECIOUS: %.opt.s
 %.opt.s: %.s
 	../compiler/peepopt $*.s | ../compiler/peepopt > $*.opt.s.tmp
 	mv $*.opt.s.tmp $*.opt.s
 
-.PRECIOUS: %.s
 %.s: %.sl $(LIBS)
 	../compiler/slangc $*.sl > $*.s.tmp
 	mv $*.s.tmp $*.s
 
-.PRECIOUS: lib.o
 lib.o: $(LIBS)
-	../compiler/slangc lib/lib.sl > lib.s
-	cat lib/libhead.s lib.s | ../asm/asm > lib.hex.tmp
-	../util/hex2bin lib.hex.tmp > lib.o.tmp
-	mv lib.o.tmp lib.o
-	cat lib/libhead.s lib.s | ../asm/asm -v > lib.anhex
+	./make-lib
 
 clean:
-	rm -f *.bin *.hex *.anhex *.s *.tmp
+	rm -f *.bin *.hex *.anhex *.s *.tmp lib.o lib.s.build lib.h

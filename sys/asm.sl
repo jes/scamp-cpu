@@ -265,6 +265,46 @@ var Word = func(x) {
     return 1;
 };
 
+var emitblob = func(name) {
+    var fd = open(name, O_READ);
+    if (fd < 0) die("open %s: %s", [name, strerror(fd)]);
+
+    var bufsz = 128;
+    var buf = malloc(bufsz);
+    var n;
+    var p;
+    while (1) {
+        n = read(fd, buf, bufsz);
+        if (n == 0) break;
+        if (n < 0) die("read %s: %s", [name, strerror(fd)]);
+        p = buf;
+        while (n--)
+            emit(*(p++));
+    };
+
+    free(buf);
+};
+
+var Blob = func(x) {
+    if (!parse(String,".blob")) return 0;
+    skip();
+
+    if (parse(AnyChar," \t\r\n")) return 0;
+    *IDENTIFIER = nextchar();
+    var i = 1;
+    while (i < maxidentifier) {
+        if (parse(AnyChar," \t\r\n")) {
+            *(IDENTIFIER+i) = 0;
+            emitblob(IDENTIFIER);
+            skip();
+            return 1;
+        };
+        *(IDENTIFIER+i) = nextchar();
+        i++;
+    };
+    die("blob name too long",0);
+};
+
 var Label = func(x) {
     if (!parse(Identifier,0)) return 0;
     skip();
@@ -283,6 +323,7 @@ var Assembly = func(x) {
         if (parse(Gap,0)) continue;
         if (parse(Str,0)) continue;
         if (parse(Word,0)) continue;
+        if (parse(Blob,0)) continue;
         if (parse(Label,0)) continue;
         if (parse(Instr,0)) continue;
 

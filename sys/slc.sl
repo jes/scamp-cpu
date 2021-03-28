@@ -45,11 +45,11 @@ rc = system(["/bin/slangc"]);
 if (rc != 0) exit(rc);
 unredirect(1, prev_out);
 
-# cat "/lib/head.s /tmp/1.s /lib/foot.s" into "/tmp/2.s"
+# cat "/lib/head.s /lib/lib.s /tmp/1.s /lib/foot.s" into "/tmp/2.s"
 fprintf(2, "cat...\n", 0);
 prev_out = redirect(1, "/tmp/2.s", O_WRITE|O_CREAT);
 var prev_in = redirect(0, "/tmp/1.s", O_READ);
-rc = system(["/bin/cat", "/lib/head.s", "/tmp/1.s", "/lib/foot.s"]);
+rc = system(["/bin/cat", "/lib/head.s", "/lib/lib.s", "/tmp/1.s", "/lib/foot.s"]);
 if (rc != 0) exit(rc);
 unredirect(1, prev_out);
 unredirect(0, prev_in);

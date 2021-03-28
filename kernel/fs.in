@@ -26,18 +26,19 @@ put ../sys/kilo.bin /bin/kilo
 put ../sys/reboot.bin /bin/reboot
 
 mkdir lib
+put ../sys/lib.o /lib/lib.o
+put -t ../sys/lib.s /lib/lib.s
+put -t ../sys/lib.h /lib/lib.h
 put -t ../sys/lib/head.s /lib/head.s
 put -t ../sys/lib/foot.s /lib/foot.s
-put -t ../sys/lib/grarr.sl /lib/grarr.sl
-put -t ../sys/lib/list.sl /lib/list.sl
-put -t ../sys/lib/malloc.sl /lib/malloc.sl
-put -t ../sys/lib/parse.sl /lib/parse.sl
-put -t ../sys/lib/stdio.sl /lib/stdio.sl
-put -t ../sys/lib/stdlib.sl /lib/stdlib.sl
-put -t ../sys/lib/string.sl /lib/string.sl
-put -t ../sys/lib/sys.sl /lib/sys.sl
-put -t ../sys/lib/xprintf.sl /lib/xprintf.sl
-put -t ../sys/lib/glob.sl /lib/glob.sl
+put -t ../sys/include-lib.h /lib/grarr.sl
+put -t ../sys/include-lib.h /lib/malloc.sl
+put -t ../sys/include-lib.h /lib/parse.sl
+put -t ../sys/include-lib.h /lib/stdio.sl
+put -t ../sys/include-lib.h /lib/stdlib.sl
+put -t ../sys/include-lib.h /lib/string.sl
+put -t ../sys/include-lib.h /lib/sys.sl
+put -t ../sys/include-lib.h /lib/xprintf.sl
 
 mkdir src
 put -t ../sys/cat.sl /src/cat.sl
@@ -52,7 +53,6 @@ put -t ../sys/slangc.sl /src/slangc.sl
 put -t ../sys/stat.sl /src/stat.sl
 put -t ../sys/asm.sl /src/asm.sl
 put -t ../sys/asmparser.sl /src/asmparser.sl
-put -t ../sys/asm.opt.s /src/asm.s
 put -t ../sys/hd.sl /src/hd.sl
 put -t ../sys/grep.sl /src/grep.sl
 put -t ../sys/more.sl /src/more.sl
@@ -62,6 +62,18 @@ put -t ../sys/mv.sl /src/mv.sl
 put -t ../sys/slc.sl /src/slc.sl
 put -t ../sys/kilo.sl /src/kilo.sl
 put -t ../sys/reboot.sl /src/reboot.sl
+
+mkdir src/lib
+put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
+put -t ../sys/lib/list.sl /src/lib/list.sl
+put -t ../sys/lib/malloc.sl /src/lib/malloc.sl
+put -t ../sys/lib/parse.sl /src/lib/parse.sl
+put -t ../sys/lib/stdio.sl /src/lib/stdio.sl
+put -t ../sys/lib/stdlib.sl /src/lib/stdlib.sl
+put -t ../sys/lib/string.sl /src/lib/string.sl
+put -t ../sys/lib/sys.sl /src/lib/sys.sl
+put -t ../sys/lib/xprintf.sl /src/lib/xprintf.sl
+put -t ../sys/lib/glob.sl /src/lib/glob.sl
 
 mkdir proc
 mkdir tmp
