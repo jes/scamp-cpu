@@ -406,6 +406,9 @@ var resolve_unbounds = func() {
     var buf = malloc(254);
     var bufend = buf;
     var bufp = buf;
+    var outbuf = malloc(1024);
+    var outbufsz = 1024;
+    var outbuflen = 0;
     while (1) {
         if (bufp == bufend) {
             n = read(fd, buf, 254);
@@ -428,10 +431,18 @@ var resolve_unbounds = func() {
             };
         };
 
-        putchar(w);
         pc++;
+
+        *(outbuf+outbuflen) = w;
+        outbuflen++;
+        if (outbuflen == outbufsz) {
+            write(1, outbuf, outbuflen);
+            outbuflen = 0;
+        };
     };
     close(fd);
+
+    if (outbuflen) write(1, outbuf, outbuflen);
 };
 
 IDENTIFIERS = htnew();
