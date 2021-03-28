@@ -289,9 +289,8 @@ var emitblob = func(name) {
         n = read(fd, buf, bufsz);
         if (n == 0) break;
         if (n < 0) die("read %s: %s", [name, strerror(fd)]);
-        p = buf;
-        while (n--)
-            emit(*(p++));
+        if (write(code_fd, buf, n) != n) die("write() didn't write enough",0);
+        asm_pc = asm_pc + n;
     };
 
     free(buf);
