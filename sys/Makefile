@@ -30,5 +30,13 @@ all: $(BINS)
 	../compiler/slangc $*.sl > $*.s.tmp
 	mv $*.s.tmp $*.s
 
+.PRECIOUS: lib.o
+lib.o: $(LIBS)
+	../compiler/slangc lib/lib.sl > lib.s
+	cat lib/libhead.s lib.s | ../asm/asm > lib.hex.tmp
+	../util/hex2bin lib.hex.tmp > lib.o.tmp
+	mv lib.o.tmp lib.o
+	cat lib/libhead.s lib.s | ../asm/asm -v > lib.anhex
+
 clean:
 	rm -f *.bin *.hex *.anhex *.s *.tmp
