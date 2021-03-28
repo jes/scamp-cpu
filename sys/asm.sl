@@ -295,6 +295,10 @@ var Blob = func(x) {
     while (i < maxidentifier) {
         if (parse(AnyChar," \t\r\n")) {
             *(IDENTIFIER+i) = 0;
+            # TODO: [perf] instead of emitting the blob now, since we know it
+            #       doesn't contain any labels, we could just remember the name
+            #       of it and the current asm_pc, and emit it during the 2nd
+            #       pass, to save time writing it out and reating it in again
             emitblob(IDENTIFIER);
             skip();
             return 1;
