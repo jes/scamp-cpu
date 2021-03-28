@@ -23,7 +23,7 @@ out REG0, x
 ld x, 0x03
 out REG3, x
 
-# write A's
+# write letters
 loop:
     ld x, 65
     out REG0, x
