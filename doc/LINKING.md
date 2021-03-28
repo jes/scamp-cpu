@@ -24,10 +24,12 @@ See `sys/make-lib` for the script that creates `lib.o`. In short:
 
 1. Create a SLANG source file that includes every library you want in the blob, something like:
 
+   ```
     include "malloc.sl";
     include "stdio.sl";
     include "stdlib.sl";
-    ...
+    # ...
+   ```
 
 2. Turn this source into assembly code with `slangc`.
 
@@ -40,6 +42,7 @@ See `sys/make-lib` for the script that creates `lib.o`. In short:
    symbols that begin with an underscore, as these are the only ones accessible from
    SLANG). This looks like:
 
+   ```
     # ...
     .def _printf 0x209f
     .def _putchar 0x2098
@@ -47,6 +50,7 @@ See `sys/make-lib` for the script that creates `lib.o`. In short:
     .def _read 0x2080
     .def _readdir 0x2078
     # ...
+   ```
 
     This has `.blob /lib/lib.o` prepended to it by `make-lib` so that when it is assembled,
     the library blob is included.
@@ -54,6 +58,7 @@ See `sys/make-lib` for the script that creates `lib.o`. In short:
 5. At the same time, get `asm` to generate a `lib.h` SLANG source file that *names*
    the same symbols, so that `slangc` knows they're available. This looks like:
 
+   ```
     # ...
     extern printf;
     extern putchar;
@@ -61,6 +66,7 @@ See `sys/make-lib` for the script that creates `lib.o`. In short:
     extern read;
     extern readdir;
     # ...
+   ```
 
 6. Now when we compile a SLANG program, if we include `lib.h` instead of the SLANG source for
    each library, and we make sure `lib.s` is included in the assembly code, then we'll get
