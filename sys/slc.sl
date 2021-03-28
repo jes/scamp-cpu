@@ -4,6 +4,7 @@
 
 include "stdio.sl";
 include "sys.sl";
+include "malloc.sl";
 
 # redirect "name" to "fd" with the given "mode"; return an fd that stores
 # the previous state, suitable for use with "unredirect()";
@@ -34,6 +35,30 @@ var unredirect = func(fd, prev) {
     close(prev);
 };
 
+var bufsz = 1024;
+var buf = malloc(bufsz);
+
+# save shelling out to cat
+var cat = func(name) {
+    var fd = open(name, O_READ);
+    if (fd < 0) {
+        fprintf(2, "open %s: %s\n", [name, strerror(fd)]);
+        exit(1);
+    };
+
+    var n;
+    while (1) {
+        n = read(fd, buf, bufsz);
+        if (n == 0) break;
+        if (n < 0) {
+            fprintf(2, "cat: read %d: %s\n", [fd, strerror(n)]);
+            exit(1);
+        };
+        write(1, buf, n);
+    };
+    close(fd);
+};
+
 # TODO: [nice] option parsing
 
 var rc;
@@ -48,13 +73,13 @@ unredirect(1, prev_out);
 # cat "/lib/head.s /lib/lib.s /tmp/1.s /lib/foot.s" into "/tmp/2.s"
 fprintf(2, "cat...\n", 0);
 prev_out = redirect(1, "/tmp/2.s", O_WRITE|O_CREAT);
-var prev_in = redirect(0, "/tmp/1.s", O_READ);
-rc = system(["/bin/cat", "/lib/head.s", "/lib/lib.s", "/tmp/1.s", "/lib/foot.s"]);
-if (rc != 0) exit(rc);
+cat("/lib/head.s");
+cat("/lib/lib.s");
+cat("/tmp/1.s");
+cat("/lib/foot.s");
 unredirect(1, prev_out);
-unredirect(0, prev_in);
 
 # assemble "/tmp/2.s" to stdout
 fprintf(2, "asm...\n", 0);
-prev_in = redirect(0, "/tmp/2.s", O_READ);
+var prev_in = redirect(0, "/tmp/2.s", O_READ);
 exec(["/bin/asm"]);
