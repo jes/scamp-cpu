@@ -55,8 +55,15 @@ var wc = func(s) {
 
 var bufsz = 254;
 var buf = malloc(bufsz);
-
-while (read(0,buf,bufsz)) {
+var n;
+while (1) {
+    n = read(0, buf, bufsz);
+    if (n == 0) break;
+    if (n < 0) {
+        fprintf(2, "read: %s\n", [strerror(n)]);
+        exit(1);
+    };
+    *(buf+n) = 0;
     wc(buf);
 };
 
