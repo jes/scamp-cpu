@@ -1,6 +1,8 @@
 include "stdio.sl";
 include "sys.sl";
 
+# TODO: [bug] suport numbers > 16-bit
+
 var showstat = func(name) {
     var statbuf = [0,0,0,0];
     var n = stat(name, statbuf);

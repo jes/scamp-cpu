@@ -3,6 +3,8 @@ include "stdlib.sl";
 include "sys.sl";
 include "malloc.sl";
 
+# TODO: [bug] support numbers > 16-bit
+
 var usage = func() {
     fputs(2,"usage: wc [-cwl]\n");
     exit(1);
