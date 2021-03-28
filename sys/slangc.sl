@@ -449,6 +449,10 @@ Declaration = func(x) {
     if (!parse(CharSkip,'=')) return 1;
     if (!parse(Expression,0)) die("initialisation needs expression",0);
     poptovar(name);
+    # TODO: [perf] if 'name' is a global, and the expression was a constant
+    #       (e.g. it's a function, inline asm, string, array literal, etc.) then
+    #       we should try to initialise it at compile-time instead of by
+    #       generating runtime code with poptovar()
     return 1;
 };
 
