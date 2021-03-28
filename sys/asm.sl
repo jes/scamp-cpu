@@ -326,7 +326,7 @@ var Label = func(x) {
     skip();
     if (!parse(CharSkip,':')) return 0;
 
-    store(IDENTIFIER, asm_pc);
+    store(intern(IDENTIFIER), asm_pc);
     return 1;
 };
 
@@ -401,7 +401,7 @@ var resolve_unbounds = func() {
 
         if (pc == addr) { # resolve an unbound address here
             v = lookup(name);
-            if (!v) die("unrecognised name %s at addr %x", [name, addr]);
+            if (!v) die("unrecognised name %s at addr 0x%x", [name, addr]);
             val = cdr(v);
             w = val;
 
