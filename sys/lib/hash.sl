@@ -1,11 +1,14 @@
 # hash table
 #
 # ht[0] = allocated size
-# ht[1] = used slots
-# ht[2] = table
+# ht[1] = number of used slots
+# ht[2..] = table
 #
-# each element of the table is either 0 (unused), or
-# a pointer to a cons(key,val)
+# each element of the table is 2 words: the first word is a pointer to the key
+# (or 0 if the element is unused); the second word is the value
+#
+# the "key"s are strings that are *not* strdup()'d, so they need to be
+# immutable and not free()'d until after you've finished using the hash table
 
 include "malloc.sl";
 include "stdlib.sl";
@@ -15,22 +18,12 @@ var htnew = func() {
     var ht = malloc(3);
     *(ht+0) = 32;
     *(ht+1) = 0;
-    *(ht+2) = malloc(32);
-    memset(ht[2], 0, 32);
+    *(ht+2) = malloc(64); # 2x htsize because each element is 2 words
+    memset(ht[2], 0, 64);
     return ht;
 };
 
 var htfree = func(ht) {
-    var i = 0;
-    var p;
-    while (i != ht[0]) {
-        p = ht[2][i];
-        if (p) {
-            free(car(p));
-            free(p);
-        };
-        i++;
-    };
     free(ht[2]);
     free(ht);
 };
@@ -52,27 +45,27 @@ var htgrow = func(ht) {
     free(newht[2]);
 
     var newsize = htsize(ht)+htsize(ht);
-    var newarr = malloc(newsize);
-    memset(newarr, 0, newsize);
+    var newarr = malloc(newsize+newsize);
+    memset(newarr, 0, newsize+newsize);
     *(newht+0) = newsize;
     *(newht+2) = newarr;
 
     var i = 0;
     var p;
     while (i != htsize(ht)) {
-        p = ht[2][i];
-        if (p)
-            htput(newht, car(p), cdr(p));
+        p = ht[2]+i+i;
+        if (*p)
+            htput(newht, p[0], p[1]);
         i++;
     };
 
     # now "newht" has all the elements, we want to swap its
-    # array with ours and then free it
-    *(newht+0) = htsize(ht);
-    *(ht+0) = newsize;
+    # array with ours and free it
     *(newht+2) = ht[2];
-    *(ht+2) = newarr;
     htfree(newht);
+
+    *(ht+0) = newsize;
+    *(ht+2) = newarr;
 };
 
 var hashstr = func(str) {
@@ -89,28 +82,26 @@ var hashstr = func(str) {
 # (mainly for "internal" use - library users probably want htget/htput)
 var htfind = func(ht, key) {
     var n = hashstr(key);
-    var idx;
     # idx = n mod htsize
-    idx = n & (htsize(ht)-1);
+    var idx = n & (htsize(ht)-1);
 
-    var orig_idx = idx;
-
-    # linear probe to find a free slot
-    var p = ht[2]+idx;
-    var endp = ht[2]+htsize(ht);
+    # linear probe to find the key, or the next free slot
+    var p = ht[2]+idx+idx;
+    var endp = ht[2]+htsize(ht)+htsize(ht);
     while (*p) {
-        if (strcmp(key, car(*p)) == 0) break; # found
-        p++;
+        if (strcmp(key, *p) == 0) break; # found
+        p = p + 2;
         if (p == endp) p = ht[2];
     };
 
     return p;
 };
 
-# return the cons of (key,val) for "key", if found, or 0 otherwise
+# return [key,val] for "key", if found, or 0 otherwise
 var htget = func(ht, key) {
     var p = htfind(ht, key);
-    return *p;
+    if (*p) return p;
+    return 0;
 };
 
 # "key" is a string
@@ -122,9 +113,10 @@ htput = func(ht, key, val) {
 
     var p = htfind(ht, key);
     if (*p) {
-        setcdr(*p, val);
+        *(p+1) = val;
     } else {
-        *p = cons(strdup(key), val);
+        *p = key;
+        *(p+1) = val;
         *(ht+1) = ht[1] + 1;
     };
 };
