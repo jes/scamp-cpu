@@ -5,38 +5,38 @@ When the machine is reset the PC would be reset to 0 which would cause the boot 
 The boot ROM's only job is to liaise with the storage device (hard disk? compactflash? sd? not sure yet) and load the kernel
 from the first N KBytes from the storage into RAM and then jump to it. See [BOOT.md](BOOT.md).
 
-The kernel would contain implementations of the system calls, and space for system buffers etc.
+The kernel contains implementations of the system calls, and space for system buffers etc.
 
-At startup, the kernel would probably just execute a program from disk (e.g. init).
+At startup, the kernel just executes `/bin/init`.
 
-I have been toying with the idea of supporting a workflow that is kind of in between CP/M and FUZIX. The filesystem could
-support directories instead of CP/M's silly drive letter and user number system. We could support a system()-like call
+The intention is to support a workflow that is kind of in between CP/M and FUZIX. The filesystem
+supports directories instead of CP/M's silly drive letter and user number system. The OS provides a `system()`-like call
 by swapping the existing program out to disk, making a note of where to reload it from and what address to jump to, and then loading the called program.
-Calling another program would then work a lot like calling a function, in the sense that you completely lose control until
-the callee is done, and then when it's done you get returned to. We'd have a process stack instead of a process tree.
+Calling another program works a lot like calling a function, in the sense that you completely lose control until
+the callee is done, and then when it's done you get returned to. We have a process *stack* instead of a process *tree*.
 
 ## Filesystem
 
-I think I'd want a pretty Unix-like filesystem. I don't know that I'd bother with "flags" on files (i.e. rwx), I'd be happy to just
-append ".x" to anything that I want to be executable.
+`SCAMP/os` has a pretty Unix-like filesystem, but without annoying features like device nodes, symlinks, permissions, or
+reference counting.
 
 Example:
 
     /bin
-        asm.x
-        cat.x
-        cmp.x
-        cp.x
-        grep.x
-        init.x
-        ls.x
-        mkdir.x
-        peepopt.x
-        rm.x
-        sh.x
-        slangc.x
-        slc.x
-        vi.x
+        asm
+        cat
+        cmp
+        cp
+        grep
+        init
+        ls
+        mkdir
+        peepopt
+        rm
+        sh
+        slangc
+        slc
+        vi
     /etc
         motd
         [other configuration?]
@@ -44,10 +44,8 @@ Example:
         [user files]
     /src
         [source code of kernel and all programs]
-    /swap
+    /proc
         [contents of swapped-out processes]
-    /sd
-        [SD card filesystem]
 
 ## Programs
 
@@ -58,7 +56,8 @@ Probably just system("cat /etc/motd") and exec("sh")
 ### sh
 
 Since the shell is just a program, and programs can call other programs via the swapping-to-disk system,
-the shell could quite easily support pipes and IO redirection.
+the shell could quite easily support pipes and IO redirection. Currently it supports IO redirection but
+not "pipes".
 
 For the command:
     $ cat foo.txt | grep bar
@@ -85,16 +84,19 @@ the useful properties of program composition, without needing to support actual 
 
 These would form a complete self-hosting build environment.
 
-asm: assembler
-slangc: compiler
-slc: compiler driver (slangc foo.sl | peepopt > foo.s; cat head.s foo.s foot.s | asm > foo.x)
-peepopt: peephole optimiser
+    asm: assembler
+    slangc: compiler
+    slc: compiler driver (slangc foo.sl | peepopt > foo.s; cat head.s foo.s foot.s | asm > foo)
+    peepopt: peephole optimiser
 
 ### vi
 
 I definitely want a text editor that works like vi. It doesn't need to do everything that vim does, I'll be happy as long
 as my "finger macros" mostly function correctly. I read that nobody uses more than 20% of vim's features, but the
 problem is everyone uses a different 20%. Well as long as it supports the 20% that I use, I'll be happy.
+
+Currently the editor is `kilo`, which is not very vi-like. It's more nano-like. It's adequate for now. It seems
+unlikely that I'll ever make it vi-like, it seems good enough.
 
 ## IO
 
@@ -103,24 +105,36 @@ The kinds of places that a program might want to read or write include:
  - files on disk
  - serial devices (I want at least 2, might not be too hard to support more)
 
-I'm not sure I'd ever want more than 1 storage device. Maybe I would.
+Currently serial devices are implemented with fixed file descriptors. Fd 3 is always the
+serial console. It might be worth making a new file type for "device files" so that the
+console can be found by opening `/dev/console` instead of assuming it's always at fd 3.
+The "fixed fd" system is *OK* for now, but would not scale very well, especially given that
+the fd table only has 16 slots.
+
+I'm not sure I'd ever want more than 1 storage device. Maybe I would. I am thinking
+that if I want to talk to an SD card, there'll be a dedicated program to interact with it,
+instead of mounting it on the main filesystem.
 
 ## Process state
 
-When a process is swapped out, we need to store some state about it:
+When a process is swapped out, in addition to storing the contents
+of the Transient Program Area (0x100 up to `TOP`) in `/proc/$n.user`,
+we need to store some state about the process in `/proc/$n.kernel` (see
+`kernel/sys_proc.sl`):
 
- - where do stdin/stdout/stderr go?
- - what is the return address for the system() call
- - what filename is the TPA stored in
+ - current stack pointer
+ - return address from `system()` call
+ - current working directory
+ - contents of fd table
+ - command line arguments
 
 ## Conventions
 
 "Executables" work exactly like COM files in CP/M: just load them into 0x100 and jump to the start.
 
-How should we pass command-line arguments? Probably array of strings, like C
+Command line arguments are stored by the kernel. A pointer to the
+array of string pointers is retrieved with the `cmdargs()` syscall.
 
-Do we want environment variables? Probably not.
+There is no such thing as environment variables.
 
-Do we want to support a shebang for shell scripts? Probably, seems easy enough. If not, just "sh foo.sh" would work for most cases.
-
-Do we want the concept of a working directory in kernel-space? Maybe it's enough to have it in the SLANG standard library.
+Shebangs work.
