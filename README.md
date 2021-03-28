@@ -68,6 +68,32 @@ Here is a diagram of the architecture I currently have in mind:
 
 For more information, see [doc/UCODE.md](doc/UCODE.md) and [doc/ISA.md](doc/ISA.md).
 
+## Try it out
+
+You can run SCAMP/os in the emulator. First you'll need to build everything. Try `make -j` in the root directory of this
+repository. It probably won't work on the first attempt because it works with multiple different Makefiles that have
+annoying dependencies. Just run `make -j` twice. If that doesn't do the trick, run `make` in `sys/` first, and then run
+it in `.`.
+
+Having built everything, you can go into `kernel/` and start it with `./run`:
+
+    ~/scamp-cpu/kernel $ ./run
+    make: 'os.disk' is up to date.
+    SCAMP boot...
+    .......................................................OK
+    starting kernel...
+    loading init...
+          ____   ____    _    __  __ ____   __
+         / ___| / ___|  / \  |  \/  |  _ \ / /__  ___
+         \___ \| |     / _ \ | |\/| | |_) / / _ \/ __|
+          ___) | |___ / ___ \| |  | |  __/ / (_) \__ \
+         |____/ \____/_/   \_\_|  |_|_| /_/ \___/|___/
+
+    $
+
+If you know how to use Unix you'll probably understand how to use it. If you know how to use CP/M you'll probably
+understand how it works.
+
 ## Resources
 
 I thoroughly recommend the Nand2Tetris course. https://nand2tetris.org/
