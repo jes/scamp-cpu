@@ -79,7 +79,7 @@ repository. It probably won't work on the first attempt because it works with mu
 annoying dependencies. Just run `make -j` twice. If that doesn't do the trick, run `make` in `sys/` first, and then run
 it in `.`.
 
-Having built everything, you can go into `kernel/` and start it with `./run`:
+Having built everything, you can go into `kernel/` and start it in the emulator with `./run`:
 
     ~/scamp-cpu/kernel $ ./run
     make: 'os.disk' is up to date.
