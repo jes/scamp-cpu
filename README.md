@@ -10,6 +10,10 @@ Here are some pictures:
 
 <img src="doc/front-panels.jpeg" height="500"> <img src="doc/card-cage.jpeg" height="500">
 
+And here's a sample session:
+
+<a href="https://asciinema.org/a/W0rYJUeaSK5ePSycyNKe3nWeL"><img src="doc/asciinema.png"></a>
+
 ## Plan
 
 1. Create the CPU in Verilog, with a testbench for each part. **[done]**
