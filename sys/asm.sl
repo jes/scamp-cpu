@@ -3,7 +3,8 @@
 # TODO: [nice] -v "annotated hex" mode
 # TODO: [nice] tidy up variable names and code layout, comment stuff that's not clear
 # TODO: [bug] the assembler can't currently assemble its own code because once it goes
-#       past 64K input words, the parse lib gets confused, I think?
+#       past 64K input words, the parse lib gets confused, I think? Perhaps we should
+#       store UNBOUNDS on disk instead of in memory?
 
 include "grarr.sl";
 include "hash.sl";
@@ -32,6 +33,16 @@ var lookup = func(name) {
 
 var store = func(name,val) {
     htput(IDENTIFIERS, name, val);
+};
+
+# return a pointer to an existing stored copy of "name", or strdup() one if there is none
+var intern = func(name) {
+    var v;
+    v = htget(IDENTIFIERS, name);
+    if (v) return car(v);
+    v = grfind(UNBOUNDS, name, func(a,b) { return strcmp(a,b)==0 });
+    if (v) return car(v);
+    return strdup(name);
 };
 
 var add_unbound = func(name,addr) {
@@ -127,7 +138,7 @@ I16 = func(x) {
         return 1;
     };
     if (parse(Identifier,0)) {
-        i16_identifier = strdup(IDENTIFIER);
+        i16_identifier = intern(IDENTIFIER);
         return 1;
     };
     return 0;
@@ -185,7 +196,7 @@ var Def = func(x) {
     if (!parse(String,".def")) return 0;
     skip();
     if (!parse(Identifier,0)) die(".def needs identifier",0);
-    var name = strdup(IDENTIFIER);
+    var name = intern(IDENTIFIER);
     skip();
     if (!parse(Constant,0)) die(".def needs constant",0);
     store(name,asm_constant);
