@@ -10,6 +10,10 @@ add sp, STACKSZ
 ld (_TOP), sp
 inc (_TOP)
 
+# storage for _TOP address
+jr+ 1
+_TOP: .word 0
+
 # system call vectors
 .def _sys_serflags 0xfeeb
 .def _sys_cmdargs  0xfeec
