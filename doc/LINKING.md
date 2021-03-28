@@ -87,7 +87,7 @@ Some parts of the library (namely `malloc()` and `system()`) need to know the hi
 by the program (called `TOP`). Previously, this was provided by `foot.s`. The initial value of `TOP` can
 not be known at the time the library is compiled, because it depends on how large the eventual
 program is. For this reason, `libhead.s` contains a `.def` directive that points at the address of
-the `_TOP` symbol created in `head.s`.
+the `_TOP` symbol, which is now defined in `head.s` so that it has a fixed address.
 
 There is some code in `head.s` that needs to run before the start of the library. It needs to initialise the
 stack pointer and the value of `_TOP`. Both of these need to know where the program code ends, which
