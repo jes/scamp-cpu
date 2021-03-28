@@ -48,7 +48,7 @@ var quit_times = QUIT_TIMES;
 
 # terminal
 var quit;
-var die;
+var fatal;
 var rawmode;
 var unrawmode;
 var readkey;
@@ -105,7 +105,7 @@ quit = func(rc) {
     exit(rc);
 };
 
-die = func(fmt, args) {
+fatal = func(fmt, args) {
     fprintf(2, fmt, args);
     fputc(2, '\n');
     quit(1);
@@ -135,8 +135,8 @@ readkey = func() {
     var c;
     var n = read(0, &c, 1);
 
-    if (n == 0) die("read: eof on stdin, but should be in raw mode ??? (is stdin a file?)", 0);
-    if (n < 0) die("read: %s", [strerror(n)]);
+    if (n == 0) fatal("read: eof on stdin, but should be in raw mode ??? (is stdin a file?)", 0);
+    if (n < 0) fatal("read: %s", [strerror(n)]);
 
     var seq = [0,0,0];
     if (c == ESC) {
@@ -371,7 +371,7 @@ openfile = func(filename) {
         dirty = 1;
         return 0;
     };
-    if (fd < 0) die("open %s: %s", [filename, strerror(fd)]);
+    if (fd < 0) fatal("open %s: %s", [filename, strerror(fd)]);
 
     var row = grnew();
     var buf = malloc(257);
@@ -410,7 +410,7 @@ savefile = func() {
     #       what happened
 
     var fd = open(openfilename, O_WRITE|O_CREAT);
-    if (fd < 0) die("open %s: %s", [openfilename, strerror(fd)]);
+    if (fd < 0) fatal("open %s: %s", [openfilename, strerror(fd)]);
 
     var buf = malloc(257);
     setbuf(fd, buf);
