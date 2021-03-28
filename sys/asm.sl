@@ -281,7 +281,7 @@ var emitblob = func(name) {
     var fd = open(name, O_READ);
     if (fd < 0) die("open %s: %s", [name, strerror(fd)]);
 
-    var bufsz = 128;
+    var bufsz = 1024;
     var buf = malloc(bufsz);
     var n;
     var p;
