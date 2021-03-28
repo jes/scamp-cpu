@@ -357,6 +357,18 @@ Statement = func(x) {
     return 0;
 };
 
+var open_include = func(file, path) {
+    var lenpath = strlen(path);
+    var fullpath = malloc(lenpath+strlen(file)+1);
+    strcpy(fullpath, path);
+    strcpy(fullpath+lenpath, file);
+
+    var fd = open(fullpath, O_READ);
+
+    free(fullpath);
+    return fd;
+};
+
 var include_fd;
 Include = func(x) {
     if (!parse(Keyword,"include")) return 0;
@@ -378,15 +390,8 @@ Include = func(x) {
     memcpy(ringbuf0, ringbuf, ringbufsz);
 
     include_fd = open(file, O_READ);
-    var include_path;
-    if (include_fd < 0) {
-        # search "/lib/" for file
-        include_path = malloc(5+strlen(file)+1);
-        strcpy(include_path, "/lib/");
-        strcpy(include_path+5, file);
-        include_fd = open(include_path, O_READ);
-        free(include_path);
-    };
+    if (include_fd < 0) include_fd = open_include(file, "/lib/");
+    if (include_fd < 0) include_fd = open_include(file, "/src/lib/");
     if (include_fd < 0) die("can't open %s: %s", [file, strerror(include_fd)]);
 
     parse_init(func() {
