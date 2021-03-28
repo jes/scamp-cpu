@@ -48,6 +48,9 @@ var intern = func(name) {
 };
 
 var add_unbound = func(name,addr) {
+    # TODO: [perf] when we buffer writes, we'll sometimes have to add_unbound()
+    #       for some address that is still in the buffer; we can just update it
+    #       in memory instead of writing it to disk
     write(unbounds_fd, [name,addr], 2);
 };
 
