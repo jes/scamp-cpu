@@ -77,10 +77,10 @@ var htgrow = func(ht) {
 
 var hashstr = func(str) {
     var h = 0;
-    var i = 0;
+    var i = 997;
 
     while (*str)
-        h = h+h+h + *(str++) + i++ + 997;
+        h = h+h+h + *(str++) + i++;
 
     return h;
 };
