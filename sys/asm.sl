@@ -391,6 +391,15 @@ var resolve_unbounds = func() {
     var n;
     var w;
     var pc = pc_start;
+    # TODO: [nice] stop hand-rolling buffer implementations everywhere!
+    # TODO: [perf] refactor this loop; instead of going through one word at a
+    #       time, replacing it if necessary, and then outputting it, we should
+    #       read a block of data into memory, replace values in place from the
+    #       unbounds, then output the block:
+    #           1. read a block
+    #           2. while next unbound addr lies within the block:
+    #           3      replace the unbound
+    #           4. write the block
     var buf = malloc(254);
     var bufend = buf;
     var bufp = buf;
@@ -408,8 +417,7 @@ var resolve_unbounds = func() {
         if (pc == addr) { # resolve an unbound address here
             v = lookup(name);
             if (!v) die("unrecognised name %s at addr 0x%x", [name, addr]);
-            val = cdr(v);
-            w = val;
+            w = cdr(v);
 
             if (read(unbounds_fd, tuple, 2)) {
                 name = car(tuple);
