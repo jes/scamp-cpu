@@ -4,8 +4,7 @@
 # TODO: [nice] tidy up variable names and code layout, comment stuff that's not clear
 # TODO: [bug] the assembler can't currently assemble its own code because once it goes
 #       past 64K input words, the parse lib gets confused, I think?
-# TODO: [bug] the assembler currently runs out of memory on large programs, perhaps
-#       move UNBOUNDS on to disk
+# TODO: [bug] the assembler currently runs out of memory on large programs
 
 include "grarr.sl";
 include "hash.sl";
@@ -24,10 +23,11 @@ var maxidentifier = maxliteral;
 var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 
 var IDENTIFIERS;
-var UNBOUNDS;
 var STRINGS;
 var code_filename;
 var code_fd;
+var unbounds_filename;
+var unbounds_fd;
 
 var lookup = func(name) {
     return htget(IDENTIFIERS, name);
@@ -48,7 +48,7 @@ var intern = func(name) {
 };
 
 var add_unbound = func(name,addr) {
-    grpush(UNBOUNDS, cons(name,addr));
+    write(unbounds_fd, [name,addr], 2);
 };
 
 var reserved = func(name) {
@@ -368,20 +368,18 @@ emit_i16 = func() {
     };
 };
 
-# read code from "code_filename", resolve unbound names, and write resulting
-# code to stdout
+# read code from "code_filename", resolve unbound names using "unbounds_fd", and
+# write resulting code to stdout
 var resolve_unbounds = func() {
-    # "UNBOUNDS" are created in-order, so we can just keep track of the current
-    # index and increment it every time we reach the address of the next unbound
-    var idx = 0;
-    var tuple;
+    # "unbounds" are created in-order, so we can just read one at a time and get
+    # the next every time we reach the address of the next unbound
+    var tuple = [0,0];
     var name;
-    var addr;
+    var addr = -1;
     var v;
     var val;
 
-    tuple = grget(UNBOUNDS,idx++);
-    if (tuple) {
+    if (read(unbounds_fd, tuple, 2)) {
         name = car(tuple);
         addr = cdr(tuple);
     };
@@ -405,8 +403,7 @@ var resolve_unbounds = func() {
             val = cdr(v);
             w = val;
 
-            tuple = grget(UNBOUNDS,idx++);
-            if (tuple) {
+            if (read(unbounds_fd, tuple, 2)) {
                 name = car(tuple);
                 addr = cdr(tuple);
             };
@@ -419,12 +416,15 @@ var resolve_unbounds = func() {
 };
 
 IDENTIFIERS = htnew();
-UNBOUNDS = grnew();
 STRINGS = grnew();
 
 code_filename = strdup(tmpnam());
 code_fd = open(code_filename, O_WRITE|O_CREAT);
 if (code_fd < 0) die("open %s: %s", [code_filename, strerror(code_fd)]);
+
+unbounds_filename = strdup(tmpnam());
+unbounds_fd = open(unbounds_filename, O_WRITE|O_CREAT);
+if (unbounds_fd < 0) die("open %s: %s", [unbounds_filename, strerror(unbounds_fd)]);
 
 setbuf(0,malloc(257));
 setbuf(1,malloc(257));
@@ -451,6 +451,13 @@ parse(Assembly,0);
 if (nextchar() != EOF) die("garbage after end",0);
 close(code_fd);
 
+# reopen unbounds file for reading
+close(unbounds_fd);
+unbounds_fd = open(unbounds_filename, O_READ);
+if (unbounds_fd < 0) die("open %s: %s", [unbounds_filename, strerror(unbounds_fd)]);
+
 fprintf(2, "2nd pass...\n", 0);
 resolve_unbounds();
 unlink(code_filename);
+close(unbounds_fd);
+unlink(unbounds_filename);
