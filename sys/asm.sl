@@ -2,8 +2,6 @@
 #
 # TODO: [nice] -v "annotated hex" mode
 # TODO: [nice] tidy up variable names and code layout, comment stuff that's not clear
-# TODO: [bug] the assembler can't currently assemble its own code because once it goes
-#       past 64K input words, the parse lib gets confused, I think?
 # TODO: [bug] the assembler currently runs out of memory on large programs
 
 include "grarr.sl";
