@@ -5,11 +5,14 @@ in the reference, and calling the function pointed to at the system call address
 
 Example:
 
-    # putchar(1, 'A')
-    .def sys_putchar 0xfefc
+    # write(1, "foo", 3);
+    .def sys_write 0xfefb
     push 1
-    push 65
-    call (sys_putchar)
+    push foo_s
+    push 3
+    call (sys_write)
+    # ...
+    foo_s: .str "foo\0"
 
 Note that stack contents will be in TPA, so system calls that overwrite the TPA
 probably need to copy the arguments first.
