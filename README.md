@@ -12,7 +12,7 @@ Here are some pictures:
 
 And here's a sample session:
 
-<a href="https://asciinema.org/a/W0rYJUeaSK5ePSycyNKe3nWeL"><img src="doc/asciinema.png"></a>
+<a href="https://asciinema.org/a/W0rYJUeaSK5ePSycyNKe3nWeL"><img width="400" src="doc/asciinema.png"></a>
 
 ## Plan
 
