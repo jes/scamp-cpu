@@ -298,7 +298,7 @@ var Blob = func(x) {
             # TODO: [perf] instead of emitting the blob now, since we know it
             #       doesn't contain any labels, we could just remember the name
             #       of it and the current asm_pc, and emit it during the 2nd
-            #       pass, to save time writing it out and reating it in again
+            #       pass, to save time writing it out and reading it in again
             emitblob(IDENTIFIER);
             skip();
             return 1;
