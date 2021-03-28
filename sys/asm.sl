@@ -391,10 +391,19 @@ var resolve_unbounds = func() {
     var n;
     var w;
     var pc = pc_start;
+    var buf = malloc(254);
+    var bufend = buf;
+    var bufp = buf;
     while (1) {
-        n = read(fd, &w, 1);
-        if (n == 0) break;
-        if (n < 0) die("read %s: %s", [code_filename, strerror(n)]);
+        if (bufp == bufend) {
+            n = read(fd, buf, 254);
+            if (n == 0) break;
+            if (n < 0) die("read %s: %s", [code_filename, strerror(n)]);
+            bufp = buf;
+            bufend = buf+n;
+        };
+
+        w = *(bufp++);
 
         if (pc == addr) { # resolve an unbound address here
             v = lookup(name);
