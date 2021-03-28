@@ -103,19 +103,20 @@ var blksetnext = func(blk, buf) {
     *(buf+1) = blk;
 };
 
+var FREEBLKBUF = asm { .gap 257 };
+var freeblkblk = 0;
+
 # find a free block and update "blknextfree"
-# TODO: [perf] start searching from the current "blknextfree" to avoid the long
-# linear search in the case where the start of the disk is all used
 var blkfindfree = func() {
     var bitmapblk = 0;
     var blkgroup;
 
     while (bitmapblk != 16) {
-        blkread(SKIP_BLOCKS + bitmapblk, 0);
+        blkread(SKIP_BLOCKS + ((bitmapblk + freeblkblk) & 0xf), FREEBLKBUF);
 
         blkgroup = 0;
         while (blkgroup != BLKSZ) {
-            if (BLKBUF[blkgroup] != 0xffff) break;
+            if (FREEBLKBUF[blkgroup] != 0xffff) break;
             blkgroup++;
         };
         if (blkgroup != BLKSZ) break;
@@ -125,16 +126,21 @@ var blkfindfree = func() {
     # TODO: [nice] don't kernel panic when disk is full
     if (bitmapblk == 16) kpanic("block device full");
 
-    # we now know that BLKBUF[blkgroup] != 0xffff, which means at least one of
+    bitmapblk = bitmapblk + freeblkblk;
+    # keep track of the block that we found a free block in, so we can start searching
+    # from there next time
+    freeblkblk = bitmapblk;
+
+    # we now know that FREEBLKBUF[blkgroup] != 0xffff, which means at least one of
     # the 16 bits is 0, corresponding to a free block
     var i = 0;
-    while (BLKBUF[blkgroup] & powers_of_2[i]) i++;
+    while (FREEBLKBUF[blkgroup] & powers_of_2[i]) i++;
 
     # upper 8 bits refer to lower 8 block numbers: swap them
     # TODO: [perf] do this byte-swapping thing in the perl script instead of the kernel
     i = i^8;
 
-    # so now bit i in BLKBUF[blkgroup] is 0, so the free block number is:
+    # so now bit i in FREEBLKBUF[blkgroup] is 0, so the free block number is:
     #    (bitmapblk*4096 + blkgroup*16 + i)
     nextfreeblk = shl(bitmapblk, 12) + shl(blkgroup, 4) + i;
 };
@@ -154,10 +160,10 @@ var blksetused = func(blk, used) {
     # upper 8 bits refer to lower 8 block numbers: swap them
     i = i^8;
 
-    blkread(SKIP_BLOCKS + bitmapblk, 0);
-    if (used) *(BLKBUF+blkgroup) = BLKBUF[blkgroup] |  powers_of_2[i]
-    else      *(BLKBUF+blkgroup) = BLKBUF[blkgroup] & ~powers_of_2[i];
-    blkwrite(SKIP_BLOCKS + bitmapblk, 0);
+    blkread(SKIP_BLOCKS + bitmapblk, FREEBLKBUF);
+    if (used) *(FREEBLKBUF+blkgroup) = FREEBLKBUF[blkgroup] |  powers_of_2[i]
+    else      *(FREEBLKBUF+blkgroup) = FREEBLKBUF[blkgroup] & ~powers_of_2[i];
+    blkwrite(SKIP_BLOCKS + bitmapblk, FREEBLKBUF);
 };
 
 # recursively truncate the file from the given block number
