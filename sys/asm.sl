@@ -3,8 +3,9 @@
 # TODO: [nice] -v "annotated hex" mode
 # TODO: [nice] tidy up variable names and code layout, comment stuff that's not clear
 # TODO: [bug] the assembler can't currently assemble its own code because once it goes
-#       past 64K input words, the parse lib gets confused, I think? Perhaps we should
-#       store UNBOUNDS on disk instead of in memory?
+#       past 64K input words, the parse lib gets confused, I think?
+# TODO: [bug] the assembler currently runs out of memory on large programs, perhaps
+#       move UNBOUNDS on to disk
 
 include "grarr.sl";
 include "hash.sl";
@@ -24,6 +25,7 @@ var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 
 var IDENTIFIERS;
 var UNBOUNDS;
+var STRINGS;
 var code_filename;
 var code_fd;
 
@@ -37,12 +39,12 @@ var store = func(name,val) {
 
 # return a pointer to an existing stored copy of "name", or strdup() one if there is none
 var intern = func(name) {
-    var v;
-    v = htget(IDENTIFIERS, name);
-    if (v) return car(v);
-    v = grfind(UNBOUNDS, name, func(a,b) { return strcmp(a,b)==0 });
-    if (v) return car(v);
-    return strdup(name);
+    var v = grfind(STRINGS, name, func(a,b) { return strcmp(a,b)==0 });
+    if (v) return v;
+
+    name = strdup(name);
+    grpush(STRINGS, name);
+    return name;
 };
 
 var add_unbound = func(name,addr) {
@@ -200,7 +202,6 @@ var Def = func(x) {
     skip();
     if (!parse(Constant,0)) die(".def needs constant",0);
     store(name,asm_constant);
-    free(name);
     return 1;
 };
 
@@ -419,6 +420,7 @@ var resolve_unbounds = func() {
 
 IDENTIFIERS = htnew();
 UNBOUNDS = grnew();
+STRINGS = grnew();
 
 code_filename = strdup(tmpnam());
 code_fd = open(code_filename, O_WRITE|O_CREAT);
