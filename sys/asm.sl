@@ -24,8 +24,10 @@ var IDENTIFIERS;
 var STRINGS;
 var code_filename;
 var code_fd;
+var code_buf = malloc(257);
 var unbounds_filename;
 var unbounds_fd;
+var unbounds_buf = malloc(257);
 
 var lookup = func(name) {
     return htget(IDENTIFIERS, name);
@@ -385,7 +387,7 @@ var resolve_unbounds = func() {
     var fd = open(code_filename, O_READ);
     if (fd < 0) die("open %s: %s", [code_filename, strerror(code_fd)]);
 
-    setbuf(fd, malloc(257));
+    setbuf(fd, code_buf);
 
     var n;
     var w;
@@ -426,7 +428,8 @@ if (unbounds_fd < 0) die("open %s: %s", [unbounds_filename, strerror(unbounds_fd
 
 setbuf(0,malloc(257));
 setbuf(1,malloc(257));
-setbuf(code_fd,malloc(257));
+setbuf(code_fd,code_buf);
+setbuf(unbounds_fd,unbounds_buf);
 
 fprintf(2, "1st pass...\n", 0);
 var inbufsz = 1024;
@@ -453,6 +456,7 @@ close(code_fd);
 close(unbounds_fd);
 unbounds_fd = open(unbounds_filename, O_READ);
 if (unbounds_fd < 0) die("open %s: %s", [unbounds_filename, strerror(unbounds_fd)]);
+setbuf(unbounds_fd,unbounds_buf);
 
 fprintf(2, "2nd pass...\n", 0);
 resolve_unbounds();
