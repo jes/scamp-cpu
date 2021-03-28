@@ -98,6 +98,10 @@ Having built everything, you can go into `kernel/` and start it in the emulator 
 If you know how to use Unix you'll probably understand how to use it. If you know how to use CP/M you'll probably
 understand how it works.
 
+If you want, you can write SLANG programs using `kilo` and compile them with `slc`. You've probably never written
+SLANG before. You can learn how to use it by reading programs under `/src` (or `sys/` in the repo). It's mostly
+like C but with fewer features and less safety.
+
 ## Resources
 
 I thoroughly recommend the Nand2Tetris course. https://nand2tetris.org/
