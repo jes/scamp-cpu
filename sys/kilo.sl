@@ -58,6 +58,7 @@ var readkey;
 var rowlen;
 var row2chars;
 var cx2rx;
+var rx2cx;
 var appendrow;
 var insertrow;
 var rowinsertchar;
@@ -81,6 +82,9 @@ var delchar;
 # file i/o
 var openfile;
 var savefile;
+
+# find
+var find;
 
 # output
 var writeesc;
@@ -190,6 +194,18 @@ cx2rx = func(row, cx) {
         i++;
     };
     return x;
+};
+
+rx2cx = func(row, rx) {
+    var s = row2chars(row);
+    var x = 0;
+    var i;
+    while (x < rx) {
+        if (s[i] == '\t') x = x + TABSTOP-1 - (x & (TABSTOP-1));
+        x++;
+        i++;
+    };
+    return i;
 };
 
 appendrow = func(gr) {
@@ -432,6 +448,30 @@ savefile = func() {
     dirty = 0;
 };
 
+### FIND
+
+find = func() {
+    var query = prompt("Search: ", " (ESC to cancel)");
+    if (!query) return 0;
+
+    var i = 0;
+    var match;
+    var line;
+    while (i < grlen(rows)) {
+        line = row2chars(grget(rows, i));
+        match = strstr(line, query);
+        if (match) {
+            cy = i;
+            cx = rx2cx(grget(rows, i), match - line);
+            rowoff = grlen(rows);
+            break;
+        };
+        i++;
+    };
+
+    free(query);
+};
+
 ### OUTPUT
 
 var outbuf = sbnew();
@@ -664,7 +704,7 @@ processkey = func() {
     } else if (c == CTRL_KEY('s')) {
         savefile();
     } else if (c == CTRL_KEY('f')) {
-        # TODO: [nice] search
+        find();
     } else if (c == CTRL_KEY('h')) {
         # TODO: [nice] show a full help screen
     } else if (c == CTRL_KEY('k')) {
@@ -719,7 +759,7 @@ waitread = func(fd, buf, bufsz, timeout) {
 
 markalldirty();
 rawmode();
-setstatusmsg("HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-Z = shell | Ctrl-K = clreol", 0);
+setstatusmsg("HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-Z = shell | Ctrl-K = clreol | Ctrl-F = find", 0);
 
 var args = cmdargs()+1;
 if (*args) openfile(*args);
