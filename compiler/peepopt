@@ -82,7 +82,7 @@ sub level2 {
             level3("ld x, $l2ldx");
             $l2ldx = undef;
         }
-        while (defined (my $v = pop @l2)) {
+        while (defined (my $v = shift @l2)) {
             level3("push $v");
         }
         level3("$line");
