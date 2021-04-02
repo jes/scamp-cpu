@@ -337,7 +337,7 @@ sub read_anhex {
             $SYMBOL[$_] = $sym for ($lastaddr+1..$addr);
         }
 
-        if (/#sym:(\w+)/) {
+        if (/#sym:(\S+)/) {
             $sym = $1;
             $lastaddr = undef;
         } else {
