@@ -451,6 +451,11 @@ savefile = func() {
 ### FIND
 
 find = func() {
+    var cx0 = cx;
+    var cy0 = cy;
+    var rowoff0 = rowoff;
+    var coloff0 = coloff;
+
     var str = prompt("Search: ", " (ESC to cancel)", func(query) {
         if (!query) return 0;
 
@@ -470,7 +475,15 @@ find = func() {
         };
     });
 
-    if (str) free(str);
+    if (str) {
+        free(str);
+    } else { # cancelled search
+        cx = cx0;
+        cy = cy0;
+        rowoff = rowoff0;
+        coloff = coloff0;
+        markalldirty();
+    };
 };
 
 ### OUTPUT
