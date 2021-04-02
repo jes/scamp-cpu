@@ -415,7 +415,7 @@ openfile = func(filename) {
 };
 
 savefile = func() {
-    if (!openfilename) openfilename = prompt("Save as: ", " (ESC to cancel)");
+    if (!openfilename) openfilename = prompt("Save as: ", " (ESC to cancel)", 0);
     if (!openfilename) {
         setstatusmsg("Save aborted", 0);
         return 0;
@@ -451,25 +451,26 @@ savefile = func() {
 ### FIND
 
 find = func() {
-    var query = prompt("Search: ", " (ESC to cancel)");
-    if (!query) return 0;
+    var str = prompt("Search: ", " (ESC to cancel)", func(query) {
+        if (!query) return 0;
 
-    var i = 0;
-    var match;
-    var line;
-    while (i < grlen(rows)) {
-        line = row2chars(grget(rows, i));
-        match = strstr(line, query);
-        if (match) {
-            cy = i;
-            cx = rx2cx(grget(rows, i), match - line);
-            rowoff = grlen(rows);
-            break;
+        var i = 0;
+        var match;
+        var line;
+        while (i < grlen(rows)) {
+            line = row2chars(grget(rows, i));
+            match = strstr(line, query);
+            if (match) {
+                cy = i;
+                cx = rx2cx(grget(rows, i), match - line);
+                rowoff = grlen(rows);
+                break;
+            };
+            i++;
         };
-        i++;
-    };
+    });
 
-    free(query);
+    if (str) free(str);
 };
 
 ### OUTPUT
@@ -618,39 +619,41 @@ scroll = func() {
 
 ### INPUT
 
-prompt = func(beforemsg, aftermsg) {
+prompt = func(beforemsg, aftermsg, callback) {
     var c;
-    var gr = grnew();
+    var sb = sbnew();
     var result = 0;
 
     while (1) {
-        grpush(gr, 0);
-        setstatusmsg("%s%s%s", [beforemsg, grbase(gr), aftermsg]);
-        grpop(gr);
+        setstatusmsg("%s%s%s", [beforemsg, sbbase(sb), aftermsg]);
 
-        prompt_cursor = strlen(beforemsg) + grlen(gr) + 1;
+        prompt_cursor = strlen(beforemsg) + sblen(sb) + 1;
         refresh();
         c = readkey();
         if (c == DEL_KEY || c == CTRL_KEY('h') || c == BACKSPACE) {
-            grpop(gr);
+            sbpop(sb);
         } else if (c == ESC) {
             setstatusmsg("", 0);
-            grfree(gr);
+            sbfree(sb);
             break;
         } else if (c == '\r') {
-            if (grlen(gr)) {
+            if (sblen(sb)) {
                 setstatusmsg("", 0);
-                grpush(gr, 0);
-                result = strdup(grbase(gr));
-                grfree(gr);
+                result = strdup(sbbase(sb));
+                sbfree(sb);
                 break;
             };
         } else if (!iscntrl(c) && c < 128) {
-            grpush(gr, c);
+            sbputc(sb, c);
         };
+
+        # call callback only if there is no input waiting
+        if (callback && (read(0,0,0)==0))
+            callback(sbbase(sb));
     };
 
     prompt_cursor = -1;
+    if (callback) callback(result);
     return result;
 };
 

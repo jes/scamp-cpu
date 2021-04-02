@@ -10,6 +10,7 @@ var sbbase = func(sb) {
 };
 var sblen = grlen;
 var sbputc = grpush;
+var sbpop = grpop;
 var sbclear = func(sb) {
     grtrunc(sb, 0);
 };
