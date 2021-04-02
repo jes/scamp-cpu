@@ -410,6 +410,7 @@ savefile = func() {
 
     var fd = open(openfilename, O_WRITE|O_CREAT);
     if (fd < 0) fatal("open %s: %s", [openfilename, strerror(fd)]);
+    free(openfilename);
 
     var buf = malloc(257);
     setbuf(fd, buf);
