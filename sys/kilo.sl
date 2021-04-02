@@ -19,6 +19,7 @@ var CTRL_KEY = func(k) return k&0x1f;
 var WELCOME = "~     Kilo editor -- SCAMP edition";
 var TABSTOP = 4; # must be a power of 2 !
 var QUIT_TIMES = 3;
+var WAIT_STEPS = 1000; # number of loop iterations to wait for escaped characters
 
 # key constants
 var BACKSPACE = 127;
@@ -72,7 +73,6 @@ var markallclean;
 var need_redraw = malloc(ROWS);
 
 ### editor operations
-
 var insertchar;
 var insertnewline;
 var truncaterow;
@@ -97,6 +97,7 @@ var prompt_cursor = -1;
 var prompt;
 var move;
 var processkey;
+var waitread;
 
 ### TERMINAL
 
@@ -140,14 +141,12 @@ readkey = func() {
 
     var seq = [0,0,0];
     if (c == ESC) {
-        # TODO: [bug] we want read() to return 0 if there is no key pressed
-        #       quickly so that a single ESC can be detected
-        if (read(0, seq+0, 1) != 1) return ESC;
-        if (read(0, seq+1, 1) != 1) return ESC;
+        if (waitread(0, seq+0, 1, WAIT_STEPS) != 1) return ESC;
+        if (waitread(0, seq+1, 1, WAIT_STEPS) != 1) return ESC;
 
         if (seq[0] == '[') {
             if (seq[1] >= '0' && seq[1] <= '9') {
-                if (read(0, seq+2, 1) != 1) return ESC;
+                if (waitread(0, seq+2, 1, WAIT_STEPS) != 1) return ESC;
                 if (seq[2] == '~') {
                     if (seq[1] == '1') return HOME_KEY;
                     if (seq[1] == '3') return DEL_KEY;
@@ -702,6 +701,17 @@ processkey = func() {
     };
 
     quit_times = QUIT_TIMES;
+};
+
+# wait for "timeout" loop iterations, read() if anything is available,
+# otherwise return 0
+waitread = func(fd, buf, bufsz, timeout) {
+    while (timeout--) {
+        if (read(fd, 0, 0))
+            return read(fd, buf, bufsz);
+    };
+
+    return 0;
 };
 
 ### INIT
