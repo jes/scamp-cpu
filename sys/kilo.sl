@@ -415,7 +415,7 @@ openfile = func(filename) {
 };
 
 savefile = func() {
-    if (!openfilename) openfilename = prompt("Save as: ", " (ESC to cancel)", 0);
+    if (!openfilename) openfilename = prompt("Save as: ", " (ESC to cancel)", 1, 0);
     if (!openfilename) {
         setstatusmsg("Save aborted", 0);
         return 0;
@@ -450,24 +450,46 @@ savefile = func() {
 
 ### FIND
 
+var find_last = -1;
+var find_dir = 1;
 find = func() {
     var cx0 = cx;
     var cy0 = cy;
     var rowoff0 = rowoff;
     var coloff0 = coloff;
 
-    var str = prompt("Search: ", " (ESC to cancel)", func(query) {
-        if (!query) return 0;
+    var str = prompt("Search: ", " (ESC/arrows/enter)", 0, func(query, key) {
+        if (key == 0) {
+            # finished searching, reset state for next time
+            find_last = -1;
+            find_dir = 1;
+            return 0;
+        } else if (key == ARROW_RIGHT || key == ARROW_DOWN) {
+            find_dir = 1;
+        } else if (key == ARROW_LEFT || key == ARROW_UP) {
+            find_dir = -1;
+        } else {
+            find_last = -1;
+            find_dir = 1;
+        };
+
+        if (find_last == -1) find_dir = 1;
+        var cur = find_last;
 
         var i = 0;
         var match;
         var line;
         while (i < grlen(rows)) {
-            line = row2chars(grget(rows, i));
+            cur = cur + find_dir;
+            if (cur == -1) cur = grlen(rows)-1;
+            if (cur == grlen(rows)) cur = 0;
+
+            line = row2chars(grget(rows, cur));
             match = strstr(line, query);
             if (match) {
-                cy = i;
-                cx = rx2cx(grget(rows, i), match - line);
+                find_last = cur;
+                cy = cur;
+                cx = rx2cx(grget(rows, cur), match - line);
                 rowoff = grlen(rows);
                 break;
             };
@@ -632,7 +654,7 @@ scroll = func() {
 
 ### INPUT
 
-prompt = func(beforemsg, aftermsg, callback) {
+prompt = func(beforemsg, aftermsg, wantcursor, callback) {
     var c;
     var sb = sbnew();
     var result = 0;
@@ -640,7 +662,8 @@ prompt = func(beforemsg, aftermsg, callback) {
     while (1) {
         setstatusmsg("%s%s%s", [beforemsg, sbbase(sb), aftermsg]);
 
-        prompt_cursor = strlen(beforemsg) + sblen(sb) + 1;
+        if (wantcursor)
+            prompt_cursor = strlen(beforemsg) + sblen(sb) + 1;
         refresh();
         c = readkey();
         if (c == DEL_KEY || c == CTRL_KEY('h') || c == BACKSPACE) {
@@ -650,23 +673,21 @@ prompt = func(beforemsg, aftermsg, callback) {
             sbfree(sb);
             break;
         } else if (c == '\r') {
-            if (sblen(sb)) {
-                setstatusmsg("", 0);
-                result = strdup(sbbase(sb));
-                sbfree(sb);
-                break;
-            };
+            if (sblen(sb)) result = strdup(sbbase(sb));
+            setstatusmsg("", 0);
+            sbfree(sb);
+            break;
         } else if (!iscntrl(c) && c < 128) {
             sbputc(sb, c);
         };
 
         # call callback only if there is no input waiting
         if (callback && (read(0,0,0)==0))
-            callback(sbbase(sb));
+            callback(sbbase(sb), c);
     };
 
     prompt_cursor = -1;
-    if (callback) callback(result);
+    if (callback) callback(result, 0);
     return result;
 };
 
