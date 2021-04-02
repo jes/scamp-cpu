@@ -91,6 +91,8 @@ var sprintf = func(fmt, args) {
     sprintf_output = malloc(sprintf_len);
     sprintf_p = sprintf_output;
 
+    *sprintf_output = 0;
+
     xprintf(fmt, args, func(ch) {
         var l = sprintf_p - sprintf_output;
         if (l == sprintf_len-1) {
@@ -104,4 +106,17 @@ var sprintf = func(fmt, args) {
     });
 
     return sprintf_output;
+};
+
+# TODO: [perf] this can be better
+var strstr = func(haystack, needle) {
+    var lenneedle = strlen(needle);
+
+    while (*haystack) {
+        if (strncmp(haystack, needle, lenneedle) == 0)
+            return haystack;
+        haystack++;
+    };
+
+    return 0;
 };
