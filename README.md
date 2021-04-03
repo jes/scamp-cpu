@@ -50,7 +50,8 @@ I'm currently designing the PCBs:
 Other work includes:
 
  - [x] get the PCBs manufactured
- - [ ] work out how to interface with storage and serial
+ - [x] work out how to interface with serial
+ - [ ] work out how to interface with storage
  - [ ] assemble the computer inside a convenient case (WIP: see `case/` and `front-panels/`)
  - [x] write the bootloader ROM (mostly done: see `bootrom.s`)
  - [x] write the "kernel" (mostly done: see `kernel/`)
