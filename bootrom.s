@@ -81,6 +81,7 @@ print:
     ld x, (r0++)
     test x
     jz printdone
+    # TODO: [bug] need to spin until tx holding register is empty
     out SERIALREG0, x
     jmp print
     printdone:
