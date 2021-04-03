@@ -12,7 +12,11 @@
 
 .def DISKBLK   4
 .def DISKDEV   5
-.def SERIALDEV 2
+.def SERIALREG0 64
+.def SERIALREG1 65
+.def SERIALREG3 67
+.def SERIALREG5 69
+.def SERIALCLKDIV 12 # 115200/12 = 9600 baud
 .def START 0xff01
 .def POINT 0xff02
 .def LENGTH 0xff03
@@ -77,14 +81,31 @@ print:
     ld x, (r0++)
     test x
     jz printdone
-    out SERIALDEV, x
+    out SERIALREG0, x
     jmp print
     printdone:
     ret
 
 serial_init:
-    # TODO: initialise serial
+    # select divisor latches:
+    # write 0x80 to line control register
+    ld x, 0x80
+    out SERIALREG3, x
+
+    # set high byte of divisor latch = 0
+    ld x, 0
+    out SERIALREG1, x
+    # set low byte of divisor latch = SERIALCLKDIV
+    ld x, SERIALCLKDIV
+    out SERIALREG0, x
+
+    # select data register instead of divisor latches, and set 8-bit words, no parity, 1 stop:
+    # write 0x03 to line control register (addr 3)
+    ld x, 0x03
+    out SERIALREG3, x
+
     ret
+
 
 .def BLKNUM 0xff0a
 .def BLKIDX 0xff0b
@@ -121,7 +142,7 @@ inword:
     out DISKBLK, (BLKNUM)
 
     ld x, 0x2e # '.'
-    out SERIALDEV, x
+    out SERIALREG0, x
     ret
 
 welcome_s:    .str "SCAMP boot...\r\n\0"
