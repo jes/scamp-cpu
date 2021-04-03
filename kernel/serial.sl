@@ -104,13 +104,13 @@ var ser_poll = func(fd) {
     if (writeimpl != ser_write) return 0; # don't try to ser_poll() on non-serial devices
 
     var readport = p[BASEPORT];
-    var readyport = readport+4;
+    var lsrport = readport+5;
     var cooked_mode = p[SERFLAGS] & SER_COOKED;
     var bufp = p[BUFPTR];
     var ch;
 
     # read while there are characters ready and the buffer is not full
-    while (inp(readyport) && !ser_buffull(bufp)) {
+    while ((inp(lsrport)&1) && !ser_buffull(bufp)) {
         ch = inp(readport);
 
         if (cooked_mode) {
@@ -119,7 +119,7 @@ var ser_poll = func(fd) {
             if (ch == 19) { # ctrl-s
                 # block the entire system until they type ctrl-q
                 while (1) {
-                    if (inp(readyport)) {
+                    if (inp(lsrport)&1) {
                         if (inp(readport) == 17) break; # ctrl-q
                     };
                 };
@@ -180,9 +180,14 @@ var ser_read = func(fd, buf, sz) {
     return sz;
 };
 
+var ser_writech = func(baseport, ch) {
+    # TODO: [bug] wait until LSR says tx buf is empty
+    outp(baseport, ch);
+};
+
 ser_write = func(fd, buf, sz) {
     var p = fdbaseptr(fd);
-    var writeport = p[BASEPORT];
+    var baseport = p[BASEPORT];
     var cooked_mode = p[SERFLAGS] & SER_COOKED;
     var ch;
     while (sz--) {
@@ -191,17 +196,17 @@ ser_write = func(fd, buf, sz) {
         # TODO: [nice] maybe we need to block and wait for the serial device to be ready?
 
         if (cooked_mode) {
-            if (ch == '\n') outp(writeport, '\r'); # put \r before \n
+            if (ch == '\n') ser_writech(baseport, '\r'); # put \r before \n
         };
 
-        outp(writeport, ch);
+        ser_writech(baseport, ch);
     };
     return sz;
 };
 
 var ser_init = func() {
     var ser_fds = [3];
-    var ser_baseports = [2];
+    var ser_baseports = [64];
     var i = 0;
     var p;
     var bufp = ser_buf_area;
@@ -217,6 +222,12 @@ var ser_init = func() {
         ser_setreadpos(bufp, 0);
         ser_setreadmaxpos(bufp, 0);
         ser_setwritepos(bufp, 0);
+
+        # initialise port
+        outp(ser_baseports[i]+3, 0x80); # dlab = 1
+        outp(ser_baseports[i]+1, 0);
+        outp(ser_baseports[i]+0, 12); # 115200/12 = 9600 baud
+        outp(ser_baseports[i]+3, 0x03); # dlab = 0, mode 8n1
 
         bufp = bufp + ser_bufsz;
         i++;
