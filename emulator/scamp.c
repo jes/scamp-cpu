@@ -33,12 +33,14 @@ struct uart8250 {
     uint16_t clockdiv;
     uint8_t rxbuf;
     uint8_t txbuf;
+    uint64_t last_rx;
     /* TODO: [bug] we should drop characters if trying to output them faster
        than the baud rate allows */
 };
 
-int test, debug, stacktrace, cyclecount, show_help, test_fail, freq, watch=-1;
+int test, debug, stacktrace, cyclecount, show_help, test_fail, freq=20000000, watch=-1;
 int halt;
+uint64_t steps;
 struct termios orig_termios;
 
 uint8_t DI, DO, AI, MI, MO, II, IOH, IOL, JMP, PO, PP, XI, EO, YI, RT;
@@ -64,11 +66,6 @@ uint64_t opcode_cycles[256];
 uint64_t addr_reads[65536];
 uint64_t addr_writes[65536];
 FILE *profile_fp;
-
-#define INPUT_BUFSZ 256
-
-char input_buffer[INPUT_BUFSZ];
-int input_pos = 0;
 
 struct uart8250 console;
 
@@ -175,6 +172,11 @@ uint16_t alu(uint16_t argx, uint16_t argy) {
 /* return 1 if data available to read, 0 if not, -1 if poll error */
 int uart_ready(struct uart8250 *uart) {
     struct pollfd pfd;
+    float chars_per_sec = 11520.0 / uart->clockdiv; /* 1/10 of baud rate */
+    uint64_t steps_per_char = freq / chars_per_sec;
+
+    /* we can't have received any more chars yet if the baud rate would't allow it */
+    if (steps - uart->last_rx < steps_per_char) return 0;
 
     pfd.fd = uart->infd;
     pfd.events = POLLIN;
@@ -185,20 +187,22 @@ int uart_ready(struct uart8250 *uart) {
 /* read into rx buffer, and maybe set halt flag on ctrl-\ */
 void uart_poll(struct uart8250 *uart) {
     uint8_t ch;
-    while (uart_ready(uart)) {
-        if (read(uart->infd, &ch, 1) != 1) {
-            halt = 1;
-            break;
-        }
-        if (uart->is_console && ch == 28) halt = 1; /* halt on ctrl-\ */
 
-        /* note: we deliberately drop characters if the rxbuf hasn't been
-           consumed yet; this emulates real 8250 behaviour; we could consider
-           setting bit 1 ("Overrun Error") of the line status register (reg 5)
-           if we are setting rxbuf while dataready is already 1 */
-        uart->rxbuf = ch;
-        uart->dataready = 1;
+    if (!uart_ready(uart)) return;
+
+    if (read(uart->infd, &ch, 1) != 1) {
+        halt = 1;
+        return;
     }
+    if (uart->is_console && ch == 28) halt = 1; /* halt on ctrl-\ */
+
+    /* note: we deliberately drop characters if the rxbuf hasn't been
+       consumed yet; this emulates real 8250 behaviour; we could consider
+       setting bit 1 ("Overrun Error") of the line status register (reg 5)
+       if we are setting rxbuf while dataready is already 1 */
+    uart->last_rx = steps;
+    uart->rxbuf = ch;
+    uart->dataready = 1;
 }
 
 /* return next char from input buffer */
@@ -227,6 +231,7 @@ uint8_t uart_in(struct uart8250 *uart, int addr) {
             return 0;
         case 5: /* line status register */
             /* TODO: [nice] there are potentially more bits that might be useful */
+            uart_poll(uart);
             return uart->dataready | (uart->txempty << 5);
         case 6: /* modem status register */
             /* TODO */
@@ -447,7 +452,7 @@ void help(void) {
 "Options:\n"
 "  -c,--cycles        Print number of cycles taken\n"
 "  -d,--debug         Print debug output after each clock cycle\n"
-"  -f,--freq HZ       Aim to emulate a clock of the given frequency\n"
+"  -f,--freq HZ       Aim to emulate a clock of the given frequency (default: 20000000)\n"
 "  -i,--image FILE    Load disk image from given hex file\n"
 "  -p,--profile FILE  Write profiling data to FILE\n"
 "  -r,--run FILE      Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
@@ -497,7 +502,6 @@ void rawmode(void) {
 }
 
 int main(int argc, char **argv) {
-    unsigned long steps = 0;
     int jmp0x100 = 0;
     struct timeval starttime, curtime;
     uint64_t elapsed_us, target_us;
