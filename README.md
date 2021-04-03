@@ -109,7 +109,7 @@ I thoroughly recommend the Nand2Tetris course. https://nand2tetris.org/
 If you want to do the exercises from Nand2Tetris without learning what a hardware-description language
 is, and without going through all the lectures, you can play https://nandgame.com/
 
-Ben Eater's videos on 8-bit CPU design are excellent and heavily influenced
+Ben Eater's [videos on 8-bit CPU design](https://www.youtube.com/watch?v=HyznrdDSSGM&list=PLowKtXNTBypGqImE405J2565dvjafglHU) are excellent and heavily influenced
 the design of my CPU.
 
 I found the [YouTube playlist](https://www.youtube.com/playlist?list=PLOech0kWpH8-njQpmSNGSiQBPUvl8v3IM) for Nicolas Laurent's [compiler class](https://norswap.com/compilers/) quite helpful
