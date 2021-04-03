@@ -269,7 +269,8 @@ uint16_t in(uint16_t addr) {
         r = disk[diskptr++];
     }
     if (addr == 5) {
-        r = disk[512*blknum + blkidx];
+        if (disk)
+            r = disk[512*blknum + blkidx];
         blkidx = (blkidx+1)%512;
     }
     if (addr >= console.base_address && addr < console.base_address + 8) {
@@ -296,7 +297,8 @@ void out(uint16_t val, uint16_t addr) {
         blkidx = 0;
     }
     if (addr == 5) {
-        disk[512*blknum + blkidx] = val;
+        if (disk)
+            disk[512*blknum + blkidx] = val;
         blkidx = (blkidx+1)%512;
     }
     if (addr >= console.base_address && addr < console.base_address + 8) {
