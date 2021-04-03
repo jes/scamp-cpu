@@ -7,11 +7,10 @@ include "sys.sl";
 # return a pointer to "sz" words of unused memory
 var sbrk = func(sz) {
     var oldtop = TOP;
-    TOP = TOP + sz;
-    if (TOP ge osbase() || TOP lt oldtop) {
-        fputs(2, "out of memory\n");
-        exit(1);
-    };
+    var newtop = TOP + sz;
+    if (newtop ge osbase() || newtop lt oldtop)
+        return 0;
+    TOP = newtop;
     return oldtop;
 };
 
@@ -30,6 +29,7 @@ var freep = [0, 0];
 var free = func(ap) {
     if (ap == 0) return 0;
 
+    # TODO: [bug] this test is ~broken now that _TOP is in head.s instead of foot.s
     if (ap lt &TOP) {
         fprintf(2, "free'd static pointer: 0x%x\n", [ap]);
         exit(1);
@@ -61,10 +61,24 @@ var free = func(ap) {
     freep = p;
 };
 
-var morecore = func(sz) {
-    if (sz < 1024)
-        sz = 1024;
+var morecore = func(needsz) {
+    var sz = needsz;
+    if (sz lt 1024) sz = 1024;
+
     var p = sbrk(sz);
+    if (!p) {
+        # not enough space for 1024? try just what we need
+        sz = needsz;
+        p = sbrk(sz);
+    };
+    if (!p) {
+        # oom
+        # TODO: [nice] can we print a call stack? or at least the return
+        #       address of malloc()?
+        fputs(2, "out of memory\n");
+        exit(1);
+    };
+
     *(p+1) = sz;
     free(p+2);
     return freep;
