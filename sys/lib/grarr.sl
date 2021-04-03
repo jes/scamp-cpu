@@ -53,11 +53,19 @@ var grbase = func(gr) return gr[2];
 
 var grset = func(gr, i, el) {
     var p = gr[2];
+    if (i ge gr[0]) {
+        fprintf(2, "out of bounds grset: N=%d, i=%d\n", [gr[0], i]);
+        exit(1);
+    };
     *(p+i) = el;
 };
 
 var grget = func(gr, i) {
     var p = gr[2];
+    if (i ge gr[0]) {
+        fprintf(2, "out of bounds grget: N=%d, i=%d\n", [gr[0], i]);
+        exit(1);
+    };
     return p[i];
 };
 
