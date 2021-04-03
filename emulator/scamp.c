@@ -20,6 +20,23 @@
 #include <time.h>
 #include <unistd.h>
 
+/* this is a pretty lame 8250 emulation, it only really supports the
+   parts that are used by SCAMP/os */
+struct uart8250 {
+    int dataready : 1;
+    int txempty : 1;
+    int dlab : 1; /* "divisor latch access bit"? */
+    int is_console : 1;
+    int infd;
+    int outfd;
+    uint16_t base_address;
+    uint16_t clockdiv;
+    uint8_t rxbuf;
+    uint8_t txbuf;
+    /* TODO: [bug] we should drop characters if trying to output them faster
+       than the baud rate allows */
+};
+
 int test, debug, stacktrace, cyclecount, show_help, test_fail, freq, watch=-1;
 int halt;
 struct termios orig_termios;
@@ -52,6 +69,8 @@ FILE *profile_fp;
 
 char input_buffer[INPUT_BUFSZ];
 int input_pos = 0;
+
+struct uart8250 console;
 
 void load_hex(uint16_t *buf, int maxlen, char *name) {
     FILE *fp;
@@ -153,43 +172,94 @@ uint16_t alu(uint16_t argx, uint16_t argy) {
     return val;
 }
 
-/* return 1 if data available on stdin, 0 if not, -1 if poll error */
-int console_ready() {
+/* return 1 if data available to read, 0 if not, -1 if poll error */
+int uart_ready(struct uart8250 *uart) {
     struct pollfd pfd;
 
-    pfd.fd = STDIN_FILENO;
+    pfd.fd = uart->infd;
     pfd.events = POLLIN;
 
     return poll(&pfd, 1, 0);
 }
 
-/* read stdin into input buffer, and set halt flag on ctrl-\ */
-void console_poll() {
-    while (console_ready() && input_pos < INPUT_BUFSZ) {
-        if (read(STDIN_FILENO, input_buffer+input_pos, 1) != 1) {
+/* read into rx buffer, and maybe set halt flag on ctrl-\ */
+void uart_poll(struct uart8250 *uart) {
+    uint8_t ch;
+    while (uart_ready(uart)) {
+        if (read(uart->infd, &ch, 1) != 1) {
             halt = 1;
             break;
         }
-        if (input_buffer[input_pos] == 28) halt = 1; /* halt on ctrl-\ */
-        input_pos++;
+        if (uart->is_console && ch == 28) halt = 1; /* halt on ctrl-\ */
+
+        /* note: we deliberately drop characters if the rxbuf hasn't been
+           consumed yet; this emulates real 8250 behaviour; we could consider
+           setting bit 1 ("Overrun Error") of the line status register (reg 5)
+           if we are setting rxbuf while dataready is already 1 */
+        uart->rxbuf = ch;
+        uart->dataready = 1;
     }
 }
 
 /* return next char from input buffer */
-uint8_t console_getchar() {
-    uint8_t ch;
+uint8_t uart_getchar(struct uart8250 *uart) {
+    uart_poll(uart);
+    uart->dataready = 0;
+    return uart->rxbuf;
+}
 
-    console_poll();
+uint8_t uart_in(struct uart8250 *uart, int addr) {
+    switch (addr) {
+        case 0:
+            if (uart->dlab) return uart->clockdiv >> 8; /* divisor latch lsb */
+            else            return uart_getchar(&console); /* rxbuf */
+        case 1:
+            if (uart->dlab) return uart->clockdiv & 0xff; /* divisor latch msb */
+            else            return 0; /* interrupt enable register */
+        case 2: /* interrupt ident register */
+            /* TODO */
+            return 0;
+        case 3: /* line control register */
+            /* TODO */
+            return 0;
+        case 4: /* modem control register */
+            /* TODO */
+            return 0;
+        case 5: /* line status register */
+            /* TODO: [nice] there are potentially more bits that might be useful */
+            return uart->dataready | (uart->txempty << 5);
+        case 6: /* modem status register */
+            /* TODO */
+            return 0;
+        case 7: /* scratch register */
+            /* TODO */
+            return 0;
+        default:
+            return -1;
+    }
+}
 
-    if (!input_pos) return 0;
+void uart_out(struct uart8250 *uart, int addr, uint8_t val) {
+    /* TODO: [nice] implement more of this, in particular we should really keep
+             track of the configured baud rate and drop characters if we try to
+             output too fast */
+    if (addr == 3) {
+        uart->dlab = !!(val & 0x80);
+    }
+    if (addr == 0 && uart->dlab) {
+        uart->clockdiv = (uart->clockdiv & 0xff00) | val;
+    }
+    if (addr == 1 && uart->dlab) {
+        uart->clockdiv = (uart->clockdiv & 0x00ff) | (val << 8);
+    }
+    if (addr == 0 && !uart->dlab) {
+        uart->txbuf = val;
+        uart->txempty = 0;
 
-    ch = input_buffer[0];
-
-    /* XXX: awful for performance, should use a ring buffer instead, but meh */
-    input_pos--;
-    memmove(input_buffer, input_buffer+1, input_pos);
-
-    return ch;
+        /* XXX: when we are tracking baud rate, the following can move: */
+        putchar(uart->txbuf);
+        uart->txempty = 1;
+    }
 }
 
 /* input a word from addr */
@@ -198,15 +268,12 @@ uint16_t in(uint16_t addr) {
     if (addr == 1) {
         r = disk[diskptr++];
     }
-    if (addr == 2) {
-        r = console_getchar();
-    }
     if (addr == 5) {
         r = disk[512*blknum + blkidx];
         blkidx = (blkidx+1)%512;
     }
-    if (addr == 6) {
-        r = (input_pos != 0);
+    if (addr >= console.base_address && addr < console.base_address + 8) {
+        r = uart_in(&console, addr-console.base_address);
     }
     return r;
 }
@@ -221,9 +288,6 @@ void out(uint16_t val, uint16_t addr) {
         }
         expect_output++;
     }
-    if (addr == 2) {
-        putchar(val);
-    }
     if (addr == 3) {
         halt = 1;
     }
@@ -234,6 +298,9 @@ void out(uint16_t val, uint16_t addr) {
     if (addr == 5) {
         disk[512*blknum + blkidx] = val;
         blkidx = (blkidx+1)%512;
+    }
+    if (addr >= console.base_address && addr < console.base_address + 8) {
+        uart_out(&console, addr-console.base_address, val);
     }
 }
 
@@ -485,12 +552,19 @@ int main(int argc, char **argv) {
     rawmode();
     gettimeofday(&starttime, NULL);
 
+    console.is_console = 1;
+    console.base_address = 64;
+    console.infd = 0; /* stdin */
+    console.outfd = 1; /* stdout */
+
     /* run the clock */
     while (!halt) {
         if ((steps & 0xffff) == 0) /* console_poll() is slow, only call it very occasionally */
-            console_poll();
+            uart_poll(&console);
+
         negedge();
         posedge();
+
         steps++;
         if (test && steps > 3000)
             halt = 1;

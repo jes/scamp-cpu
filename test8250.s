@@ -1,9 +1,9 @@
 # 8250 UART test
 
-.def REG0 0
-.def REG1 1
-.def REG3 3
-.def REG5 5
+.def REG0 64
+.def REG1 65
+.def REG3 67
+.def REG5 69
 .def CLKDIVIDE 12 # 115200 / 12 = 9600 baud
 
 ld sp, 0x8000
