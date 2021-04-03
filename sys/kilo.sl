@@ -226,8 +226,8 @@ insertrow = func(at, gr) {
 };
 
 rowinsertchar = func(row, at, c) {
-    if (at < 0 || at > rowlen(row)+1) at = rowlen(row)+1;
-    var n = rowlen(row)+1;
+    if (at < 0 || at > rowlen(row)) at = rowlen(row);
+    var n = rowlen(row);
     grpush(row, 0);
     while (n != at) {
         grset(row, n, grget(row, n-1));
@@ -246,8 +246,8 @@ rowappendstr = func(row, s, len) {
 rowdelchar = func(row, at) {
     if (at < 0 || at > rowlen(row)) return 0;
     var len = rowlen(row);
-    while (at != len) {
-        grset(row, at, grget(row, at+1));
+    while (at != len-1) {
+        grset(row, at, grget(row, at));
         at++;
     };
     grpop(row);
@@ -263,7 +263,7 @@ delrow = func(at) {
     var row = grget(rows,at);
     freerow(row);
     var len = grlen(rows);
-    while (at != len) {
+    while (at != len-1) {
         grset(rows, at, grget(rows, at+1));
         at++;
     };
