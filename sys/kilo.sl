@@ -796,7 +796,7 @@ waitread = func(fd, buf, bufsz, timeout) {
 
 markalldirty();
 rawmode();
-setstatusmsg("HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-Z = shell | Ctrl-K = clreol | Ctrl-F = find", 0);
+setstatusmsg("HELP: ^S save  ^Q quit  ^Z shell  ^K del line  ^F find", 0);
 
 var args = cmdargs()+1;
 if (*args) openfile(*args);
