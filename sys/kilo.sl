@@ -703,7 +703,8 @@ move = func(k) {
     if (cy > maxrow) cy = maxrow;
 
     var maxcol = 0;
-    var row = grget(rows, cy);
+    var row = 0;
+    if (cy < maxrow) row = grget(rows, cy);
     if (row) maxcol = rowlen(row);
 
     if (cx < 0) {
