@@ -172,9 +172,9 @@ If it doesn't work... there's always JLCPCB.
 
 Initially, only populate the oscillator circuit on UART 0.
 
-  Crystal: 1.8432 MHz
-  Caps: 30 nF
-  Resistor: 100 Omh
+    Crystal: 1.8432 MHz
+    Caps: 30 nF
+    Resistor: 100 Omh
 
 Ideally, the 4 solder jumpers in the middle can be bridged, to share the 1.8432 MHz oscillator between
 all of the UARTs. If that is not possible, then un-solder them and populate the other oscillators as well.
@@ -187,10 +187,10 @@ UARTs, and then there's 1 bit (A3,A4,A5,A6) of address to select each UART.
 
 Addresses:
 
-  UART 0: A3+A7: base address = 136
-  UART 1: A4+A7: base address = 144
-  UART 2: A5+A7: base address = 160
-  UART 3: A6+A7: base address = 192
+    UART 0: A3+A7: base address = 136
+    UART 1: A4+A7: base address = 144
+    UART 2: A5+A7: base address = 160
+    UART 3: A6+A7: base address = 192
 
 It would probably work to initialise all of the UARTs by setting all 5 address bits high, which is base address = 248.
 
