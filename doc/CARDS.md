@@ -174,7 +174,7 @@ Initially, only populate the oscillator circuit on UART 0.
 
     Crystal: 1.8432 MHz
     Caps: 30 nF
-    Resistor: 100 Omh
+    Resistor: 100 Ohm
 
 Ideally, the 4 solder jumpers in the middle can be bridged, to share the 1.8432 MHz oscillator between
 all of the UARTs. If that is not possible, then un-solder them and populate the other oscillators as well.
