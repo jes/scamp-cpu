@@ -167,3 +167,34 @@ CNC order of operations:
     6. cut edges
 
 If it doesn't work... there's always JLCPCB.
+
+## Serial
+
+Initially, only populate the oscillator circuit on UART 0.
+
+  Crystal: 1.8432 MHz
+  Caps: 30 nF
+  Resistor: 100 Omh
+
+Ideally, the 4 solder jumpers in the middle can be bridged, to share the 1.8432 MHz oscillator between
+all of the UARTs. If that is not possible, then un-solder them and populate the other oscillators as well.
+
+The 2x5 pin connector is for jumpers to allow easy disconnection of signals from the connector. The 1x6 connector
+should do up with wires to the connector on the front panel.
+
+Each UART has 8 addresses, consecutive starting from a base address. A7 (0x80) needs to be high to select the
+UARTs, and then there's 1 bit (A3,A4,A5,A6) of address to select each UART.
+
+Addresses:
+
+  UART 0: A3+A7: base address = 136
+  UART 1: A4+A7: base address = 144
+  UART 2: A5+A7: base address = 160
+  UART 3: A6+A7: base address = 192
+
+It would probably work to initialise all of the UARTs by setting all 5 address bits high, which is base address = 248.
+
+I plan to only install UART 0 at first, and then populate the rest of the slots as and when I want to use them.
+
+In the event that the clock signal does not want to be inverted for the WR pulse, then pin 2 of U2 (inv_CLK) can be popped out
+of the socket and bridged to pin 1 (CLK). But I think it does want to be inverted.
