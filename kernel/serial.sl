@@ -206,7 +206,7 @@ ser_write = func(fd, buf, sz) {
 
 var ser_init = func() {
     var ser_fds = [3];
-    var ser_baseports = [64];
+    var ser_baseports = [136];
     var i = 0;
     var p;
     var bufp = ser_buf_area;

@@ -27,12 +27,14 @@ var outp = asm {
 
 # take a pointer to a nul-terminated string, and print it
 var kputs = asm {
+    .def SERIALDEV 136
     pop x
     test (x)
     jnz kputs_loop
     ret
     kputs_loop:
-        out 2, (x)
+        # TODO: probably need to spin until the 8250 is ready to take more output
+        out SERIALDEV, (x)
         inc x
         test (x)
         jnz kputs_loop

@@ -559,7 +559,7 @@ int main(int argc, char **argv) {
     gettimeofday(&starttime, NULL);
 
     console.is_console = 1;
-    console.base_address = 64;
+    console.base_address = 136;
     console.infd = 0; /* stdin */
     console.outfd = 1; /* stdout */
 
