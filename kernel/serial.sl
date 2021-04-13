@@ -226,7 +226,7 @@ var ser_init = func() {
         # initialise port
         outp(ser_baseports[i]+3, 0x80); # dlab = 1
         outp(ser_baseports[i]+1, 0);
-        outp(ser_baseports[i]+0, 12); # 115200/12 = 9600 baud
+        outp(ser_baseports[i]+0, 1); # 115200/1 = 115200 baud
         outp(ser_baseports[i]+3, 0x03); # dlab = 0, mode 8n1
 
         bufp = bufp + ser_bufsz;
