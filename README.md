@@ -123,6 +123,8 @@ The [Build Your Own Text Editor](https://viewsourcecode.org/snaptoken/kilo/) is 
 
 Daniel Tufvesson has a post that is a good starting point for understanding the [8-bit CompactFlash interface](http://www.waveguide.se/?article=8-bit-compact-flash-interface).
 
+[PickledDog](https://github.com/PickledDog) has a description of an [improvement to the RC2014 CompactFlash card](https://github.com/PickledDog/rc-cfcard) that might be helpful.
+
 ## Contact
 
 If anything in this repo causes you to want to communicate with the person who wrote it, you can email me on [james@incoherency.co.uk](mailto:james@incoherency.co.uk)
