@@ -21,6 +21,10 @@
 .def POINT 0xff02
 .def LENGTH 0xff03
 
+# put stack pointer in pseudoregs page, to minimise chances of collision
+# with the loaded data
+ld sp, 0xfffd
+
 call serial_init
 
 # 1. print hello
