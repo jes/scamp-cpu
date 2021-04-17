@@ -44,7 +44,7 @@ I'm currently designing the PCBs:
  - [x] Instruction/control
  - [x] Backplane
  - [ ] Clock
- - [ ] Serial port
+ - [x] Serial port
  - [ ] Storage
 
 Other work includes:
