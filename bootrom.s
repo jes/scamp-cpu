@@ -125,11 +125,13 @@ serial_init:
 .def BLKIDX 0xff0b
 storage_init:
     # initialise LBA address to 0 by writing 0 to Sector Number, Cylinder Low,
-    # Cylinder High, and Drive/Head Registers
+    # and Cylinder High Registers, and 224 ("enable LBA") to the Drive/Head
+    # Register
     ld x, 0
     out CFBLKNUMREG, x
     out CFCYLLOREG, x
     out CFCYLHIREG, x
+    ld x, 224
     out CFHEADREG, x
 
     # ask for 1 block
