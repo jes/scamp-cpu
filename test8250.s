@@ -24,6 +24,13 @@ call init8250
 push CLKDIVIDE
 call init8250
 
+push 65
+call write8250
+push 66
+call write8250
+push 67
+call write8250
+
 # write letters
 loop:
     call read8250
