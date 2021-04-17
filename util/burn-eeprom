@@ -42,7 +42,7 @@ sub burn_eeprom {
         my $val = $data[$addr+$base];
         last if !defined $val;
         print $fh "write $addr $val\n";
-        usleep(10000);
+        usleep(12000);
         my $l = <$fh>;
         $l =~ s/[\0\r\n]//g;
         die "read $addr: ($l)\n" if $l ne 'ok';
