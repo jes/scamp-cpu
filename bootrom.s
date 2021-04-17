@@ -100,6 +100,89 @@ print:
     printdone:
     ret
 
+# usage: test4bits(val, start)
+# where "start" contains the right-most bit to test
+test4bits:
+    pop x
+    ld r6, x # r6 = bit to test
+    pop x
+    ld r7, x # r7 = val
+
+    ld r8, 1 # r8 = bit to set
+    ld r0, 0 # r0 = result
+
+    ld r9, 4
+    test4bits_loop:
+        ld x, r7
+        and x, r6
+        jz test4bits_dontset
+        or r0, r8
+
+        test4bits_dontset:
+        shl r8
+        shl r6
+        dec r9
+        jnz test4bits_loop
+
+    ret
+
+# print hex of the word on the stack, followed by '\r\n'
+alphabet: .str "0123456789abcdef"
+printhex:
+    pop x
+    ld r10, x
+
+    ld x, r254
+    push x
+
+    # least-significant digit
+    ld x, r10
+    and x, 0x0f
+    add x, alphabet
+    ld r11, (x)
+
+    # 2nd digit
+    ld x, r10
+    push x
+    push 0x10
+    call test4bits
+    ld x, r0
+    add x, alphabet
+    ld r12, (x)
+
+    # 3rd digit
+    ld x, r10
+    push x
+    ld x, 0x100
+    push x
+    call test4bits
+    ld x, r0
+    add x, alphabet
+    ld r13, (x)
+
+    # most-significant digit
+    ld x, r10
+    push x
+    ld x, 0x1000
+    push x
+    call test4bits
+    ld x, r0
+    add x, alphabet
+    ld r14, (x)
+
+    out SERIALREG0, r14
+    out SERIALREG0, r13
+    out SERIALREG0, r12
+    out SERIALREG0, r11
+    ld x, 0x0d # '\r'
+    out SERIALREG0, x
+    ld x, 0x0a # '\n'
+    out SERIALREG0, x
+
+    pop x
+    ld r254, x
+    ret
+
 serial_init:
     # select divisor latches:
     # write 0x80 to line control register
@@ -121,8 +204,8 @@ serial_init:
     ret
 
 
-.def BLKNUM 0xff0a
-.def BLKIDX 0xff0b
+.def BLKNUM 0xff04
+.def BLKIDX 0xff05
 storage_init:
     # initialise LBA address to 0 by writing 0 to Sector Number, Cylinder Low,
     # and Cylinder High Registers, and 224 ("enable LBA") to the Drive/Head
@@ -155,6 +238,17 @@ inword:
     ld x, (BLKIDX)
     sub x, 256
     jz nextblk
+
+    ld x, r254
+    push x
+    ld x, r0
+    push x
+    push x
+    call printhex
+    pop x
+    ld r0, x
+    pop x
+    ld r254, x
     ret
 
     nextblk:
@@ -175,8 +269,8 @@ inword:
     out SERIALREG0, x
     ret
 
-welcome_s:    .str "SCAMP boot...\r\n\0"
+welcome_s:    .str "boot...\r\n\0"
 ok_s:         .str "OK\r\n\0"
-wrongmagic_s: .str "Disk error: wrong magic\r\n\0"
-startinrom_s: .str "Disk error: start address points to ROM\r\n\0"
-zerolength_s: .str "Disk error: length is 0\r\n\0"
+wrongmagic_s: .str "wrong magic\r\n\0"
+startinrom_s: .str "start address points to ROM\r\n\0"
+zerolength_s: .str "length is 0\r\n\0"
