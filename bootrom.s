@@ -10,13 +10,22 @@
 
 .at 0
 
-.def DISKBLK   4
-.def DISKDEV   5
+.def CFDATAREG   264
+.def CFERRREG    265
+.def CFBLKCNTREG 266
+.def CFBLKNUMREG 267
+.def CFCYLLOREG  268
+.def CFCYLHIREG  269
+.def CFHEADREG   270
+.def CFSTATUSREG 271
+.def CFREADCMD 0x20
+
 .def SERIALREG0 136
 .def SERIALREG1 137
 .def SERIALREG3 139
 .def SERIALREG5 141
 .def SERIALCLKDIV 1 # 115200/1 = 115200 baud
+
 .def START 0xff01
 .def POINT 0xff02
 .def LENGTH 0xff03
@@ -115,36 +124,50 @@ serial_init:
 .def BLKNUM 0xff0a
 .def BLKIDX 0xff0b
 storage_init:
-    # TODO: initialise a real storage device
+    # initialise LBA address to 0 by writing 0 to Sector Number, Cylinder Low,
+    # Cylinder High, and Drive/Head Registers
     ld x, 0
-    out DISKBLK, x
-    ld (BLKNUM), 0
+    out CFBLKNUMREG, x
+    out CFCYLLOREG, x
+    out CFCYLHIREG, x
+    out CFHEADREG, x
+
+    # ask for 1 block
+    ld x, 1
+    out CFBLKCNTREG, x
+
+    # issue "read" command
+    ld x, CFREADCMD
+    out CFSTATUSREG, x
+
     ld (BLKIDX), 0
+    ld (BLKNUM), 0
+
     ret
 
 # read the next 1 word from the disk device and return it in r0
-# TODO: support a real disk device
 inword:
-    # high byte
-    in x, DISKDEV
-    inc (BLKIDX)
-    shl3 x
-    shl3 x
-    shl2 x
-    # low byte
-    in r0, DISKDEV
-    or r0, x
+    in r0, CFDATAREG
     inc (BLKIDX)
     # do we need to go to the next block?
     ld x, (BLKIDX)
-    sub x, 512
+    sub x, 256
     jz nextblk
     ret
 
     nextblk:
     inc (BLKNUM)
     ld (BLKIDX), 0
-    out DISKBLK, (BLKNUM)
+    # ask for the new block number
+    out CFBLKNUMREG, (BLKNUM)
+
+    # ask for 1 block
+    ld x, 1
+    out CFBLKCNTREG, x
+
+    # issue "read" command
+    ld x, CFREADCMD
+    out CFSTATUSREG, x
 
     ld x, 0x2e # '.'
     out SERIALREG0, x

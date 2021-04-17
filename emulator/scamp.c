@@ -278,6 +278,11 @@ uint16_t in(uint16_t addr) {
             r = disk[512*blknum + blkidx];
         blkidx = (blkidx+1)%512;
     }
+    if (addr == 264) { /* Data Register */
+        if (disk)
+            r = (disk[512*blknum + blkidx] << 8) | (disk[512*blknum + blkidx + 1]);
+        blkidx = (blkidx+2)%512;
+    }
     if (addr >= console.base_address && addr < console.base_address + 8) {
         r = uart_in(&console, addr-console.base_address);
     }
@@ -301,10 +306,16 @@ void out(uint16_t val, uint16_t addr) {
         blknum = val;
         blkidx = 0;
     }
-    if (addr == 5) {
+    if (addr == 5 || addr == 264) { /* Data Register */
         if (disk)
             disk[512*blknum + blkidx] = val;
         blkidx = (blkidx+1)%512;
+    }
+    if (addr == 267) { /* Sector Number Register */
+        blknum = (blknum & 0xff00) | (val & 0x00ff);
+    }
+    if (addr == 268) { /* Cylinder Low Register */
+        blknum = (blknum & 0x00ff) | ((val & 0x00ff) << 8);
     }
     if (addr >= console.base_address && addr < console.base_address + 8) {
         uart_out(&console, addr-console.base_address, val);

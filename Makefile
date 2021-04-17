@@ -38,6 +38,11 @@ testrom-low.hex: testrom.hex
 testrom-high.hex: testrom.hex
 	sed 's/..$$//' testrom.hex > testrom-high.hex
 
+bootrom-low.hex: bootrom.hex
+	sed 's/^..//' bootrom.hex > bootrom-low.hex
+bootrom-high.hex: bootrom.hex
+	sed 's/..$$//' bootrom.hex > bootrom-high.hex
+
 test8250-low.hex: test8250.hex
 	sed 's/^..//' test8250.hex > test8250-low.hex
 test8250-high.hex: test8250.hex
