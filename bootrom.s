@@ -26,13 +26,13 @@
 .def SERIALREG5 141
 .def SERIALCLKDIV 1 # 115200/1 = 115200 baud
 
-.def START 0xff01
-.def POINT 0xff02
-.def LENGTH 0xff03
+.def START 0xff01 # r1
+.def POINT 0xff02 # r2
+.def LENGTH 0xff03 # r3
 
 # put stack pointer in pseudoregs page, to minimise chances of collision
 # with the loaded data
-ld sp, 0xfffd
+ld sp, 0xfffd # r253
 
 call serial_init
 
@@ -130,50 +130,32 @@ test4bits:
 alphabet: .str "0123456789abcdef"
 printhex:
     pop x
-    ld r10, x
+    ld r10, x # r10 = value
 
     ld x, r254
     push x
 
-    # least-significant digit
-    ld x, r10
-    and x, 0x0f
-    add x, alphabet
-    ld r11, (x)
+    ld r15, 1 # bit to test
+    ld r16, 0xff12 # address (start at r18)
+    printhex_loop:
+        ld x, r10 # value
+        push x
+        ld x, r15 # bit to test
+        push x
+        call test4bits
 
-    # 2nd digit
-    ld x, r10
-    push x
-    push 0x10
-    call test4bits
-    ld x, r0
-    add x, alphabet
-    ld r12, (x)
+        add r0, alphabet
+        ld x, (r0)
+        ld (r16++), x
 
-    # 3rd digit
-    ld x, r10
-    push x
-    ld x, 0x100
-    push x
-    call test4bits
-    ld x, r0
-    add x, alphabet
-    ld r13, (x)
+        shl2 r15
+        shl2 r15
+        jnz printhex_loop
 
-    # most-significant digit
-    ld x, r10
-    push x
-    ld x, 0x1000
-    push x
-    call test4bits
-    ld x, r0
-    add x, alphabet
-    ld r14, (x)
-
-    out SERIALREG0, r14
-    out SERIALREG0, r13
-    out SERIALREG0, r12
-    out SERIALREG0, r11
+    out SERIALREG0, (0xff15) # r21
+    out SERIALREG0, (0xff14) # r20
+    out SERIALREG0, (0xff13) # r19
+    out SERIALREG0, (0xff12) # r18
     ld x, 0x0d # '\r'
     out SERIALREG0, x
     ld x, 0x0a # '\n'
@@ -204,8 +186,8 @@ serial_init:
     ret
 
 
-.def BLKNUM 0xff04
-.def BLKIDX 0xff05
+.def BLKNUM 0xff04 # r4
+.def BLKIDX 0xff05 # r5
 storage_init:
     # initialise LBA address to 0 by writing 0 to Sector Number, Cylinder Low,
     # and Cylinder High Registers, and 224 ("enable LBA") to the Drive/Head
@@ -230,8 +212,21 @@ storage_init:
 
     ret
 
+# spin until card is ready for data transfer
+cfwait:
+    in x, CFSTATUSREG
+    and x, 0x08 # test for "DRQ" bit
+    jz cfwait
+    ret
+
 # read the next 1 word from the disk device and return it in r0
 inword:
+    ld x, r254
+    push x
+    call cfwait
+    pop x
+    ld r254, x
+
     in r0, CFDATAREG
     inc (BLKIDX)
     # do we need to go to the next block?
@@ -269,8 +264,8 @@ inword:
     out SERIALREG0, x
     ret
 
-welcome_s:    .str "boot...\r\n\0"
+welcome_s:    .str "boot:\r\n\0"
 ok_s:         .str "OK\r\n\0"
-wrongmagic_s: .str "wrong magic\r\n\0"
-startinrom_s: .str "start address points to ROM\r\n\0"
-zerolength_s: .str "length is 0\r\n\0"
+wrongmagic_s: .str "bad magic\r\n\0"
+startinrom_s: .str "start in ROM\r\n\0"
+zerolength_s: .str "0 length\r\n\0"

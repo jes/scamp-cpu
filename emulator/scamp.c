@@ -283,6 +283,9 @@ uint16_t in(uint16_t addr) {
             r = (disk[512*blknum + blkidx] << 8) | (disk[512*blknum + blkidx + 1]);
         blkidx = (blkidx+2)%512;
     }
+    if (addr == 271) { /* Status Register */
+        r = 0x58; /* RDY | DSC | DRQ */
+    }
     if (addr >= console.base_address && addr < console.base_address + 8) {
         r = uart_in(&console, addr-console.base_address);
     }
