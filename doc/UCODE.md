@@ -156,7 +156,7 @@ and 1 more bit unused.
 We could use an unused bit to drive P+ directly so that it can be used concurrently with the
 ALU, in case that is ever useful.
 
-We also have 1 bit spare that we can toggle when !EO.
+We also have 2 bits spare that we can toggle when !EO.
 
 ## Extensibility
 

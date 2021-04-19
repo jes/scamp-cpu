@@ -232,6 +232,7 @@ cfwait:
     and x, r22
     sub x, r22
     jnz cfwait
+
     ret
 
 # read the next 1 word from the disk device and return it in r0
