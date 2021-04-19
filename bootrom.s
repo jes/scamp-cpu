@@ -43,35 +43,26 @@ call storage_init
 # 2. read magic from disk
 .def MAGIC 0x5343
 call inword
-sub r0, MAGIC
-jz read_startaddr
-
+ld r1, r0
 ld r0, wrongmagic_s
-call print
-jr- 1
+sub r1, MAGIC
+jnz error
 
 # 3. read start address from disk
-read_startaddr:
-    call inword
-    ld (START), r0
-    ld (POINT), r0
-    ld x, r0
-    and x, 0xff00
-    jnz read_length
-
-    ld r0, startinrom_s
-    call print
-    jr- 1
+call inword
+ld (START), r0
+ld (POINT), r0
+ld x, r0
+ld r0, startinrom_s
+and x, 0xff00
+jz error
 
 # 4. read length from disk
-read_length:
-    call inword
-    ld (LENGTH), r0
-    jnz read_data
-
-    ld r0, zerolength_s
-    call print
-    jr- 1
+call inword
+ld r1, r0
+ld r0, zerolength_s
+ld (LENGTH), r1
+jz error
 
 # 5. read data from disk
 read_data:
@@ -86,6 +77,11 @@ call print
 
 # 6. jump to the loaded code
 jmp (START)
+
+# error message pointer in r0
+error:
+    call print
+    jr- 1
 
 # print the nul-terminated string pointed to by r0
 print:
@@ -250,11 +246,7 @@ inword:
     # do we need to go to the next block?
     ld x, (BLKIDX)
     and x, 0xff00 # x&0xff00 == 0 except when we need the next block
-    jnz nextblk
-
-    pop x
-    ld r254, x
-    ret
+    jz inword_ret
 
     nextblk:
     ld r22, 0x40
@@ -277,6 +269,7 @@ inword:
     ld x, 0x2e # '.'
     out SERIALREG0, x
 
+    inword_ret:
     pop x
     ld r254, x
     ret
