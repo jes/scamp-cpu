@@ -222,7 +222,8 @@ storage_init:
 cfwait:
     in x, CFSTATUSREG
     and x, r22
-    jz cfwait
+    sub x, r22
+    jnz cfwait
     ret
 
 # read the next 1 word from the disk device and return it in r0
