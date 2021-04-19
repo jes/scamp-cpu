@@ -30,9 +30,7 @@
 .def POINT 0xff02 # r2
 .def LENGTH 0xff03 # r3
 
-# put stack pointer in pseudoregs page, to minimise chances of collision
-# with the loaded data
-ld sp, 0xfffd # r253
+ld sp, 0x8000
 
 call serial_init
 
@@ -98,22 +96,23 @@ print:
     out SERIALREG0, x
     jmp print
     printdone:
+    ld x, 0x0d # '\r'
+    out SERIALREG0, x
+    ld x, 0x0a # '\n'
+    out SERIALREG0, x
     ret
 
-# usage: test4bits(val, start)
-# where "start" contains the right-most bit to test
+# r10 = value
+# r15 = first bit to test
 test4bits:
-    pop x
-    ld r6, x # r6 = bit to test
-    pop x
-    ld r7, x # r7 = val
+    ld r6, r15 # r6 = bit to test
 
     ld r8, 1 # r8 = bit to set
     ld r0, 0 # r0 = result
 
     ld r9, 4
     test4bits_loop:
-        ld x, r7
+        ld x, r10
         and x, r6
         jz test4bits_dontset
         or r0, r8
@@ -126,40 +125,28 @@ test4bits:
 
     ret
 
-# print hex of the word on the stack, followed by '\r\n'
+# print hex of the word in r10, followed by '\r\n'
 alphabet: .str "0123456789abcdef"
 printhex:
-    pop x
-    ld r10, x # r10 = value
-
     ld x, r254
     push x
 
     ld r15, 1 # bit to test
-    ld r16, 0xff12 # address (start at r18)
+    ld r16, 0xff15 # address (start at r21 and work down)
     printhex_loop:
-        ld x, r10 # value
-        push x
-        ld x, r15 # bit to test
-        push x
         call test4bits
 
         add r0, alphabet
         ld x, (r0)
-        ld (r16++), x
+        ld (r16--), x
 
         shl2 r15
         shl2 r15
         jnz printhex_loop
 
-    out SERIALREG0, (0xff15) # r21
-    out SERIALREG0, (0xff14) # r20
-    out SERIALREG0, (0xff13) # r19
-    out SERIALREG0, (0xff12) # r18
-    ld x, 0x0d # '\r'
-    out SERIALREG0, x
-    ld x, 0x0a # '\n'
-    out SERIALREG0, x
+    ld r22, 0
+    ld r0, 0xff12
+    call print
 
     pop x
     ld r254, x
@@ -189,33 +176,59 @@ serial_init:
 .def BLKNUM 0xff04 # r4
 .def BLKIDX 0xff05 # r5
 storage_init:
+    ld x, r254
+    push x
+
     # initialise LBA address to 0 by writing 0 to Sector Number, Cylinder Low,
     # and Cylinder High Registers, and 224 ("enable LBA") to the Drive/Head
     # Register
+    ld r22, 0x40
+    call cfwait
     ld x, 0
     out CFBLKNUMREG, x
+
+    call cfwait
+    ld x, 0
     out CFCYLLOREG, x
+
+    call cfwait
+    ld x, 0
     out CFCYLHIREG, x
+
+    call cfwait
     ld x, 224
     out CFHEADREG, x
 
     # ask for 1 block
+    call cfwait
     ld x, 1
     out CFBLKCNTREG, x
 
     # issue "read" command
+    call cfwait
     ld x, CFREADCMD
     out CFSTATUSREG, x
 
     ld (BLKIDX), 0
     ld (BLKNUM), 0
 
+    pop x
+    ld r254, x
     ret
 
-# spin until card is ready for data transfer
+# spin until card status matches mask in r22
+# status flags are:
+#    0x01 - ERR  - the previous command ended in some time of error (see the Error Register)
+#    0x02 - 0    - always 0
+#    0x04 - CORR - a correctable error has occurred and the data has been corrected
+#    0x08 - DRQ  - the card requires information transferred to or from the host via the Data Register
+#    0x10 - DSC  - the card is ready
+#    0x20 - DWF  - a write fault has occurred
+#    0x40 - RDY  - the device is capable of performing card operations
+#    0x80 - BUSY - the host is locked out from accessing the command register and buffer
 cfwait:
     in x, CFSTATUSREG
-    and x, 0x08 # test for "DRQ" bit
+    and x, r22
     jz cfwait
     ret
 
@@ -223,49 +236,53 @@ cfwait:
 inword:
     ld x, r254
     push x
-    call cfwait
-    pop x
-    ld r254, x
 
-    in r0, CFDATAREG
+    ld r22, 0x48 # RDY | DRQ
+    call cfwait
+
+    in x, CFDATAREG
+
+    ld r10, x
+    call printhex
+    ld r0, r10
+
     inc (BLKIDX)
     # do we need to go to the next block?
     ld x, (BLKIDX)
-    sub x, 256
-    jz nextblk
+    and x, 0xff00 # x&0xff00 == 0 except when we need the next block
+    jnz nextblk
 
-    ld x, r254
-    push x
-    ld x, r0
-    push x
-    push x
-    call printhex
-    pop x
-    ld r0, x
     pop x
     ld r254, x
     ret
 
     nextblk:
+    ld r22, 0x40
+    call cfwait
     inc (BLKNUM)
     ld (BLKIDX), 0
     # ask for the new block number
     out CFBLKNUMREG, (BLKNUM)
 
+    call cfwait
     # ask for 1 block
     ld x, 1
     out CFBLKCNTREG, x
 
+    call cfwait
     # issue "read" command
     ld x, CFREADCMD
     out CFSTATUSREG, x
 
     ld x, 0x2e # '.'
     out SERIALREG0, x
+
+    pop x
+    ld r254, x
     ret
 
-welcome_s:    .str "boot:\r\n\0"
-ok_s:         .str "OK\r\n\0"
-wrongmagic_s: .str "bad magic\r\n\0"
-startinrom_s: .str "start in ROM\r\n\0"
-zerolength_s: .str "0 length\r\n\0"
+welcome_s:    .str "boot\0"
+ok_s:         .str "OK\0"
+wrongmagic_s: .str "bad magic\0"
+startinrom_s: .str "start in ROM\0"
+zerolength_s: .str "0 length\0"
