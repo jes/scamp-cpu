@@ -43,9 +43,9 @@ call storage_init
 # 2. read magic from disk
 .def MAGIC 0x5343
 call inword
-ld r1, r0
+ld r11, r0
 ld r0, wrongmagic_s
-sub r1, MAGIC
+sub r11, MAGIC
 jnz error
 
 # 3. read start address from disk
@@ -59,9 +59,9 @@ jz error
 
 # 4. read length from disk
 call inword
-ld r1, r0
+ld r11, r0
 ld r0, zerolength_s
-ld (LENGTH), r1
+ld (LENGTH), r11
 jz error
 
 # 5. read data from disk
@@ -221,6 +221,14 @@ storage_init:
 #    0x80 - BUSY - the host is locked out from accessing the command register and buffer
 cfwait:
     in x, CFSTATUSREG
+
+    # first check if card is BUSY: if so, the other bits are undefined
+    ld r11, x
+    and x, 0x80
+    jnz cfwait
+
+    # now test whether the bits from the mask are all set
+    ld x, r11
     and x, r22
     sub x, r22
     jnz cfwait
