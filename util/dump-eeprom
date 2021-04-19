@@ -26,7 +26,7 @@ dump_eeprom();
 sub dump_eeprom {
     for my $addr (0 .. 1023) {
         print $fh "read $addr\n";
-        usleep(10000);
+        usleep(12000);
         my $l = <$fh>;
         $l =~ s/[\0\r\n]//g;
         die "read $addr: ($l)\n" if $l !~ /^\d+$/;
