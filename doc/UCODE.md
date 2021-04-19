@@ -130,7 +130,7 @@ In general each step of microcode assumes the form:
     - choose jump flags
     - choose whether to reset the T-state counter (RT)
 
-Provisionally, the microcode instruction word encodes the control bits as follows:
+The microcode instruction word encodes the control bits as follows:
 
 |   Bit | Meaning |
 | :---- | :------ |
@@ -141,7 +141,7 @@ Provisionally, the microcode instruction word encodes the control bits as follow
 |    11 | EO ? NY : (unused) |
 |    10 | EO ? F  : P+ |
 |     9 | EO ? NO : (unused) |
-|     8 | (unused) |
+|     8 | DO |
 |     7 | bus_in[2] |
 |     6 | bus_in[1] |
 |     5 | bus_in[0] |
@@ -149,14 +149,14 @@ Provisionally, the microcode instruction word encodes the control bits as follow
 |     3 | JGT |
 |     2 | JLT |
 |     1 | RT |
-|     0 | (unused) |
+|     0 | DI |
 
-This uses 14 bits, leaving 1 bit spare to add an extra ALU flag (e.g. 2 more functions),
-and 1 more bit unused.
-We could use an unused bit to drive P+ directly so that it can be used concurrently with the
-ALU, in case that is ever useful.
+We still have 2 bits spare that we can toggle when !EO.
 
-We also have 2 bits spare that we can toggle when !EO.
+Originally RT was in one of the "(unused)" slots conditional no !EO, and DO/DI were decoded
+from bus_out/bus_in. The problem is that all of these signals can cause side effects without
+a clock edge required, so they are moved out so that they can't "glitch" during the gate delay
+of the decoding logic.
 
 ## Extensibility
 

@@ -27,7 +27,7 @@ my %ucode = (
     IOH => 0x1000,
     IOL => 0x2000,
     MO  => 0x3000,
-    DO  => 0x6000,
+    DO  => 0x6100, # 0x6000 for the bus_out decoder (to trigger the LED), 0x0100 for the actual signal
     RT  => 0x0002,
     'P+'=> 0x0400,
 
@@ -36,7 +36,7 @@ my %ucode = (
     MI  => 0x0060,
     XI  => 0x0080,
     YI  => 0x00a0,
-    DI  => 0x00c0,
+    DI  => 0x00c1, # 0x00c0 for the bus_in decoder (to trigger the LED), 0x0001 for the actual signal
 
     JC  => 0x0002,
     JZ  => 0x0010,
