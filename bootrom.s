@@ -99,23 +99,21 @@ print:
     ret
 
 # r10 = value
-# r15 = first bit to test
+# r15 = first bit to test (gets shifted-left 4)
 test4bits:
-    ld r6, r15 # r6 = bit to test
-
     ld r8, 1 # r8 = bit to set
     ld r0, 0 # r0 = result
 
     ld r9, 4
     test4bits_loop:
         ld x, r10
-        and x, r6
+        and x, r15
         jz test4bits_dontset
         or r0, r8
 
         test4bits_dontset:
         shl r8
-        shl r6
+        shl r15
         dec r9
         jnz test4bits_loop
 
@@ -136,8 +134,7 @@ printhex:
         ld x, (r0)
         ld (r16--), x
 
-        shl2 r15
-        shl2 r15
+        test r15
         jnz printhex_loop
 
     ld r22, 0
