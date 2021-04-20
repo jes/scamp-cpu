@@ -69,6 +69,15 @@ FILE *profile_fp;
 
 struct uart8250 console;
 
+void randomise_ram(void) {
+    int i;
+
+    srand(time(NULL));
+
+    for (i = 0; i < 65536; i++)
+        ram[i] = rand();
+}
+
 void load_hex(uint16_t *buf, int maxlen, char *name) {
     FILE *fp;
     int i = 0;
@@ -559,6 +568,8 @@ int main(int argc, char **argv) {
     }
 
     if (show_help) help();
+
+    randomise_ram();
 
     /* load ROMs */
     load_ucode();
