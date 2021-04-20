@@ -30,6 +30,9 @@
 .def POINT 0xff02 # r2
 .def LENGTH 0xff03 # r3
 
+# XXX: the first byte of one of my ROMs is a bit flakey...
+nop # "fuck this ROM chip in particular" - Stavros
+
 ld sp, 0x8000
 
 call serial_init
