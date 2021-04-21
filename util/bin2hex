@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+# convert raw binary to 16-bit hex
+
+use strict;
+use warnings;
+
+die "give input on stdin" if @ARGV;
+
+while (read(STDIN, my $word, 2)) {
+    my ($a,$b) = split //, $word;
+    print sprintf("%02x%02x\n", ord($a), ord($b));
+}

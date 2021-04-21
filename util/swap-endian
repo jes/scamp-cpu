@@ -1,0 +1,11 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+while (1) {
+    last unless read(STDIN, my $ch1, 1);
+    read(STDIN, my $ch2, 1);
+
+    print "$ch2$ch1";
+}
