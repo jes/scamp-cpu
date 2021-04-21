@@ -68,12 +68,16 @@ var cf_blkread = func(num, buf) {
     cf_wait(CFRDY);
     outp(CFCMDREG, CFREADCMD);
 
+    # wait for CFRDY and CFDRQ
+    cf_wait(CFRDY | CFDRQ);
+
     var n = BLKSZ;
     while (n--) {
         # TODO: [perf] could we instead work out exactly how fast we can read,
         # and just do a bunch of "slownop" instead of properly polling the
         # card status?
-        #cf_wait(CFRDY | CFDRQ);
+
+        # TODO: [bug] do we need to cf_wait(CFRDY | CFDRQ) each time?
         *(buf++) = inp(CFDATAREG);
     };
 };
@@ -89,12 +93,16 @@ var cf_blkwrite = func(num, buf) {
     cf_wait(CFRDY);
     outp(CFCMDREG, CFWRITECMD);
 
+    # wait for CFRDY and CFDRQ
+    cf_wait(CFRDY | CFDRQ);
+
     var n = BLKSZ;
     while (n--) {
         # TODO: [perf] could we instead work out exactly how fast we can write,
         # and just do a bunch of "slownop" instead of properly polling the
         # card status?
-        #cf_wait(CFRDY | CFDRQ);
+
+        # TODO: [bug] do we need to cf_wait(CFRDY | CFDRQ) each time?
         outp(CFDATAREG, *(buf++));
     };
 };
