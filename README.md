@@ -127,5 +127,5 @@ Daniel Tufvesson has a post that is a good starting point for understanding the 
 
 ## Contact
 
-If anything in this repo causes you to want to communicate with the person who wrote it, you can email me on [james@incoherency.co.uk](mailto:james@incoherency.co.uk)
+You can email me on [james@incoherency.co.uk](mailto:james@incoherency.co.uk)
 or read my blog: [https://incoherency.co.uk/].
