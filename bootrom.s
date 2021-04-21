@@ -30,9 +30,6 @@
 .def POINT 0xff02 # r2
 .def LENGTH 0xff03 # r3
 
-# XXX: the first byte of one of my ROMs is a bit flakey...
-nop # "fuck this ROM chip in particular" - Stavros
-
 ld sp, 0x8000
 
 call serial_init
@@ -83,6 +80,10 @@ jmp (START)
 
 # error message pointer in r0
 error:
+    ld r1, r0
+    ld r0, diskerror_s
+    call print
+    ld r0, r1
     call print
     jr- 1
 
@@ -94,58 +95,8 @@ print:
     # TODO: [bug] need to spin until tx holding register is empty
     out SERIALREG0, x
     jmp print
+
     printdone:
-    ld x, 0x0d # '\r'
-    out SERIALREG0, x
-    ld x, 0x0a # '\n'
-    out SERIALREG0, x
-    ret
-
-# r10 = value
-# r15 = first bit to test (gets shifted-left 4)
-test4bits:
-    ld r8, 1 # r8 = bit to set
-    ld r0, 0 # r0 = result
-
-    ld r9, 4
-    test4bits_loop:
-        ld x, r10
-        and x, r15
-        jz test4bits_dontset
-        or r0, r8
-
-        test4bits_dontset:
-        shl r8
-        shl r15
-        dec r9
-        jnz test4bits_loop
-
-    ret
-
-# print hex of the word in r10, followed by '\r\n'
-alphabet: .str "0123456789abcdef"
-printhex:
-    ld x, r254
-    push x
-
-    ld r15, 1 # bit to test
-    ld r16, 0xff15 # address (start at r21 and work down)
-    printhex_loop:
-        call test4bits
-
-        add r0, alphabet
-        ld x, (r0)
-        ld (r16--), x
-
-        test r15
-        jnz printhex_loop
-
-    ld r22, 0
-    ld r0, 0xff12
-    call print
-
-    pop x
-    ld r254, x
     ret
 
 serial_init:
@@ -167,7 +118,6 @@ serial_init:
     out SERIALREG3, x
 
     ret
-
 
 .def BLKNUM 0xff04 # r4
 .def BLKIDX 0xff05 # r5
@@ -246,11 +196,7 @@ inword:
     ld r22, 0x48 # RDY | DRQ
     call cfwait
 
-    in x, CFDATAREG
-
-    ld r10, x
-    call printhex
-    ld r0, r10
+    in r0, CFDATAREG
 
     inc (BLKIDX)
     # do we need to go to the next block?
@@ -284,8 +230,9 @@ inword:
     ld r254, x
     ret
 
-welcome_s:    .str "boot\0"
-ok_s:         .str "OK\0"
-wrongmagic_s: .str "bad magic\0"
-startinrom_s: .str "start in ROM\0"
-zerolength_s: .str "0 length\0"
+welcome_s:    .str "SCAMP boot...\r\n\0"
+ok_s:         .str "OK\r\n\0"
+diskerror_s:  .str "disk error: \0"
+wrongmagic_s: .str "bad magic\r\n\0"
+startinrom_s: .str "start address in ROM\r\n\0"
+zerolength_s: .str "length is zero\r\n\0"
