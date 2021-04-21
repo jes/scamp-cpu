@@ -5,6 +5,8 @@
 # from to avoid confusing and annoying bugs. Or maybe a separate buffer for
 # each device?
 
+include "cf.sl";
+
 var asm_blkread = asm {
     ld r0, 256 # number of words to read
     ld r1, (_blkdataport) # block data port
@@ -35,9 +37,8 @@ var blkread = func(num, buf) {
     if (buf[256] == num) return 0;
 
     *(buf+256) = num;
-    outp(blkselectport, num);
 
-    return asm_blkread(buf);
+    return cf_blkread(num, buf);
 };
 
 var asm_blkwrite = asm {
@@ -70,9 +71,8 @@ var blkwrite = func(num, buf) {
     if (!buf) buf = BLKBUF;
 
     *(buf+256) = num;
-    outp(blkselectport, num);
 
-    return asm_blkwrite(buf);
+    return cf_blkwrite(num, buf);
 };
 
 # get the "type"/"length"/"next" field of the current block
