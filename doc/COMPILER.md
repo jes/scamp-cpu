@@ -159,7 +159,7 @@ The implemented grammar is something like:
     arguments         ::= '' | (expression (',' expression)* ','?)
     address_of        ::= '&' identifier
     preop             ::= ('++' identifier) | ('--' identifier)
-    postop             ::= (identifier '++') | (identifier '--')
+    postop            ::= (identifier '++') | (identifier '--')
     unary_expr        ::= [!~*+-] term
     paren_expr        ::= '(' expression ')'
     identifier        ::= [a-zA-Z_] [a-zA-Z0-9_]*
