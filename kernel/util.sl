@@ -25,9 +25,15 @@ var outp = asm {
     ret
 };
 
+var kputc = asm {
+    .def SERIALDEV 136
+    pop x
+    out SERIALDEV, x
+    ret
+};
+
 # take a pointer to a nul-terminated string, and print it
 var kputs = asm {
-    .def SERIALDEV 136
     pop x
     test (x)
     jnz kputs_loop

@@ -83,8 +83,6 @@ var TYPE_DIR = 0;
 var TYPE_FILE = 0x100;
 var DIRENTSZ = 16;
 
-var blkselectport = 4;
-var blkdataport = 5;
 var SKIP_BLOCKS = 64; # to hold the kernel image
 var ROOTBLOCK = SKIP_BLOCKS + 16; # skip the kernel image and the free-space bitmap
 

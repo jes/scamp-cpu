@@ -318,16 +318,25 @@ void out(uint16_t val, uint16_t addr) {
         blknum = val;
         blkidx = 0;
     }
-    if (addr == 5 || addr == 264) { /* Data Register */
+    if (addr == 5) {
         if (disk)
             disk[512*blknum + blkidx] = val;
         blkidx = (blkidx+1)%512;
     }
+    if (addr == 264) { /* Data Register */
+        if (disk) {
+            disk[512*blknum + blkidx] = val >> 8;
+            disk[512*blknum + blkidx + 1] = val & 0xff;
+        }
+        blkidx = (blkidx+2)%512;
+    }
     if (addr == 267) { /* Sector Number Register */
         blknum = (blknum & 0xff00) | (val & 0x00ff);
+        blkidx = 0;
     }
     if (addr == 268) { /* Cylinder Low Register */
         blknum = (blknum & 0x00ff) | ((val & 0x00ff) << 8);
+        blkidx = 0;
     }
     if (addr >= console.base_address && addr < console.base_address + 8) {
         uart_out(&console, addr-console.base_address, val);

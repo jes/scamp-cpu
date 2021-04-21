@@ -7,29 +7,6 @@
 
 include "cf.sl";
 
-var asm_blkread = asm {
-    ld r0, 256 # number of words to read
-    ld r1, (_blkdataport) # block data port
-    pop x
-    ld r3, x # pointer to write to
-    asm_blkread_loop:
-        in x, r1 # high byte
-        shl3 x
-        shl3 x
-        shl2 x
-        ld r2, x
-        in x, r1 # low byte
-        or x, r2
-
-        # now have 1 word from device in x
-
-        ld (r3++), x
-        dec r0
-
-        jnz asm_blkread_loop
-    ret
-};
-
 # read the given block number into the BLKBUF
 var blkread = func(num, buf) {
     if (!buf) buf = BLKBUF;
@@ -39,31 +16,6 @@ var blkread = func(num, buf) {
     *(buf+256) = num;
 
     return cf_blkread(num, buf);
-};
-
-var asm_blkwrite = asm {
-    # note shr8() clobbers r0, r1, r254
-    ld r5, 256 # number of words to write
-    ld r6, (_blkdataport) # block data port
-    pop x
-    ld r3, x # pointer to read from
-    ld r4, r254 # stash return address
-    asm_blkwrite_loop:
-        ld x, (r3++) # next word to write
-        ld r2, x
-
-        push x
-        call (_shr8)
-        ld x, r0
-        out r6, x # high byte
-
-        ld x, r2
-        and x, 0xff
-        out r6, x # low byte
-
-        dec r5
-        jnz asm_blkwrite_loop
-    jmp r4 # return
 };
 
 # write the BLKBUF to the given block number

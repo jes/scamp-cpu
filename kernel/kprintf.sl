@@ -101,9 +101,9 @@ var kprintf = func(fmt, args) {
             p++;
             if (!*p) return 0;
             if (*p == '%') {
-                outp(2, '%');
+                kputc('%');
             } else if (*p == 'c') {
-                outp(2, args[argidx++]);
+                kputc(args[argidx++]);
             } else if (*p == 's') {
                 kputs(args[argidx++]);
             } else if (*p == 'd') {
@@ -114,8 +114,8 @@ var kprintf = func(fmt, args) {
                 kputs("<???>");
             }
         } else {
-            if (*p == '\n') outp(2, '\r');
-            outp(2, *p);
+            if (*p == '\n') kputc('\r');
+            kputc(*p);
         };
         p++;
     };
