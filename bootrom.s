@@ -196,7 +196,12 @@ inword:
     ld r22, 0x48 # RDY | DRQ
     call cfwait
 
-    in r0, CFDATAREG
+    # TODO: [bug] for some reason, trying to do:
+    #   in r0, CFDATAREG
+    # results in corrupting the state of the UART, so we instead
+    # input into x and then load r0 from x
+    in x, CFDATAREG
+    ld r0, x
 
     inc (BLKIDX)
     # do we need to go to the next block?
