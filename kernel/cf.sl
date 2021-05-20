@@ -57,6 +57,20 @@ var cf_blkselect = func(num) {
     outp(CFCYLLOREG, shr8(num));
 };
 
+# usage: asm_cf_blkread(buf)
+var asm_cf_blkread = asm {
+    ld r0, 256 # number of words to read
+    ld r1, (_CFDATAREG) # data port
+    pop x
+    ld r3, x # pointer to write to
+    asm_cf_blkread_loop:
+        in x, r1
+        ld (r3++), x
+        dec r0
+        jnz asm_cf_blkread_loop
+    ret
+};
+
 var cf_blkread = func(num, buf) {
     cf_blkselect(num);
 
@@ -71,15 +85,27 @@ var cf_blkread = func(num, buf) {
     # wait for CFRDY and CFDRQ
     cf_wait(CFRDY | CFDRQ);
 
-    var n = BLKSZ;
-    while (n--) {
-        # TODO: [perf] could we instead work out exactly how fast we can read,
-        # and just do a bunch of "slownop" instead of properly polling the
-        # card status?
+    #var n = BLKSZ;
+    #while (n--) {
+    #    # TODO: [bug] do we need to cf_wait(CFRDY | CFDRQ) each time?
+    #    *(buf++) = inp(CFDATAREG);
+    #};
 
-        # TODO: [bug] do we need to cf_wait(CFRDY | CFDRQ) each time?
-        *(buf++) = inp(CFDATAREG);
-    };
+    return asm_cf_blkread(buf);
+};
+
+# usage: asm_cf_blkwrite(buf)
+var asm_cf_blkwrite = asm {
+    ld r0, 256 # number of words to write
+    ld r1, (_CFDATAREG) # data port
+    pop x
+    ld r3, x # pointer to read from
+    asm_cf_blkwrite_loop:
+        ld x, (r3++)
+        out r1, x
+        dec r0
+        jnz asm_cf_blkwrite_loop
+    ret
 };
 
 var cf_blkwrite = func(num, buf) {
@@ -96,13 +122,11 @@ var cf_blkwrite = func(num, buf) {
     # wait for CFRDY and CFDRQ
     cf_wait(CFRDY | CFDRQ);
 
-    var n = BLKSZ;
-    while (n--) {
-        # TODO: [perf] could we instead work out exactly how fast we can write,
-        # and just do a bunch of "slownop" instead of properly polling the
-        # card status?
+    #var n = BLKSZ;
+    #while (n--) {
+    #    # TODO: [bug] do we need to cf_wait(CFRDY | CFDRQ) each time?
+    #    outp(CFDATAREG, *(buf++));
+    #};
 
-        # TODO: [bug] do we need to cf_wait(CFRDY | CFDRQ) each time?
-        outp(CFDATAREG, *(buf++));
-    };
+    return asm_cf_blkwrite(buf);
 };
