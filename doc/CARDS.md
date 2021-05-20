@@ -133,7 +133,11 @@ To match current generated microcode:
  * pop pins 4+5 of U5 out of socket
  * connect pins 4+5 of U5 to the "u1" pin of "spare decodings"
 
-We may have the same problem with `DO`, if reading from a device can cause side effects.
+We may have the same problem with `DO`/`DI`, if device I/O can cause side effects. Preemptively, the solution is:
+
+ * on the bottom of the card, solder a link between backplane connector pins for `DI` and `U0`
+ * on the top of the card, stick a jumper on the "spare decodings" pin labelled "u8" and solder it on to the backplane
+   connector pin for `DO`
 
 ## Memory
 
