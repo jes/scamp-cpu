@@ -111,7 +111,7 @@ var ser_poll = func(fd) {
 
     # read while there are characters ready and the buffer is not full
     while ((inp(lsrport)&1) && !ser_buffull(bufp)) {
-        ch = inp(readport);
+        ch = inp(readport) & 0xff;
 
         if (cooked_mode) {
             if (ch == 3) sys_exit(255); # ctrl-c
