@@ -59,12 +59,13 @@ var cf_blkselect = func(num) {
 
 # usage: asm_cf_blkread(buf)
 var asm_cf_blkread = asm {
+    .def CFDATAREG 264
+
     ld r0, 256 # number of words to read
-    ld r1, (_CFDATAREG) # data port
     pop x
     ld r3, x # pointer to write to
     asm_cf_blkread_loop:
-        in x, r1
+        in x, CFDATAREG
         ld (r3++), x
         dec r0
         jnz asm_cf_blkread_loop
@@ -97,12 +98,11 @@ var cf_blkread = func(num, buf) {
 # usage: asm_cf_blkwrite(buf)
 var asm_cf_blkwrite = asm {
     ld r0, 256 # number of words to write
-    ld r1, (_CFDATAREG) # data port
     pop x
     ld r3, x # pointer to read from
     asm_cf_blkwrite_loop:
         ld x, (r3++)
-        out r1, x
+        out CFDATAREG, x
         dec r0
         jnz asm_cf_blkwrite_loop
     ret
