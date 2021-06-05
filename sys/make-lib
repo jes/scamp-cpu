@@ -4,7 +4,7 @@ LIBS="grarr.sl malloc.sl parse.sl stdio.sl stdlib.sl string.sl sys.sl xprintf.sl
 
 for f in $LIBS;
 do
-    echo "include\"$f\";"
+    echo "include \"$f\";"
 done > lib.sl
 
 ../compiler/slangc lib.sl > lib.s.build
