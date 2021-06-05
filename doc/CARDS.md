@@ -202,3 +202,17 @@ I plan to only install UART 0 at first, and then populate the rest of the slots 
 
 In the event that the clock signal does not want to be inverted for the WR pulse, then pin 2 of U2 (inv_CLK) can be popped out
 of the socket and bridged to pin 1 (CLK). But I think it does want to be inverted.
+
+## Storage
+
+1 card is internal, the other card is removable through the front panel.
+
+Each card has 2 CS pins. A8 (0x100) needs to be high to select the CompactFlash, and then there's 1 bit
+(A3,A4,A5,A6) of address to select each CS pin.
+
+Addresses:
+
+    Card 1, CS0: A3+A8: base address = 264
+    Card 1, CS1: A4+A8: base address = 272
+    Card 2, CS0: A5+A8: base address = 288
+    Card 2, CS1: A6+A8: base address = 320
