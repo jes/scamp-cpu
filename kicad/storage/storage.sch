@@ -56,7 +56,6 @@ NoConn ~ 10100 4700
 NoConn ~ 10100 4600
 NoConn ~ 10100 4500
 NoConn ~ 10100 4400
-NoConn ~ 10100 4300
 NoConn ~ 10100 2800
 NoConn ~ 10100 3000
 NoConn ~ 10100 3100
@@ -173,19 +172,6 @@ Text Label 9600 4100 0    50   ~ 0
 Text Label 9600 4900 0    50   ~ 0
 CLK
 NoConn ~ 9600 4900
-$Comp
-L Connector_Generic:Conn_01x01 J6
-U 1 1 60BD2C0A
-P 1350 1400
-F 0 "J6" H 1430 1442 50  0000 L CNN
-F 1 "Conn_01x01" H 1430 1351 50  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 1350 1400 50  0001 C CNN
-F 3 "~" H 1350 1400 50  0001 C CNN
-	1    1350 1400
-	1    0    0    -1  
-$EndComp
-Text GLabel 1150 1400 0    50   Input ~ 0
-WR
 $Comp
 L 74xx:7400 U1
 U 2 1 60BD3C08
@@ -487,4 +473,52 @@ Wire Wire Line
 Connection ~ 3150 7300
 Wire Wire Line
 	3150 7300 3450 7300
+Text GLabel 10100 4300 2    50   Input ~ 0
+WR
+$Comp
+L Connector_Generic:Conn_01x03 J6
+U 1 1 60C409E1
+P 2750 1500
+F 0 "J6" H 2830 1542 50  0000 L CNN
+F 1 "Conn_01x03" H 2830 1451 50  0000 L CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical" H 2750 1500 50  0001 C CNN
+F 3 "~" H 2750 1500 50  0001 C CNN
+	1    2750 1500
+	1    0    0    -1  
+$EndComp
+Text GLabel 2550 1400 0    50   Input ~ 0
+GND
+$Comp
+L Device:R R1
+U 1 1 60C52E56
+P 2400 1500
+F 0 "R1" V 2193 1500 50  0000 C CNN
+F 1 "R" V 2284 1500 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 2330 1500 50  0001 C CNN
+F 3 "~" H 2400 1500 50  0001 C CNN
+	1    2400 1500
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R R2
+U 1 1 60C5383C
+P 2400 1600
+F 0 "R2" V 2193 1600 50  0000 C CNN
+F 1 "R" V 2284 1600 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 2330 1600 50  0001 C CNN
+F 3 "~" H 2400 1600 50  0001 C CNN
+	1    2400 1600
+	0    1    1    0   
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x02 J7
+U 1 1 60C55150
+P 2050 1600
+F 0 "J7" H 1968 1275 50  0000 C CNN
+F 1 "Conn_01x02" H 1968 1366 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" H 2050 1600 50  0001 C CNN
+F 3 "~" H 2050 1600 50  0001 C CNN
+	1    2050 1600
+	-1   0    0    1   
+$EndComp
 $EndSCHEMATC

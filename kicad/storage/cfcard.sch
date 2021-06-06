@@ -3,7 +3,7 @@ EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 3 3
+Sheet 2 3
 Title ""
 Date ""
 Rev ""
@@ -21,7 +21,7 @@ AR Path="/60BC0128/60BC0369" Ref="J2"  Part="1"
 AR Path="/60BC913C/60BC0369" Ref="J4"  Part="1" 
 F 0 "J4" H 4800 4317 50  0000 C CNN
 F 1 "Conn_02x20_Odd_Even" H 4800 4226 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_2x20_P2.54mm_Vertical" H 4750 3200 50  0001 C CNN
+F 2 "storage:cfcard" H 4750 3200 50  0001 C CNN
 F 3 "~" H 4750 3200 50  0001 C CNN
 	1    4750 3200
 	1    0    0    -1  
@@ -113,5 +113,22 @@ $EndComp
 Text GLabel 6350 2350 0    50   Input ~ 0
 VCC
 Text GLabel 6350 2450 0    50   Input ~ 0
+GND
+$Comp
+L Device:C C4
+U 1 1 60C47AAF
+P 6350 3200
+AR Path="/60BC0128/60C47AAF" Ref="C4"  Part="1" 
+AR Path="/60BC913C/60C47AAF" Ref="C5"  Part="1" 
+F 0 "C5" H 6465 3246 50  0000 L CNN
+F 1 "C" H 6465 3155 50  0000 L CNN
+F 2 "Capacitor_THT:C_Disc_D6.0mm_W2.5mm_P5.00mm" H 6388 3050 50  0001 C CNN
+F 3 "~" H 6350 3200 50  0001 C CNN
+	1    6350 3200
+	1    0    0    -1  
+$EndComp
+Text GLabel 6350 3050 2    50   Input ~ 0
+VCC
+Text GLabel 6350 3350 2    50   Input ~ 0
 GND
 $EndSCHEMATC
