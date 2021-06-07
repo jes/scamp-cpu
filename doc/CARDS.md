@@ -202,6 +202,10 @@ I plan to only install UART 0 at first, and then populate the rest of the slots 
 In the event that the clock signal does not want to be inverted for the WR pulse, then pin 2 of U2 (inv_CLK) can be popped out
 of the socket and bridged to pin 1 (CLK). But I think it does want to be inverted.
 
+## Errata
+
+Use bodge wire to connect `WR` pin to backplane pin 38, marked "unused" on backplane.
+
 ## Storage
 
 1 card is internal, the other card is removable through the front panel.
