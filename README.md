@@ -2,9 +2,9 @@
 
 I am building a simple 16-bit CPU.
 
-This repo is a loosely-connected collection of Verilog source, FreeCAD files, KiCad files, text notes, and software.
-
 It's called "SCAMP" which means something like "Simple Computing and Arithmetic Microcoded Processor".
+
+This repo is a loosely-connected collection of Verilog source, FreeCAD files, KiCad files, text notes, and software.
 
 Here are some pictures:
 
@@ -34,8 +34,7 @@ I have created an emulator (see in `emulator/`) and a compiler (`compiler/`). Al
 work to be done on the compiler, it can now compile itself from within the emulator.
 
 I have written quite a lot of the kernel (see `kernel/`). It can do most of the system calls. It needs more error-checking,
-bounds-checking, etc.. It can load programs off a filesystem stored on a block device and execute them, but obviously
-only in the emulator since the real CPU doesn't exist yet.
+bounds-checking, etc.. It can load programs off a filesystem stored on a block device and execute them, in real hardware.
 
 I'm currently designing the PCBs:
 
