@@ -66,7 +66,7 @@ It is a 16-bit CPU. The bus is 16-bit, registers are 16-bit, addresses are 16-bi
 for small immediate values. There is no support for: cache, interrupts, virtual memory, DMA, privilege rings,
 floating point, and ~anything else that is not strictly necessary.
 
-Here is a diagram of the architecture I currently have in mind:
+Here is a diagram of the architecture:
 
 ![](doc/architecture.png)
 
