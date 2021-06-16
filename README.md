@@ -57,7 +57,7 @@ Other work includes:
  - [x] write a compiler
  - [x] write system utilities (mostly done: see `sys/`)
  - [x] write an editor (mostly done: see `sys/kilo.sl`)
- - [ ] make it self-host
+ - [ ] make it self-host (almost there, but the assembler runs out of memory while assembling things like the compiler)
 
 ## Architecture
 
