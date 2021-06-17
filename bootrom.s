@@ -94,6 +94,11 @@ print:
     jz printdone
     # TODO: [bug] need to spin until tx holding register is empty
     out SERIALREG0, x
+    slownop
+    slownop
+    slownop
+    slownop
+    slownop
     jmp print
 
     printdone:
@@ -239,5 +244,5 @@ welcome_s:    .str "SCAMP boot...\r\n\0"
 ok_s:         .str "OK\r\n\0"
 diskerror_s:  .str "disk error: \0"
 wrongmagic_s: .str "bad magic\r\n\0"
-startinrom_s: .str "start address in ROM\r\n\0"
-zerolength_s: .str "length is 0\r\n\0"
+startinrom_s: .str "start in ROM\r\n\0"
+zerolength_s: .str "0 length\r\n\0"
