@@ -729,16 +729,16 @@ processkey = func() {
     var times_str;
 
     # TODO: [nice] ctrl- arrow keys to jump left/right a word, and up/down a paragraph (?)
-    if (c == CTRL_KEY('q')) {
+    if (c == CTRL_KEY('x')) {
         if (dirty && quit_times) {
             times_str = "times";
             if (quit_times == 1) times_str = "time";
-            setstatusmsg("WARNING!!! File has unsaved changes. Press Ctrl-Q %d more %s to quit.", [quit_times, times_str]);
+            setstatusmsg("WARNING!!! File has unsaved changes. Press Ctrl-X %d more %s to quit.", [quit_times, times_str]);
             quit_times--;
             return 0;
         };
         quit(0);
-    } else if (c == CTRL_KEY('s')) {
+    } else if (c == CTRL_KEY('w')) {
         savefile();
     } else if (c == CTRL_KEY('f')) {
         find();
@@ -796,7 +796,7 @@ waitread = func(fd, buf, bufsz, timeout) {
 
 markalldirty();
 rawmode();
-setstatusmsg("HELP: ^S save  ^Q quit  ^Z shell  ^K del line  ^F find", 0);
+setstatusmsg("HELP: ^W write  ^X exit  ^Z shell  ^K del line  ^F find", 0);
 
 var args = cmdargs()+1;
 if (*args) openfile(*args);
