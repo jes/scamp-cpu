@@ -3,7 +3,6 @@
 include "util.sl";
 include "data.sl";
 include "sys.sl";
-include "kprintf.sl";
 
 var ser_bufsz = 128;
 var ser_buflen = ser_bufsz - 3;
@@ -113,8 +112,6 @@ var ser_poll = func(fd) {
     # read while there are characters ready and the buffer is not full
     while ((inp(lsrport)&1) && !ser_buffull(bufp)) {
         ch = inp(readport) & 0xff;
-
-        kprintf("[%d]", [ch]);
 
         if (cooked_mode) {
             if (ch == 3) sys_exit(255); # ctrl-c
