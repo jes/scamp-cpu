@@ -42,6 +42,8 @@ var kputc = asm {
     slownop
     slownop
     slownop
+    slownop
+    slownop
     ret
 };
 
@@ -54,6 +56,8 @@ var kputs = asm {
     kputs_loop:
         # TODO: [bug] probably need to spin until the 8250 is ready to take more output
         out SERIALDEV, (x)
+        slownop
+        slownop
         slownop
         slownop
         slownop
