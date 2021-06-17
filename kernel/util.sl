@@ -37,6 +37,11 @@ var kputc = asm {
     .def SERIALDEV 136
     pop x
     out SERIALDEV, x
+    slownop
+    slownop
+    slownop
+    slownop
+    slownop
     ret
 };
 
@@ -49,6 +54,11 @@ var kputs = asm {
     kputs_loop:
         # TODO: [bug] probably need to spin until the 8250 is ready to take more output
         out SERIALDEV, (x)
+        slownop
+        slownop
+        slownop
+        slownop
+        slownop
         inc x
         test (x)
         jnz kputs_loop
