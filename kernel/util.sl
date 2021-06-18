@@ -35,38 +35,39 @@ var outp = asm {
 
 var kputc = asm {
     .def SERIALDEV 136
-    pop x
-    out SERIALDEV, x
-    slownop
-    slownop
-    slownop
-    slownop
-    slownop
-    slownop
-    slownop
-    ret
+    .def SERIALDEVLSR 141
+    kputc:
+        # wait for uart to be ready
+        # TODO: [bug] why are the nops required? it seems to corrupt the uart state if they're not here
+        nop
+        in x, SERIALDEVLSR
+        nop
+        and x, 0x20
+        nop
+        jz kputc
+        nop
+
+        pop x
+        out SERIALDEV, x
+        ret
 };
 
 # take a pointer to a nul-terminated string, and print it
 var kputs = asm {
+    ld r253, r254
     pop x
-    test (x)
+    ld r0, x
+    test (r0)
     jnz kputs_loop
     ret
     kputs_loop:
-        # TODO: [bug] probably need to spin until the 8250 is ready to take more output
-        out SERIALDEV, (x)
-        slownop
-        slownop
-        slownop
-        slownop
-        slownop
-        slownop
-        slownop
-        inc x
-        test (x)
+        ld x, (r0)
+        push x
+        call kputc
+        inc r0
+        test (r0)
         jnz kputs_loop
-    ret
+    jmp r253 # ret
 };
 
 var khalt = func() {

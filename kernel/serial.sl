@@ -181,7 +181,10 @@ var ser_read = func(fd, buf, sz) {
 };
 
 var ser_writech = func(baseport, ch) {
-    # TODO: [bug] wait until LSR says tx buf is empty
+    # spin until LSR says tx buf is empty
+    var lsrport = baseport+5;
+    while (!(inp(lsrport) & 0x20));
+
     outp(baseport, ch);
 };
 
