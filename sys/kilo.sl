@@ -173,16 +173,44 @@ readbyte = asm {
 
 # wait for "timeout" loop iterations, readbyte() into ptr if anything is
 # available and return 1, otherwise return 0
-waitreadbyte = func(ptr, timeout) {
-    while (timeout--) {
-        if (readable()) {
-            *ptr = readbyte();
-            return 1;
-        };
-    };
+# usage: waitreadbyte(ptr, timeout)
+waitreadbyte = asm {
+    pop x
+    ld r1, x # r1 = timeout
+    pop x
+    ld r2, x # r2 = ptr
 
-    return 0;
+    waitreadbyte_loop:
+        test r1
+        jz waitreadbyte_ret
+        dec r1
+
+        # loop again if there's not a character yet
+        in x, SERIALDEVLSR
+        and x, 1
+        jz waitreadbyte_loop
+
+        # read the character, put it in ptr, return 1
+        in x, SERIALDEV
+        ld (r2), x
+        ld r0, 1
+        ret
+
+    waitreadbyte_ret:
+        ld r0, 0
+        ret
 };
+# slow alternative using kernel serial support:
+#    waitreadbyte = func(ptr, timeout) {
+#        while (timeout--) {
+#            if (readable()) {
+#                *ptr = readbyte();
+#                return 1;
+#            };
+#        };
+#
+#        return 0;
+#    };
 
 readkey = func() {
     var c = readbyte();
