@@ -53,6 +53,9 @@ var quit;
 var fatal;
 var rawmode;
 var unrawmode;
+var readable;
+var readbyte;
+var waitreadbyte;
 var readkey;
 
 # row operations
@@ -102,7 +105,6 @@ var prompt_cursor = -1;
 var prompt;
 var move;
 var processkey;
-var waitread;
 
 ### TERMINAL
 
@@ -137,21 +139,42 @@ unrawmode = func() {
     serflags(3, consoleflags);
 };
 
-readkey = func() {
-    var c;
-    var n = read(0, &c, 1);
+# usage: readable() - return 1 if there is at least 1 byte waiting
+readable = func() {
+    return read(0, 0, 0);
+};
 
-    if (n == 0) fatal("read: eof on stdin, but should be in raw mode ??? (is stdin a file?)", 0);
-    if (n < 0) fatal("read: %s", [strerror(n)]);
+# usage: readbyte() - return the next character, blocking if necessary
+readbyte = func() {
+    var ch;
+    read(0, &ch, 1);
+    return ch;
+};
+
+# wait for "timeout" loop iterations, readbyte() into ptr if anything is
+# available and return 1, otherwise return 0
+waitreadbyte = func(ptr, timeout) {
+    while (timeout--) {
+        if (readable()) {
+            *ptr = readbyte();
+            return 1;
+        };
+    };
+
+    return 0;
+};
+
+readkey = func() {
+    var c = readbyte();
 
     var seq = [0,0,0];
     if (c == ESC) {
-        if (waitread(0, seq+0, 1, WAIT_STEPS) != 1) return ESC;
-        if (waitread(0, seq+1, 1, WAIT_STEPS) != 1) return ESC;
+        if (waitreadbyte(seq+0, WAIT_STEPS) != 1) return ESC;
+        if (waitreadbyte(seq+1, WAIT_STEPS) != 1) return ESC;
 
         if (seq[0] == '[') {
             if (seq[1] >= '0' && seq[1] <= '9') {
-                if (waitread(0, seq+2, 1, WAIT_STEPS) != 1) return ESC;
+                if (waitreadbyte(seq+2, WAIT_STEPS) != 1) return ESC;
                 if (seq[2] == '~') {
                     if (seq[1] == '1') return HOME_KEY;
                     if (seq[1] == '3') return DEL_KEY;
@@ -683,7 +706,7 @@ prompt = func(beforemsg, aftermsg, wantcursor, callback) {
         };
 
         # call callback only if there is no input waiting
-        if (callback && (read(0,0,0)==0))
+        if (callback && !readable())
             callback(sbbase(sb), c);
     };
 
@@ -783,17 +806,6 @@ processkey = func() {
     quit_times = QUIT_TIMES;
 };
 
-# wait for "timeout" loop iterations, read() if anything is available,
-# otherwise return 0
-waitread = func(fd, buf, bufsz, timeout) {
-    while (timeout--) {
-        if (read(fd, 0, 0))
-            return read(fd, buf, bufsz);
-    };
-
-    return 0;
-};
-
 ### INIT
 
 markalldirty();
@@ -805,7 +817,7 @@ if (*args) openfile(*args);
 
 while (1) {
     # refresh the screen if there are no keystrokes waiting
-    if (read(0, 0, 0) == 0)
+    if (!readable())
         refresh();
 
     # handle a keystroke
