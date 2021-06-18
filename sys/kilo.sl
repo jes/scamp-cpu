@@ -19,7 +19,6 @@ var CTRL_KEY = func(k) return k&0x1f;
 var WELCOME = "~     Kilo editor -- SCAMP edition";
 var TABSTOP = 4; # must be a power of 2 !
 var QUIT_TIMES = 3;
-var WAIT_STEPS = 1000; # number of loop iterations to wait for escaped characters
 
 # key constants
 var BACKSPACE = 127;
@@ -171,12 +170,11 @@ readbyte = asm {
 #         return ch;
 #     };
 
-# wait for "timeout" loop iterations, readbyte() into ptr if anything is
+# wait for 1000 loop iterations, readbyte() into ptr if anything is
 # available and return 1, otherwise return 0
-# usage: waitreadbyte(ptr, timeout)
+# usage: waitreadbyte(ptr)
 waitreadbyte = asm {
-    pop x
-    ld r1, x # r1 = timeout
+    ld r1, 1000 # r1 = timeout
     pop x
     ld r2, x # r2 = ptr
 
@@ -201,7 +199,8 @@ waitreadbyte = asm {
         ret
 };
 # slow alternative using kernel serial support:
-#    waitreadbyte = func(ptr, timeout) {
+#    waitreadbyte = func(ptr) {
+#        var timeout = 1000;
 #        while (timeout--) {
 #            if (readable()) {
 #                *ptr = readbyte();
@@ -217,12 +216,12 @@ readkey = func() {
 
     var seq = [0,0,0];
     if (c == ESC) {
-        if (waitreadbyte(seq+0, WAIT_STEPS) != 1) return ESC;
-        if (waitreadbyte(seq+1, WAIT_STEPS) != 1) return ESC;
+        if (!waitreadbyte(seq+0)) return ESC;
+        if (!waitreadbyte(seq+1)) return ESC;
 
         if (seq[0] == '[') {
             if (seq[1] >= '0' && seq[1] <= '9') {
-                if (waitreadbyte(seq+2, WAIT_STEPS) != 1) return ESC;
+                if (!waitreadbyte(seq+2)) return ESC;
                 if (seq[2] == '~') {
                     if (seq[1] == '1') return HOME_KEY;
                     if (seq[1] == '3') return DEL_KEY;
