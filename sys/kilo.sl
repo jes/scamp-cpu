@@ -176,6 +176,7 @@ var readkeyraw = asm {
 
     # read first byte
     in x, SERIALDEV
+    and x, 0xff
     ld r0, x
 
     # if it's not ESC, return it
@@ -203,6 +204,7 @@ var readkeyraw = asm {
 
             # read the character, put it in the buffer, increment pointer
             in x, SERIALDEV
+            and x, 0xff
             ld (r1++), x
             jmp readkeyraw_loop
 
