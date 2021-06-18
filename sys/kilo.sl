@@ -560,7 +560,7 @@ drawrow = func(row) {
                 addchar(' ');
         } else if (iscntrl(ch)) {
             addchar('^');
-            addchar(ch+'A');
+            addchar(ch+'A'-1);
         } else {
             addchar(ch);
         };

@@ -93,7 +93,6 @@ var ser_backspace = func(fd, bufp) {
 # if in cooked mode, also handle ^C,^S,^Q,'\r', and echo;
 # ^D is kind of a special case; it gets put in the buffer even though it's a control
 # character, because it needs to be able to interrupt a read call;
-# already been consumed from the buffer
 # if the buffer is full, do nothing;
 # TODO: [nice] should we instead drop incoming characters if the buffer is full?
 #       how can we make sure to handle ^C even if the user did a bunch of typing?
@@ -108,6 +107,7 @@ var ser_poll = func(fd) {
     var cooked_mode = p[SERFLAGS] & SER_COOKED;
     var bufp = p[BUFPTR];
     var ch;
+    var dispch;
 
     # read while there are characters ready and the buffer is not full
     while ((inp(lsrport)&1) && !ser_buffull(bufp)) {
@@ -131,9 +131,13 @@ var ser_poll = func(fd) {
             };
             if (ch == '\r') ch = '\n'; # turn enter key into '\n'
 
-            # TODO: [bug] be a bit sensible about echoing control characters
-            #       (arrow keys etc. shouldn't move the cursor around the screen)
-            ser_write(fd, &ch, 1); # echo
+            # echo
+            dispch = ch;
+            if ((dispch < 0x20) && (dispch != '\n') && (dispch != '\t')) {
+                dispch = ch + 'A' - 1;
+                ser_write(fd, "^", 1);
+            };
+            ser_write(fd, &dispch, 1);
         };
 
         ser_bufput(bufp, ch);
