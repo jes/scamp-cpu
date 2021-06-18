@@ -149,9 +149,20 @@ readable = func() {
 #    readable = func() { return read(0,0,0) };
 
 # usage: readbyte() - return the next character, blocking if necessary
-readbyte = func() {
-    while (!readable());
-    return inp(SERIALDEV);
+readbyte = asm {
+    .def SERIALDEV 136
+    .def SERIALDEVLSR 141
+
+    readbyte:
+        # wait for a character
+        in x, SERIALDEVLSR
+        and x, 1
+        jz readbyte
+
+        # read the character and return it
+        in x, SERIALDEV
+        ld r0, x
+        ret
 };
 # slow alternative using kernel serial support:
 #     readbyte = func() {
