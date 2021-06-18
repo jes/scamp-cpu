@@ -24,6 +24,7 @@ put ../sys/mv.bin /bin/mv
 put ../sys/slc.bin /bin/slc
 put ../sys/kilo.bin /bin/kilo
 put ../sys/reboot.bin /bin/reboot
+put ../sys/diskid.bin /bin/diskid
 
 mkdir lib
 put ../sys/lib.o /lib/lib.o
@@ -62,6 +63,7 @@ put -t ../sys/mv.sl /src/mv.sl
 put -t ../sys/slc.sl /src/slc.sl
 put -t ../sys/kilo.sl /src/kilo.sl
 put -t ../sys/reboot.sl /src/reboot.sl
+put -t ../sys/diskid.sl /src/diskid.sl
 
 mkdir src/lib
 put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
