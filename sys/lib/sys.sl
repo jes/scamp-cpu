@@ -63,6 +63,10 @@ var BADFD = -5;
 var TOOLONG = -6;
 var EXISTS = -7;
 
+# serial flags
+var SER_COOKED  = 1;
+var SER_DISABLE = 2;
+
 var strerror = func(err) {
     if (err == 0) return "success";
     if (err == EOF) return "end-of-file";

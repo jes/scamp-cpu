@@ -11,7 +11,7 @@
 #   2: close function pointer
 #   3: sync function pointer
 #   4..7: device-specific reserved space
-var READFD =  0;
+var READFD  = 0;
 var WRITEFD = 1;
 var CLOSEFD = 2;
 var SYNCFD  = 3;
@@ -72,7 +72,8 @@ var BUFPTR = FDDATA+1;
 var SERFLAGS = FDDATA+2;
 
 # serial port flags
-var SER_COOKED = 1;
+var SER_COOKED  = 1;
+var SER_DISABLE = 2;
 
 # Block device state
 var BLKSZ = 256; # 256 words, 512 bytes

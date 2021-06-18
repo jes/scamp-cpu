@@ -102,6 +102,8 @@ var ser_poll = func(fd) {
     var writeimpl = p[WRITEFD];
     if (writeimpl != ser_write) return 0; # don't try to ser_poll() on non-serial devices
 
+    if (p[SERFLAGS] & SER_DISABLE) return 0;
+
     var readport = p[BASEPORT];
     var lsrport = readport+5;
     var cooked_mode = p[SERFLAGS] & SER_COOKED;
@@ -156,6 +158,8 @@ var ser_read = func(fd, buf, sz) {
     var i = sz;
     var ch = 0;
 
+    if (p[SERFLAGS] & SER_DISABLE) return 0;
+
     # return number of characters that can be read without blocking
     if (sz == 0) {
         sz = ser_readmaxpos(bufp) - ser_readpos(bufp);
@@ -197,6 +201,9 @@ ser_write = func(fd, buf, sz) {
     var baseport = p[BASEPORT];
     var cooked_mode = p[SERFLAGS] & SER_COOKED;
     var ch;
+
+    if (p[SERFLAGS] & SER_DISABLE) return 0;
+
     while (sz--) {
         ch = *(buf++);
 

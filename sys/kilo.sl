@@ -125,7 +125,7 @@ var consoleflags;
 rawmode = func() {
     stdinflags = serflags(0, 0);
     stdoutflags = serflags(1, 0);
-    consoleflags = serflags(3, 0);
+    consoleflags = serflags(3, SER_DISABLE);
 
     writeesc("[2J"); # clear screen
 };
