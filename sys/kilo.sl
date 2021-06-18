@@ -138,6 +138,12 @@ unrawmode = func() {
     serflags(3, consoleflags);
 };
 
+# XXX: a lot of the keyboard handling code is written in assembly language
+# for performance; this is not a premature optimisation! At 115200 baud with
+# a 1 MHz CPU, we only have ~86 cycles to handle each character if we don't want
+# to drop any, and handling the characters at full speed is mandatory otherwise
+# escape sequences don't work
+
 # usage: readable() - return 1 if there is at least 1 byte waiting
 var SERIALDEV = 136;
 var SERIALDEVLSR = 141;
@@ -147,81 +153,75 @@ readable = func() {
 # slow alternative using kernel serial support:
 #    readable = func() { return read(0,0,0) };
 
-# usage: readbyte() - return the next character, blocking if necessary
-readbyte = asm {
+# usage: readkeyraw(seq); return the key code; if it was ESC, then the other
+# characters of the sequence go into the buffer pointed to by "seq"
+var readkeyraw = asm {
     .def SERIALDEV 136
     .def SERIALDEVLSR 141
 
-    readbyte:
-        # wait for a character
-        in x, SERIALDEVLSR
-        and x, 1
-        jz readbyte
-
-        # read the character and return it
-        in x, SERIALDEV
-        ld r0, x
-        ret
-};
-# slow alternative using kernel serial support:
-#     readbyte = func() {
-#         var ch;
-#         read(0, &ch, 1);
-#         return ch;
-#     };
-
-# wait for 1000 loop iterations, readbyte() into ptr if anything is
-# available and return 1, otherwise return 0
-# usage: waitreadbyte(ptr)
-waitreadbyte = asm {
-    ld r1, 1000 # r1 = timeout
     pop x
-    ld r2, x # r2 = ptr
+    ld r1, x
+    ld r2, 3
 
-    waitreadbyte_loop:
-        test r1
-        jz waitreadbyte_ret
-        dec r1
+    # r0 = first char
+    # r1 = pointer to sequence buffer
+    # r2 = number of bytes left to read
+    # r3 = timeout counter for spinlock
 
-        # loop again if there's not a character yet
-        in x, SERIALDEVLSR
-        and x, 1
-        jz waitreadbyte_loop
+    readkeyraw:
+    # spin until first byte is available
+    in x, SERIALDEVLSR
+    and x, 1
+    jz readkeyraw
 
-        # read the character, put it in ptr, return 1
-        in x, SERIALDEV
-        ld (r2), x
-        ld r0, 1
+    # read first byte
+    in x, SERIALDEV
+    ld r0, x
+
+    # if it's not ESC, return it
+    sub x, 0x1b # ESC
+    jnz readkeyraw_done
+
+    # if the first char was ESC, then we need to wait to read up to 3 more bytes
+    readkeyraw_esc:
+        # we only want to try up to 3 times
+        test r2
+        jz readkeyraw_done
+        dec r2
+
+        ld r3, 1000
+        readkeyraw_loop:
+            test r3
+            # timeout if no more bytes
+            jz readkeyraw_done
+            dec r3
+
+            # keep looping until there's a byte available
+            in x, SERIALDEVLSR
+            and x, 1
+            jz readkeyraw_loop
+
+            # read the character, put it in the buffer, increment pointer
+            in x, SERIALDEV
+            ld (r1++), x
+            jmp readkeyraw_loop
+
+    readkeyraw_done:
         ret
 
-    waitreadbyte_ret:
-        ld r0, 0
-        ret
+    # if it's not ESC, return it
+    # waitreadbyte up to 3 times
+    # return what the original was
 };
-# slow alternative using kernel serial support:
-#    waitreadbyte = func(ptr) {
-#        var timeout = 1000;
-#        while (timeout--) {
-#            if (readable()) {
-#                *ptr = readbyte();
-#                return 1;
-#            };
-#        };
-#
-#        return 0;
-#    };
+# TODO: [nice] implementation of slow alternative using kernel serial support
 
 readkey = func() {
-    var c = readbyte();
-
     var seq = [0,0,0];
-    if (c == ESC) {
-        if (!waitreadbyte(seq+0)) return ESC;
-        if (!waitreadbyte(seq+1)) return ESC;
+    var c = readkeyraw(seq);
 
+    if (c == ESC) {
         if (seq[0] == '[') {
             if (seq[1] >= '0' && seq[1] <= '9') {
-                if (!waitreadbyte(seq+2)) return ESC;
                 if (seq[2] == '~') {
                     if (seq[1] == '1') return HOME_KEY;
                     if (seq[1] == '3') return DEL_KEY;
