@@ -89,16 +89,21 @@ error:
 
 # print the nul-terminated string pointed to by r0
 print:
+    # wait for uart to be ready
+    # TODO: [bug] why are the nops necessary?
+    nop
+    in x, SERIALREG5 # line status register
+    nop
+    and x, 0x20 # test for "Transmitter Holding Register Empty"
+    nop
+    jz print # loop again if it's not ready
+
     ld x, (r0++)
     test x
     jz printdone
-    # TODO: [bug] need to spin until tx holding register is empty
+
+    # output the character
     out SERIALREG0, x
-    slownop
-    slownop
-    slownop
-    slownop
-    slownop
     jmp print
 
     printdone:
