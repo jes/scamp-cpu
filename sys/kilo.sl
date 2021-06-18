@@ -164,7 +164,7 @@ var readkeyraw = asm {
     ld r2, 3
 
     # r0 = first char
-    # r1 = pointer to sequence buffer
+    # r1 = pointer to sequence buffer (need at most 3 slots)
     # r2 = number of bytes left to read
     # r3 = timeout counter for spinlock
 
@@ -321,7 +321,7 @@ rowdelchar = func(row, at) {
     if (at < 0 || at > rowlen(row)) return 0;
     var len = rowlen(row);
     while (at != len-1) {
-        grset(row, at, grget(row, at));
+        grset(row, at, grget(row, at+1));
         at++;
     };
     grpop(row);
