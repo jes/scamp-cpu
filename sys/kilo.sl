@@ -23,6 +23,7 @@ var WAIT_STEPS = 1000; # number of loop iterations to wait for escaped character
 
 # key constants
 var BACKSPACE = 127;
+var BACKSPACE2 = 8;
 var ARROW_LEFT = 1000;
 var ARROW_RIGHT = 1001;
 var ARROW_UP = 1002;
@@ -176,6 +177,7 @@ readkey = func() {
         return ESC;
     };
 
+    if (c == BACKSPACE2) c = BACKSPACE;
     return c;
 };
 
