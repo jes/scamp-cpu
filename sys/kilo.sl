@@ -140,16 +140,25 @@ unrawmode = func() {
 };
 
 # usage: readable() - return 1 if there is at least 1 byte waiting
+var SERIALDEV = 136;
+var SERIALDEVLSR = 141;
 readable = func() {
-    return read(0, 0, 0);
+    return inp(SERIALDEVLSR)&1;
 };
+# slow alternative using kernel serial support:
+#    readable = func() { return read(0,0,0) };
 
 # usage: readbyte() - return the next character, blocking if necessary
 readbyte = func() {
-    var ch;
-    read(0, &ch, 1);
-    return ch;
+    while (!readable());
+    return inp(SERIALDEV);
 };
+# slow alternative using kernel serial support:
+#     readbyte = func() {
+#         var ch;
+#         read(0, &ch, 1);
+#         return ch;
+#     };
 
 # wait for "timeout" loop iterations, readbyte() into ptr if anything is
 # available and return 1, otherwise return 0
