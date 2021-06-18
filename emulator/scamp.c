@@ -241,7 +241,7 @@ uint8_t uart_in(struct uart8250 *uart, int addr) {
         case 5: /* line status register */
             /* TODO: [nice] there are potentially more bits that might be useful */
             uart_poll(uart);
-            return uart->dataready | (uart->txempty << 5);
+            return uart->dataready | (uart->txempty << 5) | (uart->txempty << 6);
         case 6: /* modem status register */
             /* TODO */
             return 0;
@@ -596,6 +596,7 @@ int main(int argc, char **argv) {
     console.base_address = 136;
     console.infd = 0; /* stdin */
     console.outfd = 1; /* stdout */
+    console.txempty = 1;
 
     /* run the clock */
     while (!halt) {
