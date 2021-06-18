@@ -45,6 +45,7 @@ var powers_of_2 = asm {
 #   *pmod = num % denom
 # Pass a null pointer if you want to discard one of the results
 # https://en.wikipedia.org/wiki/Division_algorithm#Integer_division_(unsigned)_with_remainder
+# usage: divmod(num, denom, pdiv, pmod)
 var divmod = asm {
     ld x, sp
     ld r7, 1(x) # r7 = pmod
@@ -96,6 +97,18 @@ var divmod = asm {
     ld (x), r5
     # return
     ret 4
+};
+
+var div = func(num, denom) {
+    var d;
+    divmod(num, denom, &d, 0);
+    return d;
+};
+
+var mod = func(num, denom) {
+    var m;
+    divmod(num, denom, 0, &m);
+    return m;
 };
 
 # >>8 1 arg from the stack and return the result in r0
