@@ -188,12 +188,25 @@ var ser_read = func(fd, buf, sz) {
     return sz;
 };
 
-var ser_writech = func(baseport, ch) {
-    # spin until LSR says tx buf is empty
-    var lsrport = baseport+5;
-    while (!(inp(lsrport) & 0x20));
+# usage: ser_writech(baseport, ch)
+var ser_writech = asm {
+    pop x
+    ld r1, x # r1 = ch
+    pop x
+    ld r2, x # r2 = baseport
+    add x, 5
+    ld r3, x # r3 = lsrport
 
-    outp(baseport, ch);
+    # wait for tx holding register empty
+    ser_writech_spin:
+        in x, r3
+        and x, 0x20
+        jz ser_writech_spin
+
+    # output character
+    ld x, r1
+    out r2, x
+    ret
 };
 
 ser_write = func(fd, buf, sz) {
@@ -206,8 +219,6 @@ ser_write = func(fd, buf, sz) {
 
     while (sz--) {
         ch = *(buf++);
-
-        # TODO: [nice] maybe we need to block and wait for the serial device to be ready?
 
         if (cooked_mode) {
             if (ch == '\n') ser_writech(baseport, '\r'); # put \r before \n
