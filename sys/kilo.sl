@@ -75,6 +75,7 @@ var markbelowdirty;
 var markalldirty;
 var markallclean;
 var need_redraw = malloc(ROWS);
+var full_redraw;
 
 ### editor operations
 var insertchar;
@@ -373,6 +374,7 @@ markbelowdirty = func(at) {
 };
 
 markalldirty = func() {
+    full_redraw = 1;
     memset(need_redraw, 1, ROWS);
 };
 
@@ -647,6 +649,8 @@ refresh = func() {
     else
         raw_printf("%c[%d;%dH", [ESC, ROWS+2, prompt_cursor]); # position cursor
     writeesc("[?25h"); # show cursor
+
+    full_redraw = 0;
 };
 
 var rowbuf_col;
@@ -699,7 +703,22 @@ drawrows = func() {
     markallclean();
 };
 
+var last_name;
+var last_dirty;
+var last_lines;
+var last_cy;
+
 drawstatus = func() {
+    # don't redraw status if it hasn't changed
+    if (openfilename == last_name && dirty == last_dirty && grlen(rows) == last_lines && cy == last_cy && !full_redraw) {
+        raw_write("\r\n");
+        return 0;
+    };
+    last_name = openfilename;
+    last_dirty = dirty;
+    last_lines = grlen(rows);
+    last_cy = cy;
+
     var name = openfilename;
     if (!name) name = "[No Name]";
 
