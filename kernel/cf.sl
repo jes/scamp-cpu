@@ -29,22 +29,44 @@ var CFRDY  = 0x40;
 var CFBUSY = 0x80;
 
 # wait until CF status matches "mask"
-var cf_wait = func(mask) {
-    var state;
-    var timeout = 1000; # XXX: is this sensible?
+# usage: cf_wait(mask)
+var cf_wait = asm {
+    .def CFSTATUSREG 271
+    .def CFBUSY 0x80
 
-    while (timeout--) {
-        state = inp(CFSTATUSREG);
+    pop x
+    ld r1, x # r1 = mask
+    ld r2, 1000 # r2 = timeout (XXX: is 1000 sensible?)
 
-        # if CFBUSY, the other bits are undefined
-        if (state & CFBUSY)
-            continue;
+    cf_wait_loop:
+        # panic if timed out
+        test r2
+        jz cf_wait_timeout
 
-        if ((state & mask) == mask)
-            return state;
-    };
+        # read state
+        in r3, CFSTATUSREG
 
-    kpanic("CompactFlash timeout");
+        # if CFBUSY, other bits are undefined, so check again
+        ld x, r3
+        and x, CFBUSY
+        jnz cf_wait_loop
+
+        # check if "(state & mask) == mask", if not then check again
+        ld x, r3
+        and x, r1
+        sub x, r1
+        jnz cf_wait_loop
+
+        # otherwise we're done
+        ld r0, r3
+        ret
+
+    cf_wait_timeout:
+        ld x, cf_timeout_str
+        push x
+        call (_kpanic)
+
+    cf_timeout_str: .str "CompactFlash timeout\0"
 };
 
 var cf_blkselect = func(num) {
