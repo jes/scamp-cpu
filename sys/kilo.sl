@@ -707,10 +707,11 @@ drawstatus = func() {
     if (dirty) dirtymsg = "(modified)";
 
     var status = sprintf("%20s - %d lines %s", [name, grlen(rows), dirtymsg]);
-    if (strlen(status) > COLS) *(status+COLS-1) = 0;
+    var len = strlen(status);
+
+    if (len > COLS) *(status+COLS-1) = 0;
     var rstatus = sprintf("%d/%d ", [cy+1, grlen(rows)]);
 
-    var len = strlen(status);
     var rlen = strlen(rstatus);
 
     writeesc("[7m"); # inverse video
