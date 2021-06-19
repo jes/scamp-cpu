@@ -2,7 +2,7 @@
 
 include "stdlib.sl";
 
-# usage: xprintf(fd, fmt, [arg1, arg2, ...], putc_cb);
+# usage: xprintf(fmt, [arg1, arg2, ...], putc_cb);
 # format string:
 #   %% -> %
 #   %c -> character

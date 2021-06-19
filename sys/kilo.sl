@@ -586,16 +586,53 @@ find = func() {
 
 ### OUTPUT
 
-var outbuf = sbnew();
+# usage: raw_writech(ch)
+var raw_writech = asm {
+    pop x
+    ld r1, x # r1 = ch
 
-var flush = func() {
-    write(1, sbbase(outbuf), sblen(outbuf));
-    sbclear(outbuf);
+    # wait for tx holding register empty
+    raw_writech_spin:
+        in x, SERIALDEVLSR
+        and x, 0x20
+        jz raw_writech_spin
+
+    # output character
+    ld x, r1
+    out SERIALDEV, x
+    ret
 };
 
+# usage: raw_write(str)
+var raw_write = asm {
+    pop x
+    ld r2, x # r2 = str
+
+    raw_write_next:
+        # do nothing if *str == 0
+        test (r2)
+        jz raw_write_done
+
+    raw_write_spin:
+        # wait for tx holding register empty
+        in x, SERIALDEVLSR
+        and x, 0x20
+        jz raw_write_spin
+
+    # output the character
+    ld x, (r2++)
+    out SERIALDEV, x
+    jmp raw_write_next
+
+    raw_write_done:
+        ret
+};
+
+var raw_printf = func(fmt, args) return xprintf(fmt, args, raw_writech);
+
 writeesc = func(s) {
-    sbputc(outbuf, ESC);
-    sbputs(outbuf, s);
+    raw_writech(ESC);
+    raw_write(s);
 };
 
 refresh = func() {
@@ -606,11 +643,10 @@ refresh = func() {
     drawstatus();
     drawstatusmsg();
     if (prompt_cursor == -1)
-        sbprintf(outbuf, "%c[%d;%dH", [ESC, cy-rowoff+1, rx-coloff+1]) # position cursor
+        raw_printf("%c[%d;%dH", [ESC, cy-rowoff+1, rx-coloff+1]) # position cursor
     else
-        sbprintf(outbuf, "%c[%d;%dH", [ESC, ROWS+2, prompt_cursor]); # position cursor
+        raw_printf("%c[%d;%dH", [ESC, ROWS+2, prompt_cursor]); # position cursor
     writeesc("[?25h"); # show cursor
-    flush();
 };
 
 var rowbuf_col;
@@ -618,7 +654,7 @@ drawrow = func(row) {
     rowbuf_col = 0;
     var addchar = func(ch) {
         if (rowbuf_col >= coloff && rowbuf_col < coloff+COLS)
-            sbputc(outbuf, ch);
+            raw_writech(ch);
         rowbuf_col++;
     };
 
@@ -650,14 +686,14 @@ drawrows = func() {
     while (y < ROWS) {
         filerow = y + rowoff;
         if (filerow >= grlen(rows)) {
-            if (grlen(rows) == 0 && y == 8) sbputs(outbuf, WELCOME)
-            else sbputc(outbuf, '~');
+            if (grlen(rows) == 0 && y == 8) raw_write(WELCOME)
+            else raw_writech('~');
             writeesc("[K"); # clear to end of line
         } else if (rowdirty(filerow)) {
             drawrow(grget(rows,filerow));
         };
 
-        sbputs(outbuf, "\r\n");
+        raw_write("\r\n");
         y++;
     };
     markallclean();
@@ -679,18 +715,18 @@ drawstatus = func() {
 
     writeesc("[7m"); # inverse video
 
-    sbputs(outbuf, status);
+    raw_write(status);
     while (len < COLS) {
         if (COLS-len == rlen) {
-            sbputs(outbuf, rstatus);
+            raw_write(rstatus);
             break;
         } else {
-            sbputc(outbuf, ' ');
+            raw_writech(' ');
             len++;
         };
     };
     writeesc("[m"); # un-inverse video
-    sbputs(outbuf, "\r\n");
+    raw_write("\r\n");
 
     free(status);
     free(rstatus);
@@ -698,7 +734,7 @@ drawstatus = func() {
 
 drawstatusmsg = func() {
     writeesc("[K"); # clear line
-    if (statusmsg) sbputs(outbuf, statusmsg);
+    if (statusmsg) raw_write(statusmsg);
 };
 
 setstatusmsg = func(fmt, args) {
