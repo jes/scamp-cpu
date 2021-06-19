@@ -221,6 +221,8 @@ readkey = func() {
     var seq = [0,0,0];
     var c = readkeyraw(seq);
 
+    setstatusmsg("%d: %d,%d,%d", [c, seq[0], seq[1], seq[2]]);
+
     if (c == ESC) {
         if (seq[0] == '[') {
             if (seq[1] >= '0' && seq[1] <= '9') {
@@ -240,6 +242,7 @@ readkey = func() {
                 if (seq[1] == 'D') return ARROW_LEFT;
                 if (seq[1] == 'H') return HOME_KEY;
                 if (seq[1] == 'F') return END_KEY;
+                if (seq[1] == 'K') return END_KEY;
             };
         } else if (seq[0] == 'O') {
             if (seq[1] == 'H') return HOME_KEY;
