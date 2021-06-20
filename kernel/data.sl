@@ -31,9 +31,33 @@ var fdtable = asm {
 };
 
 # fd base pointer is (fdtable + fd*8)
-var fdbaseptr = func(fd) {
-    if (fd ge nfds) return [0,0,0,0,0,0,0,0];
-    return fdtable+shl(fd,3);
+#var fdbaseptr = func(fd) {
+#    if (fd ge nfds) return [0,0,0,0,0,0,0,0];
+#    return fdtable+shl(fd,3);
+#};
+
+# usage: fdbaseptr(fd)
+var fdbaseptr = asm {
+    pop x
+    ld r1, x # fd
+
+    # if (fd ge nfds) return [0,0,0,0,0,0,0,0];
+    ld r2, r1
+    sub r2, (_nfds)
+    jge fdbaseptr_badfd
+
+    # return fdtable+shl(fd,3)
+    ld r0, (_fdtable)
+    shl2 r1
+    shl r1
+    add r0, r1
+    ret
+
+    fdbaseptr_badfd:
+    ld r0, fdbaseptr_nullfd
+    ret
+
+    fdbaseptr_nullfd: .str "\0\0\0\0\0\0\0\0"
 };
 
 # return the next free fd, or -1 if there is none
