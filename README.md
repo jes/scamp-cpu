@@ -10,7 +10,7 @@ Here are some pictures:
 
 <img src="doc/front-panels.jpeg" height="500"> <img src="doc/card-cage.jpeg" height="500">
 
-And here's a sample session recorded with `asciinema`:
+And here's a sample session in the emulator recorded with `asciinema`:
 
 <a href="https://asciinema.org/a/W0rYJUeaSK5ePSycyNKe3nWeL"><img width="400" src="doc/asciinema.png"></a>
 
