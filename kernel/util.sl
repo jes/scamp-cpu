@@ -108,14 +108,63 @@ var memcpy = asm {
     test r1
     jz memcpy_ret
 
+    # the memcpy loop is unrolled into groups of 8 words; when the
+    # length to copy is not a multiple of 8 we need to jump into the
+    # loop to skip over the first few copies
+
+    # grab last 3 bits to work out where to jump
+    ld r4, r1
+    and r4, 7
+    add r4, memcpy_offset
+    ld x, (r4)
+    ld r4, x
+
+    # round length up to next multiple of 8
+    or r1, 7
+    inc r1
+    # jump into loop
+    jmp r4
+
     memcpy_loop:
         ld x, (r2++)
         ld (r3++), x
-        dec r1
+    memcpy7:
+        ld x, (r2++)
+        ld (r3++), x
+    memcpy6:
+        ld x, (r2++)
+        ld (r3++), x
+    memcpy5:
+        ld x, (r2++)
+        ld (r3++), x
+    memcpy4:
+        ld x, (r2++)
+        ld (r3++), x
+    memcpy3:
+        ld x, (r2++)
+        ld (r3++), x
+    memcpy2:
+        ld x, (r2++)
+        ld (r3++), x
+    memcpy1:
+        ld x, (r2++)
+        ld (r3++), x
+    memcpy0:
+        sub r1, 8
         jnz memcpy_loop
 
     memcpy_ret:
     ret
+
+    memcpy_offset:
+    .word memcpy0
+    .word memcpy1
+    .word memcpy2
+    .word memcpy3
+    .word memcpy4
+    .word memcpy5
+    .word memcpy6
+    .word memcpy7
 };
 
 var memset = func(s, c, n) {
