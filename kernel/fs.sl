@@ -106,13 +106,18 @@ var fs_write = func(fd, buf, sz) {
         sz = sz - write;
         posinblk = posinblk + write;
 
-        # if we filled this block, sync it to disk, initialise the next block's header, and refresh "nextfreeblk"
+        # if we filled this block, sync it to disk
         if (posinblk == BLKSZ-2) {
             fs_sync(fd);
             blknum = nextblknum;
             *(fdbase+FDDATA) = blknum;
             posinblk = 0;
+        };
 
+        # if we allocated a new block, initialise its header and refresh "nextfreeblk"
+        # note: this is subtly different to "if we filled this block", because we might not
+        # always be writing at the end of the file, even if we reach the end of a block
+        if (nextblknum == nextfreeblk) {
             blksetused(nextblknum, 1);
             blkfindfree();
 
