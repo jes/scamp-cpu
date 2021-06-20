@@ -61,15 +61,14 @@ var fs_write = func(fd, buf, sz) {
     var nextblknum;
     var remain;
     var write;
+    var isnewblock = 0;
 
     if (!blkbuf) blkbuf = BLKBUF;
 
     while (sz) {
         # read the current block of the file
-        # TODO: [perf] we can skip this if we know we're writing at the end of the
-        # file and posinblk==0, because we don't need length, next pointer, or
-        # block contents.
-        blkread(blknum, blkbuf);
+        if (!isnewblock)
+            blkread(blknum, blkbuf);
 
         # how much space remains in this block?
         remain = (BLKSZ-2)-posinblk;
@@ -77,6 +76,13 @@ var fs_write = func(fd, buf, sz) {
         # how much can we write into this block?
         if (sz lt remain) write = sz
         else              write = remain;
+
+        # do we need to initialise block metadata?
+        if (isnewblock) {
+            blksettype(TYPE_FILE, blkbuf);
+            blksetlen(0, blkbuf);
+            blksetnext(0, blkbuf);
+        };
 
         # do we need to update the block length?
         if (posinblk+write gt blklen(blkbuf)) blksetlen(posinblk+write, blkbuf);
@@ -91,32 +97,37 @@ var fs_write = func(fd, buf, sz) {
         # copy data to block
         memcpy(blkbuf+posinblk+2, buf+writesz, write);
 
-        # write block to disk
+        # write block to disk if we're using the shared buffer
         if (blkbuf == BLKBUF) blkwrite(blknum, blkbuf);
 
         if (sz gt write && nextblknum == blknum) kpanic("write: nextblknum == blknum");
-
-        # if we allocated a new block, initialise its header and refresh "nextfreeblk"
-        if (nextblknum == nextfreeblk) {
-            blksetused(nextblknum, 1);
-            blkfindfree();
-
-            blksettype(TYPE_FILE, 0);
-            blksetlen(0, 0);
-            blksetnext(0, 0);
-            blkwrite(nextblknum, 0);
-        };
 
         writesz = writesz + write;
         sz = sz - write;
         posinblk = posinblk + write;
 
-        # move to the next block
+        # if we filled this block, sync it to disk, initialise the next block's header, and refresh "nextfreeblk"
         if (posinblk == BLKSZ-2) {
             fs_sync(fd);
             blknum = nextblknum;
             *(fdbase+FDDATA) = blknum;
             posinblk = 0;
+
+            blksetused(nextblknum, 1);
+            blkfindfree();
+
+            # if we won't be immediately writing the next block on this write()
+            # call, force a write now
+            if (sz == 0) {
+                blksettype(TYPE_FILE, blkbuf);
+                blksetlen(0, blkbuf);
+                blksetnext(0, blkbuf);
+                blkwrite(nextblknum, blkbuf);
+            };
+
+            isnewblock = 1;
+        } else {
+            isnewblock = 0;
         };
     };
 
