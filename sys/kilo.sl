@@ -466,18 +466,24 @@ openfile = func(filename) {
     if (fd < 0) fatal("open %s: %s", [filename, strerror(fd)]);
 
     var row = grnew();
-    var buf = malloc(257);
-    setbuf(fd, buf);
+    var buf = malloc(1024);
 
+    var n;
     var ch;
+    var p;
     while (1) {
-        ch = fgetc(fd);
-        if (ch == EOF) break;
-        if (ch == '\n') {
-            appendrow(row);
-            row = grnew();
-        } else {
-            grpush(row, ch);
+        n = read(fd, buf, 1024);
+        if (n <= 0) break;
+        p = buf;
+        while (n--) {
+            ch = *(p++);
+            if (ch == EOF) break;
+            if (ch == '\n') {
+                appendrow(row);
+                row = grnew();
+            } else {
+                grpush(row, ch);
+            };
         };
     };
     close(fd);
