@@ -105,9 +105,6 @@ var memcpy = asm {
     ld r3, x # dest
     ld r0, x # return
 
-    test r1
-    jz memcpy_ret
-
     # the memcpy loop is unrolled into groups of 8 words; when the
     # length to copy is not a multiple of 8 we need to jump into the
     # loop to skip over the first few copies
