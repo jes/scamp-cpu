@@ -57,6 +57,7 @@ var blksetnext = func(blk, buf) {
 
 var FREEBLKBUF = asm { .gap 257 };
 var freeblkblk = 0;
+var freeblkgroup = 0;
 
 # find a free block and update "blknextfree"
 var blkfindfree = func() {
@@ -66,7 +67,7 @@ var blkfindfree = func() {
     while (bitmapblk != 16) {
         blkread(SKIP_BLOCKS + ((bitmapblk + freeblkblk) & 0xf), FREEBLKBUF);
 
-        blkgroup = 0;
+        blkgroup = freeblkgroup;
         while (blkgroup != BLKSZ) {
             if (FREEBLKBUF[blkgroup] != 0xffff) break;
             blkgroup++;
@@ -82,6 +83,7 @@ var blkfindfree = func() {
     # keep track of the block that we found a free block in, so we can start searching
     # from there next time
     freeblkblk = bitmapblk;
+    freeblkgroup = blkgroup;
 
     # we now know that FREEBLKBUF[blkgroup] != 0xffff, which means at least one of
     # the 16 bits is 0, corresponding to a free block
