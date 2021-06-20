@@ -77,13 +77,6 @@ var fs_write = func(fd, buf, sz) {
         if (sz lt remain) write = sz
         else              write = remain;
 
-        # do we need to initialise block metadata?
-        if (isnewblock) {
-            blksettype(TYPE_FILE, blkbuf);
-            blksetlen(0, blkbuf);
-            blksetnext(0, blkbuf);
-        };
-
         # do we need to update the block length?
         if (posinblk+write gt blklen(blkbuf)) blksetlen(posinblk+write, blkbuf);
 
@@ -121,14 +114,14 @@ var fs_write = func(fd, buf, sz) {
             blksetused(nextblknum, 1);
             blkfindfree();
 
-            # if we won't be immediately writing the next block on this write()
-            # call, force a write now
-            if (sz == 0) {
-                blksettype(TYPE_FILE, blkbuf);
-                blksetlen(0, blkbuf);
-                blksetnext(0, blkbuf);
-                blkwrite(nextblknum, blkbuf);
-            };
+            blksettype(TYPE_FILE, blkbuf);
+            blksetlen(0, blkbuf);
+            blksetnext(0, blkbuf);
+            *(blkbuf+256) = blknum;
+
+            # write block to disk if we're using the shared buffer and we won't
+            # immediately write it on the next loop iteration
+            if (blkbuf == BLKBUF && sz == 0) blkwrite(nextblknum, blkbuf);
 
             isnewblock = 1;
         } else {
