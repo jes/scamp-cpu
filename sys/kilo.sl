@@ -222,8 +222,6 @@ readkey = func() {
     var seq = [0,0,0];
     var c = readkeyraw(seq);
 
-    setstatusmsg("%d: %d,%d,%d", [c, seq[0], seq[1], seq[2]]);
-
     if (c == ESC) {
         if (seq[0] == '[') {
             if (seq[1] >= '0' && seq[1] <= '9') {
