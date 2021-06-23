@@ -1,4 +1,5 @@
 kernel kernel.hex 0xc400
+limit 62270
 
 mkdir etc
 put -t motd /etc/motd

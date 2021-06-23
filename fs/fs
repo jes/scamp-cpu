@@ -33,6 +33,7 @@ my %cmd = (
     exit => \&done,
     abort => \&abort,
     kernel => \&kernel,
+    limit => \&limit,
 );
 
 info("\$ ");
@@ -83,6 +84,7 @@ sub help {
     exit      save the disk contents and quit
     abort     quit without saving contents
     kernel HEXFILE STARTADDR write HEXFILE to the disk, to be loaded at STARTADDR
+    limit N   mark blocks numbered N and onwards as "used"
 
 STARTADDR should be hex beginning "0x"
 
@@ -201,6 +203,15 @@ sub kernel {
     if (@block) {
         push @block, 0 while @block < 512;
         $fs->writeblock($blknum, @block);
+    }
+}
+
+sub limit {
+    my ($N) = @_;
+    die "usage: limit $N\n" if !$N;
+
+    for my $i ($N .. 65535) {
+        $fs->setblkused($i);
     }
 }
 
