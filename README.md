@@ -10,9 +10,13 @@ Here are some pictures:
 
 <img src="doc/front-panels.jpeg" height="500"> <img src="doc/card-cage.jpeg" height="500">
 
-And here's a sample session in the emulator recorded with `asciinema`:
+Here's a sample session in the emulator recorded with `asciinema`:
 
 <a href="https://asciinema.org/a/W0rYJUeaSK5ePSycyNKe3nWeL"><img width="400" src="doc/asciinema.png"></a>
+
+And here's a video with some explanation and an example session on real hardware:
+
+<a href="https://www.youtube.com/watch?v=4sBB0iD6XvI"><img width="400" src="doc/youtube.png"></a>
 
 ## Plan
 
