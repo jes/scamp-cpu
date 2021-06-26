@@ -90,12 +90,12 @@ var grwalk = func(gr, cb) {
 # return 0 if the value is not found
 var grfind = func(gr, findval, cb) {
     var i = 0;
-    var max = gr[0];
     var p = gr[2];
+    var maxp = p + gr[0];
 
-    while (i != max) {
-        if (cb(findval, p[i])) return p[i];
-        i++;
+    while (maxp-p) { # while p != maxp
+        if (cb(findval, *p)) return *p;
+        p++;
     };
 
     return 0;
