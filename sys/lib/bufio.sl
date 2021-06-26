@@ -10,7 +10,7 @@
 include "stdio.sl";
 include "malloc.sl";
 
-var BIO_BUFSZ = 508; # align with 2x block size on disk
+var BIO_BUFSZ = 254; # align with block size on disk
 
 # "mode" should be O_READ or O_WRITE
 var bfdopen = func(fd, mode) {
