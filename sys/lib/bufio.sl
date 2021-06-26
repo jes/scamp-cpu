@@ -83,12 +83,62 @@ var bgetc = func(bio) {
     return ch;
 };
 
-var bputc = func(bio, ch) {
-    var fd = bio[0];
-    var bufpos = bio[2];
+#var bputc = func(bio, ch) {
+#    var bufpos = bio[2];
+#    *(bio+4+bufpos) = ch;
+#    *(bio+2) = bufpos+1;
+#    if (bufpos == BIO_BUFSZ) bflush(bio);
+#};
+#
+# usage: bputc(bio, ch)
+var bputc = asm {
+    pop x
+    ld r2, x # ch
+    pop x
+    ld r1, x # bio
 
-    *(bio+4+bufpos) = ch;
-    *(bio+2) = bufpos+1;
+    ld r3, r1
+    add r3, 2 # r3 is bio+2, i.e. pointer to bufpos
+    # dereference bufpos pointer into r5
+    ld x, (r3)
+    ld r5, x
 
-    if (bufpos == BIO_BUFSZ) bflush(bio);
+    ld r4, r1
+    add r4, 4
+    add r4, r5
+    # r4 = address for next char (bio+4+bufpos)
+
+    # write char to buffer
+    ld x, r2
+    ld (r4), x
+
+    # increment bufpos and store back to bio object
+    inc r5
+    ld x, r5
+    ld (r3), x
+
+    # if (bufpos == BIO_BUFSZ) bflush(bio)
+    ld x, (_BIO_BUFSZ)
+    sub r5, x
+    jz bputc_bflush
+    ret
+
+    bputc_bflush:
+        # tail call bflush(bio)
+        ld x, r1
+        push x
+        jmp (_bflush)
+};
+
+var bputs = func(bio, str) {
+    while (*str)
+        bputc(bio, *(str++));
+};
+
+var bprintf_bio;
+var bprintf = func(bio, fmt, args) {
+    bprintf_bio = bio;
+    return xprintf(fmt, args, func(ch) {
+        bputc(bprintf_bio, ch);
+    });
 };
