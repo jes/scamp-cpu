@@ -21,6 +21,7 @@
 
 include "bufio.sl";
 include "grarr.sl";
+include "hash.sl";
 include "parse.sl";
 include "stdio.sl";
 include "stdlib.sl";
@@ -73,7 +74,7 @@ var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 var INCLUDED;
 var STRINGS;
 var ARRAYS;
-# EXTERNS and GLOBALS are grarrs of pointers to variable names
+# EXTERNS and GLOBALS are hashes of pointers to variable names
 var EXTERNS;
 var GLOBALS;
 # LOCALS is a grarr of pointers to tuples of (name,bp_rel)
@@ -91,18 +92,18 @@ var plabel = func(l) { puts("L"); puts(itoa(l)); };
 
 # return 1 if "name" is a global or extern, 0 otherwise
 var findglobal = func(name) {
-    if (grfind(GLOBALS, name, func(a,b) { return strcmp(a,b)==0 })) return 1;
-    if (grfind(EXTERNS, name, func(a,b) { return strcmp(a,b)==0 })) return 1;
+    if (htget(GLOBALS, name)) return 1;
+    if (htget(EXTERNS, name)) return 1;
     return 0;
 };
 
 var addextern = func(name) {
     if (findglobal(name)) die("duplicate global: %s",[name]);
-    grpush(EXTERNS, name);
+    htput(EXTERNS, name, name);
 };
 var addglobal = func(name) {
     if (findglobal(name)) die("duplicate global: %s",[name]);
-    grpush(GLOBALS, name);
+    htput(GLOBALS, name, name);
 };
 
 # return pointer to (name,bp_rel) if "name" is a local, 0 otherwise
@@ -1003,8 +1004,8 @@ Identifier = func(x) {
 INCLUDED = grnew();
 ARRAYS = grnew();
 STRINGS = grnew();
-EXTERNS = grnew();
-GLOBALS = grnew();
+EXTERNS = htnew();
+GLOBALS = htnew();
 
 # use dedicated input/output buffers, for performance
 setbuf(0, malloc(257));
@@ -1027,7 +1028,7 @@ if (SP_OFF != 0) die("expected to be left at SP_OFF==0 after program, found %d (
 var end = label();
 puts("jmp "); plabel(end); puts("\n");
 
-grwalk(GLOBALS, func(name) {
+htwalk(GLOBALS, func(name, val) {
     putchar('_'); puts(name); puts(": .word 0\n");
     #free(name);
 });
@@ -1060,7 +1061,7 @@ grwalk(ARRAYS, func(tuple) {
 #grfree(INCLUDED);
 #grfree(ARRAYS);
 #grfree(STRINGS);
-#grfree(EXTERNS);
-#grfree(GLOBALS);
+#htfree(EXTERNS);
+#htfree(GLOBALS);
 
 plabel(end); puts(":\n");

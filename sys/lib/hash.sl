@@ -68,14 +68,43 @@ var htgrow = func(ht) {
     *(ht+2) = newarr;
 };
 
-var hashstr = func(str) {
-    var h = 0;
-    var i = 997;
+#var hashstr = func(str) {
+#    var h = 0;
+#    var i = 997;
+#    while (*str)
+#        h = h+h+h + *(str++) + i++;
+#    return h;
+#};
+# usage: hashstr(str)
+var hashstr = asm {
+    pop x
+    ld r1, x # str
+    ld r0, 0 # h
+    ld r2, 997 # i
 
-    while (*str)
-        h = h+h+h + *(str++) + i++;
+    hashstr_loop:
+        # while (*str)
+        test (r1)
+        jz hashstr_ret
 
-    return h;
+        # h = h+h+h
+        ld r3, r0
+        add r3, r0
+        add r3, r0
+        ld r0, r3
+
+        # + *(str++)
+        ld x, (r1++)
+        add r0, x
+
+        # + i++
+        add r0, r2
+        inc r2
+
+        jmp hashstr_loop
+
+    hashstr_ret:
+        ret
 };
 
 # return pointer to slot in ht for key
@@ -118,5 +147,19 @@ htput = func(ht, key, val) {
         *p = key;
         *(p+1) = val;
         *(ht+1) = ht[1] + 1;
+    };
+};
+
+# call cb(key, val) for each element of the table
+var htwalk = func(ht, cb) {
+    var i = 0;
+    var p;
+
+    while (i < htsize(ht)) {
+        p = ht[2]+i+i;
+
+        if (*p) cb(*p, *(p+1));
+
+        i++;
     };
 };
