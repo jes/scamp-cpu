@@ -18,6 +18,7 @@
 # TODO: fix &/| precedence
 # TODO: only backup return address once per function? (profile it)
 # TODO: search paths for "include"
+# TODO: [perf] use bufio (bputc, bputs, bprintf) for code output
 
 include "bufio.sl";
 include "grarr.sl";
