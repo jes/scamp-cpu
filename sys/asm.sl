@@ -5,12 +5,13 @@
 # TODO: [bug] the assembler currently runs out of memory on large programs during
 #       the 1st pass (currently this is only "asm" I think)
 
+include "asmparser.sl";
+include "bufio.sl";
 include "grarr.sl";
 include "hash.sl";
-include "stdlib.sl";
 include "stdio.sl";
+include "stdlib.sl";
 include "string.sl";
-include "asmparser.sl";
 
 var asm_constant;
 var pc_start = 0;
@@ -376,26 +377,25 @@ emit_i16 = func() {
 var resolve_unbounds = func() {
     # "unbounds" are created in-order, so we can just read one at a time and get
     # the next every time we reach the address of the next unbound
-    var tuple = [0,0];
     var name;
     var addr = -1;
     var v;
     var val;
 
-    if (read(unbounds_fd, tuple, 2)) {
-        name = car(tuple);
-        addr = cdr(tuple);
-    };
+    var unbounds_bio = bfdopen(unbounds_fd, O_READ);
+    name = bgetc(unbounds_bio);
+    addr = bgetc(unbounds_bio);
 
     var fd = open(code_filename, O_READ);
     if (fd < 0) die("open %s: %s", [code_filename, strerror(code_fd)]);
-
     setbuf(fd, code_buf);
+    var code_bio = bfdopen(fd, O_READ);
+
+    var out_bio = bfdopen(1, O_WRITE);
 
     var n;
     var w;
     var pc = pc_start;
-    # TODO: [nice] stop hand-rolling buffer implementations everywhere!
     # TODO: [perf] refactor this loop; instead of going through one word at a
     #       time, replacing it if necessary, and then outputting it, we should
     #       read a block of data into memory, replace values in place from the
@@ -404,46 +404,27 @@ var resolve_unbounds = func() {
     #           2. while next unbound addr lies within the block:
     #           3      replace the unbound
     #           4. write the block
-    var buf = malloc(254);
-    var bufend = buf;
-    var bufp = buf;
-    var outbuf = malloc(1024);
-    var outbufsz = 1024;
-    var outbuflen = 0;
     while (1) {
-        if (bufp == bufend) {
-            n = read(fd, buf, 254);
-            if (n == 0) break;
-            if (n < 0) die("read %s: %s", [code_filename, strerror(n)]);
-            bufp = buf;
-            bufend = buf+n;
-        };
-
-        w = *(bufp++);
+        w = bgetc(code_bio);
+        if (w == EOF) break;
 
         if (pc == addr) { # resolve an unbound address here
             v = lookup(name);
             if (!v) die("unrecognised name %s at addr 0x%x", [name, addr]);
             w = cdr(v);
 
-            if (read(unbounds_fd, tuple, 2)) {
-                name = car(tuple);
-                addr = cdr(tuple);
-            };
+            name = bgetc(unbounds_bio);
+            addr = bgetc(unbounds_bio);
         };
 
         pc++;
 
-        *(outbuf+outbuflen) = w;
-        outbuflen++;
-        if (outbuflen == outbufsz) {
-            write(1, outbuf, outbuflen);
-            outbuflen = 0;
-        };
+        bputc(out_bio, w);
     };
-    close(fd);
+    bclose(code_bio);
 
-    if (outbuflen) write(1, outbuf, outbuflen);
+    bfree(out_bio);
+    bfree(unbounds_bio);
 };
 
 IDENTIFIERS = htnew();
@@ -463,21 +444,9 @@ setbuf(code_fd,code_buf);
 setbuf(unbounds_fd,unbounds_buf);
 
 fprintf(2, "1st pass...\n", 0);
-var inbufsz = 1024;
-var inbuf = malloc(inbufsz);
-var inbuflen = 0;
-var inpos = 0;
+var inbuf = bfdopen(0, O_READ);
 parse_init(func() {
-    var n;
-    if (inpos == inbuflen) {
-        n = read(0, inbuf, inbufsz);
-        if (n < 0) die("read stdin: %s", [strerror(n)]);
-        if (n == 0) return EOF;
-        inbuflen = n;
-        inpos = 0;
-    };
-
-    return inbuf[inpos++];
+    return bgetc(inbuf);
 });
 parse(Assembly,0);
 if (nextchar() != EOF) die("garbage after end",0);

@@ -397,7 +397,7 @@ Include = func(x) {
     if (include_fd < 0) include_fd = open_include(file, "/src/lib/");
     if (include_fd < 0) die("can't open %s: %s", [file, strerror(include_fd)]);
 
-    include_inbuf = bfdopen(include_fd);
+    include_inbuf = bfdopen(include_fd, O_READ);
     parse_init(func() {
         return bgetc(include_inbuf);
     });
@@ -1011,7 +1011,7 @@ setbuf(0, malloc(257));
 setbuf(1, malloc(257));
 
 # input buffering
-var inbuf = bfdopen(0);
+var inbuf = bfdopen(0, O_READ);
 
 parse_init(func() {
     return bgetc(inbuf);
