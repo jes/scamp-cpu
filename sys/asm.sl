@@ -7,7 +7,6 @@
 
 include "asmparser.sl";
 include "bufio.sl";
-include "grarr.sl";
 include "hash.sl";
 include "stdio.sl";
 include "stdlib.sl";
@@ -41,11 +40,11 @@ var store = func(name,val) {
 
 # return a pointer to an existing stored copy of "name", or strdup() one if there is none
 var intern = func(name) {
-    var v = grfind(STRINGS, name, func(a,b) { return strcmp(a,b)==0 });
-    if (v) return v;
+    var v = htget(STRINGS, name);
+    if (v) return cdr(v);
 
     name = strdup(name);
-    grpush(STRINGS, name);
+    htput(STRINGS, name, name);
     return name;
 };
 
@@ -425,7 +424,7 @@ var resolve_unbounds = func() {
 };
 
 IDENTIFIERS = htnew();
-STRINGS = grnew();
+STRINGS = htnew();
 
 code_filename = strdup(tmpnam());
 code_fd = open(code_filename, O_WRITE|O_CREAT);
