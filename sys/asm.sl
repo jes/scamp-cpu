@@ -389,41 +389,38 @@ var resolve_unbounds = func() {
     var fd = open(code_filename, O_READ);
     if (fd < 0) die("open %s: %s", [code_filename, strerror(code_fd)]);
     setbuf(fd, code_buf);
-    var code_bio = bfdopen(fd, O_READ);
 
-    var out_bio = bfdopen(1, O_WRITE);
+    var code = malloc(254);
 
     var n;
-    var w;
     var pc = pc_start;
-    # TODO: [perf] refactor this loop; instead of going through one word at a
-    #       time, replacing it if necessary, and then outputting it, we should
-    #       read a block of data into memory, replace values in place from the
-    #       unbounds, then output the block:
-    #           1. read a block
-    #           2. while next unbound addr lies within the block:
-    #           3      replace the unbound
-    #           4. write the block
     while (1) {
-        w = bgetc(code_bio);
-        if (w == EOF) break;
+        # 1. read a block of code
+        n = read(fd, code, 254);
+        if (n < 0) die("read code: %s\n", [strerror(n)]);
+        if (n == 0) break;
 
-        if (pc == addr) { # resolve an unbound address here
+        # 2. while next unbound addr lies within the block:
+        while (addr lt pc+n) {
+            # 3. replace the unbound
             v = lookup(name);
             if (!v) die("unrecognised name %s at addr 0x%x", [name, addr]);
-            w = cdr(v);
+            *(code+addr-pc) = cdr(v);
 
+            # 4. grab the next unbound
             name = bgetc(unbounds_bio);
             addr = bgetc(unbounds_bio);
         };
 
-        pc++;
+        pc = pc + 254;
 
-        bputc(out_bio, w);
+        # 5. write the block of code
+        n = write(1, code, n);
+        if (n <= 0) die("write code: %s\n", [strerror(n)]);
     };
-    bclose(code_bio);
+    close(fd);
+    free(code);
 
-    bfree(out_bio);
     bfree(unbounds_bio);
 };
 
