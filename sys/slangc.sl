@@ -18,7 +18,6 @@
 # TODO: fix &/| precedence
 # TODO: only backup return address once per function? (profile it)
 # TODO: search paths for "include"
-# TODO: [perf] use bufio (bputc, bputs, bprintf) for code output
 
 include "bufio.sl";
 include "grarr.sl";
@@ -87,9 +86,10 @@ var BLOCKLEVEL = 0;
 var BREAKLABEL;
 var CONTLABEL;
 var LABELNUM = 1;
+var OUT;
 
 var label = func() { return LABELNUM++; };
-var plabel = func(l) { puts("L"); puts(itoa(l)); };
+var plabel = func(l) { bputs(OUT, "L"); bputs(OUT, itoa(l)); };
 
 # return 1 if "name" is a global or extern, 0 otherwise
 var findglobal = func(name) {
@@ -147,12 +147,12 @@ var endscope = func() {
 };
 
 var pushx = func() {
-    puts("push x\n");
+    bputs(OUT, "push x\n");
     SP_OFF--;
 };
 
 var popx = func() {
-    puts("pop x\n");
+    bputs(OUT, "pop x\n");
     SP_OFF++;
 };
 
@@ -163,7 +163,7 @@ var pushvar = func(name) {
         v = findlocal(name);
         if (v) {
             bp_rel = cdr(v);
-            puts("ld x, "); puts(itoa(bp_rel-SP_OFF)); puts("(sp)\n");
+            bputs(OUT, "ld x, "); bputs(OUT, itoa(bp_rel-SP_OFF)); bputs(OUT, "(sp)\n");
             pushx();
             return 0;
         };
@@ -171,7 +171,7 @@ var pushvar = func(name) {
 
     v = findglobal(name);
     if (v) {
-        puts("ld x, (_"); puts(name); puts(")\n");
+        bputs(OUT, "ld x, (_"); bputs(OUT, name); bputs(OUT, ")\n");
         pushx();
         return 0;
     };
@@ -185,10 +185,10 @@ var poptovar = func(name) {
         v = findlocal(name);
         if (v) {
             bp_rel = cdr(v);
-            puts("ld r252, sp\n");
-            puts("add r252, "); puts(itoa(bp_rel-SP_OFF)); puts("\n");
+            bputs(OUT, "ld r252, sp\n");
+            bputs(OUT, "add r252, "); bputs(OUT, itoa(bp_rel-SP_OFF)); bputs(OUT, "\n");
             popx();
-            puts("ld (r252), x\n");
+            bputs(OUT, "ld (r252), x\n");
             return 0;
         };
     };
@@ -196,7 +196,7 @@ var poptovar = func(name) {
     v = findglobal(name);
     if (v) {
         popx();
-        puts("ld (_"); puts(name); puts("), x\n");
+        bputs(OUT, "ld (_"); bputs(OUT, name); bputs(OUT, "), x\n");
         return 0;
     };
 
@@ -205,17 +205,17 @@ var poptovar = func(name) {
 
 var genliteral = func(v) {
     if ((v&0xff00)==0 || (v&0xff00)==0xff00) {
-        puts("push "); puts(itoa(v)); puts("\n");
+        bputs(OUT, "push "); bputs(OUT, itoa(v)); bputs(OUT, "\n");
         SP_OFF--;
     } else {
-        puts("ld x, "); puts(itoa(v)); puts("\n");
+        bputs(OUT, "ld x, "); bputs(OUT, itoa(v)); bputs(OUT, "\n");
         pushx();
     };
 };
 
 var genop = func(op) {
     popx();
-    puts("ld r0, x\n");
+    bputs(OUT, "ld r0, x\n");
     popx();
 
     var signcmp = func(subxr0, match, wantlt) {
@@ -227,60 +227,60 @@ var genop = func(op) {
         var lt = label();
         var docmp = label();
 
-        puts("ld r1, r0\n");
-        puts("ld r2, x\n");
-        puts("ld r3, x\n");
-        puts("and r1, 32768 #peepopt:test\n"); # r1 = r0 & 0x8000
-        puts("and r2, 32768 #peepopt:test\n"); # r2 = x & 0x8000
-        puts("sub r1, r2 #peepopt:test\n");
-        puts("ld x, r3\n"); # doesn't clobber flags
-        puts("jz "); plabel(docmp); puts("\n"); # only directly compare x and r0 if they're both negative or both positive
+        bputs(OUT, "ld r1, r0\n");
+        bputs(OUT, "ld r2, x\n");
+        bputs(OUT, "ld r3, x\n");
+        bputs(OUT, "and r1, 32768 #peepopt:test\n"); # r1 = r0 & 0x8000
+        bputs(OUT, "and r2, 32768 #peepopt:test\n"); # r2 = x & 0x8000
+        bputs(OUT, "sub r1, r2 #peepopt:test\n");
+        bputs(OUT, "ld x, r3\n"); # doesn't clobber flags
+        bputs(OUT, "jz "); plabel(docmp); bputs(OUT, "\n"); # only directly compare x and r0 if they're both negative or both positive
 
         # just compare signs
-        puts("test r2\n");
-        printf("ld x, %d\n", [wantlt]); # doesn't clobber flags
-        puts("jnz "); plabel(lt); puts("\n");
-        printf("ld x, %d\n", [wantgt]); # doesn't clobber flags
-        puts("jmp "); plabel(lt); puts("\n");
+        bputs(OUT, "test r2\n");
+        bprintf(OUT, "ld x, %d\n", [wantlt]); # doesn't clobber flags
+        bputs(OUT, "jnz "); plabel(lt); bputs(OUT, "\n");
+        bprintf(OUT, "ld x, %d\n", [wantgt]); # doesn't clobber flags
+        bputs(OUT, "jmp "); plabel(lt); bputs(OUT, "\n");
 
         # do the actual magnitude comparison
-        plabel(docmp); puts(":\n");
-        if (subxr0) puts("sub x, r0 #peepopt:test\n")
-        else        puts("sub r0, x #peepopt:test\n");
-        printf("ld x, %d\n", [match]); # doesn't clobber flags
-        puts("jlt "); plabel(lt); puts("\n");
-        printf("ld x, %d\n", [nomatch]);
-        plabel(lt); puts(":\n");
+        plabel(docmp); bputs(OUT, ":\n");
+        if (subxr0) bputs(OUT, "sub x, r0 #peepopt:test\n")
+        else        bputs(OUT, "sub r0, x #peepopt:test\n");
+        bprintf(OUT, "ld x, %d\n", [match]); # doesn't clobber flags
+        bputs(OUT, "jlt "); plabel(lt); bputs(OUT, "\n");
+        bprintf(OUT, "ld x, %d\n", [nomatch]);
+        plabel(lt); bputs(OUT, ":\n");
     };
 
     var end;
 
     if (strcmp(op,"+") == 0) {
-        puts("add x, r0\n");
+        bputs(OUT, "add x, r0\n");
     } else if (strcmp(op,"-") == 0) {
-        puts("sub x, r0\n");
+        bputs(OUT, "sub x, r0\n");
     } else if (strcmp(op,"&") == 0) {
-        puts("and x, r0\n");
+        bputs(OUT, "and x, r0\n");
     } else if (strcmp(op,"|") == 0) {
-        puts("or x, r0\n");
+        bputs(OUT, "or x, r0\n");
     } else if (strcmp(op,"^") == 0) {
-        puts("ld r1, r254\n"); # xor clobbers r254
-        puts("ld y, r0\n");
-        puts("xor x, y\n");
-        puts("ld r254, r1\n");
+        bputs(OUT, "ld r1, r254\n"); # xor clobbers r254
+        bputs(OUT, "ld y, r0\n");
+        bputs(OUT, "xor x, y\n");
+        bputs(OUT, "ld r254, r1\n");
     } else if (strcmp(op,"!=") == 0) {
         end = label();
-        puts("sub x, r0 #peepopt:test\n");
-        puts("jz "); plabel(end); puts("\n");
-        puts("ld x, 1\n");
-        plabel(end); puts(":\n");
+        bputs(OUT, "sub x, r0 #peepopt:test\n");
+        bputs(OUT, "jz "); plabel(end); bputs(OUT, "\n");
+        bputs(OUT, "ld x, 1\n");
+        plabel(end); bputs(OUT, ":\n");
     } else if (strcmp(op,"==") == 0) {
         end = label();
-        puts("sub x, r0 #peepopt:test\n");
-        puts("ld x, 0\n"); # doesn't clobber flags
-        puts("jnz "); plabel(end); puts("\n");
-        puts("ld x, 1\n");
-        plabel(end); puts(":\n");
+        bputs(OUT, "sub x, r0 #peepopt:test\n");
+        bputs(OUT, "ld x, 0\n"); # doesn't clobber flags
+        bputs(OUT, "jnz "); plabel(end); bputs(OUT, "\n");
+        bputs(OUT, "ld x, 1\n");
+        plabel(end); bputs(OUT, ":\n");
     } else if (strcmp(op,">=") == 0) {
         signcmp(1, 0, 0);
     } else if (strcmp(op,"<=") == 0) {
@@ -299,24 +299,24 @@ var genop = func(op) {
         signcmp(1, 1, 0);
     } else if (strcmp(op,"&&") == 0) {
         end = label();
-        puts("test x\n");
-        puts("ld x, 0\n"); # doesn't clobber flags
-        puts("jz "); plabel(end); puts("\n");
-        puts("test r0\n");
-        puts("jz "); plabel(end); puts("\n");
-        puts("ld x, 1\n"); # both args true: x=1
-        plabel(end); puts(":\n");
+        bputs(OUT, "test x\n");
+        bputs(OUT, "ld x, 0\n"); # doesn't clobber flags
+        bputs(OUT, "jz "); plabel(end); bputs(OUT, "\n");
+        bputs(OUT, "test r0\n");
+        bputs(OUT, "jz "); plabel(end); bputs(OUT, "\n");
+        bputs(OUT, "ld x, 1\n"); # both args true: x=1
+        plabel(end); bputs(OUT, ":\n");
     } else if (strcmp(op,"||") == 0) {
         end = label();
-        puts("test x\n");
-        puts("ld x, 1\n"); # doesn't clobber flags
-        puts("jnz "); plabel(end); puts("\n");
-        puts("test r0\n");
-        puts("jnz "); plabel(end); puts("\n");
-        puts("ld x, 0\n"); # both args false: x=0
-        plabel(end); puts(":\n");
+        bputs(OUT, "test x\n");
+        bputs(OUT, "ld x, 1\n"); # doesn't clobber flags
+        bputs(OUT, "jnz "); plabel(end); bputs(OUT, "\n");
+        bputs(OUT, "test r0\n");
+        bputs(OUT, "jnz "); plabel(end); bputs(OUT, "\n");
+        bputs(OUT, "ld x, 0\n"); # both args false: x=0
+        plabel(end); bputs(OUT, ":\n");
     } else {
-        puts("bad op: "); puts(op); puts("\n");
+        bputs(OUT, "bad op: "); bputs(OUT, op); bputs(OUT, "\n");
         die("unrecognised binary operator %s (probably a compiler bug)",[op]);
     };
 
@@ -326,7 +326,7 @@ var genop = func(op) {
 var funcreturn = func() {
     if (!LOCALS) die("can't return from global scope",0);
 
-    puts("ret "); puts(itoa(NPARAMS-BP_REL)); puts("\n");
+    bputs(OUT, "ret "); bputs(OUT, itoa(NPARAMS-BP_REL)); bputs(OUT, "\n");
 };
 
 Program = func(x) {
@@ -448,7 +448,7 @@ Declaration = func(x) {
     } else {
         if (findglobal(name)) warn("local var %s overrides global",[name]);
         addlocal(name, BP_REL--);
-        puts("dec sp\n");
+        bputs(OUT, "dec sp\n");
         SP_OFF--;
     };
     if (!parse(CharSkip,'=')) return 1;
@@ -470,8 +470,8 @@ Conditional = func(x) {
     # if top of stack is 0, jmp falselabel
     var falselabel = label();
     popx();
-    puts("test x\n");
-    puts("jz "); plabel(falselabel); puts("\n");
+    bputs(OUT, "test x\n");
+    bputs(OUT, "jz "); plabel(falselabel); bputs(OUT, "\n");
 
     if (!parse(CharSkip,')')) die("if condition needs close paren",0);
     if (!parse(Statement,0)) die("if needs body",0);
@@ -479,12 +479,12 @@ Conditional = func(x) {
     var endiflabel;
     if (parse(Keyword,"else")) {
         endiflabel = label();
-        puts("jmp L"); puts(itoa(endiflabel)); puts("\n");
-        plabel(falselabel); puts(":\n");
+        bputs(OUT, "jmp L"); bputs(OUT, itoa(endiflabel)); bputs(OUT, "\n");
+        plabel(falselabel); bputs(OUT, ":\n");
         if (!parse(Statement,0)) die("else needs body",0);
-        plabel(endiflabel); puts(":\n");
+        plabel(endiflabel); bputs(OUT, ":\n");
     } else {
-        plabel(falselabel); puts(":\n");
+        plabel(falselabel); bputs(OUT, ":\n");
     };
     BLOCKLEVEL--;
     return 1;
@@ -503,20 +503,20 @@ Loop = func(x) {
     BREAKLABEL = endloop;
     CONTLABEL = loop;
 
-    plabel(loop); puts(":\n");
+    plabel(loop); bputs(OUT, ":\n");
 
     if (!parse(Expression,0)) die("while condition needs expression",0);
 
     # if top of stack is 0, jmp endloop
     popx();
-    puts("test x\n");
-    puts("jz "); plabel(endloop); puts("\n");
+    bputs(OUT, "test x\n");
+    bputs(OUT, "jz "); plabel(endloop); bputs(OUT, "\n");
 
     if (!parse(CharSkip,')')) die("while condition needs close paren",0);
 
     parse(Statement,0); # optional
-    puts("jmp "); plabel(loop); puts("\n");
-    plabel(endloop); puts(":\n");
+    bputs(OUT, "jmp "); plabel(loop); bputs(OUT, "\n");
+    plabel(endloop); bputs(OUT, ":\n");
 
     BREAKLABEL = oldbreaklabel;
     CONTLABEL = oldcontlabel;
@@ -527,14 +527,14 @@ Loop = func(x) {
 Break = func(x) {
     if (!parse(Keyword,"break")) return 0;
     if (!BREAKLABEL) die("can't break here",0);
-    puts("jmp "); plabel(BREAKLABEL); puts("\n");
+    bputs(OUT, "jmp "); plabel(BREAKLABEL); bputs(OUT, "\n");
     return 1;
 };
 
 Continue = func(x) {
     if (!parse(Keyword,"continue")) return 0;
     if (!CONTLABEL) die("can't continue here",0);
-    puts("jmp "); plabel(CONTLABEL); puts("\n");
+    bputs(OUT, "jmp "); plabel(CONTLABEL); bputs(OUT, "\n");
     return 1;
 };
 
@@ -542,7 +542,7 @@ Return = func(x) {
     if (!parse(Keyword,"return")) return 0;
     if (!parse(Expression,0)) die("return needs expression",0);
     popx();
-    puts("ld r0, x\n");
+    bputs(OUT, "ld r0, x\n");
     funcreturn();
     return 1;
 };
@@ -563,9 +563,9 @@ Assignment = func(x) {
         free(id);
     } else {
         popx();
-        puts("ld r0, x\n");
+        bputs(OUT, "ld r0, x\n");
         popx();
-        puts("ld (x), r0\n");
+        bputs(OUT, "ld (x), r0\n");
     };
     return 1;
 };
@@ -613,10 +613,10 @@ Term = func(x) {
 
         # stack now has array and index on it: pop, add together, dereference, push
         popx();
-        puts("ld r0, x\n");
+        bputs(OUT, "ld r0, x\n");
         popx();
-        puts("add x, r0\n");
-        puts("ld x, (x)\n");
+        bputs(OUT, "add x, r0\n");
+        bputs(OUT, "ld x, (x)\n");
         pushx();
     };
     return 1;
@@ -705,7 +705,7 @@ StringLiteral = func(x) {
     if (!parse(Char,'"')) return 0;
     var str = StringLiteralText();
     var strlabel = addstring(str);
-    puts("ld x, "); plabel(strlabel); puts("\n");
+    bputs(OUT, "ld x, "); plabel(strlabel); bputs(OUT, "\n");
     pushx();
     return 1;
 };
@@ -741,10 +741,10 @@ ArrayLiteral = func(x) {
         # TODO: [perf] this loads to a constant address, we should make the assembler
         # allow us to calculate it at assembly time like:
         #   ld (l+length), x
-        puts("ld r0, "); plabel(l); puts("\n");
-        puts("add r0, "); puts(itoa(length)); puts("\n");
+        bputs(OUT, "ld r0, "); plabel(l); bputs(OUT, "\n");
+        bputs(OUT, "add r0, "); bputs(OUT, itoa(length)); bputs(OUT, "\n");
         popx();
-        puts("ld (r0), x\n");
+        bputs(OUT, "ld (r0), x\n");
 
         length++;
         if (!parse(CharSkip,',')) break;
@@ -752,7 +752,7 @@ ArrayLiteral = func(x) {
 
     if (!parse(CharSkip,']')) die("array literal needs close bracket",0);
 
-    puts("ld x, "); plabel(l); puts("\n");
+    bputs(OUT, "ld x, "); plabel(l); bputs(OUT, "\n");
     pushx();
 
     grpush(ARRAYS, cons(l,length));
@@ -780,8 +780,8 @@ FunctionDeclaration = func(x) {
     var params = Parameters(0);
     var functionlabel = label();
     var functionend = label();
-    puts("jmp "); plabel(functionend); puts("\n");
-    plabel(functionlabel); puts(":\n");
+    bputs(OUT, "jmp "); plabel(functionend); bputs(OUT, "\n");
+    plabel(functionlabel); bputs(OUT, ":\n");
 
     var oldscope = LOCALS;
     var old_bp_rel = BP_REL;
@@ -807,8 +807,8 @@ FunctionDeclaration = func(x) {
     NPARAMS = oldnparams;
     SP_OFF = old_sp_off;
 
-    plabel(functionend); puts(":\n");
-    puts("ld x, "); plabel(functionlabel); puts("\n");
+    plabel(functionend); bputs(OUT, ":\n");
+    bputs(OUT, "ld x, "); plabel(functionlabel); bputs(OUT, "\n");
     pushx();
     return 1;
 };
@@ -819,22 +819,22 @@ InlineAsm = func(x) {
 
     var end = label();
     var asm = label();
-    puts("jmp "); plabel(end); puts("\n");
-    plabel(asm); puts(":\n");
+    bputs(OUT, "jmp "); plabel(end); bputs(OUT, "\n");
+    plabel(asm); bputs(OUT, ":\n");
 
-    puts("#peepopt:off\n");
+    bputs(OUT, "#peepopt:off\n");
     var ch;
     while (1) {
         ch = nextchar();
         if (ch == EOF) die("eof inside asm block",0);
         if (ch == '}') break;
-        putchar(ch);
+        bputc(OUT, ch);
     };
-    puts("\n");
-    puts("#peepopt:on\n");
+    bputs(OUT, "\n");
+    bputs(OUT, "#peepopt:on\n");
 
-    plabel(end); puts(":\n");
-    puts("ld x, "); plabel(asm); puts("\n");
+    plabel(end); bputs(OUT, ":\n");
+    bputs(OUT, "ld x, "); plabel(asm); bputs(OUT, "\n");
     pushx();
     return 1;
 };
@@ -845,7 +845,7 @@ FunctionCall = func(x) {
 
     var name = strdup(IDENTIFIER);
 
-    puts("ld x, r254\n");
+    bputs(OUT, "ld x, r254\n");
     pushx();
 
     var nargs = Arguments();
@@ -855,14 +855,14 @@ FunctionCall = func(x) {
     free(name);
     # call function
     popx();
-    puts("call x\n");
+    bputs(OUT, "call x\n");
     # arguments have been consumed
     SP_OFF = SP_OFF + nargs;
     # restore return address
     popx();
-    puts("ld r254, x\n");
+    bputs(OUT, "ld r254, x\n");
     # push return value
-    puts("ld x, r0\n");
+    bputs(OUT, "ld x, r0\n");
     pushx();
 
     return 1;
@@ -891,7 +891,7 @@ PreOp = func(x) {
     skip();
     pushvar(IDENTIFIER);
     popx();
-    puts(op); puts(" x\n");
+    bputs(OUT, op); bputs(OUT, " x\n");
     pushx();
     poptovar(IDENTIFIER);
     pushx();
@@ -913,7 +913,7 @@ PostOp = func(x) {
     pushvar(IDENTIFIER);
     popx();
     pushx();
-    puts(op); puts(" x\n");
+    bputs(OUT, op); bputs(OUT, " x\n");
     pushx();
     poptovar(IDENTIFIER);
     return 1;
@@ -929,8 +929,8 @@ AddressOf = func(x) {
         v = findlocal(IDENTIFIER);
         if (v) {
             bp_rel = cdr(v);
-            puts("ld x, sp\n");
-            puts("add x, "); puts(itoa(bp_rel-SP_OFF)); puts("\n");
+            bputs(OUT, "ld x, sp\n");
+            bputs(OUT, "add x, "); bputs(OUT, itoa(bp_rel-SP_OFF)); bputs(OUT, "\n");
             pushx();
             return 1;
         };
@@ -938,7 +938,7 @@ AddressOf = func(x) {
 
     v = findglobal(IDENTIFIER);
     if (v) {
-        puts("ld x, _"); puts(IDENTIFIER); puts("\n");
+        bputs(OUT, "ld x, _"); bputs(OUT, IDENTIFIER); bputs(OUT, "\n");
         pushx();
         return 1;
     };
@@ -958,20 +958,20 @@ UnaryExpression = func(x) {
 
     popx();
     if (op == '~') {
-        puts("not x\n");
+        bputs(OUT, "not x\n");
     } else if (op == '-') {
-        puts("neg x\n");
+        bputs(OUT, "neg x\n");
     } else if (op == '!') {
         end = label();
-        puts("test x\n");
-        puts("ld x, 0\n"); # doesn't clobber flags
-        puts("jnz "); plabel(end); puts("\n");
-        puts("ld x, 1\n");
-        plabel(end); puts(":\n");
+        bputs(OUT, "test x\n");
+        bputs(OUT, "ld x, 0\n"); # doesn't clobber flags
+        bputs(OUT, "jnz "); plabel(end); bputs(OUT, "\n");
+        bputs(OUT, "ld x, 1\n");
+        plabel(end); bputs(OUT, ":\n");
     } else if (op == '+') {
         # no-op
     } else if (op == '*') {
-        puts("ld x, (x)\n");
+        bputs(OUT, "ld x, (x)\n");
     } else {
         die("unrecognised unary operator %c (probably a compiler bug)",[op]);
     };
@@ -1012,6 +1012,8 @@ GLOBALS = htnew();
 setbuf(0, malloc(257));
 setbuf(1, malloc(257));
 
+OUT = bfdopen(1, O_WRITE);
+
 # input buffering
 var inbuf = bfdopen(0, O_READ);
 
@@ -1027,23 +1029,23 @@ if (SP_OFF != 0) die("expected to be left at SP_OFF==0 after program, found %d (
 
 # jump over the globals
 var end = label();
-puts("jmp "); plabel(end); puts("\n");
+bputs(OUT, "jmp "); plabel(end); bputs(OUT, "\n");
 
 htwalk(GLOBALS, func(name, val) {
-    putchar('_'); puts(name); puts(": .word 0\n");
+    bputc(OUT, '_'); bputs(OUT, name); bputs(OUT, ": .word 0\n");
     #free(name);
 });
 
 grwalk(STRINGS, func(tuple) {
     var str = car(tuple);
     var l = cdr(tuple);
-    plabel(l); puts(":\n");
+    plabel(l); bputs(OUT, ":\n");
     var p = str;
     while (*p) {
-        puts(".word "); puts(itoa(*p)); puts("\n");
+        bputs(OUT, ".word "); bputs(OUT, itoa(*p)); bputs(OUT, "\n");
         p++;
     };
-    puts(".word 0\n");
+    bputs(OUT, ".word 0\n");
     #free(str);
     #free(tuple);
 });
@@ -1051,9 +1053,9 @@ grwalk(STRINGS, func(tuple) {
 grwalk(ARRAYS, func(tuple) {
     var l = car(tuple);
     var length = cdr(tuple);
-    plabel(l); puts(":\n");
-    puts(".gap "); puts(itoa(length)); puts("\n");
-    puts(".word 0\n");
+    plabel(l); bputs(OUT, ":\n");
+    bputs(OUT, ".gap "); bputs(OUT, itoa(length)); bputs(OUT, "\n");
+    bputs(OUT, ".word 0\n");
     #free(tuple);
 });
 
@@ -1065,4 +1067,5 @@ grwalk(ARRAYS, func(tuple) {
 #htfree(EXTERNS);
 #htfree(GLOBALS);
 
-plabel(end); puts(":\n");
+plabel(end); bputs(OUT, ":\n");
+bclose(OUT);
