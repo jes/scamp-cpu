@@ -19,11 +19,12 @@
 # TODO: only backup return address once per function? (profile it)
 # TODO: search paths for "include"
 
+include "bufio.sl";
+include "grarr.sl";
+include "parse.sl";
 include "stdio.sl";
 include "stdlib.sl";
 include "string.sl";
-include "grarr.sl";
-include "parse.sl";
 
 var Program;
 var Statements;
@@ -370,6 +371,7 @@ var open_include = func(file, path) {
 };
 
 var include_fd;
+var include_inbuf;
 Include = func(x) {
     if (!parse(Keyword,"include")) return 0;
     if (!parse(Char,'"')) return 0;
@@ -387,6 +389,7 @@ Include = func(x) {
     var parse_filename0 = parse_filename;
     var include_fd0 = include_fd;
     var ringbuf0 = malloc(ringbufsz);
+    var include_inbuf0 = include_inbuf;
     memcpy(ringbuf0, ringbuf, ringbufsz);
 
     include_fd = open(file, O_READ);
@@ -394,17 +397,16 @@ Include = func(x) {
     if (include_fd < 0) include_fd = open_include(file, "/src/lib/");
     if (include_fd < 0) die("can't open %s: %s", [file, strerror(include_fd)]);
 
+    include_inbuf = bfdopen(include_fd);
     parse_init(func() {
-        var ch = fgetc(include_fd);
-        if (ch < 0) return EOF; # collapse all types of error to "EOF"
-        return ch;
+        return bgetc(include_inbuf);
     });
     parse_filename = strdup(file);
 
     # parse the included file
     if (!parse(Program,0)) die("expected statements",0);
 
-    close(include_fd);
+    bclose(include_inbuf);
 
     # restore parser state
     pos = pos0;
@@ -416,6 +418,7 @@ Include = func(x) {
     include_fd = include_fd0;
     memcpy(ringbuf, ringbuf0, ringbufsz);
     free(ringbuf0);
+    include_inbuf = include_inbuf0;
 
     return 1;
 };
@@ -1007,7 +1010,12 @@ GLOBALS = grnew();
 setbuf(0, malloc(257));
 setbuf(1, malloc(257));
 
-parse_init(getchar);
+# input buffering
+var inbuf = bfdopen(0);
+
+parse_init(func() {
+    return bgetc(inbuf);
+});
 parse(Program,0);
 
 if (nextchar() != EOF) die("garbage after end of program",0);
