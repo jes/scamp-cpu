@@ -74,21 +74,69 @@ var _bslurp = func(bio) {
     };
 };
 
-var bgetc = func(bio) {
-    var fd = bio[0];
-    var buflen = bio[1];
-    var bufpos = bio[2];
+#var bgetc = func(bio) {
+#    var buflen = bio[1];
+#    var bufpos = bio[2];
+#    if (bufpos == buflen) _bslurp(bio);
+#    buflen = bio[1];
+#    bufpos = bio[2];
+#    if (buflen == 0) return EOF;
+#    var ch = *(bio+4+bufpos);
+#    *(bio+2) = bufpos+1;
+#    return ch;
+#};
+#
+# usage: bgetc(bio)
+var bgetc = asm {
+    pop x
+    ld (_bgetc_bio), x # bio
 
-    if (bufpos == buflen) _bslurp(bio);
+    inc x
+    ld r2, (x) # buflen
+    inc x
+    ld r3, (x) # bufpos
 
-    buflen = bio[1];
-    bufpos = bio[2];
+    # if (bufpos == buflen)
+    sub r2, r3
+    jnz _bgetc_nextchar
+    #   _bslurp(bio):
+    ld x, r254
+    push x
+    ld x, (_bgetc_bio)
+    push x
+    call (__bslurp)
+    pop x
+    ld r254, x
 
-    if (buflen == 0) return EOF;
+    _bgetc_nextchar:
+    # if (buflen == 0) return EOF;
+    ld x, (_bgetc_bio)
+    inc x
+    ld r2, (x) # buflen
+    test r2
+    jnz _bgetc_not_eof
+    ld r0, (_EOF)
+    ret
 
-    var ch = *(bio+4+bufpos);
-    *(bio+2) = bufpos+1;
-    return ch;
+    _bgetc_not_eof:
+    inc x
+    ld r3, (x) # bufpos
+
+    # ch = *(bio+4+bufpos)
+    ld x, (_bgetc_bio)
+    add x, 4
+    add x, r3
+    ld r0, (x)
+
+    # bufpos++
+    inc r3
+    ld x, (_bgetc_bio)
+    add x, 2
+    ld (x), r3
+
+    ret
+
+    _bgetc_bio: .word 0
 };
 
 #var bputc = func(bio, ch) {
