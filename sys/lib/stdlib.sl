@@ -202,9 +202,13 @@ var itoa = func(num) return itoabase(num, 10);
 
 var islower = func(ch) return ch >= 'a' && ch <= 'z';
 var isupper = func(ch) return ch >= 'A' && ch <= 'Z';
-var isalpha = func(ch) return islower(ch) || isupper(ch);
+var isalpha = func(ch) return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
 var isdigit = func(ch) return ch >= '0' && ch <= '9';
-var isalnum = func(ch) return isalpha(ch) || isdigit(ch);
+var isalnum = func(ch) {
+    if (ch >= 'a' && ch <= 'z') return 1;
+    if (ch >= 'A' && ch <= 'Z') return 1;
+    return (ch >= '0' && ch <= '9');
+};
 var iswhite = func(ch) return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
 var iscntrl = func(ch) return ch < ' ' || ch == 127;
 var tolower = func(ch) {
