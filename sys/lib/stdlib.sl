@@ -218,13 +218,42 @@ var tolower = func(ch) {
 
 # return index of ch in alphabet, or 0 if not present; note 0 is indistinguishable
 # from "present at index 0"
-var stridx = func(alphabet, ch) {
-    var i = 0;
-    while (*(alphabet+i)) {
-        if (*(alphabet+i) == ch) return i;
-        i++;
-    };
-    return 0;
+#var stridx = func(alphabet, ch) {
+#    var i = 0;
+#    while (*(alphabet+i)) {
+#        if (*(alphabet+i) == ch) return i;
+#        i++;
+#    };
+#    return 0;
+#};
+#
+# usage: stridx(alphabet, ch)
+var stridx = asm {
+    pop x
+    ld r1, x # ch
+    pop x
+    ld r2, x # alphabet
+
+    ld r0, 0xffff # i (start at -1, increment to 0 on first loop)
+
+    stridx_loop:
+        inc r0
+        ld x, (r2++)
+
+        # if (r2) is 0, we didn't find r1
+        test x
+        jz stridx_notfound
+
+        # if x != r1, loop again
+        sub x, r1
+        jnz stridx_loop
+
+    # x == r1, return r0
+    ret
+
+    stridx_notfound:
+        ld r0, 0
+        ret
 };
 
 var atoibase = func(s, base) {
