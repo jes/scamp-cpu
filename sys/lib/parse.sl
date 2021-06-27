@@ -85,7 +85,7 @@ var asm_parse = asm {
 
     parsereset:
     pop x
-    ld r3, x # line0
+    ld (_line), x # line0
     pop x
     ld r4, x # pos0
 
@@ -102,7 +102,6 @@ var asm_parse = asm {
 
     parsereturn:
     ld (_pos), r4
-    ld (_line), r3
     ret
 
     tmb_s: .str "too much backtrack\0"
