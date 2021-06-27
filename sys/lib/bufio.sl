@@ -62,21 +62,29 @@ var bwrite = func(bio, buf, sz) {
     fprintf(2, "bwrite() not implemented yet\n", 0);
 };
 
+# grab a new block of data from bio (internal; not for library users)
+var _bslurp = func(bio) {
+    var fd = bio[0];
+
+    *(bio+2) = 0; # bufpos
+    *(bio+1) = read(fd, bio+4, BIO_BUFSZ);
+    if (bio[1] < 0) {
+        fprintf(2, "bread %d: %s\n", [fd, strerror(bio[1])]);
+        *(bio+1) = 0;
+    };
+};
+
 var bgetc = func(bio) {
     var fd = bio[0];
     var buflen = bio[1];
     var bufpos = bio[2];
 
-    if (bufpos == buflen) {
-        *(bio+2) = 0; bufpos = 0;
-        *(bio+1) = read(fd, bio+4, BIO_BUFSZ);
-        if (bio[1] < 0) {
-            fprintf(2, "bread %d: %s\n", [fd, strerror(bio[1])]);
-            return EOF;
-        } else if (bio[1] == 0) {
-            return EOF;
-        };
-    };
+    if (bufpos == buflen) _bslurp(bio);
+
+    buflen = bio[1];
+    bufpos = bio[2];
+
+    if (buflen == 0) return EOF;
 
     var ch = *(bio+4+bufpos);
     *(bio+2) = bufpos+1;
