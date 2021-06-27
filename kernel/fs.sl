@@ -58,7 +58,7 @@ var fs_write = func(fd, buf, sz) {
     var blknum = *(fdbase+FDDATA);
     var posinblk = *(fdbase+FDDATA+1);
     var blkbuf = *(fdbase+FDDATA+2);
-    var nextblknum;
+    var nextblknum = 0;
     var remain;
     var write;
     var isnewblock = 0;
@@ -90,7 +90,7 @@ var fs_write = func(fd, buf, sz) {
         # copy data to block
         memcpy(blkbuf+posinblk+2, buf+writesz, write);
 
-        # write block to disk if we're using the shared buffer
+        # write block to disk immediately if we're using the shared buffer
         if (blkbuf == BLKBUF) blkwrite(blknum, blkbuf);
 
         if (sz gt write && nextblknum == blknum) kpanic("write: nextblknum == blknum");

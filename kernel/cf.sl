@@ -5,6 +5,8 @@
 # TODO: [nice] support multiple cards, so that one can be used as removable
 #       storage?
 
+include "util.sl";
+
 var CFBASE = 264;
 
 var CFDATAREG   = CFBASE+0;
@@ -139,12 +141,6 @@ var cf_blkread = func(num, buf) {
     # wait for CFRDY and CFDRQ
     cf_wait(CFRDY | CFDRQ);
 
-    #var n = BLKSZ;
-    #while (n--) {
-    #    # TODO: [bug] do we need to cf_wait(CFRDY | CFDRQ) each time?
-    #    *(buf++) = inp(CFDATAREG);
-    #};
-
     return asm_cf_blkread(buf);
 };
 
@@ -205,12 +201,6 @@ var cf_blkwrite = func(num, buf) {
 
     # wait for CFRDY and CFDRQ
     cf_wait(CFRDY | CFDRQ);
-
-    #var n = BLKSZ;
-    #while (n--) {
-    #    # TODO: [bug] do we need to cf_wait(CFRDY | CFDRQ) each time?
-    #    outp(CFDATAREG, *(buf++));
-    #};
 
     return asm_cf_blkwrite(buf);
 };
