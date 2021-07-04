@@ -364,12 +364,13 @@ void negedge(void) {
          F = (uinstr >> 10) & 1;
         NO = (uinstr >>  9) & 1;
         bus_out = (uinstr >> 12) & 0x7;
-        RT = !EO && ((uinstr >> 11) & 0x1);
         PP = !EO && ((uinstr >> 10) & 0x1);
         bus_in = (uinstr >> 5) & 0x7;
         JZ = (uinstr >> 4) & 0x1;
         JGT = (uinstr >> 3) & 0x1;
         JLT = (uinstr >> 2) & 0x1;
+        RT = (uinstr >> 1) & 1;
+        DI = uinstr & 1;
 
         /* increment t-state */
         if (RT) T = 0;
@@ -403,7 +404,6 @@ void negedge(void) {
     MI = (bus_in == 3);
     XI = (bus_in == 4);
     YI = (bus_in == 5);
-    DI = (bus_in == 6);
     /* spare: .. = (bus_in == 7); */
 
     /* decode bus_out */
