@@ -66,6 +66,11 @@ uint64_t opcode_cycles[256];
 uint64_t addr_reads[65536];
 uint64_t addr_writes[65536];
 FILE *profile_fp;
+int run_profile;
+uint64_t prof_cycles;
+
+uint64_t segmented_cycles[256];
+int segment = 0;
 
 struct uart8250 console;
 
@@ -131,8 +136,10 @@ void open_profile(char *file) {
     }
 }
 
-void write_profile(int argc, char **argv, unsigned long cycles, uint64_t elapsed_us) {
+void write_profile(int argc, char **argv, uint64_t elapsed_us) {
     int i;
+
+    if (!profile_fp) return;
 
     fprintf(profile_fp, "scamp-profile\n");
     fprintf(profile_fp, "endtime: %ld\n", time(0));
@@ -140,7 +147,7 @@ void write_profile(int argc, char **argv, unsigned long cycles, uint64_t elapsed
     for (i = 1; i < argc; i++)
         fprintf(profile_fp, " %s", argv[i]);
     fprintf(profile_fp, "\n");
-    fprintf(profile_fp, "cycles: %lu\n", cycles);
+    fprintf(profile_fp, "cycles: %lu\n", prof_cycles);
     fprintf(profile_fp, "elapsed_us: %lu\n", elapsed_us);
     fprintf(profile_fp, "pc_cycles:\n");
     for (i = 0; i < 65536; i++)
@@ -341,6 +348,22 @@ void out(uint16_t val, uint16_t addr) {
     if (addr >= console.base_address && addr < console.base_address + 8) {
         uart_out(&console, addr-console.base_address, val);
     }
+
+    if (addr == 1 && run_profile) halt = 1;
+    if (addr == 2) {
+        /* targeted profiling: reset profiling counters to remove all the stuff we don't want */
+        memset(pc_cycles, 0, sizeof(pc_cycles));
+        memset(last_instr, 0, sizeof(last_instr));
+        memset(opcode_cycles, 0, sizeof(opcode_cycles));
+        memset(addr_reads, 0, sizeof(addr_reads));
+        memset(addr_writes, 0, sizeof(addr_writes));
+        memset(segmented_cycles, 0, sizeof(segmented_cycles));
+        prof_cycles = 0;
+
+        run_profile = 1;
+        printf("run_profile = 1\r\n");
+    }
+    if (addr == 10) segment = val;
 }
 
 /* negative edge of clock: update control lines and outputs to bus */
@@ -377,9 +400,11 @@ void negedge(void) {
         else    T = (T+1) % 8;
     } while (RT); /* loop until !RT because RT resets T-state immediately */
 
+    prof_cycles++;
     pc_cycles[PC]++;
     last_instr[PC] = instr;
     opcode_cycles[opcode]++;
+    segmented_cycles[segment]++;
 
     if (T == 1 && debug)
         fprintf(stderr, "[trace] PC=%04x\n", PC);
@@ -624,7 +649,12 @@ int main(int argc, char **argv) {
         fprintf(stderr, "[cycles] Halted after %lu cycles.\n", steps);
 
     if (profile_fp)
-        write_profile(argc, argv, steps, elapsed_us);
+        write_profile(argc, argv, elapsed_us);
+
+    int i;
+    for (i = 0; i < 256; i++) {
+        if (segmented_cycles[i] > 0) fprintf(stderr, "[cycles] segment %d: %lu\r\n", i, segmented_cycles[i]);
+    }
 
     return test_fail;
 }
