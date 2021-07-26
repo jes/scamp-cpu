@@ -28,6 +28,7 @@ put ../sys/reboot.bin /bin/reboot
 put ../sys/diskid.bin /bin/diskid
 put ../sys/baud.bin /bin/baud
 put ../sys/cp.bin /bin/cp
+put ../sys/dc.bin /bin/dc
 
 mkdir lib
 put ../sys/lib.o /lib/lib.o
@@ -69,6 +70,7 @@ put -t ../sys/reboot.sl /src/reboot.sl
 put -t ../sys/diskid.sl /src/diskid.sl
 put -t ../sys/baud.sl /src/baud.sl
 put -t ../sys/cp.sl /src/cp.sl
+put -t ../sys/dc.sl /src/dc.sl
 
 mkdir src/lib
 put -t ../sys/lib/grarr.sl /src/lib/grarr.sl

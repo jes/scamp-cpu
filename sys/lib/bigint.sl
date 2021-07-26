@@ -4,19 +4,22 @@
 # TODO: [nice] provide constants for bigzero, bigone, bigminusone, etc.?
 # TODO: [nice] maybe we should support variable-sized numbers? might even
 #       provide performance benefit
-# TODO: [nice] string formatting and unformatting
 # TODO: [nice] convert bigint to word
 
 include "malloc.sl";
 include "string.sl";
 
 var bigint_prec = 4;
+var bigint_itoaspace = 0;
 
 # if you use biginit, you must call it before creating
 # any bigints
 var biginit = func(prec) {
     bigint_prec = prec;
+    free(bigint_itoaspace);
+    bigint_itoaspace = malloc(bigint_prec * 16) + 2;
 };
+biginit(4); # initialise itoaspace etc.
 
 # create a new bigint with the given (word) value
 var bignew = func(w) {
@@ -98,6 +101,14 @@ var bigitoabase = func(big, base) {
     # TODO
 };
 
+# convert "big" to a single word signed value
+# in case of overflow, the value will be clamped to the min/max
+var bigtow = func(big) {
+    if (bigcmpw(big, 32767) > 0) return 32767;
+    if (bigcmpw(big, -32768) < 0) return -32768;
+    return big[0];
+};
+
 # return a pointer to a static string formatting "big", base 10
 var bigitoa = func(big) {
     return bigitobase(big, 10);
@@ -110,8 +121,8 @@ var bigset = func(big1, big2) {
 
 # big = w
 var bigsetw = func(big, w) {
-    if (val < 0) memset(big, -1, bigint_prec); # sign extension
-    *big = val;
+    if (w < 0) memset(big, -1, bigint_prec); # sign extension
+    *big = w;
 };
 
 # big1 = big1 + big2
