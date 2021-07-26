@@ -27,6 +27,7 @@ put ../sys/kilo.bin /bin/kilo
 put ../sys/reboot.bin /bin/reboot
 put ../sys/diskid.bin /bin/diskid
 put ../sys/baud.bin /bin/baud
+put ../sys/cp.bin /bin/cp
 
 mkdir lib
 put ../sys/lib.o /lib/lib.o
@@ -67,6 +68,7 @@ put -t ../sys/kilo.sl /src/kilo.sl
 put -t ../sys/reboot.sl /src/reboot.sl
 put -t ../sys/diskid.sl /src/diskid.sl
 put -t ../sys/baud.sl /src/baud.sl
+put -t ../sys/cp.sl /src/cp.sl
 
 mkdir src/lib
 put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
@@ -86,3 +88,6 @@ put -t ../sys/lib/strbuf.sl /src/lib/strbuf.sl
 mkdir proc
 mkdir tmp
 mkdir home
+
+put -t ./hello.sl /home/hello.sl
+put -t ./hello.sl /tmp/2.s
