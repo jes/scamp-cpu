@@ -889,11 +889,11 @@ processkey = func() {
         system(["/bin/sh"]);
         rawmode();
         markalldirty();
-    } else if (c == PAGE_UP) {
+    } else if (c == PAGE_UP || c == CTRL_KEY('u')) {
         cy = rowoff;
         n = ROWS;
         while (n--) move(ARROW_UP);
-    } else if (c == PAGE_DOWN) {
+    } else if (c == PAGE_DOWN || c == CTRL_KEY('d')) {
         cy = rowoff + ROWS-1;
         n = ROWS;
         while (n--) move(ARROW_DOWN);
