@@ -12,7 +12,7 @@ include "string.sl";
 
 var bigint_prec = 4;
 
-# if you use bigint_init, you must call it before creating
+# if you use biginit, you must call it before creating
 # any bigints
 var biginit = func(prec) {
     bigint_prec = prec;
@@ -83,6 +83,26 @@ var bigcmpw = func(big, w) {
     return 0;
 };
 
+# allocate a new bigint, populated with the value in "str"
+var bigatoibase = func(str, base) {
+    # TODO
+};
+
+# allocate a new bigint, populated with the value in "str", base 10
+var bigatoi = func(str) {
+    return bigatoibase(str, 10);
+};
+
+# return a pointer to a static string formatting "big"
+var bigitoabase = func(big, base) {
+    # TODO
+};
+
+# return a pointer to a static string formatting "big", base 10
+var bigitoa = func(big) {
+    return bigitobase(big, 10);
+};
+
 # big1 = big2
 var bigset = func(big1, big2) {
     memcpy(big1, big2, bigint_prec);
@@ -110,10 +130,9 @@ var bigadd = func(big1, big2) {
 
 # big = big + w
 var bigaddw = func(big, w) {
-    if (w < 0) return bigsubw(big, -w);
-    # now assume w >= 0
-
-    # TODO
+    var bigw = bignew(w);
+    bigadd(big, bigw);
+    bigfree(bigw);
 }
 
 # big1 = big1 - big2
@@ -132,32 +151,43 @@ var bigsub = func(big1, big2) {
 
 # big = big - w
 var bigsubw = func(big, w) {
-    if (w < 0) return bigaddw(big, -w);
-    # now assume w >= 0
-
-    # TODO
+    var bigw = bignew(w);
+    bigsub(big, bigw);
+    bigfree(bigw);
 };
 
 # big1 = big1 * big2
 var bigmul = func(big1, big2) {
+    # TODO
 };
 
 # big = big * w
 var bigmulw = func(big, w) {
+    var bigw = bignew(w);
+    bigmul(big, bigw);
+    bigfree(bigw);
 };
 
 # big1 = big1 / big2
 var bigdiv = func(big1, big2) {
+    # TODO
 };
 
 #big = big / w
 var bigdivw = func(big, w) {
+    var bigw = bignew(w);
+    bigdiv(big, bigw);
+    bigfree(bigw);
 };
 
 # big1 = big1 % big2
 var bigmod = func(big1, big2) {
+    # TODO
 };
 
 # big = big % w
 var bigmodw = func(big, w) {
+    var bigw = bignew(w);
+    bigmod(big, bigw);
+    bigfree(bigw);
 };
