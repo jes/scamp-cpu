@@ -28,11 +28,13 @@ var biginit = func(prec) {
 };
 biginit(bigint_prec); # initialise itoaspace etc.
 
+# TODO: [nice] more systematic forward declarations
 var bigset;
 var bigsetw;
 var bigsub;
 var bigdivmodw;
 var bigtow;
+var bigbit;
 
 # create a new bigint with the given (word) value
 var bignew = func(w) {
@@ -230,7 +232,18 @@ var bigsubw = func(big, w) {
 
 # big1 = big1 * big2
 var bigmul = func(big1, big2) {
-    # TODO
+    var result = bignew(0);
+    var resultn = bigclone(big2);
+    var i = 0;
+    while (i != bigint_bits) {
+        if (bigbit(big1, i)) bigadd(result, resultn);
+        bigadd(resultn, resultn);
+        i++;
+    };
+    bigset(big1, result);
+    bigfree(result);
+    bigfree(resultn);
+
     return big1;
 };
 
@@ -244,7 +257,7 @@ var bigmulw = func(big, w) {
 };
 
 # return the nth bit of big (where 0 is least-significant)
-var bigbit = func(big, n) {
+bigbit = func(big, n) {
     var word;
     var bit;
 
