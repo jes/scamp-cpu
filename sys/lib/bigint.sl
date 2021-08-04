@@ -6,6 +6,7 @@
 #       provide performance benefit
 
 include "malloc.sl";
+include "stdlib.sl";
 include "string.sl";
 
 var bigint_prec = 4;
@@ -36,6 +37,7 @@ var bigtow;
 var bigbit;
 var bigmulw;
 var bigaddw;
+var bigitoa;
 
 # create a new bigint with the given (word) value
 var bignew = func(w) {
@@ -179,7 +181,7 @@ var bigitoabase = func(big, base) {
 };
 
 # return a pointer to a static string formatting "big", base 10
-var bigitoa = func(big) {
+bigitoa = func(big) {
     return bigitoabase(big, 10);
 };
 
@@ -212,7 +214,7 @@ var bigadd = func(big1, big2) {
     while (i != bigint_prec) {
         prev = big1[i];
         *(big1+i) = big1[i] + big2[i] + carry;
-        carry = (big1[i] lt prev);
+        carry = (big1[i] lt prev) || ((carry || big2[i]) && (big1[i] == prev));
         i++;
     };
 
@@ -230,24 +232,24 @@ bigaddw = func(big, w) {
 
 # big1 = big1 - big2
 bigsub = func(big1, big2) {
-    var carry = 1;
+    var minusbig2 = bigclone(big2);
     var i = 0;
-    var prev;
-
     while (i != bigint_prec) {
-        prev = big1[i];
-        *(big1+i) = big1[i] + ~big2[i] + carry;
-        carry = (big1[i] le prev);
+        *(minusbig2+i) = ~big2[i];
         i++;
     };
+    bigaddw(minusbig2, 1);
+
+    bigadd(big1, minusbig2);
+    bigfree(minusbig2);
 
     return big1;
 };
 
 # big = big - w
 var bigsubw = func(big, w) {
-    var bigw = bignew(w);
-    bigsub(big, bigw);
+    var bigw = bignew(-w);
+    bigadd(big, bigw);
     bigfree(bigw);
 
     return big;
