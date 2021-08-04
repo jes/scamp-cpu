@@ -35,6 +35,8 @@ var bigsub;
 var bigdivmodw;
 var bigtow;
 var bigbit;
+var bigmulw;
+var bigaddw;
 
 # create a new bigint with the given (word) value
 var bignew = func(w) {
@@ -102,9 +104,31 @@ var bigcmpw = func(big, w) {
 };
 
 # allocate a new bigint, populated with the value in "str"
-var bigatoibase = func(str, base) {
-    # TODO: [bug] support >16-bit values correctly
-    return bignew(atoibase(str, base));
+var bigatoibase = func(s, base) {
+    var big = bignew(0);
+    var neg = 0;
+    if (*s == '-') {
+        neg = 1;
+        s++;
+    };
+    var n;
+    while (*s) {
+        n = stridx(itoa_alphabet, tolower(*s));
+        if (n == 0 && *s != *itoa_alphabet) break; # digit doesn't exist
+        if (n >= base) break; # digit out of range for base
+        bigmulw(big, base);
+        bigaddw(big, n);
+        s++;
+    };
+    var b;
+    if (neg) {
+        b = bignew(0);
+        bigsub(b, big);
+        bigfree(big);
+        return b;
+    } else {
+        return big;
+    };
 };
 
 # allocate a new bigint, populated with the value in "str", base 10
@@ -197,7 +221,7 @@ var bigadd = func(big1, big2) {
 };
 
 # big = big + w
-var bigaddw = func(big, w) {
+bigaddw = func(big, w) {
     var bigw = bignew(w);
     bigadd(big, bigw);
     bigfree(bigw);
@@ -248,7 +272,7 @@ var bigmul = func(big1, big2) {
 };
 
 # big = big * w
-var bigmulw = func(big, w) {
+bigmulw = func(big, w) {
     var bigw = bignew(w);
     bigmul(big, bigw);
     bigfree(bigw);
