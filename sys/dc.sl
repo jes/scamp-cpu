@@ -1,5 +1,6 @@
-# rpn calculator
+# bigint rpn calculator
 
+include "bigint.sl";
 include "bufio.sl";
 include "grarr.sl";
 include "malloc.sl";
@@ -23,21 +24,30 @@ var operator = func(ch) {
     var a;
     var b;
     if (ch == '+') {
-        push(pop() + pop());
+        b = pop();
+        a = pop();
+        push(bigadd(a, b));
+        bigfree(b);
     } else if (ch == '-') {
         b = pop();
         a = pop();
-        push(a - b);
+        push(bigsub(a, b));
+        bigfree(b);
     } else if (ch == '*') {
-        push(mul(pop(), pop()));
+        b = pop();
+        a = pop();
+        push(bigmul(a, b));
+        bigfree(b);
     } else if (ch == '/') {
         b = pop();
         a = pop();
-        push(div(a, b));
+        push(bigdiv(a, b));
+        bigfree(b);
     } else if (ch == '%') {
         b = pop();
         a = pop();
-        push(mod(a, b));
+        push(bigmod(a, b));
+        bigfree(b);
     } else if (!iswhite(ch)) {
         fprintf(2, "%c: unrecognised operator\n", [ch]);
     };
@@ -64,13 +74,13 @@ while (1) {
         *bufp = 0;
     } else {
         if (*buf) {
-            push(atoi(buf));
+            push(bigatoi(buf));
             bufp = buf;
             *bufp = 0;
         };
 
         if (ch == '\n') {
-            printf("%d\n", [stacktop()]);
+            printf("%s\n", [bigitoa(stacktop())]);
         } else {
             operator(ch);
         };

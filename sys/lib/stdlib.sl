@@ -53,6 +53,9 @@ var divmod = asm {
     ld r9, 3(x) # r9 = denom
     ld r10, 4(x) # r10 = num
 
+    # TODO: [bug] if num or denom are negative, make them positive
+    #       and toggle a flag to invert the sign at the end?
+
     ld r4, 0 # r4 = Q
     ld r5, 0 # r5 = R
     ld r6, 15 # r6 = i
@@ -177,7 +180,7 @@ var itoa_space = "................."; # static 18-word buffer
 # "base" should range from 2 to 36
 # unsigned itoa
 var utoabase = func(num, base) {
-    var s = itoa_space+16;
+    var s = itoa_space+17;
     var d;
     var m;
 
