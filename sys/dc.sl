@@ -65,11 +65,12 @@ while (1) {
     ch = bgetc(in);
     if (ch == EOF) {
         break;
-    } else if (isdigit(ch)) {
+    } else if (isdigit(ch) || ch == '_') {
         if ((bufp - buf) >= (bufsz-1)) {
             fprintf(2, "input buffer overflow\n", 0);
             exit(1);
         };
+        if (ch == '_') ch = '-'; # underscore prefix for negative numbers
         *(bufp++) = ch;
         *bufp = 0;
     } else {
