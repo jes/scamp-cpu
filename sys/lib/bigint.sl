@@ -4,7 +4,6 @@
 # TODO: [nice] provide constants for bigzero, bigone, bigminusone, etc.?
 # TODO: [nice] maybe we should support variable-sized numbers? might even
 #       provide performance benefit
-# TODO: [nice] convert bigint to word
 
 include "malloc.sl";
 include "string.sl";
