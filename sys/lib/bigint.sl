@@ -309,7 +309,8 @@ var bigsetbit = func(big, n, v) {
 # *divp = big1 / big2
 # *modp = big1 % big2
 # both *divp and *modp are new allocations; big1 and big2 are unchanged
-# TODO: [bug] handle negative arguments better
+# TODO: [bug] handle negative arguments better - what are the rules for div
+#       and mod, with negative numerator, negative denominator, and both negative?
 # https://en.wikipedia.org/wiki/Division_algorithm#Integer_division_(unsigned)_with_remainder
 var bigdivmod = func(big1, big2, divp, modp) {
     *divp = bignew(0);
