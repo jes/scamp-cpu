@@ -56,7 +56,10 @@ while (1) {
     if (ch == EOF) {
         break;
     } else if (isdigit(ch)) {
-        # TODO: [bug] buffer overflow
+        if ((bufp - buf) >= (bufsz-1)) {
+            fprintf(2, "input buffer overflow\n", 0);
+            exit(1);
+        };
         *(bufp++) = ch;
         *bufp = 0;
     } else {
