@@ -58,8 +58,10 @@ var xprintf = func(fmt, args, putc_cb) {
                 if (!str) str = "(null)";
             } else if (*p == 'd') {
                 str = itoa(args[argidx++]);
+            } else if (*p == 'u') {
+                str = utoa(args[argidx++]);
             } else if (*p == 'x') {
-                str = itoabase(args[argidx++],16);
+                str = utoabase(args[argidx++],16);
             } else {
                 str = "<???>";
             };

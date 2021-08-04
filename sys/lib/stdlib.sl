@@ -171,11 +171,12 @@ var shl = asm {
 };
 
 var itoa_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
-var itoa_space = "................."; # static 17-word buffer
+var itoa_space = "................."; # static 18-word buffer
 
 # returns pointer to static buffer
 # "base" should range from 2 to 36
-var itoabase = func(num, base) {
+# unsigned itoa
+var utoabase = func(num, base) {
     var s = itoa_space+16;
     var d;
     var m;
@@ -197,8 +198,25 @@ var itoabase = func(num, base) {
     return s;
 };
 
-# returns pointer to static buffer
+# signed itoa
+var itoabase = func(num, base) {
+    var neg = 0;
+
+    if (num < 0) {
+        neg = 1;
+        num = -num;
+    };
+
+    var s = utoabase(num, base);
+
+    if (neg) *--s = '-'; # XXX: abuse knowledge that utoabase() returns static pointer in itoa_space
+
+    return s;
+};
+
+# these return pointers into a static buffer (itoa_space)
 var itoa = func(num) return itoabase(num, 10);
+var utoa = func(num) return utoabase(num, 10);
 
 var islower = func(ch) return ch >= 'a' && ch <= 'z';
 var isupper = func(ch) return ch >= 'A' && ch <= 'Z';
