@@ -98,6 +98,7 @@ var drawrows;
 var drawstatus;
 var drawstatusmsg;
 var setstatusmsg;
+var setdefaultstatus;
 var scroll;
 
 # input
@@ -766,6 +767,10 @@ setstatusmsg = func(fmt, args) {
     statusmsg = sprintf(fmt, args);
 };
 
+setdefaultstatus = func() {
+    setstatusmsg("HELP: ^W write  ^X exit  ^Z shell  ^K del line  ^F find", 0);
+};
+
 scroll = func() {
     rx = 0;
     if (cy < grlen(rows)) rx = cx2rx(grget(rows, cy), cx);
@@ -862,6 +867,8 @@ move = func(k) {
 processkey = func() {
     var c = readkey();
 
+    setdefaultstatus();
+
     var n;
     var times_str;
 
@@ -922,7 +929,7 @@ processkey = func() {
 
 markalldirty();
 rawmode();
-setstatusmsg("HELP: ^W write  ^X exit  ^Z shell  ^K del line  ^F find", 0);
+setdefaultstatus();
 
 var args = cmdargs()+1;
 if (*args) openfile(*args);
