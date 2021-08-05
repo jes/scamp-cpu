@@ -29,6 +29,8 @@ put ../sys/diskid.bin /bin/diskid
 put ../sys/baud.bin /bin/baud
 put ../sys/cp.bin /bin/cp
 put ../sys/dc.bin /bin/dc
+put ../sys/keys.bin /bin/keys
+put ../sys/isprime.bin /bin/isprime
 
 mkdir lib
 put ../sys/lib.o /lib/lib.o
@@ -71,6 +73,8 @@ put -t ../sys/diskid.sl /src/diskid.sl
 put -t ../sys/baud.sl /src/baud.sl
 put -t ../sys/cp.sl /src/cp.sl
 put -t ../sys/dc.sl /src/dc.sl
+put -t ../sys/keys.sl /src/keys.sl
+put -t ../sys/isprime.sl /src/isprime.sl
 
 mkdir src/lib
 put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
@@ -86,10 +90,8 @@ put -t ../sys/lib/glob.sl /src/lib/glob.sl
 put -t ../sys/lib/hash.sl /src/lib/hash.sl
 put -t ../sys/lib/bigint.sl /src/lib/bigint.sl
 put -t ../sys/lib/strbuf.sl /src/lib/strbuf.sl
+put -t ../sys/lib/bufio.sl /src/lib/bufio.sl
 
 mkdir proc
 mkdir tmp
 mkdir home
-
-put -t ./hello.sl /home/hello.sl
-put -t ./hello.sl /tmp/2.s
