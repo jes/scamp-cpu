@@ -67,9 +67,9 @@ var blkfindfree = func() {
     while (bitmapblk != 16) {
         blkread(SKIP_BLOCKS + ((bitmapblk + freeblkblk) & 0xf), FREEBLKBUF);
 
-        blkgroup = freeblkgroup;
+        blkgroup = 0;
         while (blkgroup != BLKSZ) {
-            if (FREEBLKBUF[blkgroup] != 0xffff) break;
+            if (FREEBLKBUF[(blkgroup + freeblkgroup) & 0xff] != 0xffff) break; # XXX: "& 0xff" assumes BLKSZ==256
             blkgroup++;
         };
         if (blkgroup != BLKSZ) break;
@@ -80,6 +80,7 @@ var blkfindfree = func() {
     if (bitmapblk == 16) kpanic("block device full");
 
     bitmapblk = bitmapblk + freeblkblk;
+    blkgroup = blkgroup + freeblkgroup;
     # keep track of the block that we found a free block in, so we can start searching
     # from there next time
     freeblkblk = bitmapblk;
