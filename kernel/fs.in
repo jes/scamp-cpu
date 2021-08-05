@@ -31,6 +31,7 @@ put ../sys/cp.bin /bin/cp
 put ../sys/dc.bin /bin/dc
 put ../sys/keys.bin /bin/keys
 put ../sys/isprime.bin /bin/isprime
+put ../sys/hamurabi.bin /bin/hamurabi
 
 mkdir lib
 put ../sys/lib.o /lib/lib.o
@@ -75,6 +76,7 @@ put -t ../sys/cp.sl /src/cp.sl
 put -t ../sys/dc.sl /src/dc.sl
 put -t ../sys/keys.sl /src/keys.sl
 put -t ../sys/isprime.sl /src/isprime.sl
+put -t ../sys/hamurabi.sl /src/hamurabi.sl
 
 mkdir src/lib
 put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
