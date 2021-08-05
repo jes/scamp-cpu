@@ -138,7 +138,7 @@ htput = func(ht, key, val) {
     # create more space if 75% full
     var used = htused(ht);
     var size = htsize(ht);
-    if (used+used+used+used > size+size+size)
+    if (used+used+used+used gt size+size+size)
         htgrow(ht);
 
     var p = htfind(ht, key);
