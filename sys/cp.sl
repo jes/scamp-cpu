@@ -2,16 +2,37 @@
 #
 # usage:
 #   cp curfile newfile
-#   TODO: cp curfile newdir
+#   cp curfile newdir
 #   TODO: cp curfile1 curfile2 curfile3 targetdir
 #   TODO: cp -a curdir newdir
 
 include "malloc.sl";
 include "stdio.sl";
+include "string.sl";
 include "sys.sl";
 
 var bufsz = 1024;
 var buf = malloc(bufsz);
+
+var isdir = func(name) {
+    var n;
+    var buf = [0,0,0,0];
+    n = stat(name, buf);
+    if (n < 0) return 0; # it can't be a directory if we can't stat() it
+
+    return (buf[0] == 0); # check if type is directory
+};
+
+# return pointer to the final path name component
+var basename = func(name) {
+    var r = name;
+    while (*name) {
+        if (*name == '/' && *(name+1))
+            r = name;
+        name++;
+    };
+    return r;
+};
 
 var cp = func(src, dst) {
     var srcfd;
@@ -23,8 +44,10 @@ var cp = func(src, dst) {
         return 0;
     };
 
-    # TODO: [nice] if "dst" exists and is a directory, create a file inside
+    # if "dst" exists and is a directory, create a file inside
     # it with the same basename as "src"
+    if (isdir(dst))
+        dst = sprintf("%s/%s", [dst, basename(src)]);
 
     dstfd = open(dst, O_WRITE|O_CREAT);
     if (dstfd < 0) {
