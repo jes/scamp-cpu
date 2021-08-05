@@ -338,12 +338,12 @@ bigdivmodw = func(big, w, divp, modp) {
 
 # big1 = big1 / big2
 var bigdiv = func(big1, big2) {
-    var div;
-    var mod;
-    bigdivmod(big1, big2, &div, &mod);
-    bigset(big1, div);
-    bigfree(div);
-    bigfree(mod);
+    var d;
+    var m;
+    bigdivmod(big1, big2, &d, &m);
+    bigset(big1, d);
+    bigfree(d);
+    bigfree(m);
     return big1;
 };
 
@@ -358,12 +358,12 @@ var bigdivw = func(big, w) {
 
 # big1 = big1 % big2
 var bigmod = func(big1, big2) {
-    var div;
-    var mod;
-    bigdivmod(big1, big2, &div, &mod);
-    bigset(big1, mod);
-    bigfree(div);
-    bigfree(mod);
+    var d;
+    var m;
+    bigdivmod(big1, big2, &d, &m);
+    bigset(big1, m);
+    bigfree(d);
+    bigfree(m);
 
     return big1;
 };
