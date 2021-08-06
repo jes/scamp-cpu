@@ -114,7 +114,7 @@ var main = func() {
         # *** A BOUNTIFUL HARVEST!
         Y=C; H=mul(D,Y); E=0;
         calcC();
-        if (C&1 == 0) {
+        if ((C&1) == 0) {
             # *** RATS ARE RUNNING WILD!!
             E=div(S,C);
         };
