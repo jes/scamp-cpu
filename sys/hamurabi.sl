@@ -120,7 +120,6 @@ var main = func() {
         S=S-E+H;
         calcC();
         # *** LET'S HAVE SOME BABIES
-        #I=INT(C*(20*A+S)/P/100+1); # TODO
         I = div(div(mul(C,mul(20,A)+S),P),100) + 1;
         # *** HOW MANY PEOPLE HAD FULL TUMMIES?
         C=div(Q,20);
