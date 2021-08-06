@@ -12,10 +12,13 @@ var rand = func() {
     return randstate;
 };
 
+var rand5 = func() {
+    return mod(rand(),5)+1;
+};
+
 var mismanagement;
 var thinkgrain;
 var thinkacres;
-var calcC;
 var solong;
 
 # read a number from stdin
@@ -110,16 +113,16 @@ var main = func() {
             };
         };
         S=S-div(D,2);
-        calcC();
+        C=rand5();
         # *** A BOUNTIFUL HARVEST!
         Y=C; H=mul(D,Y); E=0;
-        calcC();
+        C=rand5();
         if ((C&1) == 0) {
             # *** RATS ARE RUNNING WILD!!
             E=div(S,C);
         };
         S=S-E+H;
-        calcC();
+        C=rand5();
         # *** LET'S HAVE SOME BABIES
         I = div(div(mul(C,mul(20,A)+S),P),100) + 1;
         # *** HOW MANY PEOPLE HAD FULL TUMMIES?
@@ -180,10 +183,6 @@ thinkgrain = func() {
 
 thinkacres = func() {
     printf("HAMURABI:  THINK AGAIN. YOU OWN ONLY %d ACRES.  NOW THEN,\n",[A]);
-};
-
-calcC = func() {
-    C=mod(rand(),5)+1;
 };
 
 solong = func() {
