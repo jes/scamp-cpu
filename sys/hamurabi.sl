@@ -19,7 +19,7 @@ var solong;
 
 # read a number from stdin
 var input = func() {
-    puts("> ");
+    puts("? ");
     var buf = malloc(256);
     if (!gets(buf,256)) solong();
     var n = atoi(buf);
@@ -65,7 +65,7 @@ var main = func() {
         C=mod(rand(),10); Y=C+17;
         printf("LAND IS TRADING AT %d BUSHELS PER ACRE.\n", [Y]);
         while (1) {
-            printf("HOW MANY ACRES DO YOU WISH TO BUY\n",0);
+            printf("HOW MANY ACRES DO YOU WISH TO BUY",0);
             Q=input();
             if (mul(Y,Q) <= S) break;
             thinkgrain();
@@ -74,7 +74,7 @@ var main = func() {
             A=A+Q; S=S-mul(Y,Q); C=0;
         } else {
             while (1) {
-                printf("HOW MANY ACRES DO YOU WITH TO SELL\n",0);
+                printf("HOW MANY ACRES DO YOU WITH TO SELL",0);
                 Q=input();
                 if (Q < A) break;
                 thinkacres();
@@ -83,7 +83,7 @@ var main = func() {
         };
         printf("\n",0);
         while (1) {
-            printf("HOW MANY BUSHELS DO YOU WISH TO FEED YOUR PEOPLE\n",0);
+            printf("HOW MANY BUSHELS DO YOU WISH TO FEED YOUR PEOPLE",0);
             Q=input();
             # *** TRYING TO USE MORE GRAIN THAN IS IN SILOS?
             if (Q <= S) break;
@@ -92,7 +92,7 @@ var main = func() {
         S=S-Q; C=1;
         printf("\n",0);
         while (1) {
-            printf("HOW MANY ACRES DO YOU WISH TO PLANT WITH SEED\n",0);
+            printf("HOW MANY ACRES DO YOU WISH TO PLANT WITH SEED",0);
             D=input();
             # *** TRYING TO PLANT MORE ACRES THAN YOU OWN?
             if (D <= A) {
