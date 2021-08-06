@@ -1,4 +1,5 @@
 # Ported from https://www.atariarchives.org/basicgames/showpage.php?page=79
+# Page 79 of "BASIC Computer Games" by David H. Ahl, published 1978
 # (mirrored in doc/hamurabi.png)
 
 include "stdio.sl";
