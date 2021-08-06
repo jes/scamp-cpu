@@ -137,7 +137,7 @@ var main = func() {
             printf("YOU STARVED %d PEOPLE IN ONE YEAR!!!\n",[D]);
             mismanagement();
         };
-        P1=div(div(mul(Z-1,P1)+mul(D,100),P),Z);
+        P1=div(mul(Z-1,P1)+div(mul(D,100),P),Z);
         P=C; D1=D1+D;
     };
 
