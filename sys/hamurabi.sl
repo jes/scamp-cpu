@@ -143,7 +143,7 @@ var main = func() {
 
     printf("IN YOUR 10-YEAR TERM OF OFFICE, %d PERCENT OF THE\n",[P1]);
     printf("POPULATION STARVED PER YEAR ON THE AVERAGE, I.E. A TOTAL OF\n",0);
-    printf("%d PEOPLE DIED!!\n",[D]);
+    printf("%d PEOPLE DIED!!\n",[D1]);
     var L=div(A,P);
     printf("YOU STARTED WITH 10 ACRES PER PERSON AND ENDED WITH\n",0);
     printf("%d ACRES PER PERSON.\n", [L]);
