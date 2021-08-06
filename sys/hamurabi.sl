@@ -6,9 +6,10 @@ include "stdlib.sl";
 include "malloc.sl";
 
 # TODO: [nice] better rand(), srand(), move to stdlib.sl
+var randstate = 0x5a7f;
 var rand = func() {
-    # chosen by fair dice roll. guaranteed to be random.
-    return 0x5a7f;
+    randstate = mul(randstate, 17) + 0x2e7;
+    return randstate;
 };
 
 var mismanagement;
