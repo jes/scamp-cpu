@@ -49,24 +49,24 @@ var main = func() {
         printf("\n\n",0);
         printf("HAMURABI:  I BEG TO REPORT TO YOU,\n",0);
         Z=Z+1;
-        printf("IN YEAR %d, %d PEOPLE STARVED, %d CAME TO THE CITY,\n", [Z,D,I]);
+        printf("IN YEAR %u, %u PEOPLE STARVED, %u CAME TO THE CITY,\n", [Z,D,I]);
         P=P+I;
         if (Q<=0) {
             P = div(P,2);
             printf("A HORRIBLE PLAGUE STRUCK!  HALF THE PEOPLE DIED.\n", 0);
         };
-        printf("POPULATION IS NOW %d\n", [P]);
-        printf("THE CITY NOW OWNS %d ACRES.\n", [A]);
-        printf("YOU HARVESTED %d BUSHELS PER ACRE.\n", [Y]);
-        printf("RATS ATE %d BUSHELS.\n", [E]);
-        printf("YOU NOW HAVE %d BUSHELS IN STORE.\n\n", [S]);
+        printf("POPULATION IS NOW %u\n", [P]);
+        printf("THE CITY NOW OWNS %u ACRES.\n", [A]);
+        printf("YOU HARVESTED %u BUSHELS PER ACRE.\n", [Y]);
+        printf("RATS ATE %u BUSHELS.\n", [E]);
+        printf("YOU NOW HAVE %u BUSHELS IN STORE.\n\n", [S]);
         if (Z==11) break;
         C=mod(random(),10); Y=C+17;
-        printf("LAND IS TRADING AT %d BUSHELS PER ACRE.\n", [Y]);
+        printf("LAND IS TRADING AT %u BUSHELS PER ACRE.\n", [Y]);
         while (1) {
             printf("HOW MANY ACRES DO YOU WISH TO BUY",0);
             Q=input();
-            if (mul(Y,Q) <= S) break;
+            if (mul(Y,Q) le S) break;
             thinkgrain();
         };
         if (Q) {
@@ -75,7 +75,7 @@ var main = func() {
             while (1) {
                 printf("HOW MANY ACRES DO YOU WITH TO SELL",0);
                 Q=input();
-                if (Q < A) break;
+                if (Q lt A) break;
                 thinkacres();
             };
             A=A-Q; S=S+mul(Y,Q); C=0;
@@ -85,7 +85,7 @@ var main = func() {
             printf("HOW MANY BUSHELS DO YOU WISH TO FEED YOUR PEOPLE",0);
             Q=input();
             # *** TRYING TO USE MORE GRAIN THAN IS IN SILOS?
-            if (Q <= S) break;
+            if (Q le S) break;
             thinkgrain();
         };
         S=S-Q; C=1;
@@ -94,12 +94,12 @@ var main = func() {
             printf("HOW MANY ACRES DO YOU WISH TO PLANT WITH SEED",0);
             D=input();
             # *** TRYING TO PLANT MORE ACRES THAN YOU OWN?
-            if (D <= A) {
+            if (D le A) {
                 # *** ENOUGH GRAIN FOR SEED?
-                if (div(D,2) <= S) {
+                if (div(D,2) le S) {
                     # *** ENOUGH PEOPLE TO TEND THE CROPS?
-                    if (D < mul(10,P)) break;
-                    printf("BUT YOU HAVE ONLY %d PEOPLE TO TEND THE FIELDS!  NOW THEN,\n",[P]);
+                    if (D lt mul(10,P)) break;
+                    printf("BUT YOU HAVE ONLY %u PEOPLE TO TEND THE FIELDS!  NOW THEN,\n",[P]);
                 } else {
                     thinkgrain();
                 };
@@ -132,19 +132,19 @@ var main = func() {
         D=P-C;
         if (mul(D,100) > mul(45,P)) {
             printf("\n\n",0);
-            printf("YOU STARVED %d PEOPLE IN ONE YEAR!!!\n",[D]);
+            printf("YOU STARVED %u PEOPLE IN ONE YEAR!!!\n",[D]);
             mismanagement();
         };
         P1=div(mul(Z-1,P1)+div(mul(D,100),P),Z);
         P=C; D1=D1+D;
     };
 
-    printf("IN YOUR 10-YEAR TERM OF OFFICE, %d PERCENT OF THE\n",[P1]);
+    printf("IN YOUR 10-YEAR TERM OF OFFICE, %u PERCENT OF THE\n",[P1]);
     printf("POPULATION STARVED PER YEAR ON THE AVERAGE, I.E. A TOTAL OF\n",0);
-    printf("%d PEOPLE DIED!!\n",[D1]);
+    printf("%u PEOPLE DIED!!\n",[D1]);
     var L=div(A,P);
     printf("YOU STARTED WITH 10 ACRES PER PERSON AND ENDED WITH\n",0);
-    printf("%d ACRES PER PERSON.\n", [L]);
+    printf("%u ACRES PER PERSON.\n", [L]);
     printf("\n",0);
     if (P1>33 || L<7) {
         mismanagement();
@@ -154,7 +154,7 @@ var main = func() {
         printf("FRANKLY, HATE YOUR GUTS!!\n",0);
     } else if (P1>3 || L<10) {
         printf("YOUR PERFORMANCE COULD HAVE BEEN SOMEWHAT BETTER, BUT\n",0);
-        printf("REALLY WASN'T TOO BAD AT ALL.  %d PEOPLE\n", [div((mul(P,mod(random(),80))),100)]);
+        printf("REALLY WASN'T TOO BAD AT ALL.  %u PEOPLE\n", [div((mul(P,mod(random(),80))),100)]);
         printf("DEARLY LIKE TO SEE YOU ASSASSINATED BUT WE ALL HAVE OUR\n",0);
         printf("TRIVIAL PROBLEMS.\n",0);
     } else {
@@ -173,11 +173,11 @@ mismanagement = func() {
 
 thinkgrain = func() {
     printf("HAMURABI:  THINK AGAIN. YOU HAVE ONLY\n",0);
-    printf("%d BUSHELS OF GRAIN.  NOW THEN,\n",[S]);
+    printf("%u BUSHELS OF GRAIN.  NOW THEN,\n",[S]);
 };
 
 thinkacres = func() {
-    printf("HAMURABI:  THINK AGAIN. YOU OWN ONLY %d ACRES.  NOW THEN,\n",[A]);
+    printf("HAMURABI:  THINK AGAIN. YOU OWN ONLY %u ACRES.  NOW THEN,\n",[A]);
 };
 
 solong = func() {
