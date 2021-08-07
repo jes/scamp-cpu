@@ -40,6 +40,8 @@ var cf_wait = asm {
     ld r1, x # r1 = mask
     ld r2, 1000 # r2 = timeout (XXX: is 1000 sensible?)
 
+    inc (_rngstate)
+
     cf_wait_loop:
         # panic if timed out
         test r2

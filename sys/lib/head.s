@@ -15,6 +15,7 @@ jr+ 1
 _TOP: .word 0
 
 # system call vectors
+.def _sys_random   0xfeea
 .def _sys_serflags 0xfeeb
 .def _sys_cmdargs  0xfeec
 .def _sys_osbase   0xfeed

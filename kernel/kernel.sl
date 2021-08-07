@@ -25,6 +25,8 @@ kputs("sys_io:\r\n");
 include "sys_io.sl";
 kputs("sys_proc:\r\n");
 include "sys_proc.sl";
+kputs("random:\r\n");
+include "sys_random.sl";
 
 # setup serial port fds
 kputs("ser_init():\r\n");

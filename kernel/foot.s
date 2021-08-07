@@ -10,8 +10,9 @@ sys_osbase:
 #nosym
 INITIAL_SP: .word 0
 
-.at 0xfeeb
+.at 0xfeea
 # system call vectors
+_sys_random:   .word 0
 _sys_serflags: .word 0
 _sys_cmdargs:  .word 0
 _sys_osbase:   .word sys_osbase

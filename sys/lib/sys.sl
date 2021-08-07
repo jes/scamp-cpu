@@ -1,5 +1,6 @@
 # System calls
 
+extern sys_random;
 extern sys_serflags;
 extern sys_cmdargs;
 extern sys_osbase;
@@ -22,6 +23,7 @@ extern sys_system;
 extern sys_exec;
 extern sys_exit;
 
+var random   = sys_random;
 var serflags = sys_serflags;
 var cmdargs  = sys_cmdargs;
 var osbase   = sys_osbase;

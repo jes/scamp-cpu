@@ -5,16 +5,10 @@
 include "stdio.sl";
 include "stdlib.sl";
 include "malloc.sl";
-
-# TODO: [nice] better rand(), srand(), move to stdlib.sl
-var randstate = 0x5a7f;
-var rand = func() {
-    randstate = mul(randstate, 17) + 0x2e7;
-    return randstate;
-};
+include "sys.sl";
 
 var rand5 = func() {
-    return mod(rand(),5)+1;
+    return mod(random(),5)+1;
 };
 
 var mismanagement;
@@ -67,7 +61,7 @@ var main = func() {
         printf("RATS ATE %d BUSHELS.\n", [E]);
         printf("YOU NOW HAVE %d BUSHELS IN STORE.\n\n", [S]);
         if (Z==11) break;
-        C=mod(rand(),10); Y=C+17;
+        C=mod(random(),10); Y=C+17;
         printf("LAND IS TRADING AT %d BUSHELS PER ACRE.\n", [Y]);
         while (1) {
             printf("HOW MANY ACRES DO YOU WISH TO BUY",0);
@@ -129,7 +123,7 @@ var main = func() {
         # *** HOW MANY PEOPLE HAD FULL TUMMIES?
         C=div(Q,20);
         # *** HORROR, A 15% CHANCE OF PLAGUE
-        Q=mod(rand(),100)-15;
+        Q=mod(random(),100)-15;
         if (P<C) {
             D=0;
             continue;
@@ -160,7 +154,7 @@ var main = func() {
         printf("FRANKLY, HATE YOUR GUTS!!\n",0);
     } else if (P1>3 || L<10) {
         printf("YOUR PERFORMANCE COULD HAVE BEEN SOMEWHAT BETTER, BUT\n",0);
-        printf("REALLY WASN'T TOO BAD AT ALL.  %d PEOPLE\n", [div((mul(P,mod(rand(),80))),100)]);
+        printf("REALLY WASN'T TOO BAD AT ALL.  %d PEOPLE\n", [div((mul(P,mod(random(),80))),100)]);
         printf("DEARLY LIKE TO SEE YOU ASSASSINATED BUT WE ALL HAVE OUR\n",0);
         printf("TRIVIAL PROBLEMS.\n",0);
     } else {

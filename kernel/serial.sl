@@ -98,6 +98,7 @@ var ser_backspace = func(fd, bufp) {
 #       how can we make sure to handle ^C even if the user did a bunch of typing?
 #       maybe only drop them in cooked mode?
 var ser_poll = func(fd) {
+    rngstate++;
     var p = fdbaseptr(fd);
     var writeimpl = p[WRITEFD];
     if (writeimpl != ser_write) return 0; # don't try to ser_poll() on non-serial devices
@@ -114,6 +115,8 @@ var ser_poll = func(fd) {
     # read while there are characters ready and the buffer is not full
     while ((inp(lsrport)&1) && !ser_buffull(bufp)) {
         ch = inp(readport) & 0xff;
+
+        rngstate = rngstate + ch;
 
         if (cooked_mode) {
             if (ch == 3) sys_exit(255); # ctrl-c

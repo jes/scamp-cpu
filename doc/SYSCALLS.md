@@ -269,6 +269,15 @@ to the previous value:
     var flags = serflags(fd, 0);
     serflags(fd, flags);
 
+### 0xfeea: random()
+
+    Return: random integer in range 0 .. 0xffff
+    Implemented: yes
+    Errors: n/a
+
+Return a random integer. Input on serial ports permutes the state of the RNG, so if
+you try to use the RNG before any input is observed, it won't be very random.
+
 ## Errors
 
 Errors are generally returned from system calls as `-ERR`, with the following meanings:

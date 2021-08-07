@@ -141,3 +141,5 @@ var O_KERNELFD = 0x20;
 
 # "process id"
 var pid = 0;
+
+var rngstate = 0;
