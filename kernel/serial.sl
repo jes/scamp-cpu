@@ -135,6 +135,7 @@ var ser_poll = func(fd) {
                 continue;
             };
             if (ch == 26) { # ctrl-z
+                # TODO: [bug] give the user a proper interactive session even if stdin/out are redirected
                 sys_system(sys_osbase(), ["/bin/sh"]);
                 continue;
             };
