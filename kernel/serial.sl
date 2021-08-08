@@ -120,7 +120,11 @@ var ser_poll = func(fd) {
 
         if (cooked_mode) {
             if (ch == 3) sys_exit(255); # ctrl-c
-            # if (ch == 12) # TODO: [nice] clear screen on ctrl-l
+            if (ch == 12) { # ctrl-l
+                ser_write(fd, [0x1b, '[', '2', 'J'], 4); # clear screen
+                ser_write(fd, [0x1b, '[', 'H'], 3); # home cursor
+                continue;
+            };
             if (ch == 19) { # ctrl-s
                 # block the entire system until they type ctrl-q
                 while (1) {
