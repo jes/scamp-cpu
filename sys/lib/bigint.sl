@@ -184,6 +184,7 @@ var bigitoabase = func(big, base) {
 bigitoa = func(big) {
     return bigitoabase(big, 10);
 };
+xpreg('b', bigitoa);
 
 # convert "big" to a single word signed value
 # in case of overflow, the value will be clamped to the min/max

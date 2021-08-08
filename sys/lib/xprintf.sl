@@ -2,6 +2,26 @@
 
 include "stdlib.sl";
 
+var xprintf_handlers = asm { .gap 26 };
+
+# register a character handler for xprintf et al
+# that takes in the value to format and returns the
+# formatted string; the character must be a lowercase letter
+#   e.g. xpreg('x', func(val) { return "x" });
+# it's fine if the returned string is static
+# set cb=0 to unregister the handler
+var xpreg = func(ch, cb) {
+    if (!islower(ch)) return 0;
+    ch = ch - 'a';
+    *(xprintf_handlers+ch) = cb;
+};
+
+xpreg('c', func(ch) { return [ch] });
+xpreg('s', func(s) { return s });
+xpreg('d', itoa);
+xpreg('u', utoa);
+xpreg('x', func(v) { return utoabase(v, 16) });
+
 # usage: xprintf(fmt, [arg1, arg2, ...], putc_cb);
 # format string:
 #   %% -> %
@@ -22,6 +42,7 @@ var xprintf = func(fmt, args, putc_cb) {
     var str;
     var len;
     var total = 0;
+    var fn;
 
     # TODO: [nice] how do we use the one from string.s without creating a circular dependency?
     var strlen = func(s) {
@@ -51,19 +72,12 @@ var xprintf = func(fmt, args, putc_cb) {
             # format type
             if (*p == '%') {
                 str = "%";
-            } else if (*p == 'c') {
-                str = [args[argidx++]];
-            } else if (*p == 's') {
-                str = args[argidx++];
-                if (!str) str = "(null)";
-            } else if (*p == 'd') {
-                str = itoa(args[argidx++]);
-            } else if (*p == 'u') {
-                str = utoa(args[argidx++]);
-            } else if (*p == 'x') {
-                str = utoabase(args[argidx++],16);
+            } else if (islower(*p) && xprintf_handlers[*p-'a']) {
+                fn = xprintf_handlers[*p-'a'];
+                str = fn(args[argidx++]);
             } else {
                 str = "<???>";
+                argidx++;
             };
 
             # padding

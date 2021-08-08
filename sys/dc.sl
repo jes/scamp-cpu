@@ -81,7 +81,7 @@ while (1) {
         };
 
         if (ch == '\n') {
-            printf("%s\n", [bigitoa(stacktop())]);
+            printf("%b\n", [stacktop()]);
         } else {
             operator(ch);
         };
