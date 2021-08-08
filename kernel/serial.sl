@@ -130,6 +130,10 @@ var ser_poll = func(fd) {
                 };
                 continue;
             };
+            if (ch == 26) { # ctrl-z
+                sys_system(sys_osbase(), ["/bin/sh"]);
+                continue;
+            };
             if (ch == 8 || ch == 127) { # backspace
                 ser_backspace(fd, bufp);
                 continue;
