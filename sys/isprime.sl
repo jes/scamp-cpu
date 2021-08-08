@@ -15,7 +15,7 @@ var m = bigclone(N);
 # special case: divisible by 2?
 bigmodw(m, 2);
 if (bigcmpw(m, 0) == 0) {
-	printf("%s is divisible by 2\n", [bigitoa(N)]);
+	printf("%b is divisible by 2\n", [N]);
 	exit(0);
 };
 
@@ -25,8 +25,7 @@ while (bigcmp(isquared, N) <= 0) {
 	bigset(m, N);
 	bigmod(m, i);
 	if (bigcmpw(m, 0) == 0) {
-		printf("%s", [bigitoa(N)]);
-		printf(" is divisible by %s\n", [bigitoa(i)]);
+		printf("%b is divisible by %b\n", [N, i]);
 		exit(0);
 	};
 
@@ -40,4 +39,4 @@ while (bigcmp(isquared, N) <= 0) {
 	bigaddw(i, 2);
 };
 
-printf("%s is prime\n", [bigitoa(N)]);
+printf("%b is prime\n", [N]);
