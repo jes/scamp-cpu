@@ -70,6 +70,8 @@
             console.log(e);
             w.postMessage({type:"input", text:e.key});
         });
+        term.resize(80,25);
+        term.focus();
 
         let lastStatus = { time: Date.now(), text: '' };
 

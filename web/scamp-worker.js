@@ -4,13 +4,15 @@ let scamptick = function(cycles, input) {
 };
 
 let inputbuf = '';
+let ticksperrun = 10000;
+let lastrunend = Date.now();
 let scamprun = function() {
     let thisinput = inputbuf;
     // XXX: is there a race window in between grabbing inputbuf and setting it to ''?
     inputbuf = '';
 
     // TODO: [nice] should we adjust the number of ticks based on how fast it's running?
-    let out = scamptick(100000, thisinput);
+    let out = scamptick(ticksperrun, thisinput);
     if (out != "") {
         postMessage({
             type: 'output',
@@ -18,8 +20,15 @@ let scamprun = function() {
         });
     }
 
-    // TODO: [nice] compute how long we should delay before running another tick to target 1 MHz?
-    setTimeout(scamprun, 0);
+    // try to target 1 MHz
+    let now = Date.now();
+    let duration = now - lastrunend;
+    lastrunend = now;
+
+    let delay = (ticksperrun / 1000) - duration;
+    if (delay < 0) delay = 0;
+
+    setTimeout(scamprun, delay);
 };
 
 onmessage = function(m) {
