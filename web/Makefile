@@ -1,0 +1,20 @@
+SRCS=scamp.c ucode.c rom.c
+
+all: scamp.html
+
+scamp.html: $(SRCS) scamp.template.html os.disk
+	emcc -o scamp.html $(SRCS) --shell-file scamp.template.html --preload-file os.disk -s WASM=1 -O3 -s NO_EXIT_RUNTIME=1 -s EXPORTED_RUNTIME_METHODS=['ccall'] -s ALLOW_MEMORY_GROWTH=1
+
+ucode.c: ../ucode.hex
+	./hex2c ucode 2048 < $< > $@.tmp
+	mv $@.tmp $@
+
+rom.c: ../bootrom.hex
+	./hex2c rom 256 < $< > $@.tmp
+	mv $@.tmp $@
+
+os.disk: ../kernel/os.disk
+	cp ../kernel/os.disk os.disk
+
+clean:
+	-rm -f scamp.html scamp.js scamp.wasm ucode.c rom.c os.disk
