@@ -64,7 +64,6 @@
         let term = new Terminal();
         term.open(terminalElement);
         term.onKey(function(e) {
-            console.log(e);
             w.postMessage({type:"input", text:e.key});
         });
         term.resize(80,25);
@@ -75,7 +74,6 @@
         w.onmessage = function(m) {
             let o = m.data;
             if (o.type == "output" && o.text != "") {
-                console.log(o.text);
                 term.write(o.text);
             } else if (o.type == "printErr") {
                 console.error(o.text);
