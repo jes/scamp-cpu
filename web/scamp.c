@@ -279,6 +279,7 @@ EMSCRIPTEN_KEEPALIVE
 char *tick(int N, char *input) {
     uart_inbuf = input;
     uart_outp = uart_outbuf;
+    *uart_outp = 0;
     while (N--) {
         negedge();
         posedge();
