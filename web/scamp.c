@@ -46,6 +46,7 @@ uint16_t diskptr = 0;
 uint8_t *disk;
 uint16_t blknum = 0;
 uint16_t blkidx = 0;
+int ready = 0;
 
 #define UART_OUT_SZ 1024
 char uart_outbuf[UART_OUT_SZ];
@@ -277,9 +278,12 @@ void posedge(void) {
 */
 EMSCRIPTEN_KEEPALIVE
 char *tick(int N, char *input) {
+    if (!ready) return "";
+
     uart_inbuf = input;
     uart_outp = uart_outbuf;
     *uart_outp = 0;
+
     while (N--) {
         negedge();
         posedge();
@@ -291,4 +295,5 @@ int main() {
     console.base_address = 136;
     console.txempty = 1;
     load_disk("/os.disk");
+    ready = 1;
 }
