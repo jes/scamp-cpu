@@ -4,6 +4,7 @@ all: scamp.js
 
 scamp.js: $(SRCS) os.disk
 	emcc -o scamp.js $(SRCS) --preload-file os.disk -s WASM=1 -O3 -s NO_EXIT_RUNTIME=1 -s EXPORTED_RUNTIME_METHODS=['ccall'] -s ALLOW_MEMORY_GROWTH=1
+	cp scamp.data scamp.wasm scamp.js public/
 
 ucode.c: ../ucode.hex
 	./hex2c ucode 2048 < $< > $@.tmp
