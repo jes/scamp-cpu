@@ -280,6 +280,9 @@ EMSCRIPTEN_KEEPALIVE
 char *tick(int N, char *input) {
     if (!ready) return "";
 
+    /* TODO: [nice] append "input" to our own array for uart_inbuf, instead of
+             assigning the pointer, so that characters aren't dropped if we don't
+             consume them within N cycles? */
     uart_inbuf = input;
     uart_outp = uart_outbuf;
     *uart_outp = 0;
