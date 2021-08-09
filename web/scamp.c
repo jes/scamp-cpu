@@ -286,7 +286,7 @@ void posedge(void) {
     if (JMP) PC = bus;
 }
 
-/* tick one clock cycle, appending "input" to the UART input stream,
+/* tick N clock cycles, appending "input" to the UART input stream,
    and returning anything output from the UART
 */
 EMSCRIPTEN_KEEPALIVE
