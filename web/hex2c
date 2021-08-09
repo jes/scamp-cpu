@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-my $usage = "usage: bin2c NAME LENGTH\n";
+my $usage = "usage: hex2c NAME LENGTH\n";
 my $name = shift or die $usage;
 my $length = shift or die $usage;
 
