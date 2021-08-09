@@ -768,7 +768,7 @@ setstatusmsg = func(fmt, args) {
 };
 
 setdefaultstatus = func() {
-    setstatusmsg("HELP: ^W write  ^X exit  ^Z shell  ^K del line  ^F find", 0);
+    setstatusmsg("HELP: ^O write  ^X exit  ^Z shell  ^K del line  ^F find", 0);
 };
 
 scroll = func() {
@@ -882,7 +882,7 @@ processkey = func() {
             return 0;
         };
         quit(0);
-    } else if (c == CTRL_KEY('w')) {
+    } else if (c == CTRL_KEY('o')) {
         savefile();
     } else if (c == CTRL_KEY('f')) {
         find();
