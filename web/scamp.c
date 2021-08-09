@@ -48,10 +48,10 @@ uint16_t blknum = 0;
 uint16_t blkidx = 0;
 int ready = 0;
 
-#define UART_OUT_SZ 1024
-char uart_outbuf[UART_OUT_SZ];
+#define UART_BUFSZ 1024
+char uart_outbuf[UART_BUFSZ];
+char uart_inbuf[UART_BUFSZ];
 char *uart_outp;
-char *uart_inbuf;
 
 struct uart8250 console;
 
@@ -95,8 +95,21 @@ void uart_poll(struct uart8250 *uart) {
 
 /* return next char from input buffer */
 uint8_t uart_getchar(struct uart8250 *uart) {
-    if (*uart_inbuf) return *(uart_inbuf++);
-    else return 0;
+    uint8_t ch = 0;
+    char *p;
+    if (*uart_inbuf) {
+        ch = *uart_inbuf;
+        p = uart_inbuf;
+
+        // move all remaining bytes 1 step toward the front
+        // XXX: O(n) but n should be small (usually n=1)
+        while (*(p+1)) {
+            *p = *(p+1);
+            p++;
+        }
+        *p = 0;
+    }
+    return ch;
 }
 
 uint8_t uart_in(struct uart8250 *uart, int addr) {
@@ -146,7 +159,7 @@ void uart_out(struct uart8250 *uart, int addr, uint8_t val) {
     }
     if (addr == 0 && !uart->dlab) {
         *(uart_outp++) = val;
-        if (uart_outp == uart_outbuf + UART_OUT_SZ - 1) uart_outp--;
+        if (uart_outp == uart_outbuf + UART_BUFSZ - 1) uart_outp--;
         *uart_outp = 0;
     }
 }
@@ -280,10 +293,7 @@ EMSCRIPTEN_KEEPALIVE
 char *tick(int N, char *input) {
     if (!ready) return "";
 
-    /* TODO: [nice] append "input" to our own array for uart_inbuf, instead of
-             assigning the pointer, so that characters aren't dropped if we don't
-             consume them within N cycles? */
-    uart_inbuf = input;
+    strncat(uart_inbuf, input, UART_BUFSZ - strlen(uart_inbuf) - 1);
     uart_outp = uart_outbuf;
     *uart_outp = 0;
 
