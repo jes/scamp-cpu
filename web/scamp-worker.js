@@ -9,7 +9,8 @@ let scamprun = function() {
     // XXX: is there a race window in between grabbing inputbuf and setting it to ''?
     inputbuf = '';
 
-    let out = scamptick(1000000, thisinput);
+    // TODO: [nice] should we adjust the number of ticks based on how fast it's running?
+    let out = scamptick(100000, thisinput);
     if (out != "") {
         postMessage({
             type: 'output',
@@ -17,7 +18,7 @@ let scamprun = function() {
         });
     }
 
-    // XXX: is there a better way to run an infinite loop without blocking onmessage() invocation?
+    // TODO: [nice] compute how long we should delay before running another tick to target 1 MHz?
     setTimeout(scamprun, 0);
 };
 

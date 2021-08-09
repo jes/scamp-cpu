@@ -3,6 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="node_modules/xterm/css/xterm.css" />
+    <script src="node_modules/xterm/lib/xterm.js"></script>
     <title>SCAMP Emulator</title>
     <style>
       .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
@@ -52,13 +54,22 @@
     </div>
     
     <hr/>
+    <div id="terminal"></div>
     <hr>
     <script type='text/javascript'>
         let statusElement = document.getElementById('status');
         let progressElement = document.getElementById('progress');
         let spinnerElement = document.getElementById('spinner');
+        let terminalElement = document.getElementById('terminal');
 
         let w = new Worker('scamp-worker.js');
+
+        let term = new Terminal();
+        term.open(terminalElement);
+        term.onKey(function(e) {
+            console.log(e);
+            w.postMessage({type:"input", text:e.key});
+        });
 
         let lastStatus = { time: Date.now(), text: '' };
 
@@ -66,6 +77,7 @@
             let o = m.data;
             if (o.type == "output" && o.text != "") {
                 console.log(o.text);
+                term.write(o.text);
             } else if (o.type == "printErr") {
                 console.error(o.text);
             } else if (o.type == "setStatus") {
