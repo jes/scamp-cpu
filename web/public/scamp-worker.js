@@ -6,6 +6,8 @@ let scamptick = function(cycles, input) {
 let inputbuf = '';
 let ticksperrun = 10000;
 let lastrunend = Date.now();
+let durations = [];
+let delay = 0;
 let scamprun = function() {
     let thisinput = inputbuf;
     // XXX: is there a race window in between grabbing inputbuf and setting it to ''?
@@ -24,9 +26,16 @@ let scamprun = function() {
     let now = Date.now();
     let duration = now - lastrunend;
     lastrunend = now;
+    durations.push(duration);
+    while (durations.length > 10) durations.shift();
+    let avg_duration = durations.reduce((a,b)=>a+b)/durations.length;
 
-    let delay = (ticksperrun / 1000) - duration;
-    if (delay < 0) delay = 0;
+    // XXX: setTimeout() doesn't reliably wait for the requested delay, so
+    // instead we just monitor how long the last few runs have taken and
+    // adjust the delay accordingly
+    let timeperrun = (ticksperrun / 1000);
+    if (avg_duration > timeperrun)      delay--;
+    else if (avg_duration < timeperrun) delay++;
 
     setTimeout(scamprun, delay);
 };
