@@ -1,14 +1,18 @@
 # SCAMP CPU
 
-I am building a simple 16-bit CPU.
+SCAMP is my homebrew 16-bit CPU. It stands for something like "Simple Computing and Arithmetic Microcoded Processor".
 
-It's called "SCAMP" which means something like "Simple Computing and Arithmetic Microcoded Processor".
+The CPU is very primitive. It doesn't support interrupts, and has no MMU, and no concept of privilege levels. It currently runs
+at 1 MHz, above that the CompactFlash interface falls over. It runs a homebrew operating system, with a homebrew
+programming language and compiler, and can self-host many of the system utilities (but not all).
+The environment tastes a bit like an early Unix, but works like CP/M. I plan to use the computer to complete as much
+as possible of this year's [Advent of Code](https://adventofcode.com/).
 
-This repo is a loosely-connected collection of Verilog source, FreeCAD files, KiCad files, text notes, and software.
+I have some blog posts here: https://incoherency.co.uk/blog/tags/cpu.html and a web-based emulator available here: https://incoherency.co.uk/scamp/
 
 Here are some pictures:
 
-<img src="doc/front-panels.jpeg" height="500"> <img src="doc/card-cage.jpeg" height="500">
+<img src="doc/card-cage.jpeg" height="500"> <img src="doc/case.jpeg" height="500">
 
 Here's a sample session in the emulator recorded with `asciinema`:
 
@@ -18,50 +22,28 @@ And here's a video with some explanation and an example session on real hardware
 
 <a href="https://www.youtube.com/watch?v=4sBB0iD6XvI"><img width="400" src="doc/youtube.png"></a>
 
-## Plan
+## The story so far
 
-1. Create the CPU in Verilog, with a testbench for each part. **[done]**
+This is what I've already done:
+
+1. Create the CPU in Verilog, with a testbench for each part.
 2. Replace the raw Verilog with Verilog that only uses 74xx-compatible primitives
-   (e.g. https://github.com/TimRudy/ice-chips-verilog), but still passes the testbenches. **[done]**
-3. Convert the 74xx-Verilog into KiCad schematics. **[done]**
-4. Build the CPU **[still working on this]**
+   (e.g. https://github.com/TimRudy/ice-chips-verilog), but still passes the testbenches.
+3. Convert the 74xx-Verilog into KiCad schematics.
+4. Order the PCBs and components, solder up the PCBs, build a card cage, build a wooden case.
+5. Settle on the instruction set and write the microcode (see [doc/table.html](doc/table.html), available online at https://incoherency.co.uk/interest/table.html).
+5. Write a bootloader, kernel, shell, text editor, compiler, and various system utilities.
 
-## Current status
+## Next steps
 
-I've finished writing Verilog and have settled on the overall CPU architecture (see diagram below).
+The computer already works, and I suspect it will never be "finished", but some things I still want to work on are:
 
-I'm happy with the instruction set, see [doc/table.html](doc/table.html), available online at https://incoherency.co.uk/interest/table.html - but the instruction set is implemented with microcode, so changes are relatively cheap.
-
-I have some blog posts here: https://incoherency.co.uk/blog/tags/cpu.html
-
-I have created an emulator (see in `emulator/`) and a compiler (`compiler/`). Although there is still useful
-work to be done on the compiler, it can now compile itself from within the emulator.
-
-I have written quite a lot of the kernel (see `kernel/`). It can do most of the system calls. It needs more error-checking,
-bounds-checking, etc.. It can load programs off a filesystem stored on a block device and execute them, in real hardware.
-
-I'm currently designing the PCBs:
-
- - [x] ALU
- - [x] Memory
- - [x] Instruction/control
- - [x] Backplane
- - [ ] Clock
- - [x] Serial port
- - [x] Storage
-
-Other work includes:
-
- - [x] get the PCBs manufactured
- - [x] work out how to interface with serial
- - [x] work out how to interface with storage
- - [ ] assemble the computer inside a convenient case (WIP: see `case/` and `front-panels/`)
- - [x] write the bootloader ROM (mostly done: see `bootrom.s`)
- - [x] write the "kernel" (mostly done: see `kernel/`)
- - [x] write a compiler
- - [x] write system utilities (mostly done: see `sys/`)
- - [x] write an editor (mostly done: see `sys/kilo.sl`)
- - [ ] make it self-host (almost there, but the assembler runs out of memory while assembling things like the compiler)
+ - [ ] wire in a permanent clock source from a 1 MHz crystal oscillator instead of using an Arduino on a breadboard
+ - [ ] wire up some power and reset switches
+ - [ ] mount the VGA serial console inside the case so I don't have so many wires trailing across the desk
+ - [ ] make some levers that sit on the case at the side of the cards to aid removal of the cards
+ - [ ] make the shell support pipe syntax (e.g. `foo | bar | baz`)
+ - [ ] compete in this year's [Advent of Code](https://adventofcode.com/) using the SCAMP hardware
 
 ## Architecture
 
@@ -78,7 +60,9 @@ For more information, see [doc/UCODE.md](doc/UCODE.md) and [doc/ISA.md](doc/ISA.
 
 ## Try it out
 
-You can run SCAMP/os in the emulator. First you'll need to build everything. Try `make -j` in the root directory of this
+The easiest way to try it out is to use the web-based emulator at https://incoherency.co.uk/scamp/
+
+If you want to run it locally, first you'll need to build everything. Try `make -j` in the root directory of this
 repository. It probably won't work on the first attempt because it works with multiple different Makefiles that have
 annoying dependencies. Just run `make -j` twice. If that doesn't do the trick, run `make` in `sys/` first, and then run
 it in `.`.
