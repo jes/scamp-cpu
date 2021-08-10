@@ -1,8 +1,8 @@
 SOURCES = verilog/fpga.v
 
-.PHONY: all test burn clean emulator kernel sys
+.PHONY: all test burn clean emulator kernel sys web
 
-all: doc/table.html emulator kernel sys bootrom.hex ucode.hex testrom.hex
+all: doc/table.html emulator kernel sys bootrom.hex ucode.hex testrom.hex web
 
 ttlcpu.bin: ucode.hex testrom.hex
 	yosys -p "synth_ice40 -top top -json ttlcpu.json" $(SOURCES)
@@ -74,6 +74,9 @@ kernel:
 
 sys: sys/asmparser.sl
 	make -C sys/
+
+web:
+	make -C web/
 
 burn: ttlcpu.bin
 	iceFUNprog ttlcpu.bin
