@@ -27,7 +27,7 @@ all: $(BINS) lib.o
 	../compiler/slangc $*.sl > $*.s.tmp
 	mv $*.s.tmp $*.s
 
-lib.o: $(LIBS)
+lib.o: $(LIBS) make-lib
 	./make-lib
 
 clean:

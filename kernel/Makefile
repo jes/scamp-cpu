@@ -11,7 +11,7 @@ prof: kernel.prof kernel.anhex
 kernel.prof: os.disk
 	../emulator/scamp -i os.disk -c -p kernel.prof
 
-os.disk: kernel.hex fs.in ../sys/*.bin motd os.disk.blank
+os.disk: kernel.hex fs.in ../sys/*.bin motd os.disk.blank ../sys/lib.o
 	cp os.disk.blank os.disk.tmp
 	../fs/fs os.disk.tmp < fs.in
 	mv os.disk.tmp os.disk
