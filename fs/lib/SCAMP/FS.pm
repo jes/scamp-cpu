@@ -135,6 +135,7 @@ sub mkdir {
     # TODO: don't allow duplicate names
 
     my $abs = $self->abspath($dir);
+    die "$dir: already exists\n" if $self->find($abs);
     my ($parents,$child) = $self->splitpath($abs);
     die "$parents: not a directory\n" if $self->nametype($parents) != $TYPE_DIR;
     my $parentblk = $self->find($parents);
@@ -443,7 +444,7 @@ sub add_dirent {
     my $newdir = $self->new_directory();
     $lastdirblkdata->[2] = $newdir>>8;
     $lastdirblkdata->[3] = $newdir&0xff;
-    $self->writeblock($dirblk, @$lastdirblkdata);
+    $self->writeblock($lastdirblknum, @$lastdirblkdata);
     $self->add_dirent($newdir, $addname, $blk0);
 }
 
