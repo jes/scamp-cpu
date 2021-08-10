@@ -6,3 +6,7 @@ include "stdlib.sl";
 include "string.sl";
 include "sys.sl";
 include "xprintf.sl";
+include "strbuf.sl";
+include "bufio.sl";
+include "bigint.sl";
+include "hash.sl";

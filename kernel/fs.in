@@ -47,6 +47,10 @@ put -t ../sys/include-lib.h /lib/stdlib.sl
 put -t ../sys/include-lib.h /lib/string.sl
 put -t ../sys/include-lib.h /lib/sys.sl
 put -t ../sys/include-lib.h /lib/xprintf.sl
+put -t ../sys/include-lib.h /lib/strbuf.sl
+put -t ../sys/include-lib.h /lib/bufio.sl
+put -t ../sys/include-lib.h /lib/bigint.sl
+put -t ../sys/include-lib.h /lib/hash.sl
 
 mkdir src
 put -t ../sys/cat.sl /src/cat.sl
