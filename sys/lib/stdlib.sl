@@ -1,4 +1,15 @@
 # multiply 2 numbers from stack and return result in r0
+# If this ever turns out to be a bottleneck, then we could potentially create
+# a "tbso" instruction (along the lines of "tbsz" but with the test inverted), and:
+#   tbso r2, 0x0001
+#   jr+ 2 # skip over the "add"
+#   add r0, r1
+#   shl r1
+#   tbso r2, 0x0002
+#   jr+ 2 # skip over the "add"
+#   add r0, r1
+#   shl r1
+#   ... etc. ...
 var mul = asm {
     pop x
     ld r2, x # r2 = arg1
