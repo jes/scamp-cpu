@@ -114,23 +114,12 @@ void load_hex(uint16_t *buf, int maxlen, char *name) {
     fclose(fp);
 }
 
-void load_ucode(void) {
-#ifdef EMSCRIPTEN
-    load_hex(ucode, 2048, "ucode.hex");
-#else
-    load_hex(ucode, 2048, "../ucode.hex");
-#endif
+void load_ucode(char *name) {
+    load_hex(ucode, 2048, name);
 }
 
-void load_bootrom(void) {
-    if (test)
-        load_hex(rom, 256, "../testrom.hex");
-    else
-#ifdef EMSCRIPTEN
-        load_hex(rom, 256, "bootrom.hex");
-#else
-        load_hex(rom, 256, "../bootrom.hex");
-#endif
+void load_bootrom(char *name) {
+    load_hex(rom, 256, name);
 }
 
 void load_ram(uint16_t addr, char *file) {
@@ -666,8 +655,8 @@ int main(int argc, char **argv) {
 
 #ifdef EMSCRIPTEN
     load_disk("os.disk");
-    load_ucode();
-    load_bootrom();
+    load_ucode("ucode.hex");
+    load_bootrom("bootrom.hex");
 
     ready = 1;
 #else
@@ -718,9 +707,10 @@ int main(int argc, char **argv) {
     randomise_ram();
 
     /* load ROMs */
-    load_ucode();
+    load_ucode("../ucode.hex");
     if (!jmp0x100) {
-        load_bootrom();
+        if (test) load_bootrom("../testrom.hex");
+        else      load_bootrom("../bootrom.hex");
     } else {
         PC = 0x100;
     }
