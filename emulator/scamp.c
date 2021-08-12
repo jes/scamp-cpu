@@ -60,6 +60,7 @@ uint8_t *disk;
 uint16_t blknum = 0;
 uint16_t blkidx = 0;
 
+#ifdef PROFILING
 uint64_t pc_cycles[65536];
 uint16_t last_instr[65536];
 uint64_t opcode_cycles[256];
@@ -71,6 +72,7 @@ uint64_t prof_cycles;
 
 uint64_t segmented_cycles[256];
 int segment = 0;
+#endif
 
 struct uart8250 console;
 
@@ -129,13 +131,16 @@ void load_disk(char *file) {
     close(fd);
 }
 
+#ifdef PROFILING
 void open_profile(char *file) {
     if (!(profile_fp = fopen(file, "w"))) {
         fprintf(stderr, "can't write %s: %s\n", file, strerror(errno));
         exit(1);
     }
 }
+#endif
 
+#ifdef PROFILING
 void write_profile(int argc, char **argv, uint64_t elapsed_us) {
     int i;
 
@@ -166,6 +171,7 @@ void write_profile(int argc, char **argv, uint64_t elapsed_us) {
         fprintf(profile_fp, "%lu\n", addr_writes[i]);
     fclose(profile_fp);
 }
+#endif
 
 /* compute ALU operation */
 uint16_t alu(uint16_t argx, uint16_t argy) {
@@ -349,6 +355,7 @@ void out(uint16_t val, uint16_t addr) {
         uart_out(&console, addr-console.base_address, val);
     }
 
+#ifdef PROFILING
     if (addr == 1 && run_profile) halt = 1;
     if (addr == 2) {
         /* targeted profiling: reset profiling counters to remove all the stuff we don't want */
@@ -364,6 +371,7 @@ void out(uint16_t val, uint16_t addr) {
         printf("run_profile = 1\r\n");
     }
     if (addr == 10) segment = val;
+#endif
 }
 
 /* negative edge of clock: update control lines and outputs to bus */
@@ -400,11 +408,13 @@ void negedge(void) {
         else    T = (T+1) % 8;
     } while (RT); /* loop until !RT because RT resets T-state immediately */
 
+#ifdef PROFILING
     prof_cycles++;
     pc_cycles[PC]++;
     last_instr[PC] = instr;
     opcode_cycles[opcode]++;
     segmented_cycles[segment]++;
+#endif
 
     if (T == 1 && debug)
         fprintf(stderr, "[trace] PC=%04x\n", PC);
@@ -448,7 +458,9 @@ void negedge(void) {
     if (IOL) bus = instr&0xff;
     if (MO) {
         bus = (addr < 256 ? rom[addr] : ram[addr]);
+#ifdef PROFILING
         addr_reads[addr]++;
+#endif
     }
     if (DO)  bus = in(addr);
 }
@@ -461,7 +473,9 @@ void posedge(void) {
         if (watch == addr)
             fprintf(stderr, "[watch] PC=%04x: M[%04x] was %04x, now %04x\n", PC, addr, ram[addr], bus);
         ram[addr] = bus;
+#ifdef PROFILING
         addr_writes[addr]++;
+#endif
         if (stacktrace && addr == 0xffff)
             fprintf(stderr, "[stack] PC=%04x: sp=%04x: stack = %04x %04x %04x %04x %04x...\n", PC, ram[0xffff], ram[ram[0xffff]+1], ram[ram[0xffff]+2], ram[ram[0xffff]+3], ram[ram[0xffff]+4], ram[ram[0xffff]+5]);
     }
@@ -511,7 +525,9 @@ void help(void) {
 "  -d,--debug         Print debug output after each clock cycle\n"
 "  -f,--freq HZ       Aim to emulate a clock of the given frequency (default: 20000000)\n"
 "  -i,--image FILE    Load disk image from given hex file\n"
+#ifdef PROFILING
 "  -p,--profile FILE  Write profiling data to FILE\n"
+#endif
 "  -r,--run FILE      Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
 "  -s,--stack         Trace the stack\n"
 "  -t,--test          Check whether the test ROM passes the tests\n"
@@ -572,7 +588,9 @@ int main(int argc, char **argv) {
             {"debug", no_argument, &debug,     1},
             {"freq",  required_argument,  0, 'f'},
             {"image", required_argument,  0, 'i'},
+#ifdef PROFILING
             {"profile",required_argument, 0, 'p'},
+#endif
             {"run",   required_argument,  0, 'r'},
             {"stack", no_argument, &stacktrace,1},
             {"test",  no_argument, &test,      1},
@@ -589,7 +607,9 @@ int main(int argc, char **argv) {
         if (c == 'd') debug = 1;
         if (c == 'f') freq = atoi(optarg);
         if (c == 'i') load_disk(optarg);
+#ifdef PROFILING
         if (c == 'p') open_profile(optarg);
+#endif
         if (c == 'r') {
             load_ram(0x100, optarg);
             jmp0x100 = 1;
@@ -648,6 +668,7 @@ int main(int argc, char **argv) {
     if (cyclecount)
         fprintf(stderr, "[cycles] Halted after %lu cycles.\n", steps);
 
+#ifdef PROFILING
     if (profile_fp)
         write_profile(argc, argv, elapsed_us);
 
@@ -655,6 +676,7 @@ int main(int argc, char **argv) {
     for (i = 0; i < 256; i++) {
         if (segmented_cycles[i] > 0) fprintf(stderr, "[cycles] segment %d: %lu\r\n", i, segmented_cycles[i]);
     }
+#endif
 
     return test_fail;
 }

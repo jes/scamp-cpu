@@ -3,7 +3,7 @@
 all: scamp
 
 scamp: scamp.c
-	cc -o scamp $< -Wall -Wextra
+	cc -o scamp $< -Wall -Wextra -DPROFILING
 
 test: scamp
 	./scamp -t
