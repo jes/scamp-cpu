@@ -426,9 +426,14 @@ insertnewline = func() {
 
 truncaterow = func() {
     var row = grget(rows, cy);
-    grtrunc(row, cx);
-    markrowdirty(cy);
-    dirty = 1;
+    if (grlen(row)) {
+        grtrunc(row, cx);
+        markrowdirty(cy);
+        dirty = 1;
+    } else {
+        delrow(cy);
+        markbelowdirty(cy);
+    };
 };
 
 delchar = func() {
