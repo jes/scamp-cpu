@@ -1,21 +1,17 @@
-SRCS=scamp.c ucode.c rom.c
-
 all: scamp.js
 
-scamp.js: $(SRCS) os.disk
-	emcc -o scamp.js $(SRCS) --preload-file os.disk -s WASM=1 -O3 -s NO_EXIT_RUNTIME=1 -s EXPORTED_RUNTIME_METHODS=['ccall'] -s ALLOW_MEMORY_GROWTH=1
+scamp.js: ../emulator/scamp.c os.disk ucode.hex bootrom.hex
+	emcc -o scamp.js ../emulator/scamp.c --preload-file os.disk --preload-file ucode.hex --preload-file bootrom.hex -s WASM=1 -O3 -s NO_EXIT_RUNTIME=1 -s EXPORTED_RUNTIME_METHODS=['ccall'] -s ALLOW_MEMORY_GROWTH=1 -DEMSCRIPTEN
 	cp scamp.data scamp.wasm scamp.js public/
 
-ucode.c: ../ucode.hex
-	./hex2c ucode 2048 < $< > $@.tmp
-	mv $@.tmp $@
+ucode.hex: ../ucode.hex
+	cp ../ucode.hex .
 
-rom.c: ../bootrom.hex
-	./hex2c rom 256 < $< > $@.tmp
-	mv $@.tmp $@
+bootrom.hex: ../bootrom.hex
+	cp ../bootrom.hex .
 
 os.disk: ../kernel/os.disk
 	cp ../kernel/os.disk os.disk
 
 clean:
-	-rm -f scamp.js scamp.wasm scamp.data ucode.c rom.c os.disk
+	-rm -f scamp.js scamp.wasm scamp.data os.disk ucode.hex bootrom.hex

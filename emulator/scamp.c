@@ -20,6 +20,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef EMSCRIPTEN
+#include <emscripten/emscripten.h>
+#endif
+
 /* this is a pretty lame 8250 emulation, it only really supports the
    parts that are used by SCAMP/os */
 struct uart8250 {
@@ -74,6 +78,15 @@ uint64_t segmented_cycles[256];
 int segment = 0;
 #endif
 
+#ifdef EMSCRIPTEN
+int ready;
+
+#define UART_BUFSZ 1024
+char uart_outbuf[UART_BUFSZ];
+char uart_inbuf[UART_BUFSZ];
+char *uart_outp;
+#endif
+
 struct uart8250 console;
 
 void randomise_ram(void) {
@@ -102,14 +115,22 @@ void load_hex(uint16_t *buf, int maxlen, char *name) {
 }
 
 void load_ucode(void) {
+#ifdef EMSCRIPTEN
+    load_hex(ucode, 2048, "ucode.hex");
+#else
     load_hex(ucode, 2048, "../ucode.hex");
+#endif
 }
 
 void load_bootrom(void) {
     if (test)
         load_hex(rom, 256, "../testrom.hex");
     else
+#ifdef EMSCRIPTEN
+        load_hex(rom, 256, "bootrom.hex");
+#else
         load_hex(rom, 256, "../bootrom.hex");
+#endif
 }
 
 void load_ram(uint16_t addr, char *file) {
@@ -206,6 +227,12 @@ int uart_ready(struct uart8250 *uart) {
     return poll(&pfd, 1, 0);
 }
 
+#ifdef EMSCRIPTEN
+void uart_poll(struct uart8250 *uart) {
+    uart->dataready = *uart_inbuf ? 1 : 0;
+    uart->txempty = 1;
+}
+#else
 /* read into rx buffer, and maybe set halt flag on ctrl-\ */
 void uart_poll(struct uart8250 *uart) {
     uint8_t ch;
@@ -226,13 +253,35 @@ void uart_poll(struct uart8250 *uart) {
     uart->rxbuf = ch;
     uart->dataready = 1;
 }
+#endif
 
+#ifdef EMSCRIPTEN
+/* return next char from input buffer */
+uint8_t uart_getchar(struct uart8250 *uart) {
+    uint8_t ch = 0;
+    char *p;
+    if (*uart_inbuf) {
+        ch = *uart_inbuf;
+        p = uart_inbuf;
+
+        // move all remaining bytes 1 step toward the front
+        // XXX: O(n) but n should be small (usually n=1)
+        while (*(p+1)) {
+            *p = *(p+1);
+            p++;
+        }
+        *p = 0;
+    }
+    return ch;
+}
+#else
 /* return next char from input buffer */
 uint8_t uart_getchar(struct uart8250 *uart) {
     uart_poll(uart);
     uart->dataready = 0;
     return uart->rxbuf;
 }
+#endif
 
 uint8_t uart_in(struct uart8250 *uart, int addr) {
     switch (addr) {
@@ -266,6 +315,16 @@ uint8_t uart_in(struct uart8250 *uart, int addr) {
     }
 }
 
+#ifdef EMSCRIPTEN
+void uart_putchar(int ch) {
+    *(uart_outp++) = ch;
+    if (uart_outp == uart_outbuf + UART_BUFSZ - 1) uart_outp--;
+    *uart_outp = 0;
+}
+#else
+#define uart_putchar putchar
+#endif
+
 void uart_out(struct uart8250 *uart, int addr, uint8_t val) {
     /* TODO: [nice] implement more of this, in particular we should really keep
              track of the configured baud rate and drop characters if we try to
@@ -284,7 +343,7 @@ void uart_out(struct uart8250 *uart, int addr, uint8_t val) {
         uart->txempty = 0;
 
         /* XXX: when we are tracking baud rate, the following can move: */
-        putchar(uart->txbuf);
+        uart_putchar(uart->txbuf);
         uart->txempty = 1;
     }
 }
@@ -387,7 +446,7 @@ void negedge(void) {
         uinstr = ucode[uPC];
 
         /* decode uinstr */
-        EO = !(uinstr >> 15) & 0x1;
+        EO = (!(uinstr >> 15)) & 0x1;
         EX = (uinstr >> 14) & 1;
         NX = (uinstr >> 13) & 1;
         EY = (uinstr >> 12) & 1;
@@ -574,11 +633,44 @@ void rawmode(void) {
     }
 }
 
+#ifdef EMSCRIPTEN
+/* tick N clock cycles, appending "input" to the UART input stream,
+   and returning anything output from the UART
+*/
+EMSCRIPTEN_KEEPALIVE
+char *tick(int N, char *input) {
+    if (!ready) return "";
+
+    strncat(uart_inbuf, input, UART_BUFSZ - strlen(uart_inbuf) - 1);
+    uart_outp = uart_outbuf;
+    *uart_outp = 0;
+
+    while (N--) {
+        negedge();
+        posedge();
+    }
+    return uart_outbuf;
+}
+#endif
+
 int main(int argc, char **argv) {
     int jmp0x100 = 0;
     struct timeval starttime, curtime;
     uint64_t elapsed_us, target_us;
 
+    console.is_console = 1;
+    console.base_address = 136;
+    console.infd = 0; /* stdin */
+    console.outfd = 1; /* stdout */
+    console.txempty = 1;
+
+#ifdef EMSCRIPTEN
+    load_disk("os.disk");
+    load_ucode();
+    load_bootrom();
+
+    ready = 1;
+#else
     setbuf(stdout, NULL);
 
     /* parse options */
@@ -637,12 +729,6 @@ int main(int argc, char **argv) {
     rawmode();
     gettimeofday(&starttime, NULL);
 
-    console.is_console = 1;
-    console.base_address = 136;
-    console.infd = 0; /* stdin */
-    console.outfd = 1; /* stdout */
-    console.txempty = 1;
-
     /* run the clock */
     while (!halt) {
         if ((steps & 0xffff) == 0) /* console_poll() is slow, only call it very occasionally */
@@ -678,5 +764,6 @@ int main(int argc, char **argv) {
     }
 #endif
 
+#endif /* EMSCRIPTEN */
     return test_fail;
 }
