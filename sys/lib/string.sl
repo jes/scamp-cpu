@@ -189,3 +189,12 @@ var strstr = func(haystack, needle) {
 
     return 0;
 };
+
+var strchr = func(s, ch) {
+    while (*s) {
+        if (*s == ch) return s;
+        s++;
+    };
+
+    return 0;
+};
