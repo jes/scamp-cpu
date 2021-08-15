@@ -126,6 +126,7 @@ var BareWord = func(x) {
     die("argument too long:%d,%d,%d",[ARGUMENT[0],ARGUMENT[4], ARGUMENT[7]]);
 };
 
+# TODO: [nice] implement backticks and quotes
 var Backticks = func(x) { return 0; };
 var SingleQuotes = func(x) { return 0; };
 var DoubleQuotes = func(x) { return 0; };
@@ -149,7 +150,7 @@ var Argument = func(x) {
     return 0;
 };
 
-# TODO: [nice] support appending
+# TODO: [nice] support appending with ">>"
 var IORedirection = func(x) {
     if (parse(CharSkip,'<')) {
         if (!parse(BareWord,0)) die("< needs argument",0);
