@@ -79,6 +79,7 @@ var xprintf = func(fmt, args, putc_cb) {
                 str = "<???>";
                 argidx++;
             };
+            if (!str) str = "(null)";
 
             # padding
             len = strlen(str);
