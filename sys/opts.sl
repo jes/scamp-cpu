@@ -30,7 +30,7 @@ var more_args = getopt(cmdargs()+1, "mf", func(ch, arg) {
 printf("%s\n", [message]);
 printf("The file is: %s\n", [file]);
 
-if (more_args) {
+if (*more_args) {
     printf("More arguments:\n", 0);
     while (*more_args) {
         printf("    %s\n", [*more_args]);

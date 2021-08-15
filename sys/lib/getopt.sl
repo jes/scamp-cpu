@@ -38,7 +38,7 @@ var getopt = func(args, argstr, cb) {
         s = *args;
         if (*s != '-') return args;
         if (strcmp(s, "-") == 0) return args;
-        if (strcmp(s, "--") == 0) return args;
+        if (strcmp(s, "--") == 0) return args+1;
         s++;
 
         while (*s) {
@@ -54,6 +54,7 @@ var getopt = func(args, argstr, cb) {
                     # ...the next string: ["-f", "file"]
                     cb(ch, *(args+1));
                     args++;
+                    if (!*args) return args;
                 };
             } else {
                 # option takes no argument
@@ -64,6 +65,5 @@ var getopt = func(args, argstr, cb) {
         args++;
     };
 
-    if (*args) return args
-    else return 0;
+    return args;
 };
