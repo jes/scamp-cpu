@@ -139,6 +139,27 @@ var bgetc = asm {
     _bgetc_bio: .word 0
 };
 
+# read at most size-1 characters into s, and terminate with a 0
+# return s if any chars were read
+# return 0 if EOF was reached with no chars
+var bgets = func(bio, s, size) {
+    var ch = 0;
+    var len = 0;
+
+    while (ch >= 0 && ch != '\n' && len < size) {
+        ch = bgetc(bio);
+        if (ch >= 0)
+            *(s+(len++)) = ch;
+    };
+
+    if (ch < 0 && len == 0)
+        return 0;
+
+    *(s+len) = 0;
+
+    return s;
+};
+
 #var bputc = func(bio, ch) {
 #    var bufpos = bio[2];
 #    *(bio+4+bufpos) = ch;
