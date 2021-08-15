@@ -1,10 +1,12 @@
 # SCAMP shell
 
+include "getopt.sl";
 include "glob.sl";
 include "grarr.sl";
 include "malloc.sl";
 include "parse.sl";
 include "stdio.sl";
+include "strbuf.sl";
 include "string.sl";
 include "sys.sl";
 
@@ -268,14 +270,14 @@ var execute = func(str) {
     var prev_err = redirect(2, err_redirect, O_WRITE|O_CREAT);
 
     # execute binaries
-    var n = system(args);
+    var rc = system(args);
 
     # undo io redirection
     unredirect(0, prev_in);
     unredirect(1, prev_out);
     unredirect(2, prev_err);
 
-    if (n < 0) fprintf(2, "sh: %s: %s\n", [args[0], strerror(n)]);
+    if (rc < 0) fprintf(2, "sh: %s: %s\n", [args[0], strerror(rc)]);
 
     p = args;
     while (*p) free(*(p++));
@@ -285,12 +287,34 @@ var execute = func(str) {
     free(in_redirect);
     free(out_redirect);
     free(err_redirect);
+
+    return rc;
 };
 
 var in_fd = 0; # stdin
 
-# TODO: [nice] if "-c", then just execute() the cmdargs()?
-var args = cmdargs()+1;
+var dashc = 0;
+var args = getopt(cmdargs()+1, "", func(ch, arg) {
+    if (ch == 'c') {
+        dashc = 1;
+    } else {
+        fprintf(2, "sh: error: unrecognised option -%c", [ch]);
+        exit(1);
+    };
+});
+
+# sh -c ... : concatenate the args and execute them
+var sb;
+if (dashc) {
+    sb = sbnew();
+    while (*args) {
+        sbputs(sb, *args);
+        sbputc(sb, ' ');
+        args++;
+    };
+    exit(execute(sbbase(sb)));
+};
+
 if (*args) {
     in_fd = open(*args, O_READ);
     if (in_fd < 0) die("sh: open %s: %s", [*args, strerror(in_fd)]);
