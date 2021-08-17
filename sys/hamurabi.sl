@@ -73,7 +73,7 @@ var main = func() {
             A=A+Q; S=S-mul(Y,Q); C=0;
         } else {
             while (1) {
-                printf("HOW MANY ACRES DO YOU WITH TO SELL",0);
+                printf("HOW MANY ACRES DO YOU WISH TO SELL",0);
                 Q=input();
                 if (Q lt A) break;
                 thinkacres();
