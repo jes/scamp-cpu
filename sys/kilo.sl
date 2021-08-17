@@ -2,7 +2,6 @@
 # Based on https://viewsourcecode.org/snaptoken/kilo/
 #
 # TODO: [bug] use less memory - currently can't open slangc.sl; stop using grarrs?
-# TODO: [perf] needs to be usable at 1 MHz
 
 include "grarr.sl";
 include "stdio.sl";
