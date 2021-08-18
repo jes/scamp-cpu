@@ -129,6 +129,7 @@ rawmode = func() {
     consoleflags = serflags(3, SER_DISABLE);
 
     writeesc("[2J"); # clear screen
+    writeesc("[H"); # cursor at top left
 };
 
 unrawmode = func() {
@@ -460,6 +461,7 @@ delchar = func() {
 ### FILE I/O
 
 openfile = func(filename) {
+    printf("Loading %s...", [filename]);
     var fd = open(filename, O_READ);
     if (fd == NOTFOUND) {
         # filename doesn't exist yet
