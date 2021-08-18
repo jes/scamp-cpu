@@ -5,7 +5,7 @@ use warnings;
 
 use Time::HiRes qw(usleep);
 
-my $usage = "burn-eeprom DEVICE HEXFILE\ne.g. \$ burn-eeprom /dev/ttyACM0 ucode-low.hex\n";
+my $usage = "burn-eeprom-24lc256 DEVICE BINARYFILE\ne.g. \$ burn-eeprom-24lc256 /dev/ttyUSB0 vt100.bin\n";
 my $dev = shift or die "usage: $usage";
 my $hexfile = shift or die "usage: $usage";
 
@@ -16,38 +16,26 @@ open(my $fh, '+<', $dev)
     or die "can't open $dev: $!\n";
 
 # load hex file
-my @data;
 open(my $hexfh, '<', $hexfile)
     or die "can't read $hexfile: $!\n";
-while (<$hexfh>) {
-    chomp;
-    die "line $.: value out of range: $_\n" if hex($_) > 255;
-    push @data, hex($_);
-}
+my @data = map { ord($_) } split //, join('', <$hexfh>);
 close $hexfh;
 
-print STDERR "Please close the jumper and hit ENTER...\n";
-<>;
-burn_eeprom(0);
-
-if (@data > 1024) {
-    print STDERR "Please open the jumper and hit ENTER...\n";
-    <>;
-    burn_eeprom(1024);
-}
+burn_eeprom();
 
 sub burn_eeprom {
-    my ($base) = @_;
-    for my $addr (0 .. 1023) {
-        my $val = $data[$addr+$base];
+    my $addr = 0;
+    while (1) {
+        my $val = $data[$addr];
         last if !defined $val;
         print $fh "write $addr $val\n";
         usleep(12000);
         my $l = <$fh>;
         $l =~ s/[\0\r\n]//g;
         die "write $addr: ($l)\n" if $l ne 'ok';
-        my $pct = $addr / 1023;
+        my $pct = $addr / @data;
         print STDERR sprintf("   \r%d%%", 100*$pct);
+        $addr++;
     }
     print STDERR "\n";
 }

@@ -1,0 +1,33 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Time::HiRes qw(usleep);
+
+$| = 1;
+
+my $dev = shift or die "usage: dump-eeprom-24lc256 DEVICE\ne.g. \$ dump-eeprom-24lc256 /dev/ttyUSB0\n";
+
+# configure serial port
+# no idea what the hex numbers mean, I got them from "stty -g" after getting the port into a workable state using Arduino serial monitor
+system("stty -F \Q$dev\E 0:0:18b2:0:3:1c:7f:15:4:0:0:0:11:13:1a:0:12:f:17:16:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0");
+open(my $fh, '+<', $dev)
+    or die "can't open $dev: $!\n";
+
+dump_eeprom();
+
+sub dump_eeprom {
+    my $SIZE = 24000;
+    for my $addr (0 .. $SIZE) {
+        print $fh "read $addr\n";
+        usleep(12000);
+        my $l = <$fh>;
+        $l =~ s/[\0\r\n]//g;
+        die "read $addr: ($l)\n" if $l !~ /^\d+$/;
+        print chr($l);
+        my $pct = $addr / $SIZE;
+        print STDERR sprintf("   \r%d%%", 100*$pct);
+    }
+    print STDERR "\n";
+}
