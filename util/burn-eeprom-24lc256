@@ -7,7 +7,7 @@ use Time::HiRes qw(usleep);
 
 my $usage = "burn-eeprom-24lc256 DEVICE BINARYFILE\ne.g. \$ burn-eeprom-24lc256 /dev/ttyUSB0 vt100.bin\n";
 my $dev = shift or die "usage: $usage";
-my $hexfile = shift or die "usage: $usage";
+my $binfile = shift or die "usage: $usage";
 
 # configure serial port
 # no idea what the hex numbers mean, I got them from "stty -g" after getting the port into a workable state using Arduino serial monitor
@@ -15,11 +15,11 @@ system("stty -F \Q$dev\E 0:0:18b2:0:3:1c:7f:15:4:0:0:0:11:13:1a:0:12:f:17:16:0:0
 open(my $fh, '+<', $dev)
     or die "can't open $dev: $!\n";
 
-# load hex file
-open(my $hexfh, '<', $hexfile)
-    or die "can't read $hexfile: $!\n";
-my @data = map { ord($_) } split //, join('', <$hexfh>);
-close $hexfh;
+# load bin file
+open(my $binfh, '<', $binfile)
+    or die "can't read $binfile: $!\n";
+my @data = map { ord($_) } split //, join('', <$binfh>);
+close $binfh;
 
 burn_eeprom();
 
