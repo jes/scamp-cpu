@@ -100,6 +100,17 @@ But could probably easily add "array-like" syntactic sugar for the same:
 
     arr[15] = 6;
 
+Update: I added some syntax for defining a statically-allocated array at compile time:
+
+    var arr = [1, 2, 3, 4, 5];
+
+The memory allocation works the same as string literals, but the contents are filled in dynamically at runtime, which
+allows things like this to do what you expect:
+
+    var x = foo();
+    var y = bar();
+    var arr = [1, 2, 3, x, y];
+
 ## Operators
 
 I don't know if we want/need to support anything that the CPU doesn't natively support. In particular multiplication
@@ -125,6 +136,10 @@ get the format string first, we'd need to use it like:
     printf(1, "hello", "%d. %s\n"); // "1. hello\n"
 
 which is annoying and unintuitive.
+
+Update: the solution I went with was to use the statically-allocated array syntax to pass an array of arguments to `printf()`:
+
+    printf("Hello, %s. Number is %d.\n", ["world", 42]);
 
 ## Grammar
 
@@ -216,4 +231,4 @@ Instead of generating functions inline and jumping over them, we should stick th
 
 ### Function calls
 
-Is there a more efficient way to go about the whole business of backing up r254 (return address) and r253 (base pointer)?
+Is there a more efficient way to go about the whole business of backing up r254 (return address) before function calls?
