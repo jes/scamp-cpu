@@ -10,9 +10,6 @@ The first 3 words of the disk should be:
   2. start address
   3. length
 
-I'm not yet sure whether I'll be forced to read from the disk bytewise. Regardless, words are to be
-stored big-endian as viewed from a byte-oriented system.
-
 So the disk will look like:
 
     [magic][start addr][length][kernel code][ ... gap ... ][filesystem data]
@@ -26,7 +23,7 @@ Once the kernel is loaded, its job is:
   2. initialise peripherals
   3. load init and execute it
 
-Init's job is probably just to execute the shell, at which point the system is booted and ready
+Init's job is currently just to display `/etc/motd/` and execute the shell, at which point the system is booted and ready
 to use.
 
 The program in `util/hex2disk` can take in a machine code program and turn it into a disk image
