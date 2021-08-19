@@ -1,24 +1,24 @@
 # Microcode
 
-Microcode will be stored in a ROM.
+Microcode is stored in a ROM.
 
 The immediate small-valued constant, from the low 8 bits of the instruction, can
 be placed on the bus either as 00xx or FFxx using the IOL and IOH control bits respectively.
 
-The top 256 (or whatever) bytes of RAM are available to act as "registers", which can be
+The top 256 words of RAM are available to act as "pseudo-registers", which can be
 conveniently accessed with a single-word instruction, e.g.:
 
     1. IOH AI (put FFxx into MAR)
     2. MO  YI (put RAM contents into Y register)
 
-The T-State counter counts from 0 to 7 and then wraps. The first 2 states of every instruction
+The T-state counter (or "sequencer") counts from 0 to 7 and then wraps. The first 2 states of every instruction
 are required to be:
 
     1. PO AI
     2. MO II P+
 
 In order to fetch the next instruction. These are provided implicitly by the microassembler (see
-[./uasm](./uasm)).
+[ucode/uasm](ucode/uasm)).
 
 ## Addressing
 
@@ -36,7 +36,8 @@ bus fighting at worst.
 Comments begin with "#" and run to the end of the line.
 All excess whitespace is ignored.
 
-Each instruction begins with a name for the instruction.
+Each instruction begins with a name for the instruction. This name sets the syntax needed to use
+this instruction via the assembler, and is shown in the cheatsheet.
 The name is followed by a colon, optionally followed by the number for the opcode. These
 are represented in hex and, where present, are required to count up sequentially starting from 0. Example:
 
@@ -47,7 +48,7 @@ that eventually appears at the bottom of the "hover" box on the instruction set 
 
 A line in the microcde that says " # clobbers: ..." turns into an indication in the cheatsheet
 that that instruction clobbers the given register. This is only required where it can't be
-worked out automatically by mk-table-html, e.g. for r254.
+worked out automatically by `mk-table-html`, e.g. for r254.
 
 Each microinstruction consists of several control bits, e.g.
 
@@ -153,14 +154,14 @@ The microcode instruction word encodes the control bits as follows:
 
 We still have 2 bits spare that we can toggle when !EO.
 
-Originally RT was in one of the "(unused)" slots conditional no !EO, and DO/DI were decoded
-from bus_out/bus_in. The problem is that all of these signals can cause side effects without
+Originally RT was in one of the "(unused)" slots conditional on !EO, and DO/DI were decoded
+from bus_out/bus_in. The problem is that these signals can cause side effects without
 a clock edge required, so they are moved out so that they can't "glitch" during the gate delay
 of the decoding logic.
 
 ## Extensibility
 
-In addition to the 2 unused bits, and the spare but when !EO,
+In addition to the 2 unused bits, and the spare bit when !EO,
 bus_out/bus_in have some decodings which are currently unused. In principle, as long as these unused signals are routed
 alongside everything else on the backplane, it would be possible to extend the CPU with an extra register (e.g. a
 dedicated stack pointer) or other modules, at a later date, by just plugging the new module into the backplane
@@ -218,9 +219,8 @@ say "-1 II" or "0 II". This will then proceed from T0 of instruction 255 or 0, r
 make sure that T0 of these instructions does *not* fetch the next instruction from memory, then we
 get 8 extra cycles for our useful instruction.
 
-This would need some logic to make sure that when the CPU is reset it always comes up with a
-non-0 and non-255 value in the instruction register, otherwise it could for example get stuck in the 0
-instruction.
+One problem is that we would get stuck in the 0 or 255 instruction since the first 2 T-states are not
+the standard fetch cycle.
 
 I wonder if it would work to make the 0 instruction do something like:
 
@@ -229,9 +229,23 @@ I wonder if it would work to make the 0 instruction do something like:
     MO II
 
 It would then load the next instruction. With the next instruction loaded, we'd then run that instruction's
-T0 and T1 microcode, which would repeat "PO AI" and "MO II", but now with P+, and carry on as normal.
+T0 and T1 microcode, which would repeat "PO AI" and "MO II", but now with P+, and carry on as normal, at
+the cost of 2 "wasted" cycles.
 
-But most likely it is better to just keep instructions small enough to fit into 6 T-states.
+In total we'd get 5 extra cycles to use for up to 2 long instructions: we lose 1 cycle on the "-1 II"
+step, gain 8 for the second opcode, and lose 2 more for getting back out of our instruction.
+
+Long instructions that we might want to implement include:
+
+ * xor x, ... - we could implement "xor x, y" in opcode 0 or 255, and the "ld x, ..." in the first 4 cycles at different opcodes, followed by "0 II" to get to the actual xor step?
+ * push r
+ * push i16
+ * tbsz but skips 2 words instead of just 1
+ * shl3 r
+
+Possibly it is better to just keep instructions small enough to fit into 6 T-states.
+
+But being able to implement "xor x, r" etc. would mean we could finally stop exposing the Y register.
 
 #### Conditional microjump
 
