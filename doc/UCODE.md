@@ -243,6 +243,10 @@ Long instructions that we might want to implement include:
  * tbsz but skips 2 words instead of just 1
  * shl3 r
 
+Although note that since we need to waste 2 cycles at the end anyway, the only obvious advantage this scheme has
+over 2 separate instructions that work together is you get to keep the address register intact across the 2
+different opcodes. And none of the obvious candidates look like they would make effective use of that property.
+
 Possibly it is better to just keep instructions small enough to fit into 6 T-states.
 
 But being able to implement "xor x, r" etc. would mean we could finally stop exposing the Y register.
