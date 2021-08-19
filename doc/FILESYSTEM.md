@@ -12,13 +12,13 @@ Where the device is smaller than 32M, the bitmaps should mark the unavailable bl
 
 The first 4 bytes of each block are decoded as follows:
 
-    |    type     |    length       |       next block pointer      |
+    |    type       |  length       |       next block pointer      |
     |. . . . . . . .|. . . . . . . .|. . . . . . . .|. . . . . . . .|
 
-(Although 7 bits are currently allocated for "type", only types 0 (directory) and
-1 (file) are assigned; the upper 5 bits are currently unused).
+(Although 8 bits are currently allocated for "type", only types 0 (directory) and
+1 (file) are assigned; the upper 7 bits are currently unused).
 
-"length" is 9 bits, indicating how much of the current block is to be used for
+"length" is 8 bits, indicating how many words of the current block is to be used for
 this node, not including the header.
 
 "next block pointer" contains the number of the next block that forms part of this
@@ -46,10 +46,10 @@ come first, and then the next block.
 
 A block containing a file that just contains the character "A" would look like:
 
-    |    type     |    length       |       next block pointer      | ... data ...  |
-    |0 0 0 0 0 0 1 0|0 0 0 0 0 0 0 1|0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0|0 1 0 0 0 0 0 1|
+    |    type       |  length       |       next block pointer      | ... data ...  |
+    |0 0 0 0 0 0 0 1|0 0 0 0 0 0 0 1|0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0|0 1 0 0 0 0 0 1|
 
-    type = 1
+    type = 1 (file)
     length = 1
     next = 0
     data = 'A'
