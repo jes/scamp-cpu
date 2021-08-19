@@ -12,7 +12,7 @@ so that they aren't trampled by the new session's processes.
 
 And by the time we have accepted that we need to copy the contents of `/proc/` somewhere else for
 safe-keeping, there's no reason to limit ourselves to only 1 suspended session: we could make `suspend`
-and `resume` take an argument specify the session name (kind of like GNU screen session names), and then
+and `resume` take an argument specifying the session name (kind of like GNU screen session names), and then
 we could have multiple separate sessions available.
 
 If we have multiple sessions available, then there's no reason we can't switch between them, automatically
@@ -31,7 +31,7 @@ Perhaps rather than `suspend` and `resume`, the nomenclature could be `save` and
 being that after a `suspend` you are done for the day, but after `save` you have just saved a checkpoint
 and intend to carry on.
 
-Perhaps `save("name")` could just be a system call and our hypotheticaly important long-running process
+Perhaps `save("name")` could just be a system call and our hypothetically important long-running process
 could call it of its own accord at sensible intervals so that it can be resumed even if the power goes off
 or similar.
 
