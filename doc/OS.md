@@ -1,11 +1,11 @@
 # Operating System notes
 
-We'll have a very short boot ROM permanently mapped into memory at address 0, 256 words long.
-When the machine is reset the PC would be reset to 0 which would cause the boot ROM to execute.
-The boot ROM's only job is to liaise with the storage device (hard disk? compactflash? sd? not sure yet) and load the kernel
+We have a very short boot ROM permanently mapped into memory at address 0, 256 words long.
+When the machine is reset the PC is reset to 0 which causes the boot ROM to execute.
+The boot ROM's only job is to liaise with the CompactFlash card and load the kernel
 from the first N KBytes from the storage into RAM and then jump to it. See [BOOT.md](BOOT.md).
 
-The kernel contains implementations of the system calls, and space for system buffers etc.
+The kernel contains implementations of the system calls, and space for system buffers, etc.
 
 At startup, the kernel just executes `/bin/init`.
 
@@ -77,17 +77,18 @@ The kernel would then swap the shell out once again, and this time execute grep,
 comes from the temporary file. Once grep calls exit(), the kernel would swap the shell back in
 and the second system() call would return.
 
-This method doesn't allow for example `cat foo.txt | head` to bail out of the cat early, but it still provides a lot of
-the useful properties of program composition, without needing to support actual multitasking.
+This method doesn't allow for example `cat foo.txt | head` to bail out of the cat early (i.e. you don't
+get a SIGPIPE when `head` is finished reading, because `head` doesn't start until `cat` is finished),
+but it still provides a lot of the useful properties of program composition, without needing to support actual multitasking.
 
 ### asm/slangc/slc/peepopt
 
-These would form a complete self-hosting build environment.
+These form a complete self-hosting build environment.
 
     asm: assembler
     slangc: compiler
     slc: compiler driver (slangc foo.sl | peepopt > foo.s; cat head.s foo.s foot.s | asm > foo)
-    peepopt: peephole optimiser
+    peepopt: peephole optimiser (not yet implemented)
 
 ### vi
 
@@ -103,7 +104,7 @@ unlikely that I'll ever make it vi-like, it seems good enough.
 The kinds of places that a program might want to read or write include:
 
  - files on disk
- - serial devices (I want at least 2, might not be too hard to support more)
+ - serial devices (I want at least 2, might not be too hard to support more, and the hardware has provision for 4)
 
 Currently serial devices are implemented with fixed file descriptors. Fd 3 is always the
 serial console. It might be worth making a new file type for "device files" so that the
@@ -111,9 +112,10 @@ console can be found by opening `/dev/console` instead of assuming it's always a
 The "fixed fd" system is *OK* for now, but would not scale very well, especially given that
 the fd table only has 16 slots.
 
-I'm not sure I'd ever want more than 1 storage device. Maybe I would. I am thinking
-that if I want to talk to an SD card, there'll be a dedicated program to interact with it,
-instead of mounting it on the main filesystem.
+I'm not sure whether interacting with a second CompactFlash card would be done via a userspace
+program, or whether it would be "mounted" somewhere in the main filesystem. Currently the hardware
+has 2 slots for CompactFlash cards, but there is a serious problem with the second one which means
+the computer does not work if the second CF card is installed. Need to debug this.
 
 ## Process state
 
