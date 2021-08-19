@@ -3,12 +3,11 @@
 Each word is 16 bits wide.
 
 The high 8 bits of the opcode select the actual opcode. The low 8 bits are available
-for an immediate small-valued constant. XXX: We could change this to 9/7 or 10/6 if
-we need more opcode space.
+for an immediate small-valued constant.
 
 ## Addressing modes
 
-There are kind of 2 orthogonal questions here: 1 is where the address comes from, and the other
+There are kind of 2 orthogonal questions here: one is where the address comes from, and the other
 is how many levels of indirection it takes.
 
 Numbers can come from:
@@ -51,7 +50,7 @@ It might be nice to add the hex representation of the microcode.
 
 ## Function calls
 
-Function arguments are passed on the stack, in an order not yet determined. Return address is passed
+Function arguments are passed on the stack, with the first argument pushed first. Return address is passed
 in r254. Nested function calls (which is almost all of them) need to save r254.
 
 There are 2 obvious ways to collect arguments:
@@ -143,14 +142,12 @@ Example:
     .at 0x200
     buffer: .gap 256
 
-Creates a 256-byte buffer at address 0x200, with the label "buffer".
+Creates a 256-word buffer at address 0x200, with the label "buffer".
 
 ### .str "TEXT"
 
 Generate the given string, with 1 character per word (i.e. the upper 8 bits of each value is
 always zeroes).
-
-This is not implemented in ASM-in-SLANG, simply because `slangc` does not use it.
 
 Example:
 
