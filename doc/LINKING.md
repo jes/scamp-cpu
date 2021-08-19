@@ -96,7 +96,7 @@ means they can't be pre-compiled. For this reason, `libhead.s` starts with `.at 
 but it works.
 
 This "pre-compiled blob" strategy works for as many libraries as you want, but you need all libraries to
-be compiler into a single blob. I can't think of a way to mix and match multiple blobs, because all of
+be compiled into a single blob. I can't think of a way to mix and match multiple blobs, because all of
 the addresses are static. To mix-and-match different blobs, we'd need to defer the `resolve_unbounds()`
 step of `asm` to the final compilation step, which would basically be what a proper linker would
 do. Maybe one day I'll do a proper linker.
