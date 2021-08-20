@@ -2,6 +2,10 @@
 # Based on https://viewsourcecode.org/snaptoken/kilo/
 #
 # TODO: [bug] use less memory - currently can't open slangc.sl; stop using grarrs?
+# TODO: [nice] goto line number
+# TODO: [nice] some navigation that doesn't use arrow keys
+# TODO: [nice] maybe more vi-like ui
+# TODO: [nice] delete prev/next word
 
 include "grarr.sl";
 include "stdio.sl";
@@ -513,6 +517,8 @@ savefile = func() {
 
     # TODO: [bug] on errors from open() or write(), setstatusmsg() to say
     #       what happened
+    # TODO: [nice] write something like "Writing %s..." to the status bar
+    #       while saving
 
     var fd = open(openfilename, O_WRITE|O_CREAT);
     if (fd < 0) fatal("open %s: %s", [openfilename, strerror(fd)]);
