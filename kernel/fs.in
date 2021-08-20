@@ -99,6 +99,7 @@ put -t ../sys/lib/hash.sl /src/lib/hash.sl
 put -t ../sys/lib/bigint.sl /src/lib/bigint.sl
 put -t ../sys/lib/strbuf.sl /src/lib/strbuf.sl
 put -t ../sys/lib/bufio.sl /src/lib/bufio.sl
+put -t ../sys/lib/getopt.sl /src/lib/getopt.sl
 
 mkdir proc
 mkdir tmp
