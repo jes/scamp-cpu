@@ -93,6 +93,8 @@ var fs_write = func(fd, buf, sz) {
         # write block to disk immediately if we're using the shared buffer
         if (blkbuf == BLKBUF) blkwrite(blknum, blkbuf);
 
+        # TODO: [bug] something can trigger the follownig panic in a long session
+        #       after a few rounds of edit-compile-test with kilo and slc
         if (sz gt write && nextblknum == blknum) kpanic("write: nextblknum == blknum");
 
         writesz = writesz + write;
