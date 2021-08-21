@@ -64,8 +64,22 @@ var divmod = asm {
     ld r9, 3(x) # r9 = denom
     ld r10, 4(x) # r10 = num
 
-    # TODO: [bug] if num or denom are negative, make them positive
-    #       and toggle a flag to invert the sign at the end?
+    ld r13, 0 # numerator negative?
+    ld r14, 0 # denominator negative?
+
+    # is numerator negative? Set r13 and make it positive
+    test r10
+    jge num_not_neg
+    ld r13, 1
+    neg r10
+    num_not_neg:
+
+    # is denominator negative? Set r14 and make it positive
+    test r9
+    jge denom_not_neg
+    ld r14, 1
+    neg r9
+    denom_not_neg:
 
     ld r4, 0 # r4 = Q
     ld r5, 0 # r5 = R
@@ -101,6 +115,18 @@ var divmod = asm {
         # i--
         dec r6
         jge divmod_loop
+
+    # if exactly one of numerator and denominator are negative, quotient is negative
+    sub r14, r13
+    jz positive_quotient
+    neg r4
+    positive_quotient:
+
+    # if numerator is negative, remainder is negative
+    test r13
+    jz positive_numerator
+    neg r5
+    positive_numerator:
 
     # if pdiv or pmod are null, they'll point to rom, so writing to them is a no-op
     # *pdiv = Q
