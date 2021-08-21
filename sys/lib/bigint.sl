@@ -310,22 +310,64 @@ var bigsetbit = func(big, n, v) {
 # *divp = big1 / big2
 # *modp = big1 % big2
 # both *divp and *modp are new allocations; big1 and big2 are unchanged
-# TODO: [bug] handle negative arguments better - what are the rules for div
-#       and mod, with negative numerator, negative denominator, and both negative?
 # https://en.wikipedia.org/wiki/Division_algorithm#Integer_division_(unsigned)_with_remainder
 var bigdivmod = func(big1, big2, divp, modp) {
+    var num = bigclone(big1);
+    var denom = bigclone(big2);
+
+    var negnum = 0;
+    var negdenom = 0;
+
+    # is numerator negative? set negnum and make it positive
+    if (bigcmpw(num,0) < 0) {
+        negnum = 1;
+        bigsetw(num, 0);
+        bigsub(num, big1);
+    };
+
+    # is denominator negative? set negdenom and make it positive
+    if (bigcmpw(denom,0) < 0) {
+        negdenom = 1;
+        bigsetw(denom, 0);
+        bigsub(denom, big2);
+    };
+
+    printf("big1=[%d,%d,%d,%d], num=[%d,%d,%d,%d]\n", [big1[3],big1[2],big1[1],big1[0],num[3],num[2],num[1],num[0]]);
+    printf("big2=[%d,%d,%d,%d], denom=[%d,%d,%d,%d]\n", [big2[3],big2[2],big2[1],big2[0],denom[3],denom[2],denom[1],denom[0]]);
+
     *divp = bignew(0);
     *modp = bignew(0);
     var i = bigint_bits-1;
     while (i != -1) {
         bigadd(*modp, *modp); # R := R << 1
-        if (bigbit(big1, i)) bigaddw(*modp, 1); # R(0) := N(i)
-        if (bigcmp(*modp, big2) >= 0) { # if R >= D then
-            bigsub(*modp, big2); # R := R - D
+        if (bigbit(num, i)) bigaddw(*modp, 1); # R(0) := N(i)
+        if (bigcmp(*modp, denom) >= 0) { # if R >= D then
+            bigsub(*modp, denom); # R := R - D
             bigsetbit(*divp, i, 1); # Q(i) := 1
         };
         i--;
     };
+
+    bigfree(num);
+    bigfree(denom);
+
+    # if exactly one of numerator and denominator are negative, quotient is negative
+    var tmp;
+    if (negnum != negdenom) {
+        tmp = bignew(0);
+        bigsub(tmp, *divp);
+        bigset(*divp, tmp);
+        bigfree(tmp);
+    };
+
+    # if numerator is negative, remainder is negative
+    if (negnum) {
+        tmp = bignew(0);
+        bigsub(tmp, *modp);
+        bigset(*modp, tmp);
+        bigfree(tmp);
+    };
+
     return *divp;
 };
 
