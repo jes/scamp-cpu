@@ -3,7 +3,7 @@ EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 2 3
+Sheet 3 3
 Title ""
 Date ""
 Rev ""
@@ -31,37 +31,37 @@ Text GLabel 4550 2300 0    50   Input ~ 0
 Text GLabel 5050 2300 2    50   Input ~ 0
 GND
 Text GLabel 4550 2400 0    50   Input ~ 0
-D7
+245D7
 Text GLabel 4550 2500 0    50   Input ~ 0
-D6
+245D6
 Text GLabel 4550 2600 0    50   Input ~ 0
-D5
+245D5
 Text GLabel 4550 2700 0    50   Input ~ 0
-D4
+245D4
 Text GLabel 4550 2800 0    50   Input ~ 0
-D3
+245D3
 Text GLabel 4550 2900 0    50   Input ~ 0
-D2
+245D2
 Text GLabel 4550 3000 0    50   Input ~ 0
-D1
+245D1
 Text GLabel 4550 3100 0    50   Input ~ 0
-D0
+245D0
 Text GLabel 5050 2400 2    50   Input ~ 0
-D8
+245D8
 Text GLabel 5050 2500 2    50   Input ~ 0
-D9
+245D9
 Text GLabel 5050 2600 2    50   Input ~ 0
-D10
+245D10
 Text GLabel 5050 2700 2    50   Input ~ 0
-D11
+245D11
 Text GLabel 5050 2800 2    50   Input ~ 0
-D12
+245D12
 Text GLabel 5050 2900 2    50   Input ~ 0
-D13
+245D13
 Text GLabel 5050 3000 2    50   Input ~ 0
-D14
+245D14
 Text GLabel 5050 3100 2    50   Input ~ 0
-D15
+245D15
 Text GLabel 4550 3200 0    50   Input ~ 0
 GND
 Text GLabel 5050 3300 2    50   Input ~ 0
