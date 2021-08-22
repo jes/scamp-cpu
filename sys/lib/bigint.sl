@@ -332,9 +332,6 @@ var bigdivmod = func(big1, big2, divp, modp) {
         bigsub(denom, big2);
     };
 
-    printf("big1=[%d,%d,%d,%d], num=[%d,%d,%d,%d]\n", [big1[3],big1[2],big1[1],big1[0],num[3],num[2],num[1],num[0]]);
-    printf("big2=[%d,%d,%d,%d], denom=[%d,%d,%d,%d]\n", [big2[3],big2[2],big2[1],big2[0],denom[3],denom[2],denom[1],denom[0]]);
-
     *divp = bignew(0);
     *modp = bignew(0);
     var i = bigint_bits-1;
