@@ -79,8 +79,8 @@ var blkfindfree = func() {
     # TODO: [nice] don't kernel panic when disk is full
     if (bitmapblk == 16) kpanic("block device full");
 
-    bitmapblk = bitmapblk + freeblkblk;
-    blkgroup = blkgroup + freeblkgroup;
+    bitmapblk = (bitmapblk + freeblkblk) & 0xf;
+    blkgroup = (blkgroup + freeblkgroup) & 0xff;
     # keep track of the block that we found a free block in, so we can start searching
     # from there next time
     freeblkblk = bitmapblk;

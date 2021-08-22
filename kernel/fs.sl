@@ -93,8 +93,6 @@ var fs_write = func(fd, buf, sz) {
         # write block to disk immediately if we're using the shared buffer
         if (blkbuf == BLKBUF) blkwrite(blknum, blkbuf);
 
-        # TODO: [bug] something can trigger the follownig panic in a long session
-        #       after a few rounds of edit-compile-test with kilo and slc
         if (sz gt write && nextblknum == blknum) kpanic("write: nextblknum == blknum");
 
         writesz = writesz + write;
@@ -115,6 +113,8 @@ var fs_write = func(fd, buf, sz) {
         if (nextblknum == nextfreeblk) {
             blksetused(nextblknum, 1);
             blkfindfree();
+
+            if (nextblknum == nextfreeblk) kpanic("write: nextfreeblk is not free");
 
             blksettype(TYPE_FILE, blkbuf);
             blksetlen(0, blkbuf);
