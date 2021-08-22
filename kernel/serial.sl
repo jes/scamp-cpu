@@ -255,7 +255,7 @@ var ser_init = func() {
         *(p+BASEPORT) = ser_baseports[i];
         *(p+BUFPTR) = bufp;
         *(p+SERFLAGS) = SER_COOKED;
-        if (bufp ge (ser_buf_area + ser_bufspace)) kpanic("insufficient ser_bufspace");
+        if (bufp ge (ser_buf_area + ser_bufspace)) kpanic("insufficient ser_bufspace, update CONSOLE_BUFSPACE");
         ser_setreadpos(bufp, 0);
         ser_setreadmaxpos(bufp, 0);
         ser_setwritepos(bufp, 0);

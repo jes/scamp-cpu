@@ -17,6 +17,7 @@ var inp = asm {
     #   in r0, x
     # results in corrupting the state of the UART, so we instead
     # input into x and then load r0 from x
+    # TODO: revisit the above, probably not true any more
     ld r0, x
     in x, r0
     ld r0, x
@@ -39,6 +40,7 @@ var kputc = asm {
     kputc:
         # wait for uart to be ready
         # TODO: [bug] why are the nops required? it seems to corrupt the uart state if they're not here
+        # TODO: revisit the above, probably not true any more
         nop
         in x, SERIALDEVLSR
         nop
