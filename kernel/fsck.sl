@@ -35,7 +35,7 @@ var blkisfree = func(blk) {
     var usedmap = 0x100;
 
     var addr = shl(bitmapblk,8) | blkgroup;
-    return (usedmap[addr] & shl(1,i)) == 0;
+    return (usedmap[addr] & powers_of_2[i]) == 0;
 };
 
 # walk the blocks in a file

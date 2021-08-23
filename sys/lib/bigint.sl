@@ -369,7 +369,7 @@ bigbit = func(big, n) {
 
     divmod(n, 16, &word, &bit);
 
-    if (big[word] & shl(1, bit)) return 1
+    if (big[word] & powers_of_2[bit]) return 1
     else return 0;
 };
 
@@ -381,9 +381,9 @@ var bigsetbit = func(big, n, v) {
     divmod(n, 16, &word, &bit);
 
     if (v) {
-        *(big+word) = big[word] | shl(1, bit);
+        *(big+word) = big[word] | powers_of_2[bit];
     } else {
-        *(big+word) = big[word] & ~shl(1, bit);
+        *(big+word) = big[word] & ~powers_of_2[bit];
     };
 };
 
