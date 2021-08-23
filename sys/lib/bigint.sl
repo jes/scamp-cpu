@@ -357,12 +357,38 @@ bigmulw = func(big, w) {
     return big;
 };
 
+# shift-left a small-valued number by 4 bits
+# n must be < 4096 (12 bits) due to tbsz limitation
+# usage: _byteshr4(n)
+var _byteshr4 = asm {
+    pop x
+    ld r0, x
+    ld r1, r254 # stash return address
+    ld r254, 0
+    tbsz r0, 0x800
+    sb r254, 0x80
+    tbsz r0, 0x400
+    sb r254, 0x40
+    tbsz r0, 0x200
+    sb r254, 0x20
+    tbsz r0, 0x100
+    sb r254, 0x10
+    tbsz r0, 0x80
+    sb r254, 0x8
+    tbsz r0, 0x40
+    sb r254, 0x4
+    tbsz r0, 0x20
+    sb r254, 0x2
+    tbsz r0, 0x10
+    sb r254, 0x1
+    ld r0, r254
+    jmp r1 # return
+};
+
 # return the nth bit of big (where 0 is least-significant)
 bigbit = func(big, n) {
-    var word;
-    var bit;
-
-    divmod(n, 16, &word, &bit);
+    var word = _byteshr4(n);
+    var bit = n&0xf;
 
     if (big[word] & powers_of_2[bit]) return 1
     else return 0;
@@ -370,10 +396,8 @@ bigbit = func(big, n) {
 
 # set the nth bit of big (where 0 is lsb) to v (0 or 1)
 var bigsetbit = func(big, n, v) {
-    var word;
-    var bit;
-
-    divmod(n, 16, &word, &bit);
+    var word = _byteshr4(n);
+    var bit = n&0xf;
 
     if (v) {
         *(big+word) = big[word] | powers_of_2[bit];
