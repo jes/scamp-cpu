@@ -226,38 +226,33 @@ var bigadd = asm {
     ld r1, x # big2
     pop x
     ld r0, x # big1
+    ld r10, x # big1
 
     ld r2, 0 # carry
-    ld r3, 0 # i
+    ld r3, (_bigint_prec) # i = bigint_prec+1
+    inc r3
     # r4 == prev
 
     bigadd_loop:
-        # if (i == bigint_prec) break;
-        cmp r3, (_bigint_prec)
+        # if (--i == 0) break;
+        dec r3
         jz bigadd_ret
 
         # r5 = big1[i]
-        ld x, r0
-        add x, r3
-        ld r5, (x)
-        ld r4, (x) # prev = big1[i]
+        ld x, (r10)
+        ld r5, x
+        ld r4, x # prev = big1[i]
 
-        # r6 = big2[i]
-        ld x, r1
-        add x, r3
-        ld r6, (x)
+        # x = big2[i]
+        ld x, (r1++)
 
         # r5 = big1[i] + big2[i] + carry
-        add r5, r6 # + big2[i]
+        add r5, x # + big2[i]
         add r5, r2 # + carry
 
         # big1[i] = r5
-        ld x, r0
-        add x, r3
+        ld x, r10++
         ld (x), r5
-
-        # i++
-        inc r3
 
         # carry gets set to 1 if the addition overflowed, which is true if either of:
         #  - (big1[i] == prev) && carry
@@ -291,11 +286,11 @@ var bigadd = asm {
 
         value_cmp:
         # signs are equal: compare the values
-        sub r4, r5 # prev -= big1[i]
+        cmp r4, r5 # prev -= big1[i]
         jlt bigadd_loop
 
         do_carry:
-        ld r2, 1
+        inc r2
         jmp bigadd_loop
 
     bigadd_ret:
