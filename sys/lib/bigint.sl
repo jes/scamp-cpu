@@ -207,19 +207,101 @@ bigsetw = func(big, w) {
 };
 
 # big1 = big1 + big2
-var bigadd = func(big1, big2) {
-    var carry = 0;
-    var i = 0;
-    var prev;
+#var bigadd = func(big1, big2) {
+#    var carry = 0;
+#    var i = 0;
+#    var prev;
+#
+#    while (i != bigint_prec) {
+#        prev = big1[i];
+#        *(big1+i) = big1[i] + big2[i] + carry;
+#        carry = (big1[i] lt prev) || (carry && (big1[i] == prev));
+#        i++;
+#    };
+#
+#    return big1;
+#};
+var bigadd = asm {
+    pop x
+    ld r1, x # big2
+    pop x
+    ld r0, x # big1
 
-    while (i != bigint_prec) {
-        prev = big1[i];
-        *(big1+i) = big1[i] + big2[i] + carry;
-        carry = (big1[i] lt prev) || (carry && (big1[i] == prev));
-        i++;
-    };
+    ld r2, 0 # carry
+    ld r3, 0 # i
+    # r4 == prev
 
-    return big1;
+    bigadd_loop:
+        # if (i == bigint_prec) break;
+        ld r5, r3
+        sub r5, (_bigint_prec)
+        jz bigadd_ret
+
+        # r5 = big1[i]
+        ld x, r0
+        add x, r3
+        ld r5, (x)
+        ld r4, (x) # prev = big1[i]
+
+        # r6 = big2[i]
+        ld x, r1
+        add x, r3
+        ld r6, (x)
+
+        # r5 = big1[i] + big2[i] + carry
+        add r5, r6 # + big2[i]
+        add r5, r2 # + carry
+
+        # big1[i] = r5
+        ld x, r0
+        add x, r3
+        ld (x), r5
+
+        # i++
+        inc r3
+
+        # carry gets set to 1 if the addition overflowed, which is true if either of:
+        #  - (big1[i] == prev) && carry
+        #  - big1[i] lt prev, which is true if any of:
+        #     - prev has high bit set and big1[i] does not
+        #     - sign bits are equal and big1[i] < prev
+
+        ld r7, r4
+        sub r7, r5
+        jnz prev_ne_big1i
+        # prev == big1[i], so we leave the carry flag as it was
+        jmp bigadd_loop
+
+        prev_ne_big1i:
+
+        # carry = 0
+        ld r2, 0
+
+        # now we need to see if big1[i] is less than prev
+        # first compare the signs:
+        ld r7, r4
+        ld r8, r5
+        and r7, 32768 # only retain sign bit
+        and r8, 32768 # only retain sign bit
+        sub r7, r8
+        jz value_cmp
+
+        # signs differ: if prev has high bit set, then big1[i] lt prev, so we carry, otherwise not
+        test r4
+        jlt do_carry
+        jmp bigadd_loop
+
+        value_cmp:
+        # signs are equal: compare the values
+        sub r4, r5 # prev -= big1[i]
+        jlt bigadd_loop
+
+        do_carry:
+        ld r2, 1
+        jmp bigadd_loop
+
+    bigadd_ret:
+        ret
 };
 
 # big = big + w
