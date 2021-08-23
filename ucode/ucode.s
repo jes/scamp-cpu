@@ -91,7 +91,13 @@ add (i8h), (i16): # Add <tt>(i16)</tt> to the value in <tt>r</tt>.
     MO YI
     MI Y+X
 
-nop:
+cmp (i8h), (i16):
+    PO AI
+    MO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    Y-X
 
 sub x, (i8h): # Subtract <tt>r</tt> from <tt>x</tt>.
     IOH AI
@@ -186,7 +192,12 @@ sub (i8h), (i16): # Subtract the value in <tt>(i16)</tt> from <tt>r</tt>.
     MO YI
     MI Y-X
 
-nop:
+cmp (i8h), i16:
+    PO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    Y-X
 
 and x, (i8h): # AND <tt>r</tt> with <tt>x</tt>.
     IOH AI

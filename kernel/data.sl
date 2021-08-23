@@ -42,8 +42,7 @@ var fdbaseptr = asm {
     ld r1, x # fd
 
     # if (fd ge nfds) return [0,0,0,0,0,0,0,0];
-    ld r2, r1
-    sub r2, (_nfds)
+    cmp r1, (_nfds)
     jge fdbaseptr_badfd
 
     # return fdtable+shl(fd,3)

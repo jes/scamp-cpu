@@ -163,8 +163,7 @@ var asm_nextchar = asm {
     pop x
     ld r254, x
 
-    ld x, r0
-    sub x, 10 # '\n'
+    cmp r0, 10 # '\n'
     jnz nextchar_notnl
     inc (_line)
     inc (_pos)

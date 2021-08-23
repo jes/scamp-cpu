@@ -233,8 +233,7 @@ var bigadd = asm {
 
     bigadd_loop:
         # if (i == bigint_prec) break;
-        ld r5, r3
-        sub r5, (_bigint_prec)
+        cmp r3, (_bigint_prec)
         jz bigadd_ret
 
         # r5 = big1[i]
@@ -266,8 +265,7 @@ var bigadd = asm {
         #     - prev has high bit set and big1[i] does not
         #     - sign bits are equal and big1[i] < prev
 
-        ld r7, r4
-        sub r7, r5
+        cmp r4, r5
         jnz prev_ne_big1i
         # prev == big1[i], so we leave the carry flag as it was
         jmp bigadd_loop
