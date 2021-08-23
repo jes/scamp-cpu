@@ -233,7 +233,6 @@ var genop = func(op) {
         bputs(OUT, "and r1, 32768 #peepopt:test\n"); # r1 = r0 & 0x8000
         bputs(OUT, "and r2, 32768 #peepopt:test\n"); # r2 = x & 0x8000
         bputs(OUT, "sub r1, r2 #peepopt:test\n");
-        bputs(OUT, "ld x, r3\n"); # doesn't clobber flags
         bputs(OUT, "jz "); plabel(docmp); bputs(OUT, "\n"); # only directly compare x and r0 if they're both negative or both positive
 
         # just compare signs
@@ -245,6 +244,7 @@ var genop = func(op) {
 
         # do the actual magnitude comparison
         plabel(docmp); bputs(OUT, ":\n");
+        bputs(OUT, "ld x, r3\n");
         if (subxr0) bputs(OUT, "sub x, r0 #peepopt:test\n")
         else        bputs(OUT, "sub r0, x #peepopt:test\n");
         bprintf(OUT, "ld x, %d\n", [match]); # doesn't clobber flags

@@ -926,7 +926,6 @@ sub genop {
         print "and r1, 32768 #peepopt:test\n"; # r1 = r0 & 0x8000
         print "and r2, 32768 #peepopt:test\n"; # r2 = x & 0x8000
         print "sub r1, r2 #peepopt:test\n";
-        print "ld x, r3\n"; # doesn't clobber flags
         print "jz $docmp\n"; # only directly compare x and r0 if they're both negative or both positive
 
         # just compare signs
@@ -938,6 +937,7 @@ sub genop {
 
         # do the actual magnitude comparison
         print "$docmp:\n";
+        print "ld x, r3\n";
         print "sub $xr0 #peepopt:test\n";
         print "ld x, $match\n"; # doesn't clobber flags
         print "jlt $lt\n";
