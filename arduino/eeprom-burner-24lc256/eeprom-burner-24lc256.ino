@@ -5,8 +5,8 @@
  * 
  * Assumed pin wiring:
  *  * pin 8 to +5v
- *  * pin 5 to A4, with 10k ohm pull-down
- *  * pin 6 to A5
+ *  * pin 5 to A4, with 10k ohm pull-up
+ *  * pin 6 to A5, with 10k ohm pull-up
  *  * everything else to ground
  */
 
@@ -54,7 +54,7 @@ int read_data(int addr) {
   Wire.endTransmission();
   Wire.requestFrom(eeprom,1);
   if (Wire.available())
-  rdata = Wire.read();
+    rdata = Wire.read();
   return rdata;
 }
 
