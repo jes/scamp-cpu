@@ -91,13 +91,13 @@ add (i8h), (i16): # Add <tt>(i16)</tt> to the value in <tt>r</tt>.
     MO YI
     MI Y+X
 
-cmp (i8h), (i16):
+call i16: # Set <tt>r254</tt> to the return address. Jump to <tt>i16</tt>.
+    # clobbers: r254
+    -2 AI
+    PO YI
+    Y+1 MI
     PO AI
-    MO AI
-    MO XI P+
-    IOH AI
-    MO YI
-    Y-X
+    MO JMP
 
 sub x, (i8h): # Subtract <tt>r</tt> from <tt>x</tt>.
     IOH AI
@@ -192,12 +192,113 @@ sub (i8h), (i16): # Subtract the value in <tt>(i16)</tt> from <tt>r</tt>.
     MO YI
     MI Y-X
 
-cmp (i8h), i16:
+call (i16): # Set <tt>r254</tt> to the return address. Jump to <tt>(i16)</tt>.
+    # clobbers: r254
+    -2 AI
+    PO YI
+    Y+1 MI
+    PO AI
+    MO AI
+    MO JMP
+
+cmp x, (i8h): # Set flags from subtracting <tt>r</tt> from <tt>x</tt>.
+    IOH AI
+    MO YI
+    X-Y
+
+cmp x, i16: # Set flags from subtracting <tt>i16</tt> from <tt>x</tt>.
+    PO AI
+    MO YI P+
+    X-Y
+
+cmp x, (i16): # Set flags from subtracting the value in <tt>(i16)</tt> from <tt>x</tt>.
+    PO AI
+    MO AI P+
+    MO YI
+    X-Y
+
+cmp x, ((i8h)): # Set flags from subtracting the value in <tt>(r)</tt> from <tt>x</tt>.
+    IOH AI
+    MO AI
+    MO YI
+    X-Y
+
+cmp x, ((i8h)++): # Set flags from subtracting the value in <tt>(r)</tt> from <tt>x</tt>. Post-increment <tt>r</tt>.
+    IOH AI
+    MO YI
+    Y+1 MI
+    YO AI
+    MO YI
+    X-Y
+
+cmp x, ((i8h)--): # Set flags from subtracting the value in <tt>(r)</tt> from <tt>x</tt>. Post-decrement <tt>r</tt>.
+    IOH AI
+    MO YI
+    Y-1 MI
+    YO AI
+    MO YI
+    X-Y
+
+cmp x, i8l: # Set flags from subtracting <tt>i8l</tt> from <tt>x</tt>.
+    IOL YI
+    X-Y
+
+cmp x, i8h: # Set flags from subtracting <tt>i8h</tt> from <tt>x</tt>.
+    IOH YI
+    X-Y
+
+cmp (i8h), x: # Set flags from subtracting <tt>x</tt> from <tt>r</tt>.
+    IOH AI
+    MO YI
+    Y-X
+
+cmp (i16), x: # Set flags from subtracting <tt>x</tt> from the value in <tt>(i16)</tt>.
+    PO AI
+    MO AI P+
+    MO YI
+    Y-X
+
+cmp (i16), i8l: # Set flags from subtracting <tt>i8l</tt> from the value in <tt>(i16)</tt>.
+    PO AI
+    MO AI P+
+    MO XI
+    IOL YI
+    X-Y
+
+cmp ((i8h)), x: # Set flags from subtracting <tt>x</tt> from the value in <tt>(r)</tt>.
+    IOH AI
+    MO AI
+    MO YI
+    Y-X
+
+cmp (i8h), i16: # Set flags from subtracting <tt>i16</tt> from <tt>r</tt>.
     PO AI
     MO XI P+
     IOH AI
     MO YI
     Y-X
+
+cmp ((i8h)), i16: # Set flags from subtracting <tt>i16</tt> from the value in <tt>(r)</tt>.
+    PO AI
+    MO XI P+
+    IOH AI
+    MO AI
+    MO YI
+    Y-X
+
+cmp (i8h), (i16): # Set flags from subtracting the value in <tt>(i16)</tt> from <tt>r</tt>.
+    PO AI
+    MO AI
+    MO XI P+
+    IOH AI
+    MO YI
+    Y-X
+
+call x: # Set <tt>r254</tt> to the return address. Jump to <tt>x</tt>.
+    # clobbers: r254
+    -2 AI
+    PO MI
+    XO JMP
 
 and x, (i8h): # AND <tt>r</tt> with <tt>x</tt>.
     IOH AI
@@ -292,7 +393,12 @@ and (i8h), (i16): # AND the value in <tt>(i16)</tt> with <tt>r</tt>.
     MO YI
     MI Y&X
 
-nop:
+call (x): # Set <tt>r254</tt> to the return address. Jump to <tt>(x)</tt>.
+    # clobbers: r254
+    -2 AI
+    PO MI
+    XO AI
+    MO JMP
 
 or x, (i8h): # OR <tt>r</tt> into <tt>x</tt>.
     IOH AI
@@ -387,7 +493,13 @@ or (i8h), (i16): # OR the value in <tt>(i16)</tt> into <tt>r</tt>.
     MO YI
     MI Y|X
 
-nop:
+xor x, y: # XOR <tt>y</tt> with <tt>x</tt>.
+    # clobbers: r254
+    -2 AI
+    MI X|Y
+    YI ~(X&Y)
+    MO XI
+    XI X&Y
 
 nand x, (i8h): # NAND <tt>r</tt> with <tt>x</tt>.
     IOH AI
@@ -482,7 +594,14 @@ nand (i8h), (i16): # NAND the value in <tt>(i16)</tt> with <tt>r</tt>.
     MO YI
     MI ~(Y&X)
 
-nop:
+xor x, i8l: # XOR <tt>i8l</tt> with <tt>x</tt>.
+    # clobbers: r254
+    -2 AI
+    IOL YI
+    MI X|Y
+    YI ~(X&Y)
+    MO XI
+    XI X&Y
 
 nor x, (i8h): # NOR <tt>r</tt> with <tt>x</tt>.
     IOH AI
@@ -577,25 +696,6 @@ nor (i8h), (i16): # NOR the value in <tt>(i16)</tt> with <tt>r</tt>.
     MO YI
     MI ~(Y|X)
 
-nop:
-
-xor x, y: # XOR <tt>y</tt> with <tt>x</tt>.
-    # clobbers: r254
-    -2 AI
-    MI X|Y
-    YI ~(X&Y)
-    MO XI
-    XI X&Y
-
-xor x, i8l: # XOR <tt>i8l</tt> with <tt>x</tt>.
-    # clobbers: r254
-    -2 AI
-    IOL YI
-    MI X|Y
-    YI ~(X&Y)
-    MO XI
-    XI X&Y
-
 xor x, i8h: # XOR <tt>i8h</tt> with <tt>x</tt>.
     # clobbers: r254
     -2 AI
@@ -651,6 +751,37 @@ sb (65534), i8l: # Set bits in <tt>r254</tt> based on <tt>i8l</tt>. i.e. <tt>r25
     IOL YI
     MI X|Y
 
+push x: # Store <tt>x</tt> to the value in <tt>(sp)</tt>. Post-decrement <tt>sp</tt>.
+    -1 AI
+    MO YI
+    MO AI
+    MI XO
+    -1 AI
+    Y-1 MI
+
+push i8l: # Store <tt>i8l</tt> to the value in <tt>(sp)</tt>. Post-decrement <tt>sp</tt>.
+    -1 AI
+    MO YI
+    MO AI
+    MI IOL
+    -1 AI
+    Y-1 MI
+
+push i8h: # Store <tt>i8h</tt> to the value in <tt>(sp)</tt>. Post-decrement <tt>sp</tt>.
+    -1 AI
+    MO YI
+    MO AI
+    MI IOH
+    -1 AI
+    Y-1 MI
+
+pop x: # Pre-increment <tt>sp</tt>. Load <tt>x</tt> from the value in <tt>(sp)</tt>.
+    -1 AI
+    MO XI
+    MI X+1
+    AI X+1
+    MO XI
+
 ld x, i8l(x): # Load the value in <tt>(x+i8l)</tt> into <tt>x</tt>.
     IOL YI
     X+Y AI
@@ -667,10 +798,6 @@ ld x, i8h((65535)): # Load the value in <tt>(sp+i8h)</tt> into <tt>x</tt>.
     IOH XI
     X+Y AI
     MO XI
-
-nop:
-nop:
-nop:
 
 ld x, (i8h): # Load <tt>r</tt> into <tt>x</tt>.
     IOH AI
@@ -805,8 +932,6 @@ ld x, i8l((65535)): # Load the value in <tt>(sp+i8l)</tt> into <tt>x</tt>.
     IOL XI
     X+Y AI
     MO XI
-
-nop:
 
 ld (i8h), 1((65535)): # Load the value in <tt>(sp+1)</tt> into <tt>r</tt>.
     -1 AI
@@ -949,7 +1074,27 @@ ld y, i16: # Load <tt>i16</tt> into <tt>y</tt>. Only useful for <tt>xor x, y</tt
     PO AI
     MO YI P+
 
-nop:
+jr+ i8l: # Jump forwards relative to the address of the next instruction. <tt>jr+ 0</tt> is a no-op.
+    PO YI
+    IOL XI
+    JMP X+Y
+
+jr- i8l: # Jump backwards relative to the address of the next instruction. <tt>jr- 0</tt> is a no-op. <tt>jr- 1</tt> is an infinite loop.
+    PO YI
+    IOL XI
+    JMP Y-X
+
+jr+ (i8h): # Jump forwards relative to the address of the next instruction. <tt>jr+ 0</tt> is a no-op.
+    PO YI
+    IOH AI
+    MO XI
+    JMP X+Y
+
+jr- (i8h): # Jump backwards relative to the address of the next instruction. <tt>jr- 0</tt> is a no-op. <tt>jr- 1</tt> is an infinite loop.
+    PO YI
+    IOH AI
+    MO XI
+    JMP Y-X
 
 jmp x: # Jump to <tt>x</tt>.
     XO JMP
@@ -972,27 +1117,27 @@ jge x: # Jump to <tt>x</tt> if <tt>LT</tt> is not set.
 jle x: # Jump to <tt>x</tt> if <tt>Z</tt> is set or <tt>LT</tt> is set.
     XO JZ JLT
 
-jr+ i8l: # Jump forwards relative to the address of the next instruction. <tt>jr+ 0</tt> is a no-op.
-    PO YI
-    IOL XI
-    JMP X+Y
-
-jr- i8l: # Jump backwards relative to the address of the next instruction. <tt>jr- 0</tt> is a no-op. <tt>jr- 1</tt> is an infinite loop.
-    PO YI
-    IOL XI
-    JMP Y-X
-
-jr+ (i8h): # Jump forwards relative to the address of the next instruction. <tt>jr+ 0</tt> is a no-op.
-    PO YI
+in x, (i8h): # Input from address <tt>r</tt> to <tt>x</tt>.
     IOH AI
-    MO XI
-    JMP X+Y
+    MO AI
+    DO XI
 
-jr- (i8h): # Jump backwards relative to the address of the next instruction. <tt>jr- 0</tt> is a no-op. <tt>jr- 1</tt> is an infinite loop.
-    PO YI
+in x, i16: # Input from address <tt>i16</tt> to <tt>x</tt>.
+    PO AI
+    MO AI P+
+    DO XI
+
+in x, (i16): # Input from the address in <tt>(i16)</tt> to <tt>x</tt>.
+    PO AI
+    MO AI P+
+    MO AI
+    DO XI
+
+in x, ((i8h)): # Input from the address in <tt>(r)</tt> to <tt>x</tt>.
     IOH AI
-    MO XI
-    JMP Y-X
+    MO AI
+    MO AI
+    DO XI
 
 inc x: # Increment <tt>x</tt>.
     XI X+1
@@ -1047,36 +1192,26 @@ jle i16: # Jump to <tt>i16</tt> if <tt>Z</tt> is set or <tt>LT</tt> is set.
     PO AI
     MO JZ JLT P+
 
-push x: # Store <tt>x</tt> to the value in <tt>(sp)</tt>. Post-decrement <tt>sp</tt>.
-    -1 AI
-    MO YI
-    MO AI
-    MI XO
-    -1 AI
-    Y-1 MI
+in x, i8l: # Input from address <tt>i8l</tt> to <tt>x</tt>.
+    IOL AI
+    DO XI
 
-push i8l: # Store <tt>i8l</tt> to the value in <tt>(sp)</tt>. Post-decrement <tt>sp</tt>.
-    -1 AI
-    MO YI
-    MO AI
-    MI IOL
-    -1 AI
-    Y-1 MI
+in x, i8h: # Input from address <tt>i8h</tt> to <tt>x</tt>.
+    IOH AI
+    DO XI
 
-push i8h: # Store <tt>i8h</tt> to the value in <tt>(sp)</tt>. Post-decrement <tt>sp</tt>.
-    -1 AI
-    MO YI
-    MO AI
-    MI IOH
-    -1 AI
-    Y-1 MI
+in (i8h), x: # Input from address <tt>x</tt> to <tt>r</tt>.
+    AI XO
+    DO YI
+    IOH AI
+    MI YO
 
-pop x: # Pre-increment <tt>sp</tt>. Load <tt>x</tt> from the value in <tt>(sp)</tt>.
-    -1 AI
-    MO XI
-    MI X+1
-    AI X+1
-    MO XI
+in (i16), x: # Input from address <tt>x</tt> to the value in <tt>(i16)</tt>.
+    AI XO
+    DO YI
+    PO AI
+    MO AI P+
+    MI YO
 
 dec x: # Decrement <tt>x</tt>.
     XI X-1
@@ -1138,34 +1273,29 @@ jle (i16): # Jump to the address in <tt>(i16)</tt> if <tt>Z</tt> is set or <tt>L
     MO AI P+
     MO JZ JLT
 
-call i16: # Set <tt>r254</tt> to the return address. Jump to <tt>i16</tt>.
-    # clobbers: r254
-    -2 AI
-    PO YI
-    Y+1 MI
-    PO AI
-    MO JMP
-
-call (i16): # Set <tt>r254</tt> to the return address. Jump to <tt>(i16)</tt>.
-    # clobbers: r254
-    -2 AI
-    PO YI
-    Y+1 MI
-    PO AI
+in ((i8h)), x: # Input from address <tt>x</tt> to the value in <tt>(r)</tt>.
+    AI XO
+    DO YI
+    IOH AI
     MO AI
-    MO JMP
+    MI YO
 
-ret: # Jump to <tt>r254</tt>.
-    -2 AI
-    MO JMP
+in (i8h), i16: # Input from address <tt>i16</tt> to <tt>r</tt>.
+    PO AI
+    MO AI P+
+    YI DO
+    IOH AI
+    MI YO
 
-ret i8l: # Increase <tt>sp</tt> by <tt>i8l</tt>. Jump to <tt>r254</tt>.
-    -1 AI
-    MO YI
-    IOL XI
-    MI X+Y
-    -2 AI
-    MO JMP
+in ((i8h)), i16: # Input from address <tt>i16</tt> to the value in <tt>(r)</tt>.
+    PO AI
+    MO AI P+
+    YI DO
+    IOH AI
+    MO AI
+    MI YO
+
+nop:
 
 neg x: # Arithmetic negate <tt>x</tt>.
     XI -X
@@ -1192,157 +1322,17 @@ neg (i16): # Arithmetic negate the value in <tt>(i16)</tt>.
     MO YI
     MI -Y
 
-nop:
-nop:
-nop:
-nop:
-nop:
-nop:
-nop:
-
-call x: # Set <tt>r254</tt> to the return address. Jump to <tt>x</tt>.
-    # clobbers: r254
-    -2 AI
-    PO MI
-    XO JMP
-
-call (x): # Set <tt>r254</tt> to the return address. Jump to <tt>(x)</tt>.
-    # clobbers: r254
-    -2 AI
-    PO MI
-    XO AI
-    MO JMP
-
-nop:
-nop:
-
-
-not x: # Bitwise complement <tt>x</tt>.
-    XI ~X
-
-not (i8h): # Bitwise complement <tt>r</tt>.
-    IOH AI
-    MO YI
-    MI ~Y
-
-not (x): # Bitwise complement the value in <tt>(x)</tt>.
-    XO AI
-    MO YI
-    MI ~Y
-
-not ((i8h)): # Bitwise complement the value in <tt>(r)</tt>.
-    IOH AI
-    MO AI
-    MO YI
-    MI ~Y
-
-not (i16): # Bitwise complement the value in <tt>(i16)</tt>.
-    PO AI
-    MO AI P+
-    MO YI
-    MI ~Y
-
-in x, (i8h): # Input from address <tt>r</tt> to <tt>x</tt>.
-    IOH AI
-    MO AI
-    DO XI
-
-in x, i16: # Input from address <tt>i16</tt> to <tt>x</tt>.
-    PO AI
-    MO AI P+
-    DO XI
-
-in x, (i16): # Input from the address in <tt>(i16)</tt> to <tt>x</tt>.
-    PO AI
-    MO AI P+
-    MO AI
-    DO XI
-
-in x, ((i8h)): # Input from the address in <tt>(r)</tt> to <tt>x</tt>.
-    IOH AI
-    MO AI
-    MO AI
-    DO XI
-
-in x, i8l: # Input from address <tt>i8l</tt> to <tt>x</tt>.
-    IOL AI
-    DO XI
-
-in x, i8h: # Input from address <tt>i8h</tt> to <tt>x</tt>.
-    IOH AI
-    DO XI
-
-in (i8h), x: # Input from address <tt>x</tt> to <tt>r</tt>.
-    AI XO
-    DO YI
-    IOH AI
-    MI YO
-
-in (i16), x: # Input from address <tt>x</tt> to the value in <tt>(i16)</tt>.
-    AI XO
-    DO YI
-    PO AI
-    MO AI P+
-    MI YO
-
-in ((i8h)), x: # Input from address <tt>x</tt> to the value in <tt>(r)</tt>.
-    AI XO
-    DO YI
-    IOH AI
-    MO AI
-    MI YO
-
-in (i8h), i16: # Input from address <tt>i16</tt> to <tt>r</tt>.
-    PO AI
-    MO AI P+
-    YI DO
-    IOH AI
-    MI YO
-
-in ((i8h)), i16: # Input from address <tt>i16</tt> to the value in <tt>(r)</tt>.
-    PO AI
-    MO AI P+
-    YI DO
-    IOH AI
-    MO AI
-    MI YO
-
-test x: # Set flags based on <tt>x</tt>.
-    X
-
-test (i8h): # Set flags based on <tt>r</tt>.
-    IOH AI
-    MO YI
-    Y
-
-test (x): # Set flags based on the value in <tt>(x)</tt>.
-    XO AI
-    MO YI
-    Y
-
-test ((i8h)): # Set flags based on the value in <tt>(r)</tt>.
-    IOH AI
-    MO AI
-    MO YI
-    Y
-
-test (i16): # Set flags based on the value in <tt>(i16)</tt>.
-    PO AI
-    MO AI P+
-    MO YI
-    Y
-
 out x, (i8h): # Output <tt>r</tt> to address <tt>x</tt>.
     IOH AI
     MO YI
     XO AI
     YO DI
 
-#out x, i16: # Output <tt>i16</tt> to address <tt>x</tt>.
-#    PO AI
-#    MO YI P+
-#    XO AI
-#    YO DI
+out x, i16: # Output <tt>i16</tt> to address <tt>x</tt>.
+    PO AI
+    MO YI P+
+    XO AI
+    YO DI
 
 out i16, (x): # Output the value in <tt>(x)</tt> to address <tt>i16</tt>.
     XO AI
@@ -1394,6 +1384,31 @@ out i8l, x: # Output <tt>x</tt> to address <tt>i8l</tt>.
     IOL AI
     XO DI
 
+not x: # Bitwise complement <tt>x</tt>.
+    XI ~X
+
+not (i8h): # Bitwise complement <tt>r</tt>.
+    IOH AI
+    MO YI
+    MI ~Y
+
+not (x): # Bitwise complement the value in <tt>(x)</tt>.
+    XO AI
+    MO YI
+    MI ~Y
+
+not ((i8h)): # Bitwise complement the value in <tt>(r)</tt>.
+    IOH AI
+    MO AI
+    MO YI
+    MI ~Y
+
+not (i16): # Bitwise complement the value in <tt>(i16)</tt>.
+    PO AI
+    MO AI P+
+    MO YI
+    MI ~Y
+
 out i8h, x: # Output <tt>x</tt> to address <tt>i8h</tt>.
     IOH AI
     XO DI
@@ -1418,6 +1433,21 @@ out i16, ((i8h)): # Output the value in <tt>(r)</tt> to address <tt>i16</tt>.
     MO AI P+
     YO DI
 
+ret: # Jump to <tt>r254</tt>.
+    -2 AI
+    MO JMP
+
+ret i8l: # Increase <tt>sp</tt> by <tt>i8l</tt>. Jump to <tt>r254</tt>.
+    -1 AI
+    MO YI
+    IOL XI
+    MI X+Y
+    -2 AI
+    MO JMP
+
+nop:
+nop:
+nop:
 nop: # Do nothing.
 
 slownop: # Do nothing, and take 8 cycles.
@@ -1427,3 +1457,28 @@ slownop: # Do nothing, and take 8 cycles.
     PO
     PO
     PO
+
+test x: # Set flags based on <tt>x</tt>.
+    X
+
+test (i8h): # Set flags based on <tt>r</tt>.
+    IOH AI
+    MO YI
+    Y
+
+test (x): # Set flags based on the value in <tt>(x)</tt>.
+    XO AI
+    MO YI
+    Y
+
+test ((i8h)): # Set flags based on the value in <tt>(r)</tt>.
+    IOH AI
+    MO AI
+    MO YI
+    Y
+
+test (i16): # Set flags based on the value in <tt>(i16)</tt>.
+    PO AI
+    MO AI P+
+    MO YI
+    Y
