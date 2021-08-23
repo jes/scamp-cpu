@@ -171,10 +171,13 @@ sub symbol_cycles {
         $symcycles{$SYMBOL[$addr]} += $pc_cycles[$addr] if $SYMBOL[$addr];
     }
     print "<table class=\"sym\">\n";
-    print "<tr><th>Symbol</th><th>Cycles</th><th>% total</th></tr>\n";
+    print "<tr><th>Symbol</th><th>Cycles</th><th>% total</th><th>Cumulative</th></tr>\n";
     my @syms = sort { $symcycles{$b} <=> $symcycles{$a} } keys %symcycles;
+    my $cum = 0;
     for my $s (@syms) {
-        print "<tr><td class=\"right\"><tt>$s</tt></td><td><b>$symcycles{$s}</b></td><td>". sprintf("%.2f%%", 100*$symcycles{$s}/$cycles) ."</td></tr>\n" if $symcycles{$s} > 0.001 * $cycles;
+        my $pct = 100*$symcycles{$s}/$cycles;
+        $cum += $pct;
+        print "<tr><td class=\"right\"><tt>$s</tt></td><td><b>$symcycles{$s}</b></td><td>".sprintf("%.2f%%", $pct)."</td><td>".sprintf("%.2f%%", $cum)."</tr></tr>\n" if $symcycles{$s} > 0.001 * $cycles;
     }
     print "</table>\n";
 }
