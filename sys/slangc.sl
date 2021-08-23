@@ -441,9 +441,11 @@ Extern = func(x) {
 
 Declaration = func(x) {
     if (!parse(Keyword,"var")) return 0;
+    if (BLOCKLEVEL != 0) die("var not allowed here",0);
     if (!parse(Identifier,0)) die("var needs identifier",0);
     var name = strdup(IDENTIFIER);
     if (!LOCALS) {
+        if (findglobal(name)) die("duplicate declaration of global: %s",[name]);
         addglobal(name);
     } else {
         if (findglobal(name)) warn("local var %s overrides global",[name]);
