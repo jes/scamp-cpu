@@ -70,14 +70,14 @@ var divmod = asm {
     # is numerator negative? Set r13 and make it positive
     test r10
     jge num_not_neg
-    ld r13, 1
+    inc r13
     neg r10
     num_not_neg:
 
     # is denominator negative? Set r14 and make it positive
     test r9
     jge denom_not_neg
-    ld r14, 1
+    inc r14
     neg r9
     denom_not_neg:
 
