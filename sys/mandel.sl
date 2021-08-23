@@ -44,29 +44,28 @@ var complexsquare = func(x, y) {
 };
 
 var four_big = bigatoi("4000000");
+var r = bignew(0);
+var t = bignew(0);
 var complexgt = func(x,y) {
-	var r = bigclone(x);
-	bigmul(r,x);
-	var t = bigclone(y);
-	bigmul(t,y);
-	bigadd(r,t);
-	bigfree(t);
+    bigset(r, x);
+	bigmul(r, x);
 
-	if (bigcmp(r, four_big) >= 0) {
-		bigfree(r);
-		return 1;
-	} else {
-		bigfree(r);
-		return 0;
-	};
+    bigset(t, y);
+	bigmul(t, y);
+
+	bigadd(r, t);
+
+	return bigcmp(r, four_big) >= 0;
 };
 
 var maxiters = 8;
 var alphabet = ".,-'\":=# ";
+var zx = bignew(0);
+var zy = bignew(0);
 var mandel = func(x, y) {
 	var k = 0;
-	var zx = bignew(0);
-	var zy = bignew(0);
+    bigsetw(zx, 0);
+    bigsetw(zy, 0);
 
 	while (k < maxiters) {
 		# z = z*z + c
@@ -79,9 +78,6 @@ var mandel = func(x, y) {
 
 		k++;
 	};
-
-	bigfree(zx);
-	bigfree(zy);
 
 	return k;
 };
