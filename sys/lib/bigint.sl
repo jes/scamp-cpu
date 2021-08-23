@@ -215,7 +215,7 @@ var bigadd = func(big1, big2) {
     while (i != bigint_prec) {
         prev = big1[i];
         *(big1+i) = big1[i] + big2[i] + carry;
-        carry = (big1[i] lt prev) || ((carry || big2[i]) && (big1[i] == prev));
+        carry = (big1[i] lt prev) || (carry && (big1[i] == prev));
         i++;
     };
 
