@@ -161,6 +161,10 @@ I plan to only install UART 0 at first, and then populate the rest of the slots 
 
 Use bodge wire to connect `WR` pin to backplane pin 38, marked "unused" on backplane.
 
+Use bodge wire to connect `TX` pin of UART 0 to pin 34, marked "spare_o4" on backplane.
+
+Use bodge wire to connect `RX` pin of UART 0 to pin 35, marked "spare_o5" on backplane.
+
 ## Storage
 
 1 card is internal, the other card is removable through the front panel.
