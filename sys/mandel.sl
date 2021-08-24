@@ -14,33 +14,34 @@ var ymin = bignew(-1500);
 var ymax = bignew(1500);
 
 var help = func(rc) {
-	puts("usage: mandel [optons]
+    puts("usage: mandel [optons]
 
 options:
 
-    -h			  Show this text.
+    -h            Show this text.
     -x XMIN       Set x minimum.
     -X XMAX       Set x maximum.
     -y YMIN       Set y minimum.
     -Y YMAX       Set y maximum.
 ");
-	exit(rc);
+    exit(rc);
 };
 
 var complexsquare = func(x, y) {
-	# (x + yi)^2 == (x^2 - y^2) + (2xy)i
-	var t = bigclone(x);
-	bigmul(t,y);
-	bigmulw(t,2);
-	bigdivw(t,1000);
+    # (x + yi)^2 == (x^2 - y^2) + (2xy)i
+    var t = bigclone(x);
+    bigmul(t,y);
+    #bigmulw(t,2);
+    #bigdivw(t,1000);
+    bigdivw(t,500);
 
-	bigmul(x,x);
-	bigdivw(x,1000);
-	bigmul(y,y);
-	bigdivw(y,1000);
-	bigsub(x,y);
-	bigset(y,t);
-	bigfree(t);
+    bigmul(x,x);
+    bigmul(y,y);
+    bigsub(x,y);
+    bigdivw(x,1000);
+
+    bigset(y,t);
+    bigfree(t);
 };
 
 var four_big = bigatoi("4000000");
@@ -48,14 +49,14 @@ var r = bignew(0);
 var t = bignew(0);
 var complexgt = func(x,y) {
     bigset(r, x);
-	bigmul(r, x);
+    bigmul(r, x);
 
     bigset(t, y);
-	bigmul(t, y);
+    bigmul(t, y);
 
-	bigadd(r, t);
+    bigadd(r, t);
 
-	return bigcmp(r, four_big) >= 0;
+    return bigcmp(r, four_big) >= 0;
 };
 
 var maxiters = 8;
@@ -63,32 +64,32 @@ var alphabet = ".,-'\":=# ";
 var zx = bignew(0);
 var zy = bignew(0);
 var mandel = func(x, y) {
-	var k = 0;
+    var k = 0;
     bigsetw(zx, 0);
     bigsetw(zy, 0);
 
-	while (k < maxiters) {
-		# z = z*z + c
-		complexsquare(zx, zy);
-		bigadd(zx, x);
-		bigadd(zy, y);
+    while (k < maxiters) {
+        # z = z*z + c
+        complexsquare(zx, zy);
+        bigadd(zx, x);
+        bigadd(zy, y);
 
-		# if (abs(z) >= 2) break;
-		if (complexgt(zx, zy)) break;
+        # if (abs(z) >= 2) break;
+        if (complexgt(zx, zy)) break;
 
-		k++;
-	};
+        k++;
+    };
 
-	return k;
+    return k;
 };
 
 var m = getopt(cmdargs()+1, "xXyY", func(ch, arg) {
-	if (ch == 'x') xmin = bigatoi(arg)
-	else if (ch == 'X') xmax = bigatoi(arg)
-	else if (ch == 'y') ymin = bigatoi(arg)
-	else if (ch == 'Y') ymax = bigatoi(arg)
-	else if (ch == 'h') help(0)
-	else help(1);
+    if (ch == 'x') xmin = bigatoi(arg)
+    else if (ch == 'X') xmax = bigatoi(arg)
+    else if (ch == 'y') ymin = bigatoi(arg)
+    else if (ch == 'Y') ymax = bigatoi(arg)
+    else if (ch == 'h') help(0)
+    else help(1);
 });
 
 if (*m) help(1);
@@ -103,12 +104,12 @@ var ystep = bigdiv(bigclone(yrange), bignew(24));
 
 var n;
 while (bigcmp(y, ymax) < 0) {
-	bigset(x, xmin);
-	while (bigcmp(x, xmax) < 0) {
-		n = mandel(x, y);
-		putchar(alphabet[n]);
-		bigadd(x, xstep);
-	};
-	putchar('\n');
-	bigadd(y, ystep);
+    bigset(x, xmin);
+    while (bigcmp(x, xmax) < 0) {
+        n = mandel(x, y);
+        putchar(alphabet[n]);
+        bigadd(x, xstep);
+    };
+    putchar('\n');
+    bigadd(y, ystep);
 };
