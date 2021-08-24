@@ -1,7 +1,6 @@
 # bigint library
 # bigints are signed integers taking up "bigint_prec" words
 #
-# TODO: [nice] provide constants for bigzero, bigone, bigminusone, etc.?
 # TODO: [nice] maybe we should support variable-sized numbers? might even
 #       provide performance benefit
 
@@ -14,9 +13,42 @@ var bigint_bits;
 var bigint_itoaspace = 0;
 var bigint_itoaspace_end;
 
+var bigminusone; # constant -1
+var bigzero; # constant 0
+var bigone; # constant 1
+
+# forward declarations
+var biginit;
+var bignew;
+var bigclone;
+var bigfree;
+var bigcmp;
+var bigcmpw;
+var bigatoibase;
+var bigatoi;
+var bigitoabase;
+var bigitoa;
+var bigtow;
+var bigset;
+var bigsetw;
+var bigadd;
+var bigaddw;
+var bigsub;
+var bigsubw;
+var bigmul;
+var bigmulw;
+var bigbit;
+var bigsetbit;
+var bigdivmod;
+var bigdivmodw;
+var bigdiv;
+var bigdivw;
+var bigmod;
+var bigmodw;
+
 # if you use biginit, you must call it before creating
 # any bigints
-var biginit = func(prec) {
+biginit = func(prec) {
     bigint_prec = prec;
     bigint_bits = shl(bigint_prec,4);
 
@@ -25,40 +57,33 @@ var biginit = func(prec) {
     var len = bigint_bits + 2;
     bigint_itoaspace = malloc(len);
     bigint_itoaspace_end = bigint_itoaspace + len - 1;
-};
-biginit(bigint_prec); # initialise itoaspace etc.
 
-# TODO: [nice] more systematic forward declarations
-var bigset;
-var bigsetw;
-var bigsub;
-var bigdivmodw;
-var bigtow;
-var bigbit;
-var bigmulw;
-var bigaddw;
-var bigitoa;
+    bigfree(bigminusone); bigfree(bigzero); bigfree(bigone);
+    bigminusone = bignew(-1);
+    bigzero = bignew(0);
+    bigone = bignew(1);
+};
 
 # create a new bigint with the given (word) value
-var bignew = func(w) {
+bignew = func(w) {
     var big = malloc(bigint_prec);
     bigsetw(big, w);
     return big;
 };
 
 # clone a bigint
-var bigclone = func(big1) {
+bigclone = func(big1) {
     var big2 = malloc(bigint_prec);
     bigset(big2, big1);
     return big2;
 };
 
 # free a bigint
-var bigfree = free;
+bigfree = free;
 
 # return a value less than, equal to, or greater than 0 depending on whether big1
 # is judged to be less than, equal to, or greater than big2
-var bigcmp = func(big1, big2) {
+bigcmp = func(big1, big2) {
     var big1neg = big1[bigint_prec-1] & 0x8000;
     var big2neg = big2[bigint_prec-1] & 0x8000;
     if (big1neg != big2neg) {
@@ -77,7 +102,7 @@ var bigcmp = func(big1, big2) {
 
 # return a value less than, equal to, or greater than 0 depending on whether big
 # is judged to be less than, equal to, or greater than w
-var bigcmpw = func(big, w) {
+bigcmpw = func(big, w) {
     var equal_high = 0;
     var unequal_high_result = 1;
 
@@ -106,7 +131,7 @@ var bigcmpw = func(big, w) {
 };
 
 # allocate a new bigint, populated with the value in "str"
-var bigatoibase = func(s, base) {
+bigatoibase = func(s, base) {
     var big = bignew(0);
     var neg = 0;
     if (*s == '-') {
@@ -134,12 +159,12 @@ var bigatoibase = func(s, base) {
 };
 
 # allocate a new bigint, populated with the value in "str", base 10
-var bigatoi = func(str) {
+bigatoi = func(str) {
     return bigatoibase(str, 10);
 };
 
 # return a pointer to a static string formatting "big"
-var bigitoabase = func(big, base) {
+bigitoabase = func(big, base) {
     var b = big;
     var neg = 0;
 
@@ -208,7 +233,7 @@ bigsetw = func(big, w) {
 };
 
 # big1 = big1 + big2
-#var bigadd = func(big1, big2) {
+#bigadd = func(big1, big2) {
 #    var carry = 0;
 #    var i = 0;
 #    var prev;
@@ -222,7 +247,7 @@ bigsetw = func(big, w) {
 #
 #    return big1;
 #};
-var bigadd = asm {
+bigadd = asm {
     pop x
     ld r1, x # big2
     pop x
@@ -315,7 +340,7 @@ bigsub = func(big1, big2) {
         *(minusbig2+i) = ~big2[i];
         i++;
     };
-    bigaddw(minusbig2, 1);
+    bigadd(minusbig2, bigone);
 
     bigadd(big1, minusbig2);
     bigfree(minusbig2);
@@ -324,7 +349,7 @@ bigsub = func(big1, big2) {
 };
 
 # big = big - w
-var bigsubw = func(big, w) {
+bigsubw = func(big, w) {
     var bigw = bignew(-w);
     bigadd(big, bigw);
     bigfree(bigw);
@@ -333,7 +358,7 @@ var bigsubw = func(big, w) {
 };
 
 # big1 = big1 * big2
-var bigmul = func(big1, big2) {
+bigmul = func(big1, big2) {
     var result = bignew(0);
     var resultn = bigclone(big2);
     var i = 0;
@@ -396,7 +421,7 @@ bigbit = func(big, n) {
 };
 
 # set the nth bit of big (where 0 is lsb) to v (0 or 1)
-var bigsetbit = func(big, n, v) {
+bigsetbit = func(big, n, v) {
     var word = _byteshr4(n);
     var bit = n&0xf;
 
@@ -411,7 +436,7 @@ var bigsetbit = func(big, n, v) {
 # *modp = big1 % big2
 # both *divp and *modp are new allocations; big1 and big2 are unchanged
 # https://en.wikipedia.org/wiki/Division_algorithm#Integer_division_(unsigned)_with_remainder
-var bigdivmod = func(big1, big2, divp, modp) {
+bigdivmod = func(big1, big2, divp, modp) {
     var num = bigclone(big1);
     var denom = bigclone(big2);
 
@@ -437,7 +462,7 @@ var bigdivmod = func(big1, big2, divp, modp) {
     var i = bigint_bits-1;
     while (i != -1) {
         bigadd(*modp, *modp); # R := R << 1
-        if (bigbit(num, i)) bigaddw(*modp, 1); # R(0) := N(i)
+        if (bigbit(num, i)) bigadd(*modp, bigone); # R(0) := N(i)
         if (bigcmp(*modp, denom) >= 0) { # if R >= D then
             bigsub(*modp, denom); # R := R - D
             bigsetbit(*divp, i, 1); # Q(i) := 1
@@ -477,7 +502,7 @@ bigdivmodw = func(big, w, divp, modp) {
 };
 
 # big1 = big1 / big2
-var bigdiv = func(big1, big2) {
+bigdiv = func(big1, big2) {
     var d;
     var m;
     bigdivmod(big1, big2, &d, &m);
@@ -488,7 +513,7 @@ var bigdiv = func(big1, big2) {
 };
 
 #big = big / w
-var bigdivw = func(big, w) {
+bigdivw = func(big, w) {
     var bigw = bignew(w);
     bigdiv(big, bigw);
     bigfree(bigw);
@@ -497,7 +522,7 @@ var bigdivw = func(big, w) {
 };
 
 # big1 = big1 % big2
-var bigmod = func(big1, big2) {
+bigmod = func(big1, big2) {
     var d;
     var m;
     bigdivmod(big1, big2, &d, &m);
@@ -509,10 +534,12 @@ var bigmod = func(big1, big2) {
 };
 
 # big = big % w
-var bigmodw = func(big, w) {
+bigmodw = func(big, w) {
     var bigw = bignew(w);
     bigmod(big, bigw);
     bigfree(bigw);
 
     return big;
 };
+
+biginit(bigint_prec); # initialise itoaspace etc.
