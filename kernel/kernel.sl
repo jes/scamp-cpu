@@ -4,32 +4,32 @@ include "util.sl";
 
 kputs("starting kernel...\r\n");
 
-kputs("data:\r\n");
+kputs("data ");
 include "data.sl";
-kputs("serial:\r\n");
+kputs("serial ");
 include "serial.sl";
-kputs("blkdev:\r\n");
+kputs("blkdev ");
 include "blkdev.sl";
-kputs("dir:\r\n");
+kputs("dir ");
 include "dir.sl";
-kputs("fs:\r\n");
+kputs("fs ");
 include "fs.sl";
 
 # Each of the included sys_*.sl modules initialises itself and writes the correct addresses
 # to the system call vectors that it is responsible for.
-kputs("sys_fs:\r\n");
+kputs("sys_fs ");
 include "sys_fs.sl";
-kputs("sys_dir:\r\n");
+kputs("sys_dir ");
 include "sys_dir.sl";
-kputs("sys_io:\r\n");
+kputs("sys_io ");
 include "sys_io.sl";
-kputs("sys_proc:\r\n");
+kputs("sys_proc ");
 include "sys_proc.sl";
-kputs("random:\r\n");
+kputs("sys_random ");
 include "sys_random.sl";
 
 # setup serial port fds
-kputs("ser_init():\r\n");
+kputs("ser_init()\r\n");
 ser_init();
 
 kputs("loading init...\r\n");
