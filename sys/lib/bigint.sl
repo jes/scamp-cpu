@@ -439,10 +439,9 @@ bigbit = asm {
 
     and x, (r1)
     ld r0, 0
-    jz bigbit_ret
+    jz r3 # ret
     inc r0
-    bigbit_ret:
-    jmp r3
+    jmp r3 # ret
 };
 
 # set the nth bit of big (where 0 is lsb) to v (0 or 1)
