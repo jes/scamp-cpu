@@ -68,8 +68,9 @@ var bigcmp = func(big1, big2) {
 
     var i = bigint_prec;
     while (i--) {
-        if (big1[i] gt big2[i]) return 1;
-        if (big1[i] lt big2[i]) return -1;
+        if (big1[i] == big2[i]) continue
+        else if (big1[i] gt big2[i]) return 1
+        else return -1;
     };
     return 0;
 };
