@@ -412,12 +412,37 @@ var _byteshr4 = asm {
 };
 
 # return the nth bit of big (where 0 is least-significant)
-bigbit = func(big, n) {
-    var word = _byteshr4(n);
-    var bit = n&0xf;
+#bigbit = func(big, n) {
+#    var word = _byteshr4(n);
+#    var bit = n&0xf;
+#
+#    if (big[word] & powers_of_2[bit]) return 1
+#    else return 0;
+#};
+bigbit = asm {
+    pop x
+    push x
+    push x
 
-    if (big[word] & powers_of_2[bit]) return 1
-    else return 0;
+    ld r3, r254 # r3 = return address
+
+    call (__byteshr4)
+
+    pop x
+    and x, 0xf # bit = n&0xf
+    ld r1, x # r1 = bit
+    add r1, powers_of_2 # r1 = powers_of_2+bit
+
+    pop x
+    add x, r0
+    ld x, (x) # x = big[word]
+
+    and x, (r1)
+    ld r0, 0
+    jz bigbit_ret
+    inc r0
+    bigbit_ret:
+    jmp r3
 };
 
 # set the nth bit of big (where 0 is lsb) to v (0 or 1)
