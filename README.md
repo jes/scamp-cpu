@@ -38,9 +38,9 @@ This is what I've already done:
 
 The computer already works, and I suspect it will never be "finished", but some things I still want to work on are:
 
- - [ ] wire in a permanent clock source from a 1 MHz crystal oscillator instead of using an Arduino on a breadboard
- - [ ] wire up some power and reset switches
- - [ ] mount the VGA serial console inside the case so I don't have so many wires trailing across the desk
+ - [x] wire in a permanent clock source from a 1 MHz crystal oscillator instead of using an Arduino on a breadboard
+ - [x] wire up some power and reset switches
+ - [x] mount the VGA serial console inside the case so I don't have so many wires trailing across the desk
  - [ ] make some levers that sit on the case at the side of the cards to aid removal of the cards
  - [ ] make the shell support pipe syntax (e.g. `foo | bar | baz`)
  - [ ] compete in this year's [Advent of Code](https://adventofcode.com/) using the SCAMP hardware
@@ -111,6 +111,9 @@ The [Build Your Own Text Editor](https://viewsourcecode.org/snaptoken/kilo/) is 
 Daniel Tufvesson has a post that is a good starting point for understanding the [8-bit CompactFlash interface](http://www.waveguide.se/?article=8-bit-compact-flash-interface).
 
 [PickledDog](https://github.com/PickledDog) has a description of an [improvement to the RC2014 CompactFlash card](https://github.com/PickledDog/rc-cfcard) that might be helpful. Also [Bill Shen's comment on the RC2014 mailing list](https://groups.google.com/g/rc2014-z80/c/LmvGa6PZNhQ/m/H8jrbp86AQAJ).
+
+Michał Cierniak has a good blog post about [CompactFlash + 8255 interface card](https://ciernioo.wordpress.com/2015/02/10/compact-flash-8255-interface-card/) with lots
+of detail on how his CompactFlash interface works.
 
 ## Contact
 
