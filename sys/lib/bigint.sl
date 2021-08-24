@@ -430,8 +430,8 @@ bigbit = asm {
 
     pop x
     and x, 0xf # bit = n&0xf
-    ld r1, x # r1 = bit
-    add r1, powers_of_2 # r1 = powers_of_2+bit
+    add x, powers_of_2 # x = powers_of_2+bit
+    ld r1, x # r1 = powers_of_2+bit
 
     pop x
     add x, r0
