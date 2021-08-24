@@ -138,30 +138,27 @@ storage_init:
     # initialise LBA address to 0 by writing 0 to Sector Number, Cylinder Low,
     # and Cylinder High Registers, and 224 ("enable LBA") to the Drive/Head
     # Register
-    ld r22, 0x40
+    ld r22, 0
     call cfwait
     ld x, 0
     out CFBLKNUMREG, x
 
-    call cfwait
     ld x, 0
     out CFCYLLOREG, x
 
-    call cfwait
     ld x, 0
     out CFCYLHIREG, x
 
-    call cfwait
     ld x, 224
     out CFHEADREG, x
 
     # ask for 1 block
+    ld r22, 0x40
     call cfwait
     ld x, 1
     out CFBLKCNTREG, x
 
     # issue "read" command
-    call cfwait
     ld x, CFREADCMD
     out CFSTATUSREG, x
 
