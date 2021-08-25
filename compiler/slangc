@@ -315,6 +315,27 @@ sub Assignment {
     my $id;
     if (parse(\&Identifier)) {
         $id = $IDENTIFIER;
+
+        if (parse(\&CharSkip,'[')) {
+            # array assignment: "a[x] = ..."; we need to put a+x on the stack and
+            # unset $id so that we get pointer assignment code
+
+            # first put a on the stack
+            pushvar($id);
+            $id = undef;
+
+            # now put the index on the stack
+            die "array index needs expression\n" if !parse(\&Expression);
+            die "array index needs close bracket\n" if !parse(\&CharSkip,']');
+
+            # and add them together
+            print "# array indexing pointer calculation:\n";
+            popx();
+            print "ld r0, x\n";
+            popx();
+            print "add x, r0\n";
+            pushx();
+        };
     } else {
         return 0 if !parse(\&CharSkip,'*');
         die "can't dereference non-expression\n" if !parse(\&Term);
@@ -675,6 +696,7 @@ sub AddressOf {
     my $id = $IDENTIFIER;
 
     my $sym = symlookup($id);
+    die "unrecognised identifier: $id\n" if !$sym;
     if ($sym->{type} eq 'global') {
         print "# &$id (global)\n";
         print "ld x, _$id\n";
