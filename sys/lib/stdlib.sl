@@ -83,6 +83,8 @@ var divmod = asm {
     neg r9
     denom_not_neg:
 
+    divmod_real:
+
     ld r4, 0 # r4 = Q
     ld r5, 0 # r5 = R
     ld r6, 15 # r6 = i
@@ -141,6 +143,20 @@ var divmod = asm {
     ret 4
 };
 
+# unsigned divmod
+var udivmod = asm {
+    ld x, sp
+    ld r7, 1(x) # r7 = pmod
+    ld r8, 2(x) # r8 = pdiv
+    ld r9, 3(x) # r9 = denom
+    ld r10, 4(x) # r10 = num
+
+    ld r13, 0 # numerator negative?
+    ld r14, 0 # denominator negative?
+
+    jmp divmod_real
+};
+
 var div = func(num, denom) {
     var d;
     divmod(num, denom, &d, 0);
@@ -150,6 +166,18 @@ var div = func(num, denom) {
 var mod = func(num, denom) {
     var m;
     divmod(num, denom, 0, &m);
+    return m;
+};
+
+var udiv = func(num, denom) {
+    var d;
+    udivmod(num, denom, &d, 0);
+    return d;
+};
+
+var umod = func(num, denom) {
+    var m;
+    udivmod(num, denom, 0, &m);
     return m;
 };
 
@@ -232,7 +260,7 @@ var utoabase = func(num, base) {
     };
 
     while (num != 0) {
-        divmod(num, base, &d, &m);
+        udivmod(num, base, &d, &m);
         *--s = itoa_alphabet[m];
         num = d;
     };
