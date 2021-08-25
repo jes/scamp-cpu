@@ -410,6 +410,4 @@ var sort = func(arr, len, cmp) {
     var p = _partition(arr, len, cmp);
     sort(arr, p, cmp);
     sort(arr+p+1, len-p-1, cmp);
-
-    # TODO: [perf] should we turn the tail call into a loop?
 };
