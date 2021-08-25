@@ -165,8 +165,6 @@ sys_system = asm {
     ld x, r254 # return address
     push x
     jmp (_sys_system_impl)
-
-    # TODO: [nice] how can we distinguish a system() error from a return code from the child?
 };
 
 var jmp_to_user = asm {

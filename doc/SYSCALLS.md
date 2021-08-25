@@ -29,7 +29,8 @@ arguments. `r254` must be left alone. Other pseudoregs can be trashed at will.
     Implemented: yes
     Errors: n/a
 
-Exit the current process and return `rc` to the parent.
+Exit the current process and return `rc` to the parent. Negative values of `rc` are discouraged
+as they are indistinguishable from an error value returned by `system()`.
 
 ### 0xfefe: exec([cmd, args])
 
