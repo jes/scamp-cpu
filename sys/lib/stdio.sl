@@ -31,13 +31,13 @@ var fgets = func(fd, s, size) {
     while (ch >= 0 && ch != '\n' && len < size) {
         ch = fgetc(fd);
         if (ch >= 0)
-            *(s+(len++)) = ch;
+            s[len++] = ch;
     };
 
     if (ch < 0 && len == 0)
         return 0;
 
-    *(s+len) = 0;
+    s[len] = 0;
 
     return s;
 };
@@ -80,7 +80,7 @@ var tmpnam = func() {
         *tmpnam_x = y+'0';
         x = 0;
         while (x < 10 && !ok) {
-            *(tmpnam_x+1) = x+'0';
+            tmpnam_x[1] = x+'0';
             n = stat(tmpnam_buf, statbuf);
             if (n == NOTFOUND) ok=1;
             x++;

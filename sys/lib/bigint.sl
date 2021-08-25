@@ -193,7 +193,7 @@ bigitoabase = func(big, base) {
 
     while (bigcmpw(b, 0) != 0) {
         bigdivmodw(b, base, &d, &m);
-        *--s = *(itoa_alphabet + bigtow(m));
+        *--s = itoa_alphabet[bigtow(m)];
         bigset(b, d);
         bigfree(d); bigfree(m);
     };
@@ -337,7 +337,7 @@ bigsub = func(big1, big2) {
     var minusbig2 = bigclone(big2);
     var i = 0;
     while (i != bigint_prec) {
-        *(minusbig2+i) = ~big2[i];
+        minusbig2[i] = ~big2[i];
         i++;
     };
     bigadd(minusbig2, bigone);
@@ -450,9 +450,9 @@ bigsetbit = func(big, n, v) {
     var bit = n&0xf;
 
     if (v) {
-        *(big+word) = big[word] | powers_of_2[bit];
+        big[word] = big[word] | powers_of_2[bit];
     } else {
-        *(big+word) = big[word] & ~powers_of_2[bit];
+        big[word] = big[word] & ~powers_of_2[bit];
     };
 };
 

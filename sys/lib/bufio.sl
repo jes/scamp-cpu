@@ -16,9 +16,9 @@ var BIO_BUFSZ = 254; # align with block size on disk
 var bfdopen = func(fd, mode) {
     var bio = malloc(BIO_BUFSZ + 4);
     *bio = fd;
-    *(bio+1) = 0;
-    *(bio+2) = 0;
-    *(bio+3) = mode;
+    bio[1] = 0;
+    bio[2] = 0;
+    bio[3] = mode;
 
     return bio;
 };
@@ -39,7 +39,7 @@ var bflush = func(bio) {
 
     # TODO: [bug] error-check?
     write(fd, bio+4, bufpos);
-    *(bio+2) = 0;
+    bio[2] = 0;
 };
 
 # free without closing the underlying fd
@@ -66,11 +66,11 @@ var bwrite = func(bio, buf, sz) {
 var _bslurp = func(bio) {
     var fd = bio[0];
 
-    *(bio+2) = 0; # bufpos
-    *(bio+1) = read(fd, bio+4, BIO_BUFSZ);
+    bio[2] = 0; # bufpos
+    bio[1] = read(fd, bio+4, BIO_BUFSZ);
     if (bio[1] < 0) {
         fprintf(2, "bread %d: %s\n", [fd, strerror(bio[1])]);
-        *(bio+1) = 0;
+        bio[1] = 0;
     };
 };
 
@@ -82,7 +82,7 @@ var _bslurp = func(bio) {
 #    bufpos = bio[2];
 #    if (buflen == 0) return EOF;
 #    var ch = *(bio+4+bufpos);
-#    *(bio+2) = bufpos+1;
+#    bio[2] = bufpos+1;
 #    return ch;
 #};
 #
@@ -163,7 +163,7 @@ var bgets = func(bio, s, size) {
 #var bputc = func(bio, ch) {
 #    var bufpos = bio[2];
 #    *(bio+4+bufpos) = ch;
-#    *(bio+2) = bufpos+1;
+#    bio[2] = bufpos+1;
 #    if (bufpos == BIO_BUFSZ) bflush(bio);
 #};
 #

@@ -12,8 +12,7 @@ var xprintf_handlers = asm { .gap 26 };
 # set cb=0 to unregister the handler
 var xpreg = func(ch, cb) {
     if (!islower(ch)) return 0;
-    ch = ch - 'a';
-    *(xprintf_handlers+ch) = cb;
+    xprintf_handlers[ch-'a'] = cb;
 };
 
 xpreg('c', func(ch) { return [ch] });

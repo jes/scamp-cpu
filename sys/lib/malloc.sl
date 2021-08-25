@@ -45,14 +45,14 @@ var free = func(ap) {
     };
 
     if ((bp + bp[1]) == p[0]) { # join to upper neighbour
-        *(bp+1) = bp[1] + p[0][1];
+        bp[1] = bp[1] + p[0][1];
         *bp = p[0][0];
     } else {
         *bp = p[0];
     };
 
     if ((p + p[1]) == bp) { # join to lower neighbour
-        *(p+1) = p[1] + bp[1];
+        p[1] = p[1] + bp[1];
         *p = bp[0];
     } else {
         *p = bp;
@@ -79,7 +79,7 @@ var morecore = func(needsz) {
         exit(1);
     };
 
-    *(p+1) = sz;
+    p[1] = sz;
     free(p+2);
     return freep;
 };
@@ -99,9 +99,9 @@ var malloc = func(sz) {
             if (p[1] == sz) { # exactly
                 *prevp = p[0];
             } else { # allocate tail end
-                *(p+1) = p[1]-sz; # block size gets shorter by the size of the new block
+                p[1] = p[1]-sz; # block size gets shorter by the size of the new block
                 p = p+p[1]; # point to new block
-                *(p+1) = sz; # set size of new block
+                p[1] = sz; # set size of new block
             };
             freep = prevp;
             return p+2; # return pointer to new space
@@ -136,6 +136,6 @@ var realloc = func(p, sz) {
 var cons = func(a,b) {
     var tuple = malloc(2);
     *tuple = a;
-    *(tuple+1) = b;
+    tuple[1] = b;
     return tuple;
 };

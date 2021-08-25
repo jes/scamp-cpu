@@ -233,7 +233,7 @@ var utoabase = func(num, base) {
 
     while (num != 0) {
         divmod(num, base, &d, &m);
-        *--s = *(itoa_alphabet + m);
+        *--s = itoa_alphabet[m];
         num = d;
     };
 
@@ -280,8 +280,8 @@ var tolower = func(ch) {
 # from "present at index 0"
 #var stridx = func(alphabet, ch) {
 #    var i = 0;
-#    while (*(alphabet+i)) {
-#        if (*(alphabet+i) == ch) return i;
+#    while (alphabet[i])) {
+#        if (alphabet[i]) == ch) return i;
 #        i++;
 #    };
 #    return 0;
@@ -354,9 +354,9 @@ var outp = asm {
 };
 
 var car = func(tuple) { return *tuple; };
-var cdr = func(tuple) { return *(tuple+1); };
+var cdr = func(tuple) { return tuple[1]; };
 var setcar = func(tuple,a) { *tuple = a; };
-var setcdr = func(tuple,b) { *(tuple+1) = b; };
+var setcdr = func(tuple,b) { tuple[1] = b; };
 
 # internal, used for quicksort;
 # return the index of the pivot element
@@ -398,8 +398,8 @@ var _partition = func(arr, len, cmp) {
         if (l >= r) return r;
 
         tmp = arr[r];
-        *(arr+r) = arr[l];
-        *(arr+l) = tmp;
+        arr[r] = arr[l];
+        arr[l] = tmp;
     };
 };
 

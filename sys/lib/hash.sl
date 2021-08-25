@@ -16,9 +16,9 @@ include "string.sl";
 
 var htnew = func() {
     var ht = malloc(3);
-    *(ht+0) = 32;
-    *(ht+1) = 0;
-    *(ht+2) = malloc(64); # 2x htsize because each element is 2 words
+    ht[0] = 32;
+    ht[1] = 0;
+    ht[2] = malloc(64); # 2x htsize because each element is 2 words
     memset(ht[2], 0, 64);
     return ht;
 };
@@ -47,8 +47,8 @@ var htgrow = func(ht) {
     var newsize = htsize(ht)+htsize(ht);
     var newarr = malloc(newsize+newsize);
     memset(newarr, 0, newsize+newsize);
-    *(newht+0) = newsize;
-    *(newht+2) = newarr;
+    newht[0] = newsize;
+    newht[2] = newarr;
 
     var i = 0;
     var p;
@@ -61,11 +61,11 @@ var htgrow = func(ht) {
 
     # now "newht" has all the elements, we want to swap its
     # array with ours and free it
-    *(newht+2) = ht[2];
+    newht[2] = ht[2];
     htfree(newht);
 
-    *(ht+0) = newsize;
-    *(ht+2) = newarr;
+    ht[0] = newsize;
+    ht[2] = newarr;
 };
 
 #var hashstr = func(str) {
@@ -143,11 +143,11 @@ htput = func(ht, key, val) {
 
     var p = htfind(ht, key);
     if (*p) {
-        *(p+1) = val;
+        p[1] = val;
     } else {
         *p = key;
-        *(p+1) = val;
-        *(ht+1) = ht[1] + 1;
+        p[1] = val;
+        ht[1] = ht[1] + 1;
     };
 };
 
@@ -159,7 +159,7 @@ var htwalk = func(ht, cb) {
     while (i < htsize(ht)) {
         p = ht[2]+i+i;
 
-        if (*p) cb(*p, *(p+1));
+        if (*p) cb(*p, p[1]);
 
         i++;
     };

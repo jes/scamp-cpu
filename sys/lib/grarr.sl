@@ -13,8 +13,8 @@ include "stdlib.sl";
 var grnew = func() {
     var gr = malloc(3);
     *gr = 0;
-    *(gr+1) = 32;
-    *(gr+2) = malloc(32);
+    gr[1] = 32;
+    gr[2] = malloc(32);
     return gr;
 };
 
@@ -27,12 +27,12 @@ var grpush = func(gr, el) {
     var n;
     if (gr[0] == gr[1]) { # need more space
         n = gr[1] + 32; # increase the length
-        *(gr+2) = realloc(gr[2], n);
-        *(gr+1) = n;
+        gr[2] = realloc(gr[2], n);
+        gr[1] = n;
     };
     n = *gr;
     var p = gr[2];
-    *(p+n) = el;
+    p[n] = el;
     *gr = *gr+1;
 };
 
@@ -58,7 +58,7 @@ var grset = func(gr, i, el) {
         fprintf(2, "out of bounds grset: N=%d, i=%d\n", [gr[0], i]);
         exit(1);
     };
-    *(p+i) = el;
+    p[i] = el;
 };
 
 var grget = func(gr, i) {
