@@ -324,18 +324,28 @@ sub Assignment {
             pushvar($id);
             $id = undef;
 
-            # now put the index on the stack
-            die "array index needs expression\n" if !parse(\&Expression);
-            die "array index needs close bracket\n" if !parse(\&CharSkip,']');
+            while (1) {
+                # now put the index on the stack
+                die "array index needs expression\n" if !parse(\&Expression);
+                die "array index needs close bracket\n" if !parse(\&CharSkip,']');
 
-            # and add them together
-            print "# array indexing pointer calculation:\n";
-            popx();
-            print "ld r0, x\n";
-            popx();
-            print "add x, r0\n";
-            pushx();
-        };
+                # and add them together
+                print "# array indexing pointer calculation:\n";
+                popx();
+                print "ld r0, x\n";
+                popx();
+                print "add x, r0\n";
+
+                if (!parse(\&CharSkip, '[')) {
+                    pushx();
+                    last;
+                }
+
+                # looping around for another level: dereference this pointer
+                print "ld x, (x)\n";
+                pushx();
+            };
+        }
     } else {
         return 0 if !parse(\&CharSkip,'*');
         die "can't dereference non-expression\n" if !parse(\&Term);

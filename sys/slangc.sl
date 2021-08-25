@@ -562,16 +562,26 @@ Assignment = func(x) {
             pushvar(id);
             id = 0;
 
-            # now put the index on the stack
-            if (!parse(Expression,0)) die("array index needs expression\n",0);
-            if (!parse(CharSkip,']')) die("array index needs close bracket\n",0);
+            while (1) {
+                # now put the index on the stack
+                if (!parse(Expression,0)) die("array index needs expression\n",0);
+                if (!parse(CharSkip,']')) die("array index needs close bracket\n",0);
 
-            # and add them together
-            popx();
-            bputs(OUT, "ld r0, x\n");
-            popx();
-            bputs(OUT, "add x, r0\n");
-            pushx();
+                # and add them together
+                popx();
+                bputs(OUT, "ld r0, x\n");
+                popx();
+                bputs(OUT, "add x, r0\n");
+
+                if (!parse(CharSkip,'[')) {
+                    pushx();
+                    break;
+                };
+
+                # looping around for another level: dereference this pointer
+                bputs(OUT, "ld x, (x)\n");
+                pushx();
+            };
         };
     } else {
         if (!parse(CharSkip,'*')) return 0;
