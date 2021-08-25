@@ -32,5 +32,5 @@ sys_random = func() {
     rngstate = rngstate ^ shr9(rngstate);
     rngstate = rngstate ^ shl(rngstate, 7);
 
-    return rngstate;
+    return rngstate & 0x7fff;
 };
