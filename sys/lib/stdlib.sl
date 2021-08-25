@@ -360,6 +360,7 @@ var setcdr = func(tuple,b) { *(tuple+1) = b; };
 
 # internal, used for quicksort;
 # return the index of the pivot element
+# XXX: we assume len>1
 var _partition = func(arr, len, cmp) {
     # TODO: [perf] what's the best way to choose a pivot? Wikipedia says:
     #
@@ -376,30 +377,33 @@ var _partition = func(arr, len, cmp) {
     # It's likely that the best choice in SCAMP depends on how efficiently
     # we can calculate the pivot, more than on the actual number of comparisons
     # required. (And calculating mod(random(),len) is bad).
+
+    # XXX: pivot choice must avoid the final element to ensure termination
     var pivot;
     if (len <= 8)
-        pivot = arr[len-1]
+        pivot = arr[len-2]
     else
-        pivot = arr[mod(random(),len)];
+        pivot = arr[mod(random(),len-1)];
 
-    var i = -1;
-    var j = 0;
+    var l = -1;
+    var r = len;
     var tmp;
-    while (j != len) {
-        if (cmp(arr[j], pivot) <= 0) { # if arr[j] <= pivot, swap i and j
-            i++;
-            tmp = arr[j];
-            *(arr+j) = arr[i];
-            *(arr + i) = tmp;
-        };
-        j++;
-    };
+    while (1) {
+        l++;
+        while (cmp(arr[l], pivot) < 0) l++;
 
-    return i;
+        r--;
+        while (cmp(arr[r], pivot) > 0) r--;
+
+        if (l >= r) return r;
+
+        tmp = arr[r];
+        *(arr+r) = arr[l];
+        *(arr+l) = tmp;
+    };
 };
 
 # sort array "arr" of "len" 1-word elements in-place;
-# max "len" is 16383 else beware of overflow;
 # cmp(a,b) should be a function that returns a value less than, equal to, or
 # greater than 0 if a is respectively less than, equal to, or greater than b;
 # e.g. sort an array of 10 string pointers with:
@@ -408,6 +412,7 @@ var sort = func(arr, len, cmp) {
     if (len <= 1) return 0;
 
     var p = _partition(arr, len, cmp);
-    sort(arr, p, cmp);
+
+    sort(arr, p+1, cmp);
     sort(arr+p+1, len-p-1, cmp);
 };
