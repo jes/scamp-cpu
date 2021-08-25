@@ -57,10 +57,8 @@ var cf_identify = func(buf) {
     cf_wait(CFRDY | CFDRQ);
 
     var n = 256;
-    while (n--) {
-        # TODO: [bug] do we need to cf_wait(CFRDY | CFDRQ) each time?
+    while (n--)
         *(buf++) = inp(CFDATAREG);
-    };
 };
 
 var strbuf = malloc(256);
