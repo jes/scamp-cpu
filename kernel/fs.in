@@ -34,6 +34,7 @@ put ../sys/isprime.bin /bin/isprime
 put ../sys/hamurabi.bin /bin/hamurabi
 put ../sys/opts.bin /bin/opts
 put ../sys/mandel.bin /bin/mandel
+put ../sys/sort.bin /bin/sort
 
 mkdir lib
 put ../sys/lib.o /lib/lib.o
@@ -85,6 +86,7 @@ put -t ../sys/isprime.sl /src/isprime.sl
 put -t ../sys/hamurabi.sl /src/hamurabi.sl
 put -t ../sys/opts.sl /src/opts.sl
 put -t ../sys/mandel.sl /src/mandel.sl
+put -t ../sys/sort.sl /src/sort.sl
 
 mkdir src/lib
 put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
