@@ -19,8 +19,6 @@ var strings = grnew();
 while (bgets(in, buf, bufsz))
     grpush(strings, strdup(buf));
 
-outp(2,1);
 sort(grbase(strings), grlen(strings), strcmp);
-outp(1,1);
 
 grwalk(strings, puts);
