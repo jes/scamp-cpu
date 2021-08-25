@@ -46,6 +46,7 @@ The computer already works, and I suspect it will never be "finished", but some 
  - [ ] write a fixed-point arithmetic library
  - [ ] write a big-fixed-point arithmetic library
  - [ ] add a checksum to the bootloader
+ - [ ] support array element assignment syntax in compiler (e.g. `arr[i] = foo`)
  - [ ] compete in this year's [Advent of Code](https://adventofcode.com/) using the SCAMP hardware
 
 ## Architecture

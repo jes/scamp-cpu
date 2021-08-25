@@ -105,3 +105,22 @@ var grfind = func(gr, findval, cb) {
 var grsort = func(gr, cmp) {
     sort(grbase(gr), grlen(gr), cmp);
 };
+
+# reverse the elements in the growarray
+var grrev = func(gr) {
+    var i = 0;
+    var j = grlen(gr)-1;
+
+    var tmp;
+
+    # TODO: [perf] this could operate directly on the underlying array
+    while (i < j) {
+        tmp = grget(gr, j);
+        grset(gr, j, grget(gr, i));
+        grset(gr, i, tmp);
+        i++;
+        j--;
+    };
+
+    return gr;
+};

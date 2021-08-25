@@ -188,8 +188,8 @@ Fill in `buf` with information about the file at the given path.
 Fields are:
 
     0: file type (0 = dir, 1 = file)
-    1: length of file in blocks
-    2: length of file in words
+    1: length of file in words
+    2: length of file in blocks
     3: block number of start of file
 
 ### 0xfeef: unlink(path)
