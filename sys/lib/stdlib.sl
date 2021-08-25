@@ -1,3 +1,5 @@
+include "sys.sl";
+
 # multiply 2 numbers from stack and return result in r0
 # If this ever turns out to be a bottleneck, then we could potentially create
 # a "tbso" instruction (along the lines of "tbsz" but with the test inverted), and:
@@ -374,7 +376,11 @@ var _partition = func(arr, len, cmp) {
     # It's likely that the best choice in SCAMP depends on how efficiently
     # we can calculate the pivot, more than on the actual number of comparisons
     # required. (And calculating mod(random(),len) is bad).
-    var pivot = arr[len-1];
+    var pivot;
+    if (len <= 8)
+        pivot = arr[len-1]
+    else
+        pivot = arr[mod(random(),len)];
 
     var i = -1;
     var j = 0;
