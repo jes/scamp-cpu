@@ -100,8 +100,8 @@ var sizecmp = func(a, b) {
     # we can't just "return sizeb-sizea" because it overflows on values
     # larger than 32K
     if (sizeb == sizea) return 0
-    else if (sizeb lt sizea) return 1
-    else return -1;
+    else if (sizeb lt sizea) return -1
+    else return 1;
 };
 
 var ls = func(name) {
