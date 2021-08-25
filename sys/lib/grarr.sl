@@ -8,6 +8,7 @@
 # gr[2] = pointer to element space
 
 include "malloc.sl";
+include "stdlib.sl";
 
 var grnew = func() {
     var gr = malloc(3);
@@ -99,4 +100,8 @@ var grfind = func(gr, findval, cb) {
     };
 
     return 0;
+};
+
+var grsort = func(gr, cmp) {
+    sort(grbase(gr), grlen(gr), cmp);
 };
