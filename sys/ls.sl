@@ -7,6 +7,9 @@ include "string.sl";
 include "sys.sl";
 
 # TODO: align in neat columns like GNU ls?
+# TODO: [perf] instead of stat()'ing all the names upfront, make a memoised
+#       stat() so that we can start printing names before we've stat()'d them
+#       all; stat() is very expensive
 
 var bufsz = 256;
 var buf = malloc(bufsz);
