@@ -91,10 +91,6 @@ var blkfindfree = func() {
     var i = 0;
     while (FREEBLKBUF[blkgroup] & powers_of_2[i]) i++;
 
-    # upper 8 bits refer to lower 8 block numbers: swap them
-    # TODO: [perf] do this byte-swapping thing in the perl script instead of the kernel
-    i = i^8;
-
     # so now bit i in FREEBLKBUF[blkgroup] is 0, so the free block number is:
     #    (bitmapblk*4096 + blkgroup*16 + i)
     nextfreeblk = shl(bitmapblk, 12) + shl(blkgroup, 4) + i;
@@ -111,9 +107,6 @@ var blksetused = func(blk, used) {
     var bitmapblk = shr12(blk);
     var blkgroup  = byteshr4(blk & 0x0fff);
     var i         = blk & 0x0f;
-
-    # upper 8 bits refer to lower 8 block numbers: swap them
-    i = i^8;
 
     blkread(SKIP_BLOCKS + bitmapblk, FREEBLKBUF);
     if (used) *(FREEBLKBUF+blkgroup) = FREEBLKBUF[blkgroup] |  powers_of_2[i]
