@@ -355,3 +355,55 @@ var car = func(tuple) { return *tuple; };
 var cdr = func(tuple) { return *(tuple+1); };
 var setcar = func(tuple,a) { *tuple = a; };
 var setcdr = func(tuple,b) { *(tuple+1) = b; };
+
+# internal, used for quicksort;
+# return the index of the pivot element
+var _partition = func(arr, len, cmp) {
+    # TODO: [perf] what's the best way to choose a pivot? Wikipedia says:
+    #
+    # Specifically, the expected number of comparisons needed to sort n elements
+    # with random pivot selection is 1.386 n log n. Median-of-three pivoting
+    # brings this down to Cn,2 = 1.188 n log n, at the expense of a three-
+    # percent increase in the expected number of swaps. An even stronger
+    # pivoting rule, for larger arrays, is to pick the ninther, a recursive
+    # median-of-three (Mo3), defined as
+    # ninther(a) = median(Mo3(first 1/3 of a), Mo3(middle 1/3 of a), Mo3(final 1/3 of a))
+    #
+    # https://en.wikipedia.org/wiki/Quicksort#Choice_of_pivot
+    #
+    # It's likely that the best choice in SCAMP depends on how efficiently
+    # we can calculate the pivot, more than on the actual number of comparisons
+    # required. (And calculating mod(random(),len) is bad).
+    var pivot = arr[len-1];
+
+    var i = -1;
+    var j = 0;
+    var tmp;
+    while (j != len) {
+        if (cmp(arr[j], pivot) <= 0) { # if arr[j] <= pivot, swap i and j
+            i++;
+            tmp = arr[j];
+            *(arr+j) = arr[i];
+            *(arr + i) = tmp;
+        };
+        j++;
+    };
+
+    return i;
+};
+
+# sort array "arr" of "len" 1-word elements in-place;
+# max "len" is 16383 else beware of overflow;
+# cmp(a,b) should be a function that returns a value less than, equal to, or
+# greater than 0 if a is respectively less than, equal to, or greater than b;
+# e.g. sort an array of 10 string pointers with:
+#   sort(strings, 10, strcmp);
+var sort = func(arr, len, cmp) {
+    if (len <= 1) return 0;
+
+    var p = _partition(arr, len, cmp);
+    sort(arr, p, cmp);
+    sort(arr+p+1, len-p-1, cmp);
+
+    # TODO: [perf] should we turn the tail call into a loop?
+};
