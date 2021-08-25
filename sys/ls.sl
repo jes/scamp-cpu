@@ -7,9 +7,6 @@ include "string.sl";
 include "sys.sl";
 
 # TODO: align in neat columns like GNU ls?
-# TODO: [perf] instead of stat()'ing all the names upfront, make a memoised
-#       stat() so that we can start printing names before we've stat()'d them
-#       all; stat() is very expensive
 
 var bufsz = 256;
 var buf = malloc(bufsz);
@@ -27,17 +24,21 @@ var ls_col;
 
 var statbufs = 0;
 
-var stat_names = func(names) {
-    statbufs = htnew();
-    grwalk(names, func(s) {
-        var statbuf = malloc(4);
-        var n = stat(s, statbuf);
-        if (n < 0) {
-            fprintf("stat %s: %s\n", [s, strerror(n)]);
-            return 0;
-        };
-        htput(statbufs, s, statbuf);
-    });
+var memostat = func(name) {
+    if (!statbufs) statbufs = htnew();
+
+    var r = htget(statbufs, name);
+    if (r) return cdr(r);
+
+    var statbuf = malloc(4);
+    var n = stat(name, statbuf);
+    if (n < 0) {
+        fprintf("stat %s: %s\n", [name, strerror(n)]);
+        statbuf = 0;
+    };
+    htput(statbufs, name, statbuf);
+
+    return statbuf;
 };
 
 var ls_single = func(names) {
@@ -52,10 +53,8 @@ var ls_long = func(names) {
         var typch = '?';
         var size = 0;
 
-        var r = htget(statbufs, s);
-        var statbuf;
-        if (r) {
-            statbuf = cdr(statbuf);
+        var statbuf = memostat(s);
+        if (statbuf) {
             typch = '-';
             if (*statbuf == 0) typch = 'd';
             size = statbuf[1];
@@ -85,15 +84,12 @@ var sizecmp = func(a, b) {
     var sizea = 0;
     var sizeb = 0;
 
-    var r = htget(statbufs, a);
-    var statbuf;
-    if (r) {
-        statbuf = cdr(r);
+    var statbuf = memostat(a);
+    if (statbuf) {
         sizea = statbuf[1];
     };
-    r = htget(statbufs, b);
-    if (r) {
-        statbuf = cdr(r);
+    statbuf = memostat(b);
+    if (statbuf) {
         sizeb = statbuf[1];
     };
 
@@ -138,8 +134,6 @@ var ls = func(name) {
     getcwd(buf, bufsz);
     chdir(name);
 
-    if (size_sort || long_output) stat_names(names);
-
     if (size_sort) grsort(names, sizecmp)
     else grsort(names, strcmp);
 
@@ -152,6 +146,7 @@ var ls = func(name) {
     if (statbufs) {
         htwalk(statbufs, func(k,v) free(v));
         htfree(statbufs);
+        statbufs = 0;
     };
 
     grwalk(names, free);
