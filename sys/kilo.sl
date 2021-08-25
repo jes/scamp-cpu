@@ -429,6 +429,8 @@ insertnewline = func() {
 };
 
 truncaterow = func() {
+    if (cy == grlen(rows)) return 0;
+
     var row = grget(rows, cy);
     if (grlen(row)) {
         grtrunc(row, cx);
