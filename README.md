@@ -43,6 +43,9 @@ The computer already works, and I suspect it will never be "finished", but some 
  - [x] mount the VGA serial console inside the case so I don't have so many wires trailing across the desk
  - [ ] make some levers that sit on the case at the side of the cards to aid removal of the cards
  - [ ] make the shell support pipe syntax (e.g. `foo | bar | baz`)
+ - [ ] write a fixed-point arithmetic library
+ - [ ] write a big-fixed-point arithmetic library
+ - [ ] add a checksum to the bootloader
  - [ ] compete in this year's [Advent of Code](https://adventofcode.com/) using the SCAMP hardware
 
 ## Architecture
