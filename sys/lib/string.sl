@@ -19,16 +19,13 @@ var strcmp = asm {
         jz strcmp_done
 
         # if (*s1 != *s2) return *s1-*s2
-        ld x, (r1)
-        sub x, (r2)
-        jz strcmp_cont
+        ld x, (r1++)
+        sub x, (r2++)
+        jz strcmp_loop
+
         ld r0, x
         ret
 
-        strcmp_cont:
-        inc r1
-        inc r2
-        jmp strcmp_loop
     strcmp_done:
 
     # return *s1-*s2
