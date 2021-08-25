@@ -187,18 +187,32 @@ sub kernel {
     }
     close $fh;
 
-    my $length = @kernel/2;
+    my $length = (@kernel/2)+1;
 
+    my $checksum = (0x5343 + $start + $length)% 0x10000;
     my @block = (0x53, 0x43, int($start/256), $start%256, int($length/256), $length%256);
     my $blknum = 0;
+    my $even = 1;
     while (defined (my $byte = shift @kernel)) {
         push @block, $byte;
+        if ($even) {
+            $checksum = ($checksum + $byte*256) % 0x10000;
+        } else {
+            $checksum = ($checksum + $byte) % 0x10000;
+        }
+        $even = !$even;
         if (@block == 512) {
             $fs->writeblock($blknum, @block);
             $blknum++;
             @block = ();
         }
     }
+
+    # TODO: may need to flush block in between these, if the kernel
+    # length is unusual (but $fs->writeblock() will die if so)
+    $checksum = 0x10000-$checksum;
+    push @block, int($checksum/256);
+    push @block, $checksum%256;
 
     if (@block) {
         push @block, 0 while @block < 512;

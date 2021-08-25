@@ -29,6 +29,7 @@
 .def START 0xff01 # r1
 .def POINT 0xff02 # r2
 .def LENGTH 0xff03 # r3
+.def CHECKSUM 0xff06 # r6
 
 ld sp, 0x8000
 
@@ -44,7 +45,7 @@ call storage_init
 .def MAGIC 0x5343
 call inword
 ld r11, r0
-ld r0, wrongmagic_s
+ld r0, badmagic_s
 sub r11, MAGIC
 jnz error
 
@@ -52,17 +53,10 @@ jnz error
 call inword
 ld (START), r0
 ld (POINT), r0
-ld x, r0
-ld r0, startinrom_s
-and x, 0xff00
-jz error
 
 # 4. read length from disk
 call inword
-ld r11, r0
-ld r0, zerolength_s
-ld (LENGTH), r11
-jz error
+ld (LENGTH), r0
 
 # 5. read data from disk
 read_data:
@@ -71,6 +65,14 @@ read_data:
     ld ((POINT)++), x
     dec (LENGTH)
     jnz read_data
+
+ld r0, newline_s
+call print
+
+# 6. check checksum
+ld r0, badchecksum_s
+test (CHECKSUM)
+jnz error
 
 ld r0, ok_s
 call print
@@ -84,6 +86,8 @@ error:
     ld r0, diskerror_s
     call print
     ld r0, r1
+    call print
+    ld r0, newline_s
     call print
     jr- 1
 
@@ -165,6 +169,8 @@ storage_init:
     ld (BLKIDX), 0
     ld (BLKNUM), 0
 
+    ld (CHECKSUM), 0
+
     pop x
     ld r254, x
     ret
@@ -209,6 +215,7 @@ inword:
     # input into x and then load r0 from x
     in x, CFDATAREG
     ld r0, x
+    add (CHECKSUM), x
 
     inc (BLKIDX)
     # do we need to go to the next block?
@@ -242,9 +249,12 @@ inword:
     ld r254, x
     ret
 
-welcome_s:    .str "SCAMP boot...\r\n\0"
-ok_s:         .str "OK\r\n\0"
-diskerror_s:  .str "disk error: \0"
-wrongmagic_s: .str "bad magic\r\n\0"
-startinrom_s: .str "start in ROM\r\n\0"
-zerolength_s: .str "0 length\r\n\0"
+welcome_s:     .str "SCAMP boot...\r\n\0"
+ok_s:          .str "OK\r\n\0"
+diskerror_s:   .str "disk error: \0"
+badmagic_s:    .str "bad magic\0"
+badchecksum_s: .str "bad checksum\0"
+newline_s:     .str "\r\n\0"
+
+# make sure the bootrom fits in 256 bytes:
+.at 0x100

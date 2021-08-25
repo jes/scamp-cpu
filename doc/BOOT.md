@@ -10,9 +10,13 @@ The first 3 words of the disk should be:
   2. start address
   3. length
 
+The bootloader adds together all the 16-bit values that it reads (that is magic number, start address, length,
+and then `length` words). So the kernel data should be followed by a 16-bit checksum value that will make
+this all sum to 0. The checksum value can actually be anywhere in the kernel, as long as all the data sums to 0.
+
 So the disk will look like:
 
-    [magic][start addr][length][kernel code][ ... gap ... ][filesystem data]
+    [magic][start addr][length][kernel code][checksum][ ... gap ... ][filesystem data]
 
 The "... gap ..." is there to allow the kernel code to be replaced with a longer one without
 having to relocate the filesystem.
