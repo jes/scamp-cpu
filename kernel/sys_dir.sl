@@ -201,6 +201,7 @@ sys_unlink = func(name) {
     var blknum = location[0];
     var dirblk = location[1];
     var unlink_offset = location[2];
+    var dir_parent = location[3];
 
     # don't unlink the empty string file, or "."
     if (dirblk == 0) return NOTFOUND;
@@ -230,8 +231,8 @@ sys_unlink = func(name) {
     # free the first block
     blksetused(blknum, 0);
 
-    # TODO: [nice] if the directory block is now empty, we should unlink it
-    #       from the linked list of blocks in the directory
+    # clear up the containing directory block if it's now empty
+    dirgc(dir_parent, dirblk, 0);
 
     return 0;
 };
@@ -254,6 +255,7 @@ sys_rename = func(oldname, newname) {
     var blknum = oldlocation[0];
     var dirblk = oldlocation[1];
     var unlink_offset = oldlocation[2];
+    var dir_parent = oldlocation[3];
 
     # don't rename the empty string file, or "."
     if (dirblk == 0 || dirblk == blknum) return NOTFOUND;
@@ -273,8 +275,8 @@ sys_rename = func(oldname, newname) {
     dirent(BLKBUF+unlink_offset, "", 0);
     blkwrite(dirblk, 0);
 
-    # TODO: [nice] if the old directory block is now empty, we should unlink it
-    #       from the linked list of blocks in the directory
+    # clear up the containing directory block if it's now empty
+    dirgc(dir_parent, dirblk, 0);
 
     return 0;
 

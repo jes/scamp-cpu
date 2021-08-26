@@ -82,15 +82,19 @@ var dirwalk = func(dirblk, cb) {
 # find the given name in dirblk, traversing directories as necessary
 # return a pointer to a static list:
 #  [
-#    blknum,        # the block number that the name links to
-#    dirblknum,     # the block number that the name was found in
-#    dirent_offset, # the word offset of the dirent for this name
+#    blknum,           # the block number that the name links to
+#    dirblknum,        # the block number that the name was found in
+#    dirent_offset,    # the word offset of the dirent for this name
+#    parent_dirblknum, # the block number of the immediate parent of the
+#                      # directory block that the name was found in
 #  ]
 # return a null pointer if not found
 var dir_offset;
 var dir_name;
 var dir_blknum;
 var dir_dirblknum;
+var dir_parentblknum;
+var dir_curblknum;
 var dirfindname = func(dirblk, findname) {
     dir_name = findname;
     while (*dir_name == '/') dir_name++;
@@ -99,8 +103,14 @@ var dirfindname = func(dirblk, findname) {
 
     while (1) {
         dir_blknum = 0;
+        dir_parentblknum = 0;
+        dir_curblknum = 0;
 
         dirwalk(dirblk, func(name, blknum, dirblknum, dirent_offset) {
+            if (dirblknum != dir_curblknum) {
+                dir_parentblknum = dir_curblknum;
+                dir_curblknum = dirblknum;
+            };
             if (*name && pathbegins(dir_name, name)) {
                 while (*dir_name && *dir_name != '/') dir_name++;
                 dir_blknum = blknum;
@@ -120,7 +130,7 @@ var dirfindname = func(dirblk, findname) {
         dirblk = dir_blknum;
     };
 
-    return [dir_blknum, dir_dirblknum, dir_offset];
+    return [dir_blknum, dir_dirblknum, dir_offset, dir_parentblknum];
 };
 
 # create the given name in dirblk, traversing directories as necessary
@@ -221,4 +231,47 @@ var dirmkname = func(dirblk, mkname, mktype, firstblock) {
     blkwrite(dir_blknum, 0);
 
     return [blknum, dir_blknum, dir_offset, dirblk];
+};
+
+# unlink "dirblk" from its parent "parentblk" if "dirblk" is now empty
+# "dirblk" should be the next block for "parentblk";
+# "blkbuf" can be the block buffer to use, or 0 to use BLKBUF, either way note
+# that it will get clobbered
+var dirgc = func(parentblk, dirblk, blkbuf) {
+    if (!parentblk) return 0;
+
+    if (!blkbuf) blkbuf = BLKBUF;
+
+    blkread(dirblk, blkbuf);
+
+    # if any of the entries are still in use, we can't gc this directory
+    var off = 2;
+    var pname;
+    while ((off+DIRENTSZ) <= BLKSZ) {
+        # if the first byte of any entry's name is nonzero, then the directory
+        # still contains at least one entry, so we just return early
+        pname = blkbuf+off;
+        if (*pname & 0xff00) return 0;
+
+        off = off + DIRENTSZ;
+    };
+
+    # OK, we now know that this block is empty
+
+    # remember its "next" block
+    var nextdirblk = blknext(blkbuf);
+
+    # verify that blknext of parentblk==dirblk, else panic
+    blkread(parentblk, blkbuf);
+    if (blknext(blkbuf) != dirblk) kpanic("dirgc: bad block");
+
+    # now unlink this block from the list
+    blksetnext(nextdirblk, blkbuf);
+    blkwrite(parentblk, blkbuf);
+
+    # and mark the free'd block as free
+    blksetused(dirblk, 0);
+
+    # TODO: [nice] we could "de-fragment" directory entries even when they're
+    #       not fully empty, by moving entries up to the first empty slots?
 };
