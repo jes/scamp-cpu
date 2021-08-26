@@ -8,11 +8,11 @@ var readdir_sz;
 var readdir_blknum;
 var readdir_minoffset;
 var readdir_ndirents;
+var readdir_accepting;
 sys_readdir = func(fd, buf, sz) {
     ser_poll(3);
 
-    var err;
-    err = catch();
+    var err = catch();
     if (err) return err;
 
     var fdbase = fdbaseptr(fd);
@@ -23,9 +23,12 @@ sys_readdir = func(fd, buf, sz) {
     readdir_blknum = *(fdbase+FDDATA);
     readdir_minoffset = *(fdbase+FDDATA+1);
     readdir_ndirents = 0;
+    readdir_accepting = 0;
 
     dirwalk(readdir_blknum, func(name, blknum, dirblknum, dirent_offset) {
-        if (dirent_offset < readdir_minoffset && dirblknum == readdir_blknum) return 0;
+        if (dirblknum == readdir_blknum) readdir_accepting = 1;
+        if (!readdir_accepting) return 1;
+        if (dirent_offset < readdir_minoffset && dirblknum == readdir_blknum) return 1;
 
         if (*name) {
             # copy the name into readdir_buf
