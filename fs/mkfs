@@ -24,9 +24,9 @@ while (<>) {
 
 push @d, 0 while @d < $FS_SIZE;
 
-# mark skipped blocks and bitmap blocks as unavailable
+# mark skipped blocks, bitmap blocks, and root directory block as unavailable
 $d[($SKIP_BLOCKS * $BLKSZ) + $_] = 0xff for (0 .. 9);
-$d[($SKIP_BLOCKS * $BLKSZ) + 10] = 0x01;
+$d[($SKIP_BLOCKS * $BLKSZ) + 11] = 0x01;
 
 $fs->{disk} = \@d;
 

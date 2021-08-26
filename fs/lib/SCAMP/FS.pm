@@ -344,7 +344,7 @@ sub findfreeblk {
         my $blknum = ($b+$self->{lastfreeblk}+1)&0xffff;
         my $blkblk = $SKIP_BLOCKS + int($blknum / ($BLKSZ * 8));
         my $byteinblk = int($blknum/8) % $BLKSZ;
-        $byteinblk ^= 1;
+        $byteinblk ^= 1; # swap endianness
         my $bitinbyte = $blknum % 8;
 
         if ($blkblk != $readblk) {
@@ -367,7 +367,7 @@ sub blkisfree {
 
     my $blkblk = $SKIP_BLOCKS + int($blknum / ($BLKSZ * 8));
     my $byteinblk = int($blknum/8) % $BLKSZ;
-    $byteinblk ^= 1;
+    $byteinblk ^= 1; # swap endianness
     my $bitinbyte = $blknum % 8;
 
     my @bitmapblock = $self->readblock($blkblk);
@@ -381,7 +381,7 @@ sub setblkused {
 
     my $blkblk = $SKIP_BLOCKS + int($blknum / ($BLKSZ * 8));
     my $byteinblk = int($blknum/8) % $BLKSZ;
-    $byteinblk ^= 1;
+    $byteinblk ^= 1; # swap endianness
     my $bitinbyte = $blknum % 8;
 
     my @bitmapblock = $self->readblock($blkblk);
