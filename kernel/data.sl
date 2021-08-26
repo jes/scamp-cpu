@@ -1,7 +1,4 @@
 # Data storage and related functions
-# TODO: [nice] we should probably aim to move some of this into the middle of the top
-# page so that the kernel is smaller. Maybe leave 16/32 pseudoregs free at the
-# bottom, and some more at the top, and use the rest for kernel data.
 
 # File descriptor table
 #
@@ -26,9 +23,7 @@ var FDDATA  = 4;
 #   3: serial port 0 (console)
 var nfds = 16;
 var KERNELFD = nfds-1;
-var fdtable = asm {
-    fdtable: .gap 128 # space for 16 fds
-};
+var fdtable = 0xff40;
 
 # fd base pointer is (fdtable + fd*8)
 #var fdbaseptr = func(fd) {
@@ -85,6 +80,14 @@ var fdfree = func(fd) {
     var i = 0;
     while (i != 8) {
         *(fdbaseptr(fd)+i) = 0;
+        i++;
+    };
+};
+
+var fd_init = func() {
+    var i = 0;
+    while (i != nfds) {
+        fdfree(i);
         i++;
     };
 };

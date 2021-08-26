@@ -28,6 +28,10 @@ include "sys_proc.sl";
 kputs("sys_random ");
 include "sys_random.sl";
 
+# initialise fdtable
+kputs("fd_init()\r\n");
+fd_init();
+
 # setup serial port fds
 kputs("ser_init()\r\n");
 ser_init();
