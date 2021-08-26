@@ -2,7 +2,7 @@
 
 include "util.sl";
 
-kputs("starting kernel...\r\n");
+kputs("kernel...\r\n");
 
 kputs("data ");
 include "data.sl";
@@ -32,9 +32,8 @@ include "sys_random.sl";
 kputs("ser_init()\r\n");
 ser_init();
 
-kputs("loading init...\r\n");
-
 # We just need to start init to boot the system.
+kputs("init...\r\n");
 sys_exec(["/bin/init"]);
 
-kpanic("return from exec([\"/bin/init\"]) (probably /bin/init doesn't exist)");
+kpanic("return from init"); # is /bin/init missing?

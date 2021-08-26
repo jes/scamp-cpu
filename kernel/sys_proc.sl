@@ -29,7 +29,7 @@ var sys_exit_impl = func(rc) {
     denycatch();
     if (err) kpanic("exit() panics");
 
-    if (pid == 0) kpanic("init exits.");
+    if (pid == 0) kpanic("init exits");
     pid--;
 
     # sync buffers
@@ -73,7 +73,7 @@ var sys_exit_impl = func(rc) {
 
     allowcatch();
     return_to_parent(sp, ret, rc);
-    kpanic("return_to_parent() returned to exit()");
+    kpanic("returned to exit");
 };
 
 # copy the rc, switch to the kernel stack, and call sys_exit_impl()
@@ -120,7 +120,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
         if (writesz gt 16384) writesz = 16384;
         n = sys_write(ufd, p, writesz);
         if (n < 0) throw(n);
-        if (n != writesz) kpanic("system(): write() didn't write enough");
+        if (n != writesz) kpanic("system: write too small");
         p = p + writesz;
     };
     sys_close(ufd);
@@ -272,7 +272,7 @@ var sys_exec_impl = func(args) {
     # jump to it
     allowcatch();
     jmp_to_user();
-    kpanic("user program returned to exec() call");
+    kpanic("returned to exec");
 };
 
 # copy arg pointer, switch to kernel stack, and call sys_exec_impl()

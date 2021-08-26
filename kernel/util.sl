@@ -84,13 +84,6 @@ var kpanic = func(s) {
     khalt();
 };
 
-var unimpl = func(s) {
-    kputs("panic: unimplemented: ");
-    kputs(s);
-    kputs("\r\n");
-    khalt();
-};
-
 #var memcpy = func(dest, src, len) {
 #    var dd = dest;
 #    while (len--) *(dest++) = *(src++);
