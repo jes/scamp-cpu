@@ -34,6 +34,7 @@ my %cmd = (
     abort => \&abort,
     kernel => \&kernel,
     limit => \&limit,
+    view => \&view,
 );
 
 info("\$ ");
@@ -227,6 +228,16 @@ sub limit {
     for my $i ($N .. 65535) {
         $fs->setblkused($i);
     }
+}
+
+sub view {
+    my ($name) = @_;
+
+    my $blk = $fs->find($name);
+    $fs->dirwalk($blk, sub {
+        my ($name, $blknum, $dirblknum, $off) = @_;
+        print " [in $dirblknum] $name => $blknum\n";
+    });
 }
 
 sub free {
