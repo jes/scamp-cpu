@@ -97,8 +97,6 @@ var blkfindfree = func() {
 };
 
 # Mark the given block as used/unused ("used" should be 0 or 1)
-# If using "nextfreeblk", make sure to call blkfindfree() straight away
-# note this function clobbers the block buffer
 var blksetused = func(blk, used) {
     # block "blk" corresponds to:
     #   bitmapblk = blk / 4096
@@ -112,6 +110,9 @@ var blksetused = func(blk, used) {
     if (used) *(FREEBLKBUF+blkgroup) = FREEBLKBUF[blkgroup] |  powers_of_2[i]
     else      *(FREEBLKBUF+blkgroup) = FREEBLKBUF[blkgroup] & ~powers_of_2[i];
     blkwrite(SKIP_BLOCKS + bitmapblk, FREEBLKBUF);
+
+    # if we just used the free block, find another
+    if (blk == nextfreeblk) blkfindfree();
 };
 
 # recursively truncate the file from the given block number

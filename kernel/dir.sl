@@ -173,7 +173,6 @@ var dirmkname = func(dirblk, mkname, mktype, firstblock) {
     if (blknum == 0) {
         blknum = nextfreeblk;
         blksetused(blknum, 1);
-        blkfindfree();
 
         # initialise the new file
         blksettype(mktype, 0);
@@ -200,7 +199,6 @@ var dirmkname = func(dirblk, mkname, mktype, firstblock) {
         # allocate a new block for this directory
         dir_blknum = nextfreeblk;
         blksetused(dir_blknum, 1);
-        blkfindfree();
 
         # write a header
         blksettype(TYPE_DIR, 0);

@@ -112,7 +112,6 @@ var fs_write = func(fd, buf, sz) {
         # always be writing at the end of the file, even if we reach the end of a block
         if (nextblknum == nextfreeblk) {
             blksetused(nextblknum, 1);
-            blkfindfree();
 
             if (nextblknum == nextfreeblk) kpanic("write: nextfreeblk is not free");
 
