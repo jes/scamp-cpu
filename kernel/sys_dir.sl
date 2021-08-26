@@ -203,7 +203,8 @@ sys_unlink = func(name) {
     var unlink_offset = location[2];
 
     # don't unlink the empty string file, or "."
-    if (dirblk == 0 || dirblk == blknum) return NOTFOUND;
+    if (dirblk == 0) return NOTFOUND;
+    if (dirblk == blknum) return EXISTS;
 
     blkread(blknum, 0);
     # don't unlink non-empty directories
