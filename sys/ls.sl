@@ -33,7 +33,8 @@ var memostat = func(name) {
     var statbuf = malloc(4);
     var n = stat(name, statbuf);
     if (n < 0) {
-        fprintf("stat %s: %s\n", [name, strerror(n)]);
+        fprintf(2, "ls: stat %s: %s\n", [name, strerror(n)]);
+        rc = 1;
         statbuf = 0;
     };
     htput(statbufs, name, statbuf);
@@ -130,9 +131,20 @@ var ls = func(name) {
     close(fd);
 
     # change directory so that we can stat() the files in sizecmp(),ls_long()
-    # TODO: [bug] getcwd() can fail if the path is too long
-    getcwd(buf, bufsz);
-    chdir(name);
+    n = getcwd(buf, bufsz);
+    if (n < 0) {
+        fprintf(2, "ls: getcwd: %s\n", [strerror(n)]);
+        rc = 1;
+        grwalk(names, free);
+        grfree(names);
+        return 0;
+    };
+    n = chdir(name);
+    if (n < 0) {
+        fprintf(2, "ls: chdir %s: %s\n", [name, strerror(n)]);
+        rc = 1;
+        return 0;
+    };
 
     if (size_sort) grsort(names, sizecmp)
     else grsort(names, strcmp);
