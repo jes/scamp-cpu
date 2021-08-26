@@ -135,7 +135,6 @@ var sys_system_impl  = func(top, args, sp, ret) {
     #  - CWDBLK
     #  - fdtable
     #  - cmdargs
-    # TODO: [bug] error checking
     sys_write(kfd, &sp, 1);
     sys_write(kfd, &ret, 1);
     sys_write(kfd, &CWDBLK, 1);
