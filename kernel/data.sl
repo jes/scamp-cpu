@@ -103,9 +103,7 @@ var SER_DISABLE = 2;
 
 # Block device state
 var BLKSZ = 256; # 256 words, 512 bytes
-var BLKBUF = asm {
-    BLKBUF: .gap 257
-};
+var BLKBUF = asm { .gap 257 };
 var TYPE_DIR = 0;
 var TYPE_FILE = 0x100;
 var DIRENTSZ = 16;
@@ -123,9 +121,7 @@ var nextfreeblk = 0;
 #       allow arbitrarily-large amounts, and stick it just before the kernel
 #       base, and make osbase() report the start address of cmdargs() instead?
 var cmdargs_sz = 256; # words, including pointers, characters, and nuls
-var cmdargs = asm {
-    cmdargs: .gap 256
-};
+var cmdargs = asm { cmdargs: .gap 256 };
 
 # Space to build names for undirent()
 var undirent_str = asm { .gap 32 };
