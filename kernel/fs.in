@@ -35,6 +35,7 @@ put ../sys/hamurabi.bin /bin/hamurabi
 put ../sys/opts.bin /bin/opts
 put ../sys/mandel.bin /bin/mandel
 put ../sys/sort.bin /bin/sort
+put ../sys/mandelfix.bin /bin/mandelfix
 
 mkdir lib
 put ../sys/lib.o /lib/lib.o
@@ -87,6 +88,7 @@ put -t ../sys/hamurabi.sl /src/hamurabi.sl
 put -t ../sys/opts.sl /src/opts.sl
 put -t ../sys/mandel.sl /src/mandel.sl
 put -t ../sys/sort.sl /src/sort.sl
+put -t ../sys/mandelfix.sl /src/mandelfix.sl
 
 mkdir src/lib
 put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
@@ -104,6 +106,7 @@ put -t ../sys/lib/bigint.sl /src/lib/bigint.sl
 put -t ../sys/lib/strbuf.sl /src/lib/strbuf.sl
 put -t ../sys/lib/bufio.sl /src/lib/bufio.sl
 put -t ../sys/lib/getopt.sl /src/lib/getopt.sl
+put -t ../sys/lib/fixed.sl /src/lib/fixed.sl
 
 mkdir proc
 mkdir tmp
