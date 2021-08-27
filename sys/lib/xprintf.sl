@@ -2,25 +2,6 @@
 
 include "stdlib.sl";
 
-var xprintf_handlers = asm { .gap 26 };
-
-# register a character handler for xprintf et al
-# that takes in the value to format and returns the
-# formatted string; the character must be a lowercase letter
-#   e.g. xpreg('x', func(val) { return "x" });
-# it's fine if the returned string is static
-# set cb=0 to unregister the handler
-var xpreg = func(ch, cb) {
-    if (!islower(ch)) return 0;
-    xprintf_handlers[ch-'a'] = cb;
-};
-
-xpreg('c', func(ch) { return [ch] });
-xpreg('s', func(s) { return s });
-xpreg('d', itoa);
-xpreg('u', utoa);
-xpreg('x', func(v) { return utoabase(v, 16) });
-
 # usage: xprintf(fmt, [arg1, arg2, ...], putc_cb);
 # format string:
 #   %% -> %
