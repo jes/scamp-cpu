@@ -4,7 +4,7 @@ include "stdio.sl";
 include "string.sl";
 include "sys.sl";
 
-var bufsz = 32;
+var bufsz = 256;
 var recursive = 0;
 
 var help = func(rc) {
