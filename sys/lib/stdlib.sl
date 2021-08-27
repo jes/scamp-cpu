@@ -250,6 +250,19 @@ var shl = asm {
     ret
 };
 
+# compute "i >> n"
+var shr = func(i, n) {
+    var bit = 1;
+    var r = 0;
+    var j = 0;
+    while (n != 16) {
+        if (i & powers_of_2[n]) r = r | bit;
+        bit = bit + bit;
+        n++;
+    };
+    return r;
+};
+
 var itoa_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
 var itoa_space = "................."; # static 18-word buffer
 
