@@ -24,8 +24,6 @@ var rm;
 var rm_recurse = func(name) {
     var n;
 
-    printf("rm_recurse(%s)\n", [name]);
-
     var olddir = malloc(bufsz);
     n = getcwd(olddir, bufsz);
     if (n < 0) {
@@ -64,7 +62,6 @@ var rm_recurse = func(name) {
 
         p = namebuf;
         while (n--) {
-            printf("readdir of %s sees: %s\n", [name,p]);
             if (strcmp(p,".") != 0 && strcmp(p,"..") != 0)
                 rm(p);
             p = p + strlen(p)+1;
@@ -81,8 +78,6 @@ var rm_recurse = func(name) {
 rm = func(name) {
     var n;
     var statbuf = [0,0,0,0];
-
-    printf("rm(%s)\n", [name]);
 
     if (recursive) {
         n = stat(name, statbuf);
