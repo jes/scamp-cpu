@@ -1,14 +1,24 @@
 include "sys.sl";
 
 # multiply 2 numbers from stack and return result in r0
-# If this ever turns out to be a bottleneck, then we could potentially create
-# a "tbso" instruction (along the lines of "tbsz" but with the test inverted), and:
+# TODO: [perf] if this ever turns out to be a bottleneck, then we could
+# potentially create a "tbso" instruction (along the lines of "tbsz" but with
+# the test inverted), and:
 #   tbso r2, 0x0001
 #   jr+ 2 # skip over the "add"
 #   add r0, r1
 #   shl r1
 #   tbso r2, 0x0002
 #   jr+ 2 # skip over the "add"
+#   add r0, r1
+#   shl r1
+#   ... etc. ...
+# (In fact, we could do the above with ordinary "tbsz" if we "neg r2" first)
+# Or even better with a "test bits and skip 2 words if zero":
+#   tbs2z r2, 0x0001
+#   add r0, r1
+#   shl r1
+#   tbs2z r2, 0x0002
 #   add r0, r1
 #   shl r1
 #   ... etc. ...
