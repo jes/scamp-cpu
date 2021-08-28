@@ -9,11 +9,16 @@ var fix_prec = 8;
 var fixinit;
 var fixatofbase;
 var fixatof;
+var fixftoabase;
 var fixftoa;
 var fixitof;
 var fixftoi;
 var fixmul;
 var fixdiv;
+var fixint;
+var fixfrac;
+var fixfloor;
+var fixceil;
 
 fixinit = func(frac) {
     fix_prec = frac;
@@ -54,10 +59,40 @@ fixatofbase = func(s, base) {
 
 fixatof = func(s) return fixatofbase(s, 10);
 
-fixftoa = func(f) {
-    printf("TODO: fixftoa\n", 0);
-    exit(1);
+# TODO: [bug] how much space does this actually need in the worst case?
+var fixftoa_space = asm { .gap 64 };
+fixftoabase = func(f, base) {
+    var neg = 0;
+    var s = fixftoa_space;
+    if (f < 0) {
+        neg = 1;
+        f = -f;
+        *(s++) = '-';
+    };
+
+    # handle the integer part with itoabase
+    strcpy(s, itoabase(fixftoi(f), base));
+    # append a '.'
+    while (*s) s++;
+    *(s++) = '.';
+
+    f = fixfrac(f);
+    var n;
+    var i = 16;
+    while (f && (i--)) {
+        n = mul(f, base);
+        f = fixfrac(n);
+
+        *(s++) = itoa_alphabet[fixftoi(n)];
+    };
+
+    if (*(s-1) == '.') *(s++) = '0';
+
+    *s = 0;
+    return fixftoa_space;
 };
+
+fixftoa = func(f) return fixftoabase(f, 10);
 xpreg('f', fixftoa);
 
 fixitof = func(i) {
@@ -198,4 +233,27 @@ fixmul = asm {
 fixdiv = func(a, b) {
     printf("TODO: fixdiv\n", 0);
     exit(1);
+};
+
+# return the integer part of f, as a fixed-point value
+fixint = func(f) {
+    # TODO: is this right?
+    return fixitof(fixftoi(f));
+};
+
+# return the fractional part of f
+fixfrac = func(f) {
+    # TODO: is this right?
+    return f - fixint(f);
+};
+
+fixfloor = func(f) {
+    # TODO: is this right?
+    return f - fixfrac(f)
+};
+
+fixceil = func(f) {
+    # TODO: is this right?
+    if (f == fixfloor(f)) return f
+    else return fixfloor(f)+1;
 };
