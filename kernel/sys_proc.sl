@@ -90,26 +90,34 @@ sys_exit = asm {
 var sys_system_impl  = func(top, args, sp, ret) {
     ser_poll(3);
 
+    var origpid = pid;
+
+    # create filenames
+    # TODO: [bug] should support more than 1 digit in filenames
+    var userfile = "/proc/0.user";
+    var unlink_userfile = 0;
+    var kernelfile = "/proc/0.kernel";
+    var unlink_kernelfile = 0;
+    *(userfile+6) = pid+'0';
+    *(kernelfile+6) = pid+'0';
+
     var err = catch();
     denycatch();
     if (err) {
         allowcatch();
+        pid = origpid;
+        if (unlink_userfile) sys_unlink(userfile);
+        if (unlink_kernelfile) sys_unlink(kernelfile);
         return err;
     };
 
     # sync buffers (before writing fdtable to disk)
     sys_sync(-1);
 
-    # create filenames
-    # TODO: [bug] should support more than 1 digit in filenames
-    var userfile = "/proc/0.user";
-    var kernelfile = "/proc/0.kernel";
-    *(userfile+6) = pid+'0';
-    *(kernelfile+6) = pid+'0';
-
     # open "/proc/$pid.user" for writing
     var ufd = sys_open(userfile, O_WRITE|O_CREAT|O_KERNELFD);
     if (ufd < 0) throw(ufd);
+    unlink_userfile = 1;
 
     # copy bytes from 0x100..top
     var p = 0x100;
@@ -128,6 +136,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
     # open "/proc/$pid.kernel" for writing
     var kfd = sys_open(kernelfile, O_WRITE|O_CREAT|O_KERNELFD);
     if (kfd < 0) throw(kfd);
+    unlink_kernelfile = 1;
 
     # copy into $pid.kernel:
     #  - stack pointer
@@ -145,15 +154,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
     # execute the "child" process
     pid++;
     err = sys_exec(args);
-    pid--;
-
-    # if sys_exec() returned, there was an error
-
-    sys_unlink(userfile);
-    sys_unlink(kernelfile);
-
-    allowcatch();
-    return err;
+    throw(err);
 };
 
 # call sys_system_impl() with the return address, stack pointer, and system() arguments
