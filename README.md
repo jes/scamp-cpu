@@ -38,27 +38,31 @@ This is what I've already done:
 
 The computer already works, and I suspect it will never be "finished", but some things I still want to work on are:
 
- - [x] wire in a permanent clock source from a 1 MHz crystal oscillator instead of using an Arduino on a breadboard
- - [x] wire up some power and reset switches
- - [x] mount the VGA serial console inside the case so I don't have so many wires trailing across the desk
+#### Hardware
+
  - [ ] make some levers that sit on the case at the side of the cards to aid removal of the cards
- - [ ] make the shell support pipe syntax (e.g. `foo | bar | baz`)
- - [x] write a fixed-point arithmetic library (WIP: just missing fixdiv())
- - [ ] write a big-fixed-point arithmetic library
- - [ ] fixed-point mathematics: pow,sqrt
- - [ ] fixed-point trigonometry: sin,cos,tan,asin,acos,atan,atan2
- - [x] add a checksum to the bootloader
- - [x] support array element assignment syntax in compiler (e.g. `arr[i] = foo`)
- - [ ] solve some of this year's [Advent of Code](https://adventofcode.com/) using the SCAMP hardware
+ - [ ] build a hardware multiplication card (and maybe division?)
+ - [ ] make the CompactFlash interface more reliable
+
+#### Low-level software
+
  - [ ] make kernel self-hosting (compile within SCAMP/os & write to disk)
  - [ ] make library blob self-hosting (compile within SCAMP/os)
  - [ ] support multiple different library blobs (e.g. to toggle the large parts on/off)
  - [ ] write an strace-like debugging tool
  - [ ] write a DDT-like debugging tool
+ - [ ] write a peephole optimiser to run within SCAMP/os
+
+#### Other software
+
+ - [ ] make the shell support pipe syntax (e.g. `foo | bar | baz`)
+ - [ ] write a big-fixed-point arithmetic library
+ - [ ] fixed-point mathematics: pow,sqrt
+ - [ ] fixed-point trigonometry: sin,cos,tan,asin,acos,atan,atan2
+ - [ ] solve some of this year's [Advent of Code](https://adventofcode.com/) using the SCAMP hardware
  - [ ] write a FORTH implementation (should it run on bare metal or under SCAMP/os?)
  - [ ] write a Z-machine interpreter and port some text adventures
  - [ ] write some games (pong? breakout? snake? tetris?)
- - [ ] build a hardware multiplication card (and maybe division?)
 
 If you happen to want to work on any of the above, I'd be happy to help you!
 
