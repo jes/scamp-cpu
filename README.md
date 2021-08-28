@@ -50,12 +50,15 @@ The computer already works, and I suspect it will never be "finished", but some 
  - [x] add a checksum to the bootloader
  - [x] support array element assignment syntax in compiler (e.g. `arr[i] = foo`)
  - [ ] solve some of this year's [Advent of Code](https://adventofcode.com/) using the SCAMP hardware
- - [ ] make kernel self-hosting
- - [ ] make library blob self-hosting
+ - [ ] make kernel self-hosting (compile within SCAMP/os & write to disk)
+ - [ ] make library blob self-hosting (compile within SCAMP/os)
  - [ ] support multiple different library blobs (e.g. to toggle the large parts on/off)
  - [ ] write an strace-like debugging tool
  - [ ] write a DDT-like debugging tool
  - [ ] write a FORTH implementation (should it run on bare metal or under SCAMP/os?)
+ - [ ] write a Z-machine interpreter and port some text adventures
+ - [ ] write some games (pong? breakout? snake? tetris?)
+ - [ ] build a hardware multiplication card (and maybe division?)
 
 If you happen to want to work on any of the above, I'd be happy to help you!
 
