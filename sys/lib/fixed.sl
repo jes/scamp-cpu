@@ -33,10 +33,17 @@ fixatofbase = func(s, base) {
     # now see if there's a fractional part
     while (*s && *s != '.') s++;
 
+    var divisor = 10;
+    var n;
+
     if (*s == '.') {
         s++;
         while (*s) {
-            # TODO: ???
+            n = stridx(itoa_alphabet, tolower(*s));
+            if (n == 0 && *s != *itoa_alphabet) break; # digit doesn't exist
+            if (n >= base) break; # digit out of range for base
+            v = v + div(fixitof(n), base);
+            divisor = mul(divisor, base);
             s++;
         };
     };

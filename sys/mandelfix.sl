@@ -14,12 +14,6 @@ var xmax = fixatof("1.5");
 var ymin = fixatof("-1.5");
 var ymax = fixatof("1.5");
 
-# TODO: once fixatof() works on fractional parts, delete the following:
-xmin = 0-0x0a00;
-xmax = 0x0600;
-ymin = 0-0x0600;
-ymax = 0x0600;
-
 var help = func(rc) {
     puts("usage: mandelfix [optons]
 
