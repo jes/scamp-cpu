@@ -6,6 +6,9 @@ include "stdio.sl";
 include "getopt.sl";
 include "fixed.sl";
 
+var ROWS = 24;
+var COLS = 80;
+
 # 10 bits of fractional part
 fixinit(10);
 
@@ -81,19 +84,25 @@ if (*m) help(1);
 var xrange = xmax - xmin;
 var yrange = ymax - ymin;
 
-var x = xmin;
-var y = ymin;
-var xstep = div(xrange, 80);
-var ystep = div(yrange, 24);
+var x;
+var y;
+var xstep = div(xrange, COLS);
+var ystep = div(yrange, ROWS);
 
-var n;
-while (y < ymax) {
+var xi;
+var yi;
+
+y = ymin;
+yi = 0;
+while (yi < ROWS) {
     x = xmin;
-    while (x < xmax) {
-        n = mandel(x, y);
-        putchar(alphabet[n]);
+    xi = 0;
+    while (xi < COLS) {
+        putchar(alphabet[mandel(x,y)]);
         x = x + xstep;
+        xi++;
     };
     putchar('\n');
     y = y + ystep;
+    yi++;
 };
