@@ -62,6 +62,15 @@ fixftoi = func(f) {
 };
 
 fixmul = func(a, b) {
+    var neg = 0;
+    if (a < 0) {
+        a = -a;
+        neg = !neg;
+    };
+    if (b < 0) {
+        b = -b;
+        neg = !neg;
+    };
     var result = 0;
     var n = shr(a,fix_prec);
     var i = 0;
@@ -78,6 +87,7 @@ fixmul = func(a, b) {
             if (a & powers_of_2[f]) n++;
         };
     };
+    if (neg) result = -result;
     return result;
 };
 
