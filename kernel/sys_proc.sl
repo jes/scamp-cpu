@@ -90,8 +90,6 @@ sys_exit = asm {
 var sys_system_impl  = func(top, args, sp, ret) {
     ser_poll(3);
 
-    var origpid = pid;
-
     # create filenames
     # TODO: [bug] should support more than 1 digit in filenames
     var userfile = "/proc/0.user";
@@ -101,14 +99,19 @@ var sys_system_impl  = func(top, args, sp, ret) {
     *(userfile+6) = pid+'0';
     *(kernelfile+6) = pid+'0';
 
+    var exit_on_catch = 0;
+
     var err = catch();
     denycatch();
     if (err) {
         allowcatch();
-        pid = origpid;
-        if (unlink_userfile) sys_unlink(userfile);
-        if (unlink_kernelfile) sys_unlink(kernelfile);
-        return err;
+        if (exit_on_catch) {
+            return sys_exit(err);
+        } else {
+            if (unlink_userfile) sys_unlink(userfile);
+            if (unlink_kernelfile) sys_unlink(kernelfile);
+            return err;
+        };
     };
 
     # sync buffers (before writing fdtable to disk)
@@ -153,6 +156,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
 
     # execute the "child" process
     pid++;
+    exit_on_catch = 1;
     err = sys_exec(args);
     throw(err);
 };
