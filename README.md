@@ -45,9 +45,18 @@ The computer already works, and I suspect it will never be "finished", but some 
  - [ ] make the shell support pipe syntax (e.g. `foo | bar | baz`)
  - [ ] write a fixed-point arithmetic library
  - [ ] write a big-fixed-point arithmetic library
+ - [ ] fixed-point mathematics: pow,sqrt
+ - [ ] fixed-point trigonometry: sin,cos,tan,asin,acos,atan,atan2
  - [x] add a checksum to the bootloader
  - [x] support array element assignment syntax in compiler (e.g. `arr[i] = foo`)
- - [ ] compete in this year's [Advent of Code](https://adventofcode.com/) using the SCAMP hardware
+ - [ ] solve some of this year's [Advent of Code](https://adventofcode.com/) using the SCAMP hardware
+ - [ ] make kernel self-hosting
+ - [ ] make library blob self-hosting
+ - [ ] support multiple different library blobs (e.g. to toggle the large parts on/off)
+ - [ ] write an strace-like debugging tool
+ - [ ] write a DDT-like debugging tool
+
+If you happen to want to work on any of the above, I'd be happy to help you!
 
 ## Architecture
 
