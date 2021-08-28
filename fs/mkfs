@@ -28,7 +28,8 @@ push @d, 0 while @d < $FS_SIZE;
 $d[($SKIP_BLOCKS * $BLKSZ) + $_] = 0xff for (0 .. 9);
 $d[($SKIP_BLOCKS * $BLKSZ) + 11] = 0x01;
 
-$fs->{disk} = \@d;
+push @d, 0 while @d < $FS_SIZE;
+$fs->{disk} = join('', map { chr($_) } @d);
 
 $fs->add_dirent(80, ".", 80);
 $fs->add_dirent(80, "..", 80);
