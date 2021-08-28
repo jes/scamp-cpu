@@ -1,6 +1,6 @@
 # Fixed point arithmetic
 
-include "stdio.sl";
+include "string.sl";
 include "sys.sl";
 
 var fix_prec = 8;
@@ -38,7 +38,7 @@ fixatofbase = func(s, base) {
     # now see if there's a fractional part
     while (*s && *s != '.') s++;
 
-    var divisor = 10;
+    var divisor = base;
     var n;
 
     if (*s == '.') {
@@ -47,7 +47,9 @@ fixatofbase = func(s, base) {
             n = stridx(itoa_alphabet, tolower(*s));
             if (n == 0 && *s != *itoa_alphabet) break; # digit doesn't exist
             if (n >= base) break; # digit out of range for base
-            v = v + div(fixitof(n), base);
+            # TODO: [bug] what about e.g. "0.9" when fix_prec is not enough to
+            #       represent 9?
+            v = v + div(fixitof(n), divisor);
             divisor = mul(divisor, base);
             s++;
         };
@@ -78,11 +80,9 @@ fixftoabase = func(f, base) {
 
     f = fixfrac(f);
     var n;
-    var i = 16;
-    while (f && (i--)) {
+    while (f) {
         n = mul(f, base);
         f = fixfrac(n);
-
         *(s++) = itoa_alphabet[fixftoi(n)];
     };
 
