@@ -251,16 +251,53 @@ var shl = asm {
 };
 
 # compute "i >> n"
-var shr = func(i, n) {
-    var bit = 1;
-    var r = 0;
-    var j = 0;
-    while (n != 16) {
-        if (i & powers_of_2[n]) r = r | bit;
-        bit = bit + bit;
-        n++;
-    };
-    return r;
+#var shr = func(i, n) {
+#    var bit = 1;
+#    var r = 0;
+#    var j = 0;
+#    while (n != 16) {
+#        if (i & powers_of_2[n]) r = r | bit;
+#        bit = bit + bit;
+#        n++;
+#    };
+#    return r;
+#};
+# usage: shr(i,n)
+var shr = asm {
+    pop x
+    ld r1, x # r1 = n
+    pop x
+    ld r2, x # r2 = i
+
+    ld r3, 1 # r3 = bit
+    ld r0, 0 # r0 = r
+    ld r5, 0 # r5 = j
+
+    ld r6, powers_of_2
+    add r6, r1 # r6 = powers_of_2+n
+
+    shr_loop:
+        # while (n != 16)
+        cmp r1, 16
+        jz shr_ret
+
+        # if (i & powers_of_2[n]) r = r | bit
+        ld x, (r6++)
+        and x, r2
+        jz shr_no_bit
+        or r0, r3
+
+        shr_no_bit:
+
+        # bit = bit + bit
+        shl r3
+
+        # n++
+        inc r1
+        jmp shr_loop
+
+    shr_ret:
+    ret
 };
 
 var itoa_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
