@@ -4,15 +4,20 @@ echo -n "var KERNEL_NAME=\""
 
 sha=`git rev-parse --short HEAD`
 if [ $sha ]; then
+    # write the commit hash
     echo -n "$sha"
+
+    # append a "+" if there are uncommitted changes
     if git status --porcelain=v1 | egrep -q '^ M'; then
         echo -n "+"
     fi
     echo -n " "
 else
+    # write question marks in lieu of commit hash
     echo -n "??????? "
 fi
 
+# write the current date
 echo -n `date +"%Y-%m-%d %H:%M:%S"`
 
 echo "\";"
