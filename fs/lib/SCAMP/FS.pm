@@ -543,7 +543,7 @@ sub writeblock {
 
     my $start = $BLKSZ * $blknum;
 
-    @{ $self->{disk} }[$start .. $start+$BLKSZ-1] = @block;
+    substr($self->{disk}, $start, $BLKSZ, join('', map { chr($_) } @block));
 }
 
 sub readblock {
@@ -551,7 +551,7 @@ sub readblock {
 
     my $start = $BLKSZ * $blknum;
 
-    return @{ $self->{disk} }[$start .. $start+$BLKSZ-1];
+    return map { ord($_) } split //, substr($self->{disk}, $start, $BLKSZ);
 }
 
 sub load {
@@ -562,7 +562,7 @@ sub load {
     my $data = join('', <$fh>);
     close $fh;
 
-    $self->{disk} = [ unpack("C*", $data) ];
+    $self->{disk} = $data;
 }
 
 sub save {
@@ -570,7 +570,7 @@ sub save {
 
     open(my $fh, '>', $self->{file})
         or die "can't write $self->{file}: $!\n";
-    print $fh pack("C*", @{ $self->{disk} });
+    print $fh $self->{disk};
     close $fh;
 }
 
