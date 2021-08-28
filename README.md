@@ -55,6 +55,7 @@ The computer already works, and I suspect it will never be "finished", but some 
  - [ ] support multiple different library blobs (e.g. to toggle the large parts on/off)
  - [ ] write an strace-like debugging tool
  - [ ] write a DDT-like debugging tool
+ - [ ] write a FORTH implementation (should it run on bare metal or under SCAMP/os?)
 
 If you happen to want to work on any of the above, I'd be happy to help you!
 
