@@ -32,6 +32,7 @@ kernel.opt.s: kernel.s
 	mv kernel.opt.s.tmp kernel.opt.s
 
 kernel.s: $(SOURCES)
+	./mk-kernel-name > kernel-name.sl
 	../compiler/slangc kernel.sl > kernel.s.tmp
 	mv kernel.s.tmp kernel.s
 

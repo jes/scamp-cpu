@@ -2,7 +2,10 @@
 
 include "util.sl";
 
-kputs("kernel...\r\n");
+include "kernel-name.sl";
+kputs("kernel ");
+kputs(KERNEL_NAME);
+kputs("\r\n");
 
 kputs("data ");
 include "data.sl";
@@ -29,7 +32,7 @@ kputs("sys_random ");
 include "sys_random.sl";
 
 # initialise fdtable
-kputs("fd_init()\r\n");
+kputs("fd_init() ");
 fd_init();
 
 # setup serial port fds

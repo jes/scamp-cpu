@@ -1,0 +1,18 @@
+#!/bin/sh
+
+echo -n "var KERNEL_NAME=\""
+
+sha=`git rev-parse --short HEAD`
+if [ $sha ]; then
+    echo -n "$sha"
+    if git status --porcelain=v1 | egrep -qv '^ M'; then
+        echo -n "+"
+    fi
+    echo -n " "
+else
+    echo -n "??????? "
+fi
+
+echo -n `date +"%Y-%m-%d %H:%M:%S"`
+
+echo "\";"
