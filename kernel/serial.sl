@@ -97,6 +97,7 @@ var ser_backspace = func(fd, bufp) {
 # TODO: [nice] should we instead drop incoming characters if the buffer is full?
 #       how can we make sure to handle ^C even if the user did a bunch of typing?
 #       maybe only drop them in cooked mode?
+# TODO: [bug] this seems to fall over when the buffer fills up
 var ser_poll = func(fd) {
     rngstate++;
     var p = fdbaseptr(fd);
