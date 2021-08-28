@@ -44,6 +44,8 @@ var complexsquare = func(x, y) {
 
 # return (abs(z) >= 2)
 var complexgt = func(x,y) {
+    if (x >= fixtwo) return 1;
+    if (y >= fixtwo) return 1;
     return (fixmul(x,x)+fixmul(y,y) >= fixfour);
 };
 
