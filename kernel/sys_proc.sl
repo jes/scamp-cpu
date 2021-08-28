@@ -249,6 +249,18 @@ var sys_exec_impl = func(args) {
     build_cmdargs(0, args);
     load_program(cmdargs[0]);
 
+    # TODO: [bug] from this point onwards, if an error is thrown, simply
+    #       returning the error doesn't suffice; we've already overwritten
+    #       the program we've been returning to with the contents of the
+    #       new program - what should we do about this? I think the only
+    #       time we'd throw an error from now on is if the loaded program
+    #       was a script and we're deciding to try to find its interpreter
+    #       instead - so perhaps load_program() should check if the first 2
+    #       characters are "#!" and if so, indicate it in some way, and
+    #       *don't* overwrite the parent program. That way we can safely
+    #       return to the parent if, for example, the interpreter doesn't
+    #       exist.
+
     # if it's a script, we need to load an interpreter instead
     var name;
     var len_name;
