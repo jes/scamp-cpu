@@ -9,11 +9,13 @@ include "stdlib.sl";
 #   %s -> string
 #   %d -> decimal integer
 #   %x -> hex integer
+#   %b -> bigint
+#   %f -> fixed-point
 #   %5d -> decimal integer, padded with spaces in front to make at least 5 chars
 #   %05d -> decimal integer, padded with zeroes in front to make at least 5 chars
-# TODO: [nice] signed vs unsigned integers? padding?
 # TODO: [nice] show arrays? lists?
 # TODO: [nice] padding at right-hand-side with negative padlen (%-5d)
+# TODO: [nice] allow setting precision of %f, e.g. "%0.3f"
 var xprintf = func(fmt, args, putc_cb) {
     var p = fmt;
     var argidx = 0;
@@ -24,7 +26,7 @@ var xprintf = func(fmt, args, putc_cb) {
     var total = 0;
     var fn;
 
-    # TODO: [nice] how do we use the one from string.s without creating a circular dependency?
+    # TODO: [nice] how do we use the one from string.sl without creating a circular dependency?
     var strlen = func(s) {
         var len = 0;
         while (*(s++)) len++;
