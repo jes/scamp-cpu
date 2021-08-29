@@ -10,3 +10,4 @@ include "strbuf.sl";
 include "bufio.sl";
 include "bigint.sl";
 include "hash.sl";
+include "xscanf.sl";

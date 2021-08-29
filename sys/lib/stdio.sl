@@ -1,6 +1,7 @@
 include "stdlib.sl";
 include "sys.sl";
 include "xprintf.sl";
+include "xscanf.sl";
 
 var fgetc = func(fd) {
     var ch;
@@ -60,6 +61,14 @@ var fprintf = func(fd, fmt, args) {
 };
 
 var printf = func(fmt, args) return xprintf(fmt, args, putchar);
+
+var fscanf_fd;
+var fscanf = func(fd, fmt, args) {
+    fscanf_fd = fd;
+    return xscanf(fmt, args, func() { return fgetc(fscanf_fd) });
+};
+
+var scanf = func(fmt, args) return xscanf(fmt, args, getchar);
 
 # return a pointer to a static buffer containing the string "/tmp/tmpfileXX",
 # with X's changed to digits, naming a file that did not previously exist;

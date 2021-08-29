@@ -174,6 +174,14 @@ var sprintf = func(fmt, args) {
     return sprintf_output;
 };
 
+var sscanf_str;
+var sscanf = func(str, fmt, args) {
+    sscanf_str = str;
+    xscanf(fmt, args, func() {
+        return *(sscanf_str++);
+    });
+};
+
 # TODO: [perf] this can be better
 var strstr = func(haystack, needle) {
     var lenneedle = strlen(needle);

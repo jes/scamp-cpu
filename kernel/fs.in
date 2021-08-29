@@ -109,6 +109,7 @@ put -t ../sys/lib/strbuf.sl /src/lib/strbuf.sl
 put -t ../sys/lib/bufio.sl /src/lib/bufio.sl
 put -t ../sys/lib/getopt.sl /src/lib/getopt.sl
 put -t ../sys/lib/fixed.sl /src/lib/fixed.sl
+put -t ../sys/lib/xscanf.sl /src/lib/xscanf.sl
 
 mkdir proc
 mkdir tmp

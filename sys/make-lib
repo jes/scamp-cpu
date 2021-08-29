@@ -2,7 +2,7 @@
 
 # if you add something here you also need to add a line to ../kernel/fs.in to put
 # "include-lib.h" in /lib/foo.h
-LIBS="grarr.sl malloc.sl parse.sl stdio.sl stdlib.sl string.sl sys.sl xprintf.sl strbuf.sl bufio.sl bigint.sl hash.sl"
+LIBS="grarr.sl malloc.sl parse.sl stdio.sl stdlib.sl string.sl sys.sl xprintf.sl strbuf.sl bufio.sl bigint.sl hash.sl xscanf.sl"
 
 for f in $LIBS;
 do
