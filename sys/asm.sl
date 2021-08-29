@@ -31,7 +31,7 @@ var unbounds_fd;
 var unbounds_buf = malloc(257);
 
 var lookup = func(name) {
-    return htget(IDENTIFIERS, name);
+    return htgetkv(IDENTIFIERS, name);
 };
 
 var store = func(name,val) {
@@ -40,7 +40,7 @@ var store = func(name,val) {
 
 # return a pointer to an existing stored copy of "name", or strdup() one if there is none
 var intern = func(name) {
-    var v = htget(STRINGS, name);
+    var v = htgetkv(STRINGS, name);
     if (v) return cdr(v);
 
     name = strdup(name);

@@ -93,8 +93,8 @@ var plabel = func(l) { bputs(OUT, "L"); bputs(OUT, itoa(l)); };
 
 # return 1 if "name" is a global or extern, 0 otherwise
 var findglobal = func(name) {
-    if (htget(GLOBALS, name)) return 1;
-    if (htget(EXTERNS, name)) return 1;
+    if (htgetkv(GLOBALS, name)) return 1;
+    if (htgetkv(EXTERNS, name)) return 1;
     return 0;
 };
 

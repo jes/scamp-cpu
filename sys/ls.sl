@@ -27,7 +27,7 @@ var statbufs = 0;
 var memostat = func(name) {
     if (!statbufs) statbufs = htnew();
 
-    var r = htget(statbufs, name);
+    var r = htgetkv(statbufs, name);
     if (r) return cdr(r);
 
     var statbuf = malloc(4);

@@ -127,9 +127,17 @@ var htfind = func(ht, key) {
 };
 
 # return [key,val] for "key", if found, or 0 otherwise
-var htget = func(ht, key) {
+var htgetkv = func(ht, key) {
     var p = htfind(ht, key);
     if (*p) return p;
+    return 0;
+};
+
+# return val for "key" if found, or 0 otherwise
+# (you need to use htgetkv() to distinguish "not found" from "val == 0")
+var htget = func(ht, key) {
+    var p = htfind(ht, key);
+    if (*p) return p[1];
     return 0;
 };
 
