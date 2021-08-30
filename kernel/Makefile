@@ -17,7 +17,7 @@ os.disk: kernel.hex fs.in ../sys/*.bin motd os.disk.blank ../sys/lib.o
 	mv os.disk.tmp os.disk
 
 os.disk.blank:
-	../fs/mkfs < /dev/null > os.disk.blank
+	../fs/mkfs > os.disk.blank
 
 kernel.hex: head.s kernel.opt.s foot.s
 	cat head.s kernel.opt.s foot.s | ../asm/asm > kernel.hex.tmp

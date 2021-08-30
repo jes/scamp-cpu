@@ -543,7 +543,7 @@ sub writeblock {
 
     my $start = $BLKSZ * $blknum;
 
-    substr($self->{disk}, $start, $BLKSZ, join('', map { chr($_) } @block));
+    substr($self->{disk}, $start, $BLKSZ, pack("C*", @block));
 }
 
 sub readblock {
@@ -551,7 +551,7 @@ sub readblock {
 
     my $start = $BLKSZ * $blknum;
 
-    return map { ord($_) } split //, substr($self->{disk}, $start, $BLKSZ);
+    return unpack("C*", substr($self->{disk}, $start, $BLKSZ));
 }
 
 sub load {
@@ -559,10 +559,9 @@ sub load {
 
     open(my $fh, '<', $self->{file})
         or die "can't read $self->{file}: $!\n";
-    my $data = join('', <$fh>);
+    my $n = read($fh, $self->{disk}, $FS_SIZE);
+    die "read: expected $FS_SIZE bytes but only got $n\n" if $n != $FS_SIZE;
     close $fh;
-
-    $self->{disk} = $data;
 }
 
 sub save {

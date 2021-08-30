@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+# make a blank filesystem
+
 use strict;
 use warnings;
 
@@ -8,30 +10,36 @@ use lib "$FindBin::Bin/lib/";
 
 use SCAMP::FS;
 
-my $fs = SCAMP::FS->new("/dev/null");
+my $fs = SCAMP::FS->new("/dev/zero");
 
+# TODO: [nice] get these constants from SCAMP::FS instead of hardcoding
 my $BLKSZ = 512;
 my $SKIP_BLOCKS = 64;
 my $BITMAP_BLOCKS = 16;
 my $FS_SIZE = $BLKSZ * 65536;
 
-my @d;
+# skipped blocks (to store the kernel), bitmap blocks, and root block are all used
+$fs->setblkused($_, 1) for (0..80);
 
-while (<>) {
-    chomp;
-    push @d, hex($_);
+# sanity check
+my $ok = 1;
+for my $i (0..80) {
+    if ($fs->blkisfree($i)) {
+        $ok = 0;
+        print STDERR "block $i shouldn't be free\n";
+    }
 }
+for my $i (81 .. 65535) {
+    if (!$fs->blkisfree($i)) {
+        $ok = 0;
+        print STDERR "block $i should be free\n";
+    }
+}
+exit(1) if !$ok;
 
-push @d, 0 while @d < $FS_SIZE;
-
-# mark skipped blocks, bitmap blocks, and root directory block as unavailable
-$d[($SKIP_BLOCKS * $BLKSZ) + $_] = 0xff for (0 .. 9);
-$d[($SKIP_BLOCKS * $BLKSZ) + 11] = 0x01;
-
-push @d, 0 while @d < $FS_SIZE;
-$fs->{disk} = join('', map { chr($_) } @d);
-
+# root directory gets "." and ".." entries
 $fs->add_dirent(80, ".", 80);
 $fs->add_dirent(80, "..", 80);
 
-print pack("C*", @d);
+$fs->{file} = '/dev/stdout';
+$fs->save();
