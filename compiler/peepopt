@@ -21,6 +21,8 @@ my $l8remove;
 my $l9ldxx = 0;
 my $l10reg;
 my $l11state = 0;
+my $l12state = 0;
+my $l12load;
 
 my $off = 0;
 
@@ -244,6 +246,26 @@ sub level11 {
         print "ld r252, r253\n" if $l11state >= 1;
         print "pop x\n" if $l11state >= 2;
         $l11state = 0;
-        print "$line\n";
+        level12($line);
     }
+}
+
+# turn "push x; ld r, i16; pop x" into just "ld r, i16"
+sub level12 {
+    my ($line) = @_;
+
+    if ($l12state == 0 && $line =~ /^push x$/) {
+        $l12state++;
+    } elsif ($l12state == 1 && $line =~ /^ld r\d+, (0x)?[0-9a-f]+$/i) {
+        $l12state++;
+        $l12load = $line;
+    } elsif ($l12state == 2 && $line =~ /^pop x$/) {
+        print "$l12load\n";
+        $l12state = 0;
+    } else {
+        print "push x\n" if $l12state >= 1;
+        print "$l12load\n" if $l12state >= 2;
+        $l12state = 0;
+        print "$line\n";
+    };
 }
