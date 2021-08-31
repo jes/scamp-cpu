@@ -180,7 +180,7 @@ fixmul = asm {
     ld r6, 16 # r6 = i
     ld r7, 1 # r7 = bit
     ld r8, (_fix_prec) # r8 = f
-    ld r9, powers_of_2
+    ld r9, (_powers_of_2)
     add r9, r8 # r9 = powers_of_2+f
 
     # see if b is negative
