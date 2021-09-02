@@ -232,7 +232,7 @@ var execute = func(str) {
     var args = parse_input(str);
     if (!args) {
         fprintf(2, "sh: parse error\n", 0);
-        return 0;
+        return 1;
     };
     if (!args[0]) return 0;
 
@@ -258,7 +258,7 @@ var execute = func(str) {
         free(in_redirect);
         free(out_redirect);
         free(err_redirect);
-        return 0;
+        return 1;
     };
     var oldargs0 = args[0];
     *args = strdup(path);
