@@ -1120,18 +1120,24 @@ jle x: # Jump to <tt>x</tt> if <tt>Z</tt> is set or <tt>LT</tt> is set.
 in x, (i8h): # Input from address <tt>r</tt> to <tt>x</tt>.
     IOH AI
     MO AI
+    XO
     DO XI
+    XO
 
 in x, i16: # Input from address <tt>i16</tt> to <tt>x</tt>.
     PO AI
     MO AI P+
+    XO
     DO XI
+    XO
 
 in x, (i16): # Input from the address in <tt>(i16)</tt> to <tt>x</tt>.
     PO AI
     MO AI P+
     MO AI
+    XO
     DO XI
+    XO
 
 in x, ((i8h)): # Input from the address in <tt>(r)</tt> to <tt>x</tt>.
     IOH AI
@@ -1194,21 +1200,28 @@ jle i16: # Jump to <tt>i16</tt> if <tt>Z</tt> is set or <tt>LT</tt> is set.
 
 in x, i8l: # Input from address <tt>i8l</tt> to <tt>x</tt>.
     IOL AI
+    XO
     DO XI
+    XO
 
 in x, i8h: # Input from address <tt>i8h</tt> to <tt>x</tt>.
     IOH AI
+    XO
     DO XI
+    XO
 
 in (i8h), x: # Input from address <tt>x</tt> to <tt>r</tt>.
     AI XO
+    XO
     DO YI
+    XO
     IOH AI
     MI YO
 
 in (i16), x: # Input from address <tt>x</tt> to the value in <tt>(i16)</tt>.
     AI XO
     DO YI
+    XO
     PO AI
     MO AI P+
     MI YO
@@ -1275,6 +1288,7 @@ jle (i16): # Jump to the address in <tt>(i16)</tt> if <tt>Z</tt> is set or <tt>L
 
 in ((i8h)), x: # Input from address <tt>x</tt> to the value in <tt>(r)</tt>.
     AI XO
+    XO
     DO YI
     IOH AI
     MO AI
@@ -1283,6 +1297,7 @@ in ((i8h)), x: # Input from address <tt>x</tt> to the value in <tt>(r)</tt>.
 in (i8h), i16: # Input from address <tt>i16</tt> to <tt>r</tt>.
     PO AI
     MO AI P+
+    XO
     YI DO
     IOH AI
     MI YO
