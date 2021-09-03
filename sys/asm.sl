@@ -389,7 +389,7 @@ var resolve_unbounds = func() {
     addr = bgetc(unbounds_bio);
 
     var fd = open(code_filename, O_READ);
-    if (fd < 0) die("open %s: %s", [code_filename, strerror(code_fd)]);
+    if (fd < 0) die("open %s: %s", [code_filename, strerror(fd)]);
     setbuf(fd, code_buf);
 
     var code = malloc(254);
