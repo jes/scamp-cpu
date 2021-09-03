@@ -150,13 +150,9 @@ htput = func(ht, key, val) {
         htgrow(ht);
 
     var p = htfind(ht, key);
-    if (*p) {
-        p[1] = val;
-    } else {
-        *p = key;
-        p[1] = val;
-        ht[1] = ht[1] + 1;
-    };
+    if (!*p) ht[1] = ht[1] + 1;
+    p[0] = key;
+    p[1] = val;
 };
 
 # call cb(key, val) for each element of the table
