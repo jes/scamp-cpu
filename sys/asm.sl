@@ -87,7 +87,7 @@ var Identifier = func(x) {
 
 var NumLiteral = func(alphabet,base,neg) {
     *literal_buf = peekchar();
-    if (!parse(AnyChar,alphabet)) return 0;
+    if (!AnyChar(alphabet)) return 0;
     var i = 1;
     while (i < maxliteral) {
         *(literal_buf+i) = peekchar();
@@ -103,7 +103,7 @@ var NumLiteral = func(alphabet,base,neg) {
 };
 
 var HexLiteral = func(x) {
-    if (!parse(String,"0x")) return 0;
+    if (!String("0x")) return 0;
     return NumLiteral("0123456789abcdefABCDEF",16,0);
 };
 
@@ -116,7 +116,7 @@ var DecimalLiteral = func(x) {
 var Constant = func(x) {
     if (parse(HexLiteral,0)) return 1;
     if (parse(DecimalLiteral,0)) return 1;
-    if (!parse(Identifier,0)) return 0;
+    if (!Identifier(0)) return 0;
     var v = lookup(IDENTIFIER);
     if (!v) return 0;
     asm_constant = cdr(v);
@@ -124,14 +124,14 @@ var Constant = func(x) {
 };
 
 I8l = func(x) {
-    if (!parse(Constant,0)) return 0;
+    if (!Constant(0)) return 0;
     if (asm_constant gt 0x00ff) return 0;
     asm_i8 = asm_constant;
     return 1;
 };
 
 I8h = func(x) {
-    if (!parse(Constant,0)) return 0;
+    if (!Constant(0)) return 0;
     if (asm_constant lt 0xff00) return 0;
     asm_i8 = asm_constant & 0xff;
     return 1;
@@ -143,11 +143,9 @@ I16 = func(x) {
         asm_i16 = asm_constant;
         return 1;
     };
-    if (parse(Identifier,0)) {
-        i16_identifier = intern(IDENTIFIER);
-        return 1;
-    };
-    return 0;
+    if (!Identifier(0)) return 0;
+    i16_identifier = intern(IDENTIFIER);
+    return 1;
 };
 
 # "Endline" is similar to "skip" except it doesn't match if it stops before
@@ -184,7 +182,7 @@ Indirection = func(width) {
         return 1;
     };
 
-    if (!parse(Char,'(')) return 0;
+    if (!Char('(')) return 0;
     if (width == 8) {
         if (!parse(I8h,0)) return 0;
     } else if (width == 16) {
@@ -199,22 +197,22 @@ Indirection = func(width) {
 
 var Def = func(x) {
     # TODO: [nice] this should maybe allow arbitrary string replacement, not just numeric constants
-    if (!parse(String,".d")) return 0;
+    if (!String(".d")) return 0;
     String("ef"); # allow ".def"
 
     skip();
-    if (!parse(Identifier,0)) die(".def needs identifier",0);
+    if (!Identifier(0)) die(".def needs identifier",0);
     var name = intern(IDENTIFIER);
     skip();
-    if (!parse(Constant,0)) die(".def needs constant",0);
+    if (!Constant(0)) die(".def needs constant",0);
     store(name,asm_constant);
     return 1;
 };
 
 var At = func(x) {
-    if (!parse(String,".at")) return 0;
+    if (!String(".at")) return 0;
     skip();
-    if (!parse(Constant,0)) die(".at needs constant",0);
+    if (!Constant(0)) die(".at needs constant",0);
     skip();
 
     var at = asm_constant;
@@ -235,11 +233,11 @@ var At = func(x) {
 };
 
 var Gap = func(x) {
-    if (!parse(String,".g")) return 0;
+    if (!String(".g")) return 0;
     String("ap"); # allow ".gap"
 
     skip();
-    if (!parse(Constant,0)) die(".gap needs constant",0);
+    if (!Constant(0)) die(".gap needs constant",0);
     skip();
 
     while (asm_constant--) emit(0);
@@ -257,9 +255,9 @@ var escapedchar = func(ch) {
 };
 
 var Str = func(x) {
-    if (!parse(String,".str")) return 0;
+    if (!String(".str")) return 0;
     skip();
-    if (!parse(Char,'"')) return 0;
+    if (!Char('"')) return 0;
 
     while (1) {
         if (parse(Char,'"')) {
@@ -275,11 +273,11 @@ var Str = func(x) {
 };
 
 var Word = func(x) {
-    if (!parse(String,".w")) return 0;
+    if (!String(".w")) return 0;
     String("ord"); # allow ".word"
 
     skip();
-    if (!parse(I16,0)) return 0;
+    if (!I16(0)) return 0;
     skip();
 
     emit_i16();
@@ -307,7 +305,7 @@ var emitblob = func(name) {
 };
 
 var Blob = func(x) {
-    if (!parse(String,".blob")) return 0;
+    if (!String(".blob")) return 0;
     skip();
 
     if (parse(AnyChar," \t\r\n")) return 0;
@@ -331,9 +329,9 @@ var Blob = func(x) {
 };
 
 var Label = func(x) {
-    if (!parse(Identifier,0)) return 0;
+    if (!Identifier(0)) return 0;
     skip();
-    if (!parse(CharSkip,':')) return 0;
+    if (!CharSkip(':')) return 0;
 
     store(intern(IDENTIFIER), asm_pc);
     return 1;
