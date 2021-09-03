@@ -1037,6 +1037,7 @@ gotoline = func(n) {
     cy = n;
     if (cy >= grlen(rows)) cy = grlen(rows)-1;
     markalldirty();
+    move(0);
 };
 
 processkey = func() {
