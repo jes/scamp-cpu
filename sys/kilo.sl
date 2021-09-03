@@ -426,6 +426,8 @@ navchar = func(c) {
     else if (c == 'g') gotoline(movecount)
     else if ((c == 'G') && movecount) gotoline(movecount)
     else if (c == 'G') gotoline(grlen(rows))
+    else if (c == 'D') truncaterow()
+    else if (c == 'C') { truncaterow(); mode = INSERT_MODE; }
     else if (c == 'z') {
         c = readkey();
         if (c == 't') rowoff = cy
