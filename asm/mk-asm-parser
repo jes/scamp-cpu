@@ -181,10 +181,20 @@ sub parser_footer {
 
     $src .= "var Instr = func(x) {\n";
     $src .= "    skip();\n";
+    $src .= "    var ch = peekchar();\n";
 
+    my $group = '';
     for my $mnem (sort keys %mnemonic) {
-        $src .= "    if (parse(Instr_".safemnem($mnem).",0)) return 1;\n";
+        my $ch = substr($mnem, 0, 1);
+        if ($ch ne $group) {
+            $src .= "    } else\n" if $group;
+            $src .= "    if (ch == '$ch') {\n";
+            $group = $ch;
+        }
+        $src .= "        if (parse(Instr_".safemnem($mnem).",0)) return 1;\n";
     }
+
+    $src .= "    };\n" if $group;
 
     $src .= "    return 0;\n";
     $src .= "};\n";
