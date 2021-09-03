@@ -337,14 +337,17 @@ var Assembly = func(x) {
     while (1) {
         skip();
 
-        if (parse(Def,0)) continue;
-        if (parse(At,0)) continue;
-        if (parse(Gap,0)) continue;
-        if (parse(Str,0)) continue;
-        if (parse(Word,0)) continue;
-        if (parse(Blob,0)) continue;
-        if (parse(Label,0)) continue;
-        if (parse(Instr,0)) continue;
+        if (peekchar() == '.') {
+            if (parse(Def,0)) continue;
+            if (parse(At,0)) continue;
+            if (parse(Gap,0)) continue;
+            if (parse(Str,0)) continue;
+            if (parse(Word,0)) continue;
+            if (parse(Blob,0)) continue;
+        } else {
+            if (parse(Label,0)) continue;
+            if (parse(Instr,0)) continue;
+        };
 
         return 1;
     };
