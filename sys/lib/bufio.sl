@@ -221,7 +221,9 @@ var bread = func(bio, buf, sz) {
 };
 
 var bwrite = func(bio, buf, sz) {
-    while (sz--) bputc(*(buf++));
+    var n = sz;
+    while (n--) bputc(bio, *(buf++));
+    return sz; # TODO: [bug] what if there's an error?
 };
 
 var bprintf_bio;
