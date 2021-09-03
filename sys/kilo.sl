@@ -3,6 +3,7 @@
 #
 # TODO: [bug] use less memory - currently can't open slangc.sl; stop using grarrs?
 # TODO: [nice] delete prev/next word
+# TODO: [perf] how can we repeatably profile just the parts that aren't waiting for input?
 
 include "grarr.sl";
 include "stdio.sl";
