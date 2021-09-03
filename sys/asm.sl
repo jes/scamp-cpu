@@ -71,7 +71,7 @@ var reserved = func(name) {
 
 var Identifier = func(x) {
     *IDENTIFIER = peekchar();
-    if (!parse(AlphaUnderChar,0)) return 0;
+    if (!AlphaUnderChar(0)) return 0;
     var i = 1;
     while (i < maxidentifier) {
         *(IDENTIFIER+i) = peekchar();
