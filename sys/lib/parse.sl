@@ -130,14 +130,11 @@ var asm_peekchar = asm {
     call (_parse_getchar)
     pop x
     ld r254, x
-    ld r1, (_ringbuf)
-    ld r2, (_readpos)
-    add r1, r2
-    ld x, r0
-    ld (r1), x
-    inc r2
-    and r2, 0xff # 0xff == ringbufsz-1
-    ld (_readpos), r2
+    ld x, (_ringbuf)
+    add x, (_readpos)
+    ld (x), r0
+    inc (_readpos)
+    and (_readpos), 0xff # 0xff == ringbufsz-1
 
     peekchar_good:
     ld x, (_ringbuf)
