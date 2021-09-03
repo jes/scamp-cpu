@@ -1,5 +1,6 @@
 # hex dump
 
+include "bufio.sl";
 include "stdio.sl";
 include "sys.sl";
 include "malloc.sl";
@@ -11,25 +12,27 @@ var line = malloc(8);
 var pos = 0;
 var first = 1;
 
+var out = bfdopen(1, O_WRITE);
+
 var show_text_line = func() {
     var end = 8;
 
     var n;
     if ((pos & 7) != 0) {
         n = 8 - (pos&7);
-        while (n--) puts("     ");
+        while (n--) bputs(out, "     ");
         end = pos & 7;
     };
 
-    puts("  |");
+    bputs(out, "  |");
     var i = 0;
     var ch;
     while (i < end) {
         ch = line[i++] & 0xff;
-        if (ch >= ' ' && ch <= '~') putchar(ch)
-        else putchar('.');
+        if (ch >= ' ' && ch <= '~') bputc(out, ch)
+        else bputc(out, '.');
     };
-    puts("|\n");
+    bputs(out, "|\n");
 };
 
 var output = func(ch) {
@@ -37,13 +40,12 @@ var output = func(ch) {
         if (!first) show_text_line()
         else first = 0;
 
-        printf("%04x: ", [pos]);
+        bprintf(out, "%04x: ", [pos]);
     };
 
     *(line+(pos&7)) = ch;
 
-    printf(" %04x", [ch]);
-
+    bprintf(out, " %04x", [ch]);
 };
 
 var hd = func(name) {
@@ -55,11 +57,12 @@ var hd = func(name) {
             return 0;
         };
     };
+    var in = bfdopen(fd, O_READ);
 
     var n;
     var i;
     while (1) {
-        n = read(fd, buf, bufsz);
+        n = bread(in, buf, bufsz);
         if (n == 0) break;
         if (n < 0) {
             fprintf(2, "hd: read %d: %s\n", [fd, strerror(n)]);
@@ -72,7 +75,7 @@ var hd = func(name) {
             pos++;
         };
     };
-    close(fd);
+    bclose(in);
 
     if ((pos & 7) != 0) show_text_line();
 };
@@ -86,5 +89,7 @@ if (args[1]) {
 
 if (*args) hd(*args)
 else       hd(0);
+
+bclose(out);
 
 exit(0);

@@ -7,8 +7,10 @@
 # 3:   mode (1)
 # 4..: buffer (BIO_BUFSZ)
 
-include "stdio.sl";
 include "malloc.sl";
+include "stdio.sl";
+include "xprintf.sl";
+include "xscanf.sl";
 
 var BIO_BUFSZ = 254; # align with block size on disk
 
@@ -52,14 +54,6 @@ var bclose = func(bio) {
     var fd = bio[0];
     bfree(bio);
     close(fd);
-};
-
-var bread = func(bio, buf, sz) {
-    fprintf(2, "bread() not implemented yet\n", 0);
-};
-
-var bwrite = func(bio, buf, sz) {
-    fprintf(2, "bwrite() not implemented yet\n", 0);
 };
 
 # grab a new block of data from bio (internal; not for library users)
@@ -212,10 +206,36 @@ var bputs = func(bio, str) {
         bputc(bio, *(str++));
 };
 
+var bread = func(bio, buf, sz) {
+    var n = 0;
+    var ch;
+
+    while (sz--) {
+        ch = bgetc(bio);
+        if (ch == EOF) return n;
+        *(buf++) = ch;
+        n++;
+    };
+
+    return n;
+};
+
+var bwrite = func(bio, buf, sz) {
+    while (sz--) bputc(*(buf++));
+};
+
 var bprintf_bio;
 var bprintf = func(bio, fmt, args) {
     bprintf_bio = bio;
     return xprintf(fmt, args, func(ch) {
         bputc(bprintf_bio, ch);
+    });
+};
+
+var bscanf_bio;
+var bscanf = func(bio, fmt, args) {
+    bscanf_bio = bio;
+    return xscanf(fmt, args, func() {
+        return bgetc(bscanf_bio);
     });
 };
