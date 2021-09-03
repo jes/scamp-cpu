@@ -26,6 +26,7 @@ var STRINGS;
 var code_filename;
 var code_fd;
 var code_buf = malloc(257);
+var code_bio;
 var unbounds_filename;
 var unbounds_fd;
 var unbounds_buf = malloc(257);
@@ -297,7 +298,7 @@ var emitblob = func(name) {
         n = read(fd, buf, bufsz);
         if (n == 0) break;
         if (n < 0) die("read %s: %s", [name, strerror(fd)]);
-        if (write(code_fd, buf, n) != n) die("write() didn't write enough",0);
+        if (bwrite(code_bio, buf, n) != n) die("write() didn't write enough",0);
         asm_pc = asm_pc + n;
     };
 
@@ -358,8 +359,7 @@ var Assembly = func(x) {
 };
 
 emit = func(v) {
-    # TODO: [perf] buffer writes
-    fputc(code_fd, v);
+    bputc(code_bio, v);
     asm_pc++;
 };
 
@@ -436,6 +436,7 @@ STRINGS = htnew();
 code_filename = strdup(tmpnam());
 code_fd = open(code_filename, O_WRITE|O_CREAT);
 if (code_fd < 0) die("open %s: %s", [code_filename, strerror(code_fd)]);
+code_bio = bfdopen(code_fd, O_WRITE);
 
 unbounds_filename = strdup(tmpnam());
 unbounds_fd = open(unbounds_filename, O_WRITE|O_CREAT);
@@ -453,7 +454,7 @@ parse_init(func() {
 });
 parse(Assembly,0);
 if (nextchar() != EOF) die("garbage after end",0);
-close(code_fd);
+bclose(code_bio);
 
 # reopen unbounds file for reading
 close(unbounds_fd);
