@@ -1064,7 +1064,7 @@ var end = label();
 bputs(OUT, "jmp "); plabel(end); bputs(OUT, "\n");
 
 htwalk(GLOBALS, func(name, val) {
-    bputc(OUT, '_'); bputs(OUT, name); bputs(OUT, ": .word 0\n");
+    bputc(OUT, '_'); bputs(OUT, name); bputs(OUT, ": .w 0\n");
     #free(name);
 });
 
@@ -1074,10 +1074,10 @@ grwalk(STRINGS, func(tuple) {
     plabel(l); bputs(OUT, ":\n");
     var p = str;
     while (*p) {
-        bputs(OUT, ".word "); bputs(OUT, itoa(*p)); bputs(OUT, "\n");
+        bputs(OUT, ".w "); bputs(OUT, itoa(*p)); bputs(OUT, "\n");
         p++;
     };
-    bputs(OUT, ".word 0\n");
+    bputs(OUT, ".w 0\n");
     #free(str);
     #free(tuple);
 });
@@ -1086,7 +1086,7 @@ grwalk(ARRAYS, func(tuple) {
     var l = car(tuple);
     var length = cdr(tuple);
     plabel(l); bputs(OUT, ":\n");
-    bputs(OUT, ".gap "); bputs(OUT, itoa(length+1)); bputs(OUT, "\n");
+    bputs(OUT, ".g "); bputs(OUT, itoa(length+1)); bputs(OUT, "\n");
     #free(tuple);
 });
 

@@ -199,7 +199,9 @@ Indirection = func(width) {
 
 var Def = func(x) {
     # TODO: [nice] this should maybe allow arbitrary string replacement, not just numeric constants
-    if (!parse(String,".def")) return 0;
+    if (!parse(String,".d")) return 0;
+    String("ef"); # allow ".def"
+
     skip();
     if (!parse(Identifier,0)) die(".def needs identifier",0);
     var name = intern(IDENTIFIER);
@@ -233,7 +235,9 @@ var At = func(x) {
 };
 
 var Gap = func(x) {
-    if (!parse(String,".gap")) return 0;
+    if (!parse(String,".g")) return 0;
+    String("ap"); # allow ".gap"
+
     skip();
     if (!parse(Constant,0)) die(".gap needs constant",0);
     skip();
@@ -271,7 +275,9 @@ var Str = func(x) {
 };
 
 var Word = func(x) {
-    if (!parse(String,".word")) return 0;
+    if (!parse(String,".w")) return 0;
+    String("ord"); # allow ".word"
+
     skip();
     if (!parse(I16,0)) return 0;
     skip();

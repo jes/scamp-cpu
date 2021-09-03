@@ -71,7 +71,7 @@ while (my $line = <>) {
     my ($op, $args_str) = split /\s+/, $line, 2;
     my @args = split /\s*,\s*/, $args_str//'';
 
-    if ($op eq '.def') {
+    if ($op eq '.d' || $op eq '.def') {
         @args = split /\s+/, $args_str;
         params($op, 2, @args);
         my $name = namearg($args[0]);
@@ -86,10 +86,10 @@ while (my $line = <>) {
             emit(0x0000) for ($pc+1 .. $at);
         }
         $pc = $at;
-    } elsif ($op eq '.gap') {
+    } elsif ($op eq '.g' || $op eq '.gap') {
         params($op, 1, @args);
         emit(0x0000) for (1 .. numarg($args[0]));
-    } elsif ($op eq '.word') {
+    } elsif ($op eq '.w' || $op eq '.word') {
         params($op, 1, @args);
         if ($args[0] =~ /^([a-z_][a-z_0-9]*)$/i) {
             emit($args[0]);
@@ -190,7 +190,7 @@ if ($asm_header) {
     open(my $fh, '>', $asm_header)
         or die "can't write $asm_header: $!\n";
     for my $l (sort keys %label) {
-        print $fh ".def $l " . sprintf("0x%04x", $label{$l}) . "\n" if $l =~ /^_/;
+        print $fh ".d $l " . sprintf("0x%04x", $label{$l}) . "\n" if $l =~ /^_/;
     }
     close $fh;
 }
