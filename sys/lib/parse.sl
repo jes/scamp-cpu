@@ -90,7 +90,7 @@ var asm_parse = asm {
     ld r4, x # pos0
 
     ld r1, (_pos)
-    sub r1, r4
+    sub r1, x
     and r1, 0xff00
     jz parsereturn
 
