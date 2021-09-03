@@ -414,6 +414,9 @@ navchar = func(c) {
     else if (c == '$') cx = maxcol
     else if (c == 'i') mode = INSERT_MODE
     else if (c == 'a') { mode = INSERT_MODE; move(ARROW_RIGHT); }
+    else if (c == 'A') { mode = INSERT_MODE; cx = maxcol; }
+    else if (c == 'o') { mode = INSERT_MODE; cx = maxcol; insertnewline(); }
+    else if (c == 'O') { mode = INSERT_MODE; cx = 0; insertnewline(); move(ARROW_UP); }
     else if (c == '/') find()
     else if (c == 'w') multimove(MOVE_WORD, movecount)
     else if (c == 'b') multimove(MOVE_BACK, movecount)
