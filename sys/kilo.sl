@@ -2,9 +2,6 @@
 # Based on https://viewsourcecode.org/snaptoken/kilo/
 #
 # TODO: [bug] use less memory - currently can't open slangc.sl; stop using grarrs?
-# TODO: [nice] goto line number
-# TODO: [nice] some navigation that doesn't use arrow keys
-# TODO: [nice] maybe more vi-like ui
 # TODO: [nice] delete prev/next word
 
 include "grarr.sl";
@@ -17,11 +14,14 @@ include "sys.sl";
 # definitions
 var ESC = 0x1b;
 var ROWS = 23; # rows of file content - should be 2 rows short of total screen rows
+var HALFROWS = div(ROWS, 2);
 var COLS = 80;
 var CTRL_KEY = func(k) return k&0x1f;
 var WELCOME = "~     Kilo editor -- SCAMP edition";
 var TABSTOP = 4; # must be a power of 2 !
 var QUIT_TIMES = 3;
+var INSERT_MODE = 0;
+var NAV_MODE = 1;
 
 # key constants
 var BACKSPACE = 127;
@@ -35,6 +35,8 @@ var PAGE_DOWN = 1005;
 var HOME_KEY = 1006;
 var END_KEY = 1007;
 var DEL_KEY = 1008;
+var MOVE_WORD = 1009;
+var MOVE_BACK = 1010;
 
 # data
 var cx = 0;
@@ -49,6 +51,7 @@ var openfilename = 0;
 var statusmsg = 0;
 var dirty = 0;
 var quit_times = QUIT_TIMES;
+var mode = INSERT_MODE;
 
 # terminal
 var quit;
@@ -81,10 +84,14 @@ var need_redraw = malloc(ROWS);
 var full_redraw;
 
 ### editor operations
+var navchar;
 var insertchar;
 var insertnewline;
 var truncaterow;
 var delchar;
+var delchars;
+var charat;
+var curchar;
 
 # file i/o
 var openfile;
@@ -103,11 +110,15 @@ var drawstatusmsg;
 var setstatusmsg;
 var setdefaultstatus;
 var scroll;
+var helpscreen;
 
 # input
 var prompt_cursor = -1;
 var prompt;
+var wordsmove;
 var move;
+var multimove;
+var gotoline;
 var processkey;
 
 ### TERMINAL
@@ -186,7 +197,7 @@ var readkeyraw = asm {
     ld r0, x
 
     # if it's not ESC, return it
-    sub x, 0x1b # ESC
+    cmp x, 0x1b # ESC
     jnz readkeyraw_done
 
     # if the first char was ESC, then we need to wait to read up to 3 more bytes
@@ -387,6 +398,40 @@ markallclean = func() {
 
 ### EDITOR OPERATIONS
 
+var movecount = 0;
+
+# basic vi-style movement in navigation mode
+navchar = func(c) {
+    var maxcol = 0;
+    var row = grget(rows, cy);
+    if (row) maxcol = rowlen(row);
+
+    if (c == 'h') multimove(ARROW_LEFT, movecount)
+    else if (c == 'j') multimove(ARROW_DOWN, movecount)
+    else if (c == 'k') multimove(ARROW_UP, movecount)
+    else if (c == 'l') multimove(ARROW_RIGHT, movecount)
+    else if (c == '0') cx = 0
+    else if (c == '$') cx = maxcol
+    else if (c == 'i') mode = INSERT_MODE
+    else if (c == 'a') { mode = INSERT_MODE; move(ARROW_RIGHT); }
+    else if (c == '/') find()
+    else if (c == 'w') multimove(MOVE_WORD, movecount)
+    else if (c == 'b') multimove(MOVE_BACK, movecount)
+    else if (c == 'x') delchars(movecount)
+    else if (c == 'g') gotoline(movecount)
+    else if ((c == 'G') && movecount) gotoline(movecount)
+    else if (c == 'G') gotoline(grlen(rows))
+    else if (c == 'z') {
+        c = readkey();
+        if (c == 't') rowoff = cy
+        else if (c == 'z') rowoff = cy-HALFROWS
+        else if (c == 'b') rowoff = cy-ROWS;
+
+        if (rowoff < 0) rowoff = 0;
+        markalldirty();
+    };
+};
+
 insertchar = func(c) {
     var gr;
     if (cy == grlen(rows)) {
@@ -462,6 +507,27 @@ delchar = func() {
         cy--;
         markbelowdirty(cy);
     };
+};
+
+delchars = func(n) {
+    if (!n) n = 1;
+    while (n--) {
+        move(ARROW_RIGHT);
+        scroll();
+        delchar();
+        scroll();
+    };
+};
+
+charat = func(x, y) {
+    if (y == grlen(rows)) return 0;
+    var row = grget(rows, y);
+    if (x == grlen(row)) return 0;
+    return grget(row, x);
+};
+
+curchar = func() {
+    return charat(cx, cy);
 };
 
 ### FILE I/O
@@ -726,10 +792,11 @@ var last_name;
 var last_dirty;
 var last_lines;
 var last_cy;
+var last_mode;
 
 drawstatus = func() {
     # don't redraw status if it hasn't changed
-    if (openfilename == last_name && dirty == last_dirty && grlen(rows) == last_lines && cy == last_cy && !full_redraw) {
+    if (openfilename == last_name && dirty == last_dirty && grlen(rows) == last_lines && cy == last_cy && mode == last_mode && !full_redraw) {
         raw_write("\r\n");
         return 0;
     };
@@ -737,6 +804,7 @@ drawstatus = func() {
     last_dirty = dirty;
     last_lines = grlen(rows);
     last_cy = cy;
+    last_mode = mode;
 
     var name = openfilename;
     if (!name) name = "[No Name]";
@@ -748,7 +816,9 @@ drawstatus = func() {
     var len = strlen(status);
 
     if (len > COLS) *(status+COLS-1) = 0;
-    var rstatus = sprintf("%d/%d ", [cy+1, grlen(rows)]);
+    var modestr = "INS";
+    if (mode == NAV_MODE) modestr = "NAV";
+    var rstatus = sprintf("%s %d/%d ", [modestr, cy+1, grlen(rows)]);
 
     var rlen = strlen(rstatus);
 
@@ -782,7 +852,7 @@ setstatusmsg = func(fmt, args) {
 };
 
 setdefaultstatus = func() {
-    setstatusmsg("HELP: ^O write  ^X exit  ^Z shell  ^K del line  ^F find", 0);
+    setstatusmsg("^O save  ^X exit  ^Z shell  ^K del line  ^F find  ^N nav  ^E help", 0);
 };
 
 scroll = func() {
@@ -805,6 +875,40 @@ scroll = func() {
         rowoff = cy - ROWS + 1;
         markalldirty();
     };
+};
+
+helpscreen = func() {
+    markalldirty();
+    writeesc("[2J"); # clear screen
+    writeesc("[H"); # position cursor
+
+    puts(" Kilo editor -- SCAMP edition\r
+\r
+ * Text at bottom right indicates insert/navigation mode as INS/NAV.\r
+ * Ctrl-keys are the same in both modes\r
+ * In insert mode, ordinary characters insert that character.\r
+ * In navigation mode, some ordinary characters perform navigation or other\r
+   actions.\r
+ * In navigation mode, typing digits is number input for rapid movements.\r
+\r
+    CTRL KEYS                         |   NAV KEYS\r
+    ----------------------------------+-----------------------------------\r
+    ^X quit                           |   h/j/k/l  vim style movement\r
+    ^O save file                      |   0 goto start of line\r
+    ^Z spawn child shell              |   $ goto end of line\r
+    ^K delete to end of line          |   i enter insert mode\r
+    ^F find text                      |   a enter insert mode 1 char right\r
+    ^N toggle navigation mode         |   / find text\r
+    ^E show this help                 |   w move forward a word\r
+    ^U page up                        |   b move back a word\r
+    ^D page down                      |   x delete character\r
+    ^L redraw screen                  |   g/G goto line\r
+                                      |   z[tzb] reposition screen offset\r
+\r
+         PRESS ANY KEY TO CLOSE\r
+");
+
+    readkey();
 };
 
 ### INPUT
@@ -846,13 +950,54 @@ prompt = func(beforemsg, aftermsg, wantcursor, callback) {
     return result;
 };
 
+# move in direction "k" until either:
+#  - we reach the end of the file
+#  - we find the next word
+wordsmove = func(k) {
+    var cx0;
+    var cy0;
+
+    # states:
+    # 0 - waiting for end of starting word
+    # 1 - looking for start of next word
+    var state ;
+    if (isalnum(curchar())) state = 0
+    else state = 1;
+
+    while (1) {
+        cx0 = cx;
+        cy0 = cy;
+
+        move(k);
+        scroll();
+
+        # stop if we've stopped making progress (e.g. end of file)
+        if (cx == cx0 && cy == cy0) return 0;
+
+        if (state == 0) {
+            if (!isalnum(curchar())) state++;
+        } else {
+            if (isalnum(curchar())) return 0;
+        };
+    };
+
+    return 0;
+};
+
 move = func(k) {
+    var d;
+    if ((k == MOVE_WORD) || (k == MOVE_BACK)) {
+        d = ARROW_RIGHT;
+        if (k == MOVE_BACK) d = ARROW_LEFT;
+        return wordsmove(d);
+    };
+
     if (k == ARROW_LEFT) cx--;
     if (k == ARROW_RIGHT) cx++;
     if (k == ARROW_UP) cy--;
     if (k == ARROW_DOWN) cy++;
 
-    var maxrow = grlen(rows);
+    var maxrow = grlen(rows)-1;
 
     if (cy < 0) cy = 0;
     if (cy > maxrow) cy = maxrow;
@@ -878,6 +1023,20 @@ move = func(k) {
     };
 };
 
+multimove = func(k, n) {
+    if (!n) n = 1;
+    while (n--) {
+        move(k);
+        scroll();
+    };
+};
+
+gotoline = func(n) {
+    cy = n;
+    if (cy >= grlen(rows)) cy = grlen(rows)-1;
+    markalldirty();
+};
+
 processkey = func() {
     var c = readkey();
 
@@ -885,8 +1044,8 @@ processkey = func() {
 
     var n;
     var times_str;
+    var reset_movecount = 1;
 
-    # TODO: [nice] ctrl- arrow keys to jump left/right a word, and up/down a paragraph (?)
     if (c == CTRL_KEY('x')) {
         if (dirty && quit_times) {
             times_str = "times";
@@ -900,8 +1059,8 @@ processkey = func() {
         savefile();
     } else if (c == CTRL_KEY('f')) {
         find();
-    } else if (c == CTRL_KEY('h')) {
-        # TODO: [nice] show a full help screen
+    } else if (c == CTRL_KEY('e')) {
+        helpscreen();
     } else if (c == CTRL_KEY('k')) {
         truncaterow();
     } else if (c == CTRL_KEY('z')) {
@@ -910,14 +1069,20 @@ processkey = func() {
         system(["/bin/sh"]);
         rawmode();
         markalldirty();
+    } else if (c == CTRL_KEY('n')) {
+        mode = !mode;
     } else if (c == PAGE_UP || c == CTRL_KEY('u')) {
-        cy = rowoff;
-        n = ROWS;
-        while (n--) move(ARROW_UP);
+        cy = cy - ROWS;
+        rowoff = rowoff - ROWS;
+        if (cy < 0) cy = 0;
+        if (rowoff < 0) rowoff = 0;
+        markalldirty();
     } else if (c == PAGE_DOWN || c == CTRL_KEY('d')) {
-        cy = rowoff + ROWS-1;
-        n = ROWS;
-        while (n--) move(ARROW_DOWN);
+        cy = cy + ROWS;
+        rowoff = rowoff + ROWS;
+        if (cy >= grlen(rows)) cy = grlen(rows)-1;
+        if (rowoff >= grlen(rows)) rowoff = grlen(rows)-1;
+        markalldirty();
     } else if (c == HOME_KEY) {
         cx = 0;
     } else if (c == END_KEY) {
@@ -927,15 +1092,28 @@ processkey = func() {
         move(c);
     } else if (c == '\r') {
         insertnewline();
-    } else if (c == BACKSPACE || c == CTRL_KEY('h') || c == DEL_KEY) {
+    } else if (c == BACKSPACE || c == DEL_KEY) {
         if (c == DEL_KEY) move(ARROW_RIGHT);
         delchar();
-    } else if (c == CTRL_KEY('l') || c == ESC) {
+    } else if (c == CTRL_KEY('l')) {
         markalldirty();
+    } else if (c == ESC) {
+        mode = NAV_MODE;
     } else {
-        insertchar(c);
+        if (mode == NAV_MODE) {
+            if (isdigit(c) && ((c != '0') || (movecount != 0))) {
+                movecount = mul(movecount,10) + (c - '0');
+                reset_movecount = 0;
+                setstatusmsg("%d", [movecount]);
+            } else {
+                navchar(c);
+            };
+        } else if (mode == INSERT_MODE) {
+            insertchar(c);
+        };
     };
 
+    if (reset_movecount) movecount = 0;
     quit_times = QUIT_TIMES;
 };
 
