@@ -403,7 +403,8 @@ var movecount = 0;
 # basic vi-style movement in navigation mode
 navchar = func(c) {
     var maxcol = 0;
-    var row = grget(rows, cy);
+    var row = 0;
+    if (cy < grlen(rows)) row = grget(rows,cy);
     if (row) maxcol = rowlen(row);
 
     if (c == 'h') multimove(ARROW_LEFT, movecount)
@@ -436,11 +437,7 @@ navchar = func(c) {
 };
 
 insertchar = func(c) {
-    var gr;
-    if (cy == grlen(rows)) {
-        gr = grnew();
-        appendrow(gr);
-    };
+    if (cy == grlen(rows)) appendrow(grnew());
 
     markrowdirty(cy);
     rowinsertchar(grget(rows,cy), cx, c);
@@ -456,6 +453,8 @@ insertnewline = func() {
         cy++;
         return 0;
     };
+
+    if (cy == grlen(rows)) appendrow(grnew());
 
     var row = grget(rows,cy);
     var chars = row2chars(row);
@@ -480,7 +479,7 @@ truncaterow = func() {
     if (cy == grlen(rows)) return 0;
 
     var row = grget(rows, cy);
-    if (grlen(row)) {
+    if (rowlen(row)) {
         grtrunc(row, cx);
         markrowdirty(cy);
         dirty = 1;
@@ -525,7 +524,7 @@ delchars = func(n) {
 charat = func(x, y) {
     if (y == grlen(rows)) return 0;
     var row = grget(rows, y);
-    if (x == grlen(row)) return 0;
+    if (x == rowlen(row)) return 0;
     return grget(row, x);
 };
 
@@ -1000,7 +999,7 @@ move = func(k) {
     if (k == ARROW_UP) cy--;
     if (k == ARROW_DOWN) cy++;
 
-    var maxrow = grlen(rows)-1;
+    var maxrow = grlen(rows);
 
     if (cy < 0) cy = 0;
     if (cy > maxrow) cy = maxrow;
