@@ -1086,8 +1086,7 @@ grwalk(ARRAYS, func(tuple) {
     var l = car(tuple);
     var length = cdr(tuple);
     plabel(l); bputs(OUT, ":\n");
-    bputs(OUT, ".gap "); bputs(OUT, itoa(length)); bputs(OUT, "\n");
-    bputs(OUT, ".word 0\n");
+    bputs(OUT, ".gap "); bputs(OUT, itoa(length+1)); bputs(OUT, "\n");
     #free(tuple);
 });
 

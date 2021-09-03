@@ -72,8 +72,7 @@ for my $s (sort {$labelcmp->($STRINGS{$a},$STRINGS{$b})} keys %STRINGS) {
 }
 for my $arr (@ARRAYS) {
     print "$arr->{label}:\n";
-    print ".gap $arr->{length}\n";
-    print ".word 0\n";
+    print ".gap " . ($arr->{length}+1) . "\n";
 }
 print "$end:\n";
 
