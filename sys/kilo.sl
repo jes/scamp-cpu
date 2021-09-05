@@ -93,6 +93,7 @@ var delchar;
 var delchars;
 var charat;
 var curchar;
+var joinline;
 
 # file i/o
 var openfile;
@@ -119,6 +120,7 @@ var prompt;
 var wordsmove;
 var move;
 var multimove;
+var findchar;
 var gotoline;
 var processkey;
 
@@ -408,6 +410,8 @@ navchar = func(c) {
     if (cy < grlen(rows)) row = grget(rows,cy);
     if (row) maxcol = rowlen(row);
 
+    # TODO: dd, dNd
+    # (and d.. and c.. on movements)
     if (c == 'h') multimove(ARROW_LEFT, movecount)
     else if (c == 'j') multimove(ARROW_DOWN, movecount)
     else if (c == 'k') multimove(ARROW_UP, movecount)
@@ -428,7 +432,29 @@ navchar = func(c) {
     else if (c == 'G') gotoline(grlen(rows))
     else if (c == 'D') truncaterow()
     else if (c == 'C') { truncaterow(); mode = INSERT_MODE; }
-    else if (c == 'z') {
+    else if (c == 'f') findchar(readkey(), ARROW_RIGHT)
+    else if (c == 'F') findchar(readkey(), ARROW_LEFT)
+    else if (c == 'J') joinline(cy)
+    else if (c == 'd') {
+        c = readkey();
+        if (c == 'd') {
+            delrow(cy);
+            markbelowdirty(cy);
+            if (cy < grlen(rows)) {
+                if (cx >= rowlen(grget(rows, cy))) cx = rowlen(grget(rows,cy));
+            } else cx = 0;
+        };
+    } else if (c == ':') {
+        c = readkey();
+        if (c == 'w') savefile();
+    } else if (c == 'r') {
+        c = readkey();
+        if (c < 32) return 0; # reject escape, CR, LF, etc.
+        move(ARROW_RIGHT);
+        delchar();
+        insertchar(c);
+        move(ARROW_LEFT);
+    } else if (c == 'z') {
         c = readkey();
         if (c == 't') rowoff = cy
         else if (c == 'z') rowoff = cy-HALFROWS
@@ -533,6 +559,16 @@ charat = func(x, y) {
 
 curchar = func() {
     return charat(cx, cy);
+};
+
+joinline = func(y) {
+    if (cy >= grlen(rows)-1) return 0;
+
+    # TODO: [nice] insert a space at the end of the line, trim the whitespace
+    #       from the start of the next line
+    cy++;
+    cx = 0;
+    delchar();
 };
 
 ### FILE I/O
@@ -1033,6 +1069,25 @@ multimove = func(k, n) {
     while (n--) {
         move(k);
         scroll();
+    };
+};
+
+findchar = func(c, dir) {
+    var cx0 = cx;
+    var cy0 = cy;
+    var cx1;
+    var cy1;
+
+    while (1) {
+        cx1 = cx;
+        cy1 = cy;
+        move(dir);
+        if ((cy!=cy0) || ((cx==cx1) && (cy==cy1))) {
+            cx = cx0;
+            cy = cy0;
+            break;
+        };
+        if (curchar() == c) break;
     };
 };
 
