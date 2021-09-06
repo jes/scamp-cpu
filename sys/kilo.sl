@@ -3,7 +3,6 @@
 #
 # TODO: [bug] use less memory - currently can't open slangc.sl; stop using grarrs?
 # TODO: [nice] delete prev/next word
-# TODO: [perf] how can we repeatably profile just the parts that aren't waiting for input?
 
 include "grarr.sl";
 include "stdio.sl";
@@ -230,10 +229,6 @@ var readkeyraw = asm {
 
     readkeyraw_done:
         ret
-
-    # if it's not ESC, return it
-    # waitreadbyte up to 3 times
-    # return what the original was
 };
 # TODO: [nice] implementation of slow alternative using kernel serial support
 
@@ -792,8 +787,10 @@ drawrow = func(row) {
     #  - turn control characters into "^A" type stuff?
     var i = 0;
     var ch;
-    while (i != rowlen(row)) {
-        ch = grget(row, i++);
+    var rowstr = grbase(row);
+    var len = rowlen(row);
+    while (i != len) {
+        ch = rowstr[i++];
         if (ch == '\t') {
             addchar(' ');
             while (rowbuf_col & (TABSTOP-1))
@@ -1136,12 +1133,14 @@ processkey = func() {
         rowoff = rowoff - ROWS;
         if (cy < 0) cy = 0;
         if (rowoff < 0) rowoff = 0;
+        move(0);
         markalldirty();
     } else if (c == PAGE_DOWN || c == CTRL_KEY('d')) {
         cy = cy + ROWS;
         rowoff = rowoff + ROWS;
         if (cy >= grlen(rows)) cy = grlen(rows)-1;
         if (rowoff >= grlen(rows)) rowoff = grlen(rows)-1;
+        move(0);
         markalldirty();
     } else if (c == HOME_KEY) {
         cx = 0;
