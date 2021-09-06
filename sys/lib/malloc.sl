@@ -118,7 +118,21 @@ var realloc = func(p, sz) {
     var bp = p-2;
     var oldsz = bp[1];
 
-    # TODO: [perf] if there's free space immediately after p, just grow into it
+    # if we can grow in-place, do so
+    var bpnext = *bp;
+    var sznext;
+    if (bpnext == p+oldsz) {
+        sznext = bp[1];
+        # TODO: [nice] also support shrinking in-place
+        if ((sz gt oldsz) && (oldsz+sznext le sz)) {
+            bpnext = p+sz;
+            bpnext[1] = sznext-(sz-oldsz);
+
+            *bp = bpnext;
+            bp[1] = sz;
+            return p;
+        };
+    };
 
     var newp = malloc(sz);
     var copysz = oldsz;
