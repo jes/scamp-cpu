@@ -25,6 +25,9 @@ my $l12state = 0;
 my $l12load;
 my $l13ldx;
 my $l14count = 0;
+my $l15state = 0;
+my $l15val;
+my $l15offset;
 
 my $off = 0;
 
@@ -292,9 +295,45 @@ sub level14 {
     if ($line =~ /^dec sp$/) {
         $l14count++;
     } else {
-        print "sub sp, $l14count\n" if $l14count > 1;
-        print "dec sp\n" if $l14count == 1;
+        level15("sub sp, $l14count") if $l14count > 1;
+        level15("dec sp") if $l14count == 1;
         $l14count = 0;
+        level15("$line");
+    }
+}
+
+# turn:
+#   push N; ld r252, sp; add r252, M; pop x; ld (r252), x
+# into:
+#   ld r252, sp; add r252, M-1; ld (r252), N
+sub level15 {
+    my ($line) = @_;
+
+    if ($l15state == 0 && $line =~ /^push (\d+)$/) {
+        $l15val = $1;
+        $l15state++;
+    } elsif ($l15state == 1 && $line eq 'ld r252, sp') {
+        $l15state++;
+    } elsif ($l15state == 2 && $line =~ /^add r252, (\d+)$/) {
+        $l15offset = $1-1; # "minus 1" because we're getting rid of the push that preceded it
+        $l15state++;
+    } elsif ($l15state == 3 && $line eq 'pop x') {
+        $l15state++;
+    } elsif ($l15state == 4 && $line eq 'ld (r252), x') {
+        if ($l15offset == 0) { # XXX: can we ever hit this case?
+            print "ld (sp), $l15val\n";
+        } else {
+            print "ld r252, sp\n";
+            print "add r252, $l15offset\n";
+            print "ld (r252), $l15val\n";
+        }
+        $l15state = 0;
+    } else {
+        print "push $l15val\n" if $l15state >= 1;
+        print "ld r252, sp\n" if $l15state >= 2;
+        print "add r252, $l15offset\n", if $l15state >= 3;
+        print "pop x\n" if $l15state >= 4;
+        $l15state = 0;
         print "$line\n";
     }
 }
