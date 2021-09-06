@@ -358,7 +358,10 @@ var isalnum = func(ch) {
     return (ch >= '0' && ch <= '9');
 };
 var iswhite = func(ch) return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
-var iscntrl = func(ch) return ch < ' ' || ch == 127;
+var iscntrl = func(ch) {
+    if (ch < ' ') return 1;
+    return ch == 127;
+};
 var tolower = func(ch) {
     if (isupper(ch)) return ch - 'A' + 'a';
     return ch;

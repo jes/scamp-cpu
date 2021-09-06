@@ -1,3 +1,6 @@
+var fprintf;
+var fputs;
+
 include "stdlib.sl";
 include "sys.sl";
 include "xprintf.sl";
@@ -44,7 +47,7 @@ var fgets = func(fd, s, size) {
 };
 
 # take a pointer to a nul-terminated string, and print it
-var fputs = func(fd, s) {
+fputs = func(fd, s) {
     var ss = s;
     var len = 0;
     while (*ss++) len++;
@@ -55,7 +58,7 @@ var gets = func(s,size) return fgets(0,s,size);
 var puts = func(s) return fputs(1,s);
 
 var fprintf_fd;
-var fprintf = func(fd, fmt, args) {
+fprintf = func(fd, fmt, args) {
     fprintf_fd = fd;
     return xprintf(fmt, args, func(ch) { fputc(fprintf_fd, ch) });
 };

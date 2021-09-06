@@ -1,6 +1,9 @@
 # generic printf() implementation
 
+var xprintf;
+
 include "stdlib.sl";
+include "string.sl";
 
 # usage: xprintf(fmt, [arg1, arg2, ...], putc_cb);
 # format string:
@@ -16,7 +19,7 @@ include "stdlib.sl";
 # TODO: [nice] show arrays? lists?
 # TODO: [nice] padding at right-hand-side with negative padlen (%-5d)
 # TODO: [nice] allow setting precision of %f, e.g. "%0.3f"
-var xprintf = func(fmt, args, putc_cb) {
+xprintf = func(fmt, args, putc_cb) {
     var p = fmt;
     var argidx = 0;
     var padchar;
@@ -25,13 +28,6 @@ var xprintf = func(fmt, args, putc_cb) {
     var len;
     var total = 0;
     var fn;
-
-    # TODO: [nice] how do we use the one from string.sl without creating a circular dependency?
-    var strlen = func(s) {
-        var len = 0;
-        while (*(s++)) len++;
-        return len;
-    };
 
     while (*p) {
         if (*p == '%') {

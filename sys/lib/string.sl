@@ -1,5 +1,8 @@
+var strlen;
+
 include "malloc.sl";
 include "xprintf.sl";
+include "xscanf.sl";
 
 # usage: strcmp(s1,s2)
 # return a value:
@@ -48,7 +51,7 @@ var strncmp = func(s1,s2,n) {
     return *s1-*s2;
 };
 
-var strlen = func(s) {
+strlen = func(s) {
     var ss = s;
     while (*ss) ss++;
     return ss - s;
@@ -153,7 +156,7 @@ var sprintf_len;
 var sprintf_output;
 var sprintf_p;
 var sprintf = func(fmt, args) {
-    sprintf_len = 16;
+    sprintf_len = 64;
     sprintf_output = malloc(sprintf_len);
     sprintf_p = sprintf_output;
 

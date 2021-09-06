@@ -1,5 +1,8 @@
 # Based on the "Example Storage Allocator" from chapter 8 of K&R Second Edition
 
+var malloc;
+var realloc;
+
 include "stdio.sl";
 include "stdlib.sl";
 include "sys.sl";
@@ -84,7 +87,7 @@ var morecore = func(needsz) {
     return freep;
 };
 
-var malloc = func(sz) {
+malloc = func(sz) {
     var p;
     var prevp;
     var origsz = sz;
@@ -114,7 +117,7 @@ var malloc = func(sz) {
     };
 };
 
-var realloc = func(p, sz) {
+realloc = func(p, sz) {
     var bp = p-2;
     var oldsz = bp[1];
 
