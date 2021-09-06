@@ -71,7 +71,7 @@ uint64_t opcode_cycles[256];
 uint64_t addr_reads[65536];
 uint64_t addr_writes[65536];
 FILE *profile_fp;
-int run_profile;
+int run_profile = 1;
 uint64_t prof_cycles;
 
 uint64_t segmented_cycles[256];
@@ -416,8 +416,9 @@ void out(uint16_t val, uint16_t addr) {
         prof_cycles = 0;
 
         run_profile = 1;
-        printf("run_profile = 1\r\n");
     }
+    if (addr == 6) run_profile = 0;
+    if (addr == 7) run_profile = 1;
     if (addr == 10) segment = val;
 #endif
 }
@@ -457,11 +458,13 @@ void negedge(void) {
     } while (RT); /* loop until !RT because RT resets T-state immediately */
 
 #ifdef PROFILING
-    prof_cycles++;
-    pc_cycles[PC]++;
-    last_instr[PC] = instr;
-    opcode_cycles[opcode]++;
-    segmented_cycles[segment]++;
+    if (run_profile) {
+        prof_cycles++;
+        pc_cycles[PC]++;
+        last_instr[PC] = instr;
+        opcode_cycles[opcode]++;
+        segmented_cycles[segment]++;
+    }
 #endif
 
     if (T == 1 && debug)
@@ -507,7 +510,7 @@ void negedge(void) {
     if (MO) {
         bus = (addr < 256 ? rom[addr] : ram[addr]);
 #ifdef PROFILING
-        addr_reads[addr]++;
+        if (run_profile) addr_reads[addr]++;
 #endif
     }
     if (DO)  bus = in(addr);
@@ -522,7 +525,7 @@ void posedge(void) {
             fprintf(stderr, "[watch] PC=%04x: M[%04x] was %04x, now %04x\n", PC, addr, ram[addr], bus);
         ram[addr] = bus;
 #ifdef PROFILING
-        addr_writes[addr]++;
+        if (run_profile) addr_writes[addr]++;
 #endif
         if (stacktrace && addr == 0xffff)
             fprintf(stderr, "[stack] PC=%04x: sp=%04x: stack = %04x %04x %04x %04x %04x...\n", PC, ram[0xffff], ram[ram[0xffff]+1], ram[ram[0xffff]+2], ram[ram[0xffff]+3], ram[ram[0xffff]+4], ram[ram[0xffff]+5]);
