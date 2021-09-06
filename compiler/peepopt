@@ -23,6 +23,8 @@ my $l10reg;
 my $l11state = 0;
 my $l12state = 0;
 my $l12load;
+my $l13ldx;
+my $l14count = 0;
 
 my $off = 0;
 
@@ -239,12 +241,12 @@ sub level11 {
     } elsif ($l11state == 1 && $line =~ /^pop x$/) {
         $l11state++;
     } elsif ($l11state >= 1 && $line =~ /^ld \(r252\), (x|\d+)$/) {
-        print "pop x\n" if $l11state >= 2;
-        print "ld (r253), $1\n";
+        level12("pop x") if $l11state >= 2;
+        level12("ld (r253), $1");
         $l11state = 0;
     } else {
-        print "ld r252, r253\n" if $l11state >= 1;
-        print "pop x\n" if $l11state >= 2;
+        level12("ld r252, r253") if $l11state >= 1;
+        level12("pop x") if $l11state >= 2;
         $l11state = 0;
         level12($line);
     }
@@ -260,12 +262,39 @@ sub level12 {
         $l12state++;
         $l12load = $line;
     } elsif ($l12state == 2 && $line =~ /^pop x$/) {
-        print "$l12load\n";
+        level13("$l12load");
         $l12state = 0;
     } else {
-        print "push x\n" if $l12state >= 1;
-        print "$l12load\n" if $l12state >= 2;
+        level13("push x") if $l12state >= 1;
+        level13("$l12load") if $l12state >= 2;
         $l12state = 0;
-        print "$line\n";
+        level13($line);
     };
+}
+
+# turn "ld x, a; ld x, b; ld x, ...; ld x, c" into "ld x, c"
+sub level13 {
+    my ($line) = @_;
+
+    if ($line =~ /^ld x, (.*)$/ && $line ne "ld x, (x)") {
+        $l13ldx = $1;
+    } else {
+        level14("ld x, $l13ldx") if defined $l13ldx;
+        level14($line);
+        $l13ldx = undef;
+    }
+}
+
+# turn "dec sp; dec sp; ..." into "sub sp, N"
+sub level14 {
+    my ($line) = @_;
+
+    if ($line =~ /^dec sp$/) {
+        $l14count++;
+    } else {
+        print "sub sp, $l14count\n" if $l14count > 1;
+        print "dec sp\n" if $l14count == 1;
+        $l14count = 0;
+        print "$line\n";
+    }
 }
