@@ -277,7 +277,7 @@ row2chars = func(r) return grbase(r);
 cx2rx = func(row, cx) {
     var s = row2chars(row);
     var x = 0;
-    var i;
+    var i = 0;
     while (i < cx) {
         if (s[i] == '\t') x = x + TABSTOP-1 - (x & (TABSTOP-1));
         x++;
