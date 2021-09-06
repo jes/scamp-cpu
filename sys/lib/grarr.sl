@@ -103,7 +103,7 @@ var grfind = func(gr, findval, cb) {
 };
 
 var grsort = func(gr, cmp) {
-    sort(grbase(gr), grlen(gr), cmp);
+    return sort(grbase(gr), grlen(gr), cmp);
 };
 
 # reverse the elements in the growarray
