@@ -410,8 +410,7 @@ navchar = func(c) {
     if (cy < grlen(rows)) row = grget(rows,cy);
     if (row) maxcol = rowlen(row);
 
-    # TODO: dd, dNd
-    # (and d.. and c.. on movements)
+    # TODO: [nice] and d.. and c.. on movements, e.g. "d3w", "cf."
     if (c == 'h') multimove(ARROW_LEFT, movecount)
     else if (c == 'j') multimove(ARROW_DOWN, movecount)
     else if (c == 'k') multimove(ARROW_UP, movecount)
