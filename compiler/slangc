@@ -194,20 +194,27 @@ sub Declaration {
         type => $scope->{global} ? 'global' : 'local',
         bp_rel => $scope->{bp_rel}--,
     };
-    if (!$scope->{global}) {
-        print "# allocate space for $id\n";
-        print "dec sp\n";
-        $SP_OFF--;
-    } else {
-        push @GLOBALS_ORDER, $id;
+    push @GLOBALS_ORDER, $id if $scope->{global};
+
+    # for locals, if there's no initialiser, just decrement sp
+    if (!parse(\&CharSkip,'=')) {
+        if (!$scope->{global}) {
+            print "# allocate space for $id\n";
+            print "dec sp\n";
+            $SP_OFF--;
+        }
+        return 1;
     }
-    return 1 if !parse(\&CharSkip,'=');
+    # otherwise, we implicitly allocate space for $id by *not* popping
+    # the result of evaluating the expression:
 
     print "#sym:$id\n" if $scope->{global};
+    print "# implicit space for $id\n" if !$scope->{global};
     die "initialisation needs expression\n" if !parse(\&Expression);
     print "#nosym\n" if $scope->{global};
 
-    poptovar($id);
+    poptovar($id) if $scope->{global};
+
     return 1;
 }
 

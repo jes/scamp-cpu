@@ -450,12 +450,20 @@ Declaration = func(x) {
     } else {
         if (findglobal(name)) warn("local var %s overrides global",[name]);
         addlocal(name, BP_REL--);
-        bputs(OUT, "dec sp\n");
-        SP_OFF--;
     };
-    if (!parse(CharSkip,'=')) return 1;
+    # for locals, if there's no initialiser, just decrement sp
+    if (!parse(CharSkip,'=')) {
+        if (LOCALS) {
+            bputs(OUT, "dec sp\n");
+            SP_OFF--;
+        };
+        return 1;
+    };
+    # otherwise, we implicitly allocate space for $id by *not* popping
+    # the result of evaluating the expression:
+
     if (!parse(Expression,0)) die("initialisation needs expression",0);
-    poptovar(name);
+    if (!LOCALS) poptovar(name);
     # TODO: [perf] if 'name' is a global, and the expression was a constant
     #       (e.g. it's a function, inline asm, string, array literal, etc.) then
     #       we should try to initialise it at compile-time instead of by
