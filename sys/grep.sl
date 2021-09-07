@@ -31,6 +31,7 @@ var buf = malloc(bufsz);
 
 var in = bfdopen(0, O_READ);
 
+setbuf(1, malloc(257));
 while (bgets(in,buf,bufsz))
     if (match(buf, searchterm))
         puts(buf);
