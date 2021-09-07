@@ -423,7 +423,7 @@ navchar = func(c) {
     else if (c == 'x') delchars(movecount)
     else if (c == 'g') gotoline(movecount)
     else if ((c == 'G') && movecount) gotoline(movecount)
-    else if (c == 'G') gotoline(grlen(rows))
+    else if (c == 'G') gotoline(grlen(rows)+1)
     else if (c == 'D') truncaterow()
     else if (c == 'C') { truncaterow(); mode = INSERT_MODE; }
     else if (c == 'f') findchar(readkey(), ARROW_RIGHT)
@@ -1088,7 +1088,8 @@ findchar = func(c, dir) {
 };
 
 gotoline = func(n) {
-    cy = n;
+    cy = n-1;
+    if (cy < 0) cy = 0;
     if (cy >= grlen(rows)) cy = grlen(rows)-1;
     markalldirty();
     move(0);
