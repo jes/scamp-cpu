@@ -24,6 +24,9 @@ var prompt = func(text) {
     bputc(out, '\r');
 
     if (ch == 'q') exit(0);
+
+    # TODO: [nice] if (ch == '/'), read a search phrase up to '\n' and then search forwards
+    # TODO: [nice] if (ch == 'n'), repeat search
 };
 
 var more = func(in) {
