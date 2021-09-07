@@ -289,7 +289,7 @@ cx2rx = func(row, cx) {
 rx2cx = func(row, rx) {
     var s = row2chars(row);
     var x = 0;
-    var i;
+    var i = 0;
     while (x < rx) {
         if (s[i] == '\t') x = x + TABSTOP-1 - (x & (TABSTOP-1));
         x++;
