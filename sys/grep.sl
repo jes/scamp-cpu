@@ -1,3 +1,4 @@
+include "bufio.sl";
 include "stdio.sl";
 include "string.sl";
 include "sys.sl";
@@ -28,6 +29,8 @@ var searchterm = *args;
 var bufsz = 16384;
 var buf = malloc(bufsz);
 
-while (gets(buf,bufsz))
+var in = bfdopen(0, O_READ);
+
+while (bgets(in,buf,bufsz))
     if (match(buf, searchterm))
         puts(buf);

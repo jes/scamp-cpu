@@ -6,6 +6,8 @@
 # 2:   bufpos (1)
 # 3:   mode (1)
 # 4..: buffer (BIO_BUFSZ)
+#
+# TODO: [nice] line-buffer on terminals
 
 include "malloc.sl";
 include "stdio.sl";
