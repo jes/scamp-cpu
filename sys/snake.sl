@@ -139,6 +139,14 @@ wait = func() {
     while (i--);
 };
 
+puts("   SNAKE\n");
+puts("\n");
+puts(" Use W/A/S/D to move\n");
+puts(" Use Q to quit\n");
+puts("\n");
+puts("Press any key to start\n");
+while (!read(0,0,0));
+
 var stdinflags = serflags(0, 0);
 var stdoutflags = serflags(1, 0);
 var consoleflags = serflags(3, 0);
