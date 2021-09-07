@@ -198,6 +198,23 @@ var strstr = func(haystack, needle) {
     return 0;
 };
 
+# search for nul-terminated needle in haystack of up to "len" characters
+var strnstr = func(haystack, needle, len) {
+    var lenneedle = strlen(needle);
+
+    len = len - lenneedle + 1;
+
+    while ((*haystack) && len) {
+        if (strncmp(haystack, needle, lenneedle) == 0)
+            return haystack;
+        haystack++;
+        len--;
+    };
+
+    return 0;
+
+};
+
 var strchr = func(s, ch) {
     while (*s) {
         if (*s == ch) return s;

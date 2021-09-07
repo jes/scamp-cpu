@@ -656,11 +656,10 @@ find = func() {
     var rowoff0 = rowoff;
     var coloff0 = coloff;
 
+    find_last = -1;
+    find_dir = 1;
     var str = prompt("Search: ", " (ESC/arrows/enter)", 0, func(query, key) {
         if (key == 0) {
-            # finished searching, reset state for next time
-            find_last = -1;
-            find_dir = 1;
             return 0;
         } else if (key == ARROW_RIGHT || key == ARROW_DOWN) {
             find_dir = 1;
@@ -671,24 +670,26 @@ find = func() {
             find_dir = 1;
         };
 
-        if (find_last == -1) find_dir = 1;
         var cur = find_last;
 
         var i = 0;
         var match;
         var line;
-        while (i < grlen(rows)) {
+        var row;
+        while (i != grlen(rows)) {
             cur = cur + find_dir;
             if (cur == -1) cur = grlen(rows)-1;
             if (cur == grlen(rows)) cur = 0;
 
-            line = row2chars(grget(rows, cur));
-            match = strstr(line, query);
+            row = grget(rows, cur);
+            line = row2chars(row);
+            match = strnstr(line, query, rowlen(row));
             if (match) {
                 find_last = cur;
                 cy = cur;
-                cx = rx2cx(grget(rows, cur), match - line);
+                cx = rx2cx(row, match - line);
                 rowoff = grlen(rows);
+                coloff = 0;
                 break;
             };
             i++;
@@ -966,12 +967,10 @@ prompt = func(beforemsg, aftermsg, wantcursor, callback) {
             sbpop(sb);
         } else if (c == ESC) {
             setstatusmsg("", 0);
-            sbfree(sb);
             break;
         } else if (c == '\r') {
             if (sblen(sb)) result = strdup(sbbase(sb));
             setstatusmsg("", 0);
-            sbfree(sb);
             break;
         } else if (!iscntrl(c) && c < 128) {
             sbputc(sb, c);
@@ -982,8 +981,9 @@ prompt = func(beforemsg, aftermsg, wantcursor, callback) {
             callback(sbbase(sb), c);
     };
 
+    sbfree(sb);
+
     prompt_cursor = -1;
-    if (callback) callback(result, 0);
     return result;
 };
 
