@@ -33,7 +33,7 @@ var grpush = func(gr, el) {
     n = *gr;
     var p = gr[2];
     p[n] = el;
-    *gr = *gr+1;
+    *gr = n+1;
 };
 
 var grpop = func(gr) {
