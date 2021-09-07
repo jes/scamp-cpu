@@ -38,6 +38,7 @@ put ../sys/sort.bin /bin/sort
 put ../sys/mandelfix.bin /bin/mandelfix
 put ../sys/fc.bin /bin/fc
 put ../sys/snake.bin /bin/snake
+put ../sys/reset.bin /bin/reset
 
 mkdir lib
 put ../sys/lib.o /lib/lib.o
@@ -93,6 +94,7 @@ put -t ../sys/sort.sl /src/sort.sl
 put -t ../sys/mandelfix.sl /src/mandelfix.sl
 put -t ../sys/fc.sl /src/fc.sl
 put -t ../sys/snake.sl /src/snake.sl
+put -t ../sys/reset.sl /src/reset.sl
 
 mkdir src/lib
 put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
