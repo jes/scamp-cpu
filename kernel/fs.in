@@ -115,6 +115,21 @@ put -t ../sys/lib/getopt.sl /src/lib/getopt.sl
 put -t ../sys/lib/fixed.sl /src/lib/fixed.sl
 put -t ../sys/lib/xscanf.sl /src/lib/xscanf.sl
 
+mkdir doc
+put -t ../doc/ALU.md /doc/alu
+put -t ../doc/ASSEMBLER.md /doc/assembler
+put -t ../doc/BOOT.md /doc/boot
+put -t ../doc/CARDS.md /doc/cards
+put -t ../doc/COMPILER.md /doc/compiler
+put -t ../doc/FILESYSTEM.md /doc/filesystem
+put -t ../doc/ISA.md /doc/isa
+put -t ../doc/LINKING.md /doc/linking
+put -t ../doc/OS.md /doc/os
+put -t ../doc/PIC.md /doc/pic
+put -t ../doc/SUSPEND.md /doc/suspend
+put -t ../doc/SYSCALLS.md /doc/syscalls
+put -t ../doc/UCODE.md /doc/ucode
+
 mkdir proc
 mkdir tmp
 mkdir home
