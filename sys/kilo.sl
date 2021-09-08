@@ -438,6 +438,13 @@ navchar = func(c) {
                 if (cx >= rowlen(grget(rows, cy))) cx = rowlen(grget(rows,cy));
             } else cx = 0;
         };
+    } else if (c == 'c') {
+        c = readkey();
+        if (c == 'c') {
+            cx = 0;
+            truncaterow();
+            mode = INSERT_MODE;
+        };
     } else if (c == ':') {
         c = readkey();
         if (c == 'w') savefile();
