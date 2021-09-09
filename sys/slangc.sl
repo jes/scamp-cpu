@@ -325,13 +325,11 @@ var genop = func(op) {
 var funcreturn = func() {
     if (!LOCALS) die("can't return from global scope",0);
 
-    # move sp over locals
-    bputs(OUT, "add sp, "); bputs(OUT, itoa(-(BP_REL+1))); bputs(OUT, "\n");
     # restore r254
-    bputs(OUT, "pop x\n");
+    bputs(OUT, "ld x, "); bputs(OUT, itoa(-BP_REL)); bputs(OUT, "(sp)\n");
     bputs(OUT, "ld r254, x\n");
     # move sp over parameters
-    bputs(OUT, "ret "); bputs(OUT, itoa(NPARAMS)); bputs(OUT, "\n");
+    bputs(OUT, "ret "); bputs(OUT, itoa(NPARAMS-BP_REL)); bputs(OUT, "\n");
 };
 
 Program = func(x) {

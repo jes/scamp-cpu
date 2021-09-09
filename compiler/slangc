@@ -906,13 +906,11 @@ sub funcreturn {
     # cleanup the local scope
     my $s = $scope;
 
-    # move sp over locals
-    print "add sp, " . -($s->{bp_rel}+1) . "\n";
     # restore r254
-    print "pop x\n";
+    print "ld x, " . (-$s->{bp_rel}) . "(sp)\n";
     print "ld r254, x\n";
-    # move sp over parameters
-    print "ret $s->{params}\n";
+    # move sp over parameters, backed up r254, and locals
+    print "ret " . ($s->{params}-$s->{bp_rel}) . "\n";
 }
 
 sub genliteral {
