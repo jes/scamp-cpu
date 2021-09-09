@@ -18,7 +18,6 @@
 # TODO: optionally annotate generated assembly code with the source code that
 #       generated it
 # TODO: fix &/| precedence
-# TODO: only backup return address once per function? (profile it)
 # TODO: search paths for "include"
 
 use strict;
@@ -555,6 +554,12 @@ sub FunctionDeclaration {
     print "jmp $functionend\n";
     print "$functionlabel:\n";
 
+    my $SP_OFF0 = $SP_OFF;
+    $SP_OFF = 0;
+
+    print "ld x, r254\n";
+    pushx();
+
     # back up the enclosing scope, because we hack functions into the global scope
     # to make life easy
     my $parentscope = $scope;
@@ -570,8 +575,6 @@ sub FunctionDeclaration {
         };
         $scope->{params}++;
     }
-    my $SP_OFF0 = $SP_OFF;
-    $SP_OFF = 0;
 
     die "func needs close paren\n" if !parse(\&CharSkip,')');
     parse(\&Statement);
@@ -627,9 +630,6 @@ sub FunctionCall {
     my $id = $IDENTIFIER;
 
     print "# parseFunctionCall:\n";
-    # backup return address before we push arguments
-    print "ld x, r254\n";
-    pushx();
 
     my $nargs = Arguments();
     die "argument list needs closing paren\n" if !parse(\&CharSkip, ')');
@@ -641,10 +641,6 @@ sub FunctionCall {
 
     # arguments have been consumed
     $SP_OFF += $nargs;
-
-    # restore return address
-    popx();
-    print "ld r254, x\n";
 
     # push return value
     print "ld x, r0\n";
@@ -848,7 +844,7 @@ sub newscope {
     $scope = {
         symbols => {},
         parent => $scope,
-        bp_rel => 0,
+        bp_rel => -1,
         params => 0,
     };
 }
@@ -910,9 +906,13 @@ sub funcreturn {
     # cleanup the local scope
     my $s = $scope;
 
-    # then clean up the function parameters and return
-    print "# function had $s->{params} parameters and " . (-$s->{bp_rel}) . " locals:\n";
-    print "ret " . ($s->{params}-$s->{bp_rel}) . "\n";
+    # move sp over locals
+    print "add sp, " . -($s->{bp_rel}+1) . "\n";
+    # restore r254
+    print "pop x\n";
+    print "ld r254, x\n";
+    # move sp over parameters
+    print "ret $s->{params}\n";
 }
 
 sub genliteral {

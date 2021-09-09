@@ -16,7 +16,6 @@
 # TODO: optionally annotate generated assembly code with the source code that
 #       generated it
 # TODO: fix &/| precedence
-# TODO: only backup return address once per function? (profile it)
 # TODO: search paths for "include"
 
 include "bufio.sl";
@@ -133,7 +132,7 @@ var addstring = func(str) {
 
 var newscope = func() {
     LOCALS = grnew();
-    BP_REL = 0;
+    BP_REL = -1;
 };
 
 var endscope = func() {
@@ -326,7 +325,13 @@ var genop = func(op) {
 var funcreturn = func() {
     if (!LOCALS) die("can't return from global scope",0);
 
-    bputs(OUT, "ret "); bputs(OUT, itoa(NPARAMS-BP_REL)); bputs(OUT, "\n");
+    # move sp over locals
+    bputs(OUT, "add sp, "); bputs(OUT, itoa(-(BP_REL+1))); bputs(OUT, "\n");
+    # restore r254
+    bputs(OUT, "pop x\n");
+    bputs(OUT, "ld r254, x\n");
+    # move sp over parameters
+    bputs(OUT, "ret "); bputs(OUT, itoa(NPARAMS)); bputs(OUT, "\n");
 };
 
 Program = func(x) {
@@ -823,11 +828,15 @@ FunctionDeclaration = func(x) {
     bputs(OUT, "jmp "); plabel(functionend); bputs(OUT, "\n");
     plabel(functionlabel); bputs(OUT, ":\n");
 
+    var old_sp_off = SP_OFF;
+    SP_OFF = 0;
+
+    bputs(OUT, "ld x, r254\n");
+    pushx();
+
     var oldscope = LOCALS;
     var old_bp_rel = BP_REL;
     var oldnparams = NPARAMS;
-    var old_sp_off = SP_OFF;
-    SP_OFF = 0;
     newscope();
 
     var bp_rel = 1; # parameters (grows up)
@@ -885,9 +894,6 @@ FunctionCall = func(x) {
 
     var name = strdup(IDENTIFIER);
 
-    bputs(OUT, "ld x, r254\n");
-    pushx();
-
     var nargs = Arguments();
     if (!parse(CharSkip,')')) die("argument list needs closing paren",0);
 
@@ -898,9 +904,6 @@ FunctionCall = func(x) {
     bputs(OUT, "call x\n");
     # arguments have been consumed
     SP_OFF = SP_OFF + nargs;
-    # restore return address
-    popx();
-    bputs(OUT, "ld r254, x\n");
     # push return value
     bputs(OUT, "ld x, r0\n");
     pushx();
