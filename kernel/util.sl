@@ -39,15 +39,9 @@ var kputc = asm {
     .def SERIALDEVLSR 141
     kputc:
         # wait for uart to be ready
-        # TODO: [bug] why are the nops required? it seems to corrupt the uart state if they're not here
-        # TODO: revisit the above, probably not true any more
-        nop
         in x, SERIALDEVLSR
-        nop
         and x, 0x20
-        nop
         jz kputc
-        nop
 
         pop x
         out SERIALDEV, x
