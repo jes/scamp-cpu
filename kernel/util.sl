@@ -12,16 +12,7 @@ var EXISTS = -7;
 # usage: inp(addr)
 var inp = asm {
     pop x
-
-    # TODO: [bug] for some reason, trying to do:
-    #   in r0, x
-    # results in corrupting the state of the UART, so we instead
-    # input into x and then load r0 from x
-    # TODO: revisit the above, probably not true any more
-    ld r0, x
-    in x, r0
-    ld r0, x
-
+    in r0, x
     ret
 };
 
