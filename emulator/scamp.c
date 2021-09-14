@@ -656,6 +656,8 @@ int main(int argc, char **argv) {
     console.outfd = 1; /* stdout */
     console.txempty = 1;
 
+    randomise_ram();
+
 #ifdef EMSCRIPTEN
     load_disk("os.disk");
     load_ucode("ucode.hex");
@@ -707,7 +709,6 @@ int main(int argc, char **argv) {
 
     if (show_help) help();
 
-    randomise_ram();
 
     /* load ROMs */
     load_ucode("../ucode.hex");
