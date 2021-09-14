@@ -98,7 +98,6 @@ put -t ../sys/reset.sl /src/reset.sl
 
 mkdir src/lib
 put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
-put -t ../sys/lib/list.sl /src/lib/list.sl
 put -t ../sys/lib/malloc.sl /src/lib/malloc.sl
 put -t ../sys/lib/parse.sl /src/lib/parse.sl
 put -t ../sys/lib/stdio.sl /src/lib/stdio.sl
