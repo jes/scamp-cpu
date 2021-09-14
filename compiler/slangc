@@ -906,11 +906,14 @@ sub funcreturn {
     # cleanup the local scope
     my $s = $scope;
 
-    # restore r254
-    print "ld x, " . (-$s->{bp_rel}) . "(sp)\n";
-    print "ld r254, x\n";
-    # move sp over parameters, backed up r254, and locals
-    print "ret " . ($s->{params}-$s->{bp_rel}) . "\n";
+    # here we make use of the "add" instruction's clobber of the X register;
+    # "add sp, N" can be fulfilled with either "add (i16), i8l" or "add r, i16";
+    # in both cases, the X register is left containing the value of sp *prior*
+    # to the addition, so we then use "jmp i8l(x)" to jump to an address grabbed
+    # from the stack, at a point relative to where the *previous* stack pointer
+    # pointed
+    print "add sp, " . ($s->{params}-$s->{bp_rel}) . " #peepopt:xclobber\n";
+    print "jmp " . (-$s->{bp_rel}) . "(x)\n";
 }
 
 sub genliteral {

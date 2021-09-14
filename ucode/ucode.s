@@ -70,9 +70,9 @@ add ((i8h)), x: # Add <tt>x</tt> to the value in <tt>(r)</tt>.
 
 add (i8h), i16: # Add <tt>i16</tt> to the value in <tt>r</tt>.
     PO AI
-    MO XI P+
+    MO YI P+
     IOH AI
-    MO YI
+    MO XI
     MI Y+X
 
 add ((i8h)), i16: # Add <tt>i16</tt> to the value in <tt>(r)</tt>.
@@ -171,9 +171,9 @@ sub ((i8h)), x: # Subtract <tt>x</tt> from the value in <tt>(r)</tt>.
 
 sub (i8h), i16: # Subtract <tt>i16</tt> from <tt>r</tt>.
     PO AI
-    MO XI P+
+    MO YI P+
     IOH AI
-    MO YI
+    MO XI
     MI Y-X
 
 sub ((i8h)), i16: # Subtract <tt>i16</tt> from the value in <tt>(r)</tt>.
@@ -273,9 +273,9 @@ cmp ((i8h)), x: # Set flags from subtracting <tt>x</tt> from the value in <tt>(r
 
 cmp (i8h), i16: # Set flags from subtracting <tt>i16</tt> from <tt>r</tt>.
     PO AI
-    MO XI P+
+    MO YI P+
     IOH AI
-    MO YI
+    MO XI
     Y-X
 
 cmp ((i8h)), i16: # Set flags from subtracting <tt>i16</tt> from the value in <tt>(r)</tt>.
@@ -372,9 +372,9 @@ and ((i8h)), x: # AND <tt>x</tt> with the value in <tt>(r)</tt>.
 
 and (i8h), i16: # AND <tt>i16</tt> with the value in <tt>r</tt>.
     PO AI
-    MO XI P+
+    MO YI P+
     IOH AI
-    MO YI
+    MO XI
     MI Y&X
 
 and ((i8h)), i16: # AND <tt>i16</tt> with the value in <tt>(r)</tt>.
@@ -472,9 +472,9 @@ or ((i8h)), x: # OR <tt>x</tt> into the value in <tt>(r)</tt>.
 
 or (i8h), i16: # OR <tt>i16</tt> into <tt>r</tt>.
     PO AI
-    MO XI P+
+    MO YI P+
     IOH AI
-    MO YI
+    MO XI
     MI Y|X
 
 or ((i8h)), i16: # OR <tt>i16</tt> into the value in <tt>(r)</tt>.
@@ -573,9 +573,9 @@ nand ((i8h)), x: # NAND <tt>x</tt> with the value in <tt>(r)</tt>.
 
 nand (i8h), i16: # NAND <tt>i16</tt> with <tt>r</tt>.
     PO AI
-    MO XI P+
+    MO YI P+
     IOH AI
-    MO YI
+    MO XI
     MI ~(Y&X)
 
 nand ((i8h)), i16: # NAND <tt>i16</tt> with the value in <tt>(r)</tt>.
@@ -675,9 +675,9 @@ nor ((i8h)), x: # NOR <tt>x</tt> with the value in <tt>(r)</tt>.
 
 nor (i8h), i16: # NOR <tt>i16</tt> with <tt>r</tt>.
     PO AI
-    MO XI P+
+    MO YI P+
     IOH AI
-    MO YI
+    MO XI
     MI ~(Y|X)
 
 nor ((i8h)), i16: # NOR <tt>i16</tt> with the value in <tt>(r)</tt>.
@@ -1460,7 +1460,11 @@ ret i8l: # Increase <tt>sp</tt> by <tt>i8l</tt>. Jump to <tt>r254</tt>.
     -2 AI
     MO JMP
 
-nop:
+jmp i8l(x): # Jump to the address in <tt>(x+i8l)</tt>.
+    IOL YI
+    X+Y AI
+    MO JMP
+
 nop:
 nop:
 nop: # Do nothing.
