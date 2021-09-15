@@ -43,9 +43,12 @@
         to {transform: rotate(360deg);}
       }
 
+      tt { font-weight: bold; font-size: 1.1em; }
+
     </style>
   </head>
   <body>
+    <h1>SCAMP Emulator</h1>
     <figure style="overflow:visible;" id="spinner"><div class="spinner"></div><center style="margin-top:0.5em"><strong>emscripten</strong></center></figure>
     <div class="emscripten" id="status">Downloading...</div>
     <div class="emscripten">
@@ -53,6 +56,26 @@
     </div>
     
     <div style="float:left" id="terminal"></div>
+
+    <div style="clear:both"></div>
+    <hr>
+    <ul>
+    <li><tt>cd</tt> to change directory, <tt>ls</tt> to list directory contents.</li>
+    <li><tt>kilo</tt> is the text editor, see its builtin help with <tt>Ctrl-E</tt>.</li>
+    <li><tt>slc</tt> is the compiler driver; compile a program with <tt>slc &lt; hello.sl &gt; hello</tt>, run it with <tt>./hello</tt>.</li>
+    <li>Look under <tt>/bin</tt> for more programs to run.</li>
+    <li>Look under <tt>/src</tt> for program source code.</li>
+    </ul>
+    <hr>
+    <ul>
+    <li>This tool is a microcode-level emulator of my homemade <a href="https://github.com/jes/scamp-cpu">SCAMP</a> CPU.</li>
+    <li>Some SCAMP documentation is in <a href="https://github.com/jes/scamp-cpu/tree/master/doc">the git repo</a>.</li>
+    <li>Some more information is on <a href="https://incoherency.co.uk/blog/tags/cpu.html">my blog</a>.</li>
+    <li>Contact me at <a href="mailto:james@incoherency.co.uk">james@incoherency.co.uk</a>.</li>
+    </ul>
+    <hr>
+    <p>By <a href="https://incoherency.co.uk/">James Stanley</a>.</p>
+
     <script type='text/javascript'>
         let statusElement = document.getElementById('status');
         let progressElement = document.getElementById('progress');
