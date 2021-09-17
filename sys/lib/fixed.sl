@@ -4,6 +4,7 @@ include "string.sl";
 include "sys.sl";
 
 var fix_prec = 8;
+var fixpi;
 
 # forward declarations
 var fixinit;
@@ -19,9 +20,12 @@ var fixint;
 var fixfrac;
 var fixfloor;
 var fixceil;
+var fixsin;
+var fixcos;
 
 fixinit = func(frac) {
     fix_prec = frac;
+    fixpi = fixatof("3.141596");
 };
 
 fixatofbase = func(s, base) {
@@ -257,3 +261,26 @@ fixceil = func(f) {
     if (f == fixfloor(f)) return f
     else return fixfloor(f)+1;
 };
+
+# TODO: characterise error
+fixsin = func(f) {
+    while (f > fixpi) f = f - fixpi;
+    while (f < -fixpi) f = f + fixpi;
+    var f2 = fixmul(f, f);
+    var f3 = fixmul(f, f2);
+    var f5 = fixmul(f3, f2);
+    var f7 = fixmul(f5, f2);
+    return f - div(f3, 6) - div(f5, 120) - div(f7, 5040);
+};
+
+# TODO: characterise error
+fixcos = func(f) {
+    while (f > fixpi) f = f - fixpi;
+    while (f < -fixpi) f = f + fixpi;
+    var f2 = fixmul(f, f);
+    var f4 = fixmul(f2, f2);
+    var f6 = fixmul(f4, f2);
+    return fixitof(1) - div(f2, 2) + div(f4, 24) + div(f6, 720);
+};
+
+fixinit(fix_prec);

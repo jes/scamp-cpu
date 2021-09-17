@@ -39,6 +39,12 @@ var operator = func(ch) {
         b = pop();
         a = pop();
         push(fixdiv(a, b));
+    } else if (ch == 's') {
+        a = pop();
+        push(fixsin(a));
+    } else if (ch == 'c') {
+        a = pop();
+        push(fixcos(a));
     } else if (!iswhite(ch)) {
         fprintf(2, "%c: unrecognised operator\n", [ch]);
     };
