@@ -8,7 +8,7 @@ var ser_bufsz = 128;
 var ser_buflen = ser_bufsz - 3;
 var ser_buf_area = asm {
     # BUFSPACE needs to be bufsz multiplied by no. of devices
-    .def CONSOLE_BUFSPACE 128
+    .def CONSOLE_BUFSPACE 256
     ser_buf_area: .gap CONSOLE_BUFSPACE
 
     _ser_bufspace: .word CONSOLE_BUFSPACE
@@ -243,8 +243,8 @@ ser_write = func(fd, buf, sz) {
 };
 
 var ser_init = func() {
-    var ser_fds = [3];
-    var ser_baseports = [136];
+    var ser_fds = [3, 4];
+    var ser_baseports = [136, 144];
     var i = 0;
     var p;
     var bufp = ser_buf_area;
