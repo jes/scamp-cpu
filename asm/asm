@@ -10,11 +10,13 @@ use JSON qw(decode_json);
 use FindBin;
 
 my $verbose = 0;
+my $verbose_file;
 my $asm_header;
 my $slang_header;
 
 GetOptions(
     'v|verbose' => \$verbose,
+    'verbose-file=s' => \$verbose_file,
     'asm-header=s' => \$asm_header,
     'slang-header=s' => \$slang_header,
     'h|help' => sub { help(0) },
@@ -62,11 +64,11 @@ while (my $line = <>) {
     }
 
     if ($line eq '') {
-        emit("__asm_annotation $orig_line") if $verbose;
+        emit("__asm_annotation $orig_line");
         next;
     }
 
-    emit("__asm_addr_$pc") if $verbose;
+    emit("__asm_addr_$pc");
 
     my ($op, $args_str) = split /\s+/, $line, 2;
     my @args = split /\s*,\s*/, $args_str//'';
@@ -156,33 +158,23 @@ while (my $line = <>) {
         emit($_) for @operands;
     }
 
-    emit("__asm_annotation $orig_line") if $verbose;
+    emit("__asm_annotation $orig_line");
 }
 
-my $chars_on_line = 0;
+write_output(
+    code => \@code,
+    verbose => $verbose,
+    fh => \*STDOUT,
+);
 
-# now turn the code into hex output
-for my $c (@code) {
-    if ($verbose && $c =~ /__asm_addr_(\d+)/) {
-        print sprintf("%04x:  ", $1);
-        $chars_on_line += 7;
-        next;
-    }
-    if ($verbose && $c =~ s/^__asm_annotation //) {
-        print " " for ($chars_on_line .. 17);
-        print "# $c\n";
-        $chars_on_line = 0;
-        next;
-    }
-
-    if ($c =~ /\D/) {
-        die "error: label $c not found\n" if !exists $label{$c};
-        $c = $label{$c};
-    }
-    $c = $c+65536 if $c < 0;
-    die "error: $c out of range\n" if $c < 0 || $c > 0xffff;
-    print sprintf("%04x%s", $c, ($verbose ? ' ' : "\n"));
-    $chars_on_line += 5;
+if ($verbose_file) {
+    open(my $fh, '>', $verbose_file)
+        or die "can't write $verbose_file: $!\n";
+    write_output(
+        code => \@code,
+        verbose => 1,
+        fh => $fh,
+    );
 }
 
 # now create the asm header file, if any
@@ -204,6 +196,48 @@ if ($slang_header) {
         print $fh "extern $slang_l;\n" if $l =~ /^_/;
     }
     close $fh;
+}
+
+# opts:
+# - code: array of values
+# - verbose: true if verbose (annotated) output wanted
+# - fh: file handle to write to
+sub write_output {
+    my (%opts) = @_;
+
+    my @code = @{ $opts{code} };
+    my $verbose = $opts{verbose};
+    my $fh = $opts{fh};
+
+    my $chars_on_line = 0;
+
+    # now turn the code into hex output
+    for my $c (@code) {
+        if ($c =~ /__asm_addr_(\d+)/) {
+            if ($verbose) {
+                print $fh sprintf("%04x:  ", $1);
+                $chars_on_line += 7;
+            }
+            next;
+        }
+        if ($c =~ s/^__asm_annotation //) {
+            if ($verbose) {
+                print $fh " " for ($chars_on_line .. 17);
+                print $fh "# $c\n";
+                $chars_on_line = 0;
+            }
+            next;
+        }
+
+        if ($c =~ /\D/) {
+            die "error: label $c not found\n" if !exists $label{$c};
+            $c = $label{$c};
+        }
+        $c = $c+65536 if $c < 0;
+        die "error: $c out of range\n" if $c < 0 || $c > 0xffff;
+        print $fh sprintf("%04x%s", $c, ($verbose ? ' ' : "\n"));
+        $chars_on_line += 5;
+    }
 }
 
 # examples:
