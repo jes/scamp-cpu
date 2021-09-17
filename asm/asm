@@ -332,10 +332,11 @@ Usage: asm [-v] < source.s > binary.hex
 
 Options:
 
-    -h,--help       Show this help.
-    --asm-header FILE   Write asm label values beginning with underscore into FILE.
-    --slang-header FILE   Write SLANG names beginning with underscore into FILE.
-    -v,--verbose    Annotate the generated hex with the source.
+    -h,--help            Show this help.
+    --asm-header FILE    Write asm label values beginning with underscore into FILE.
+    --slang-header FILE  Write SLANG names beginning with underscore into FILE.
+    -v,--verbose         Annotate the generated hex with the source.
+    --verbose-file FILE  Write annotated hex (like with -v) into FILE.
 };
     exit($rc);
 }
