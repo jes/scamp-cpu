@@ -6,17 +6,13 @@ BINS = cat.bin init.bin ls.bin mkdir.bin sh.bin pwd.bin echo.bin stat.bin rm.bin
 all: $(BINS) lib.o
 
 .PRECIOUS: %.bin
-%.bin: %.hex %.anhex
+%.bin: %.hex
 	../util/hex2bin $*.hex > $*.bin.tmp
 	mv $*.bin.tmp $*.bin
 
 %.hex: lib/head.s %.opt.s lib/foot.s
-	cat lib/head.s $*.opt.s lib/foot.s | ../asm/asm > $*.hex.tmp
+	cat lib/head.s $*.opt.s lib/foot.s | ../asm/asm --verbose-file $*.anhex.tmp > $*.hex.tmp
 	mv $*.hex.tmp $*.hex
-
-.PRECIOUS: %.anhex
-%.anhex: lib/head.s %.opt.s lib/foot.s
-	cat lib/head.s $*.opt.s lib/foot.s | ../asm/asm -v > $*.anhex.tmp
 	mv $*.anhex.tmp $*.anhex
 
 %.opt.s: %.s
