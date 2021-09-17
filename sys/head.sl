@@ -6,7 +6,7 @@ var buf = malloc(bufsz);
 
 var args = cmdargs()+1;
 if (!*args || *(args+1)) {
-    fputs("usage: head N\n");
+    fputs(2, "usage: head N\n");
     exit(1);
 };
 
