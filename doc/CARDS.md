@@ -165,6 +165,8 @@ Use bodge wire to connect `TX` pin of UART 0 to pin 34, marked "spare_o4" on bac
 
 Use bodge wire to connect `RX` pin of UART 0 to pin 35, marked "spare_o5" on backplane.
 
+LEDs need to be wired with signal on cathode and VCC on anode.
+
 ## Storage
 
 1 card is internal, the other card is removable through the front panel.
