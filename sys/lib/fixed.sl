@@ -25,7 +25,7 @@ var fixcos;
 
 fixinit = func(frac) {
     fix_prec = frac;
-    fixpi = fixatof("3.141596");
+    fixpi = fixatof("3.1415927");
 };
 
 fixatofbase = func(s, base) {
