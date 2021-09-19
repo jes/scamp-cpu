@@ -272,23 +272,23 @@ fixlerp = func(a, b, k) {
 
 # return the integer part of f, as a fixed-point value
 fixint = func(f) {
-    # TODO: is this right?
+    # TODO: is this right? what about negative values?
     return fixitof(fixftoi(f));
 };
 
 # return the fractional part of f
 fixfrac = func(f) {
-    # TODO: is this right?
+    # TODO: is this right? what about negative values?
     return f - fixint(f);
 };
 
 fixfloor = func(f) {
-    # TODO: is this right?
+    # TODO: is this right? what about negative values?
     return f - fixfrac(f)
 };
 
 fixceil = func(f) {
-    # TODO: is this right?
+    # TODO: is this right? what about negative values?
     if (f == fixfloor(f)) return f
     else return fixfloor(f)+1;
 };
