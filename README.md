@@ -53,6 +53,7 @@ The computer already works, and I suspect it will never be "finished", but some 
  - [ ] write an strace-like debugging tool
  - [ ] write a DDT-like debugging tool
  - [ ] write a peephole optimiser to run within SCAMP/os
+ - [ ] find out whether changing the calling convention to return values on the stack is overall better or worse
 
 #### Other software
 
