@@ -16,6 +16,7 @@ var fixitof;
 var fixftoi;
 var fixmul;
 var fixdiv;
+var fixlerp;
 var fixint;
 var fixfrac;
 var fixfloor;
@@ -234,9 +235,39 @@ fixmul = asm {
     fixmul_neg: .word 0
 };
 
+# TODO: [perf] write a non-awful version of this
+# https://blog.veitheller.de/Fixed_Point_Division.html
 fixdiv = func(a, b) {
-    printf("TODO: fixdiv\n", 0);
-    exit(1);
+    var neg = 0;
+    if (a < 0) {
+        a = -a;
+        neg = !neg;
+    };
+    if (b < 0) {
+        b = -b;
+        neg = !neg;
+    };
+
+    var quotient = 0;
+    var i = fix_prec+1;
+    var d;
+    var m;
+    while (a && i) {
+        divmod(a, b, &d, &m);
+        a = m+m;
+        quotient = quotient + shl(d, i);
+        i--;
+    };
+
+    quotient = shr(quotient, 1);
+
+    if (neg) return -quotient
+    else return quotient;
+};
+
+# linear interpolate between a and b, according to k (k=0 gets a, k=1 gets b)
+fixlerp = func(a, b, k) {
+    return fixmul(b,k) + fixmul(a,fixone-k);
 };
 
 # return the integer part of f, as a fixed-point value
