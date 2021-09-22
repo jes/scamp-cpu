@@ -23,7 +23,9 @@ makelib() {
     cat lib/libhead.s lib$name.s.build | ../asm/asm -v > lib$name.anhex
 }
 
-makelib ""
-makelib fixed fixed.sl
-makelib bigint bigint.sl
-makelib bigfix bigint.sl fixed.sl
+makelib "" &
+makelib fixed fixed.sl &
+makelib bigint bigint.sl &
+makelib bigfix bigint.sl fixed.sl &
+
+wait
