@@ -265,7 +265,7 @@ fixdiv = func(a, b) {
 
 # linear interpolate between a and b, according to k (k=0 gets a, k=1 gets b)
 fixlerp = func(a, b, k) {
-    return fixmul(b,k) + fixmul(a,fixone-k);
+    return a + fixmul(b-a,k);
 };
 
 # return the integer part of f, as a fixed-point value
