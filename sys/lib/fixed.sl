@@ -249,7 +249,7 @@ fixdiv = func(a, b) {
     };
 
     var quotient = 0;
-    var i = fix_prec+1;
+    var i = fix_prec;
     var d;
     var m;
     while (a && i) {
@@ -258,8 +258,6 @@ fixdiv = func(a, b) {
         quotient = quotient + shl(d, i);
         i--;
     };
-
-    quotient = shr(quotient, 1);
 
     if (neg) return -quotient
     else return quotient;
