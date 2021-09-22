@@ -57,7 +57,7 @@ The computer already works, and I suspect it will never be "finished", but some 
 
 #### Other software
 
- - [ ] make the shell support pipe syntax (e.g. `foo | bar | baz`)
+ - [x] make the shell support pipe syntax (e.g. `foo | bar | baz`)
  - [ ] write a big-fixed-point arithmetic library
  - [ ] fixed-point mathematics: pow,sqrt
  - [ ] fixed-point trigonometry: sin,cos,tan,asin,acos,atan,atan2 (partly done)
