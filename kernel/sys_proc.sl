@@ -67,6 +67,7 @@ var sys_exit_impl = func(rc) {
     sys_read(kfd, &CWDBLK, 1);
     sys_read(kfd, fdtable, 128);
     sys_read(kfd, &cmdargs_sz, 1);
+    sys_read(kfd, &cmdargs, 1);
     sys_read(kfd, cmdargs, cmdargs_sz);
     sys_close(kfd);
 
@@ -154,6 +155,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
     sys_write(kfd, &CWDBLK, 1);
     sys_write(kfd, fdtable, 128);
     sys_write(kfd, &cmdargs_sz, 1);
+    sys_write(kfd, &cmdargs, 1);
     sys_write(kfd, cmdargs, cmdargs_sz);
     sys_close(kfd);
 
