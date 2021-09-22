@@ -24,6 +24,7 @@ var fixfloor;
 var fixceil;
 var fixsin;
 var fixcos;
+var fixtan;
 
 fixinit = func(frac) {
     fix_prec = frac;
@@ -347,5 +348,7 @@ fixsin = func(f) {
 };
 
 fixcos = func(f) return fixsin(f + fixhalfpi);
+
+fixtan = func(f) return fixdiv(fixsin(f), fixcos(f));
 
 fixinit(fix_prec);

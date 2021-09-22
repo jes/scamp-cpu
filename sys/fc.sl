@@ -45,6 +45,9 @@ var operator = func(ch) {
     } else if (ch == 'c') {
         a = pop();
         push(fixcos(a));
+    } else if (ch == 't') {
+        a = pop();
+        push(fixtan(a));
     } else if (!iswhite(ch)) {
         fprintf(2, "%c: unrecognised operator\n", [ch]);
     };
