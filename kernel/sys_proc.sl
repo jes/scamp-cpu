@@ -6,9 +6,10 @@ include "sys_fs.sl";
 include "sys.sl";
 
 sys_cmdargs = asm {
-    ld r0, cmdargs
+    ld r0, (_cmdargs)
     ret
 };
+sys_osbase = sys_cmdargs;
 
 # usage: return_to_parent(sp, ret, rc)
 # restore stack pointer and return address, and return rc

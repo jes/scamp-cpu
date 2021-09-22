@@ -121,7 +121,8 @@ var nextfreeblk = 0;
 #       allow arbitrarily-large amounts, and stick it just before the kernel
 #       base, and make osbase() report the start address of cmdargs() instead?
 var cmdargs_sz = 256; # words, including pointers, characters, and nuls
-var cmdargs = asm { cmdargs: .gap 256 };
+extern OSBASE;
+var cmdargs = OSBASE - cmdargs_sz;
 
 # Space to build names for undirent()
 var undirent_str = asm { .gap 32 };

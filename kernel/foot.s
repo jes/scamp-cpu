@@ -1,7 +1,5 @@
 
-sys_osbase:
-    ld r0, OSBASE
-    ret
+_OSBASE: .word OSBASE
 
 # kernel stack
 #sym:kernel_stack
@@ -14,7 +12,7 @@ INITIAL_SP: .word 0
 _sys_random:   .word 0
 _sys_serflags: .word 0
 _sys_cmdargs:  .word 0
-_sys_osbase:   .word sys_osbase
+_sys_osbase:   .word 0
 _sys_copyfd:   .word 0
 _sys_unlink:   .word 0
 _sys_stat:     .word 0
