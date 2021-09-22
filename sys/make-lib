@@ -10,15 +10,10 @@ makelib() {
 
     echo " ... makelib $name"
 
-    for f in $LIBS;
+    for f in $LIBS $*;
     do
         echo "include \"$f\";"
     done > lib$name.sl
-
-    while (( "$#" )); do
-        echo "include \"$1\";"
-        shift
-    done >> lib$name.sl
 
     ../compiler/slangc lib$name.sl | ../compiler/peepopt | ../compiler/peepopt > lib$name.s.build
     cat lib/libhead.s lib$name.s.build | ../asm/asm --asm-header lib$name.s.tmp --slang-header lib$name.h > lib$name.hex.tmp
