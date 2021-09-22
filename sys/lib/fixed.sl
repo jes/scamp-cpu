@@ -296,7 +296,8 @@ fixceil = func(f) {
 var FIXSINSIZE = 37;
 # table of sin(x) values with fix_prec=13; these are then shifted to the target
 # precision when returned by fixsin()
-var FIXSINTABLE = [0x0000, 0x0165, 0x02c9, 0x042d, 0x058e, 0x06ed, 0x0848, 0x099f, 0x0af1, 0x0c3e, 0x0d86, 0x0ec6, 0x0fff, 0x1131, 0x125a, 0x137a, 0x1491, 0x159e, 0x16a0, 0x1797, 0x1883, 0x1963, 0x1a36, 0x1afd, 0x1bb6, 0x1c62, 0x1d00, 0x1d90, 0x1e11, 0x1e84, 0x1ee8, 0x1f3d, 0x1f83, 0x1fb9, 0x1fe0, 0x1ff8, 0x2000, 0x2000];
+var FIXSINXS = [0x0000, 0x0165, 0x02ca, 0x0430, 0x0595, 0x06fb, 0x0860, 0x09c6, 0x0b2b, 0x0c90, 0x0df6, 0x0f5b, 0x10c1, 0x1226, 0x138c, 0x14f1, 0x1657, 0x17bc, 0x1921, 0x1a87, 0x1bec, 0x1d52, 0x1eb7, 0x201d, 0x2182, 0x22e8, 0x244d, 0x25b2, 0x2718, 0x287d, 0x29e3, 0x2b48, 0x2cae, 0x2e13, 0x2f79, 0x30de, 0x3243];
+var FIXSINYS = [0x0000, 0x0165, 0x02c9, 0x042d, 0x058e, 0x06ed, 0x0848, 0x099f, 0x0af1, 0x0c3e, 0x0d86, 0x0ec6, 0x0fff, 0x1131, 0x125a, 0x137a, 0x1491, 0x159e, 0x16a0, 0x1797, 0x1883, 0x1963, 0x1a36, 0x1afd, 0x1bb6, 0x1c62, 0x1d00, 0x1d90, 0x1e11, 0x1e84, 0x1ee8, 0x1f3d, 0x1f83, 0x1fb9, 0x1fe0, 0x1ff8, 0x2000, 0x2000];
 
 # TODO: [bug] at fix_prec=12, maximum error should be less than 1/4096 (the
 # smallest representable value), but we observe errors higher than this; why?
@@ -315,24 +316,31 @@ fixsin = func(f) {
     };
     if (f gt fixhalfpi) f = fixpi - f;
 
-    # TODO: [perf] is a mul() and fixdiv() faster than linear search of a 37-element table?
+    # TODO: [perf] is a mul() and fixdiv() faster than linear search of a 37-element table? (watch out for overflow)
     #var pos = mul(FIXSINSIZE, fixdiv(f, fixhalfpi));
     #var idx = fixftoi(pos);
     #var k = fixfrac(pos);
 
-    var pos = 0;
+    var prev_prec = fix_prec;
+    if (fix_prec < 13) {
+        f = shl(f, 13-fix_prec);
+        fixinit(13);
+    };
+
     var idx = 0;
-    var step = div(fixhalfpi, FIXSINSIZE-1); # TODO: [perf] pre-compute
-    while (f gt (pos+step)) {
-        pos = pos + step;
+    while (f gt FIXSINXS[idx+1]) {
         idx++;
     };
-    var k = fixdiv(f-pos, step);
-
-    var a = FIXSINTABLE[idx];
-    var b = FIXSINTABLE[idx+1];
+    var pos = FIXSINXS[idx];
+    var a = FIXSINYS[idx];
+    var b = FIXSINYS[idx+1];
+    var k = fixdiv(f-pos, FIXSINXS[1]-FIXSINXS[0]);
     var sin = fixlerp(a, b, k);
-    if (fix_prec < 13) sin = shr(sin, 13-fix_prec);
+
+    if (prev_prec < 13) sin = shr(sin, 13-prev_prec)
+    else if (prev_prec > 13) sin = shl(sin, prev_prec-13);
+
+    fixinit(prev_prec);
 
     if (neg) return -sin
     else return sin;
