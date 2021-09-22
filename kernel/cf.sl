@@ -91,10 +91,6 @@ var asm_cf_blkread = asm {
     pop x
     ld r3, x # pointer to write to
 
-    # TODO: [perf] can we implement an instruction for
-    #       in ((i8h)++), i16
-    # ?
-
     asm_cf_blkread_loop:
         in x, CFDATAREG
         ld (r3++), x
@@ -155,10 +151,6 @@ var asm_cf_blkwrite = asm {
     ld r0, 16 # number of loop iterations (BLKSZ/16 == 256/16 == 16)
     pop x
     ld r3, x # pointer to read from
-
-    # TODO: [perf] can we implement an instruction for
-    #       out i16, ((i8h)++)
-    # ?
 
     asm_cf_blkwrite_loop:
         ld x, (r3++)
