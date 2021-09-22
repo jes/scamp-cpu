@@ -1,5 +1,7 @@
 # Data storage and related functions
 
+extern OSBASE;
+
 # File descriptor table
 #
 # Each file descriptor contains 8 words:
@@ -117,11 +119,7 @@ var nextfreeblk = 0;
 #
 # Starts out with a 0-terminated list of pointers to strings; the strings
 # immediately follow, with a 0 word after each one
-# TODO: [nice] instead of allocating a fixed buffer for cmdargs_sz, we should
-#       allow arbitrarily-large amounts, and stick it just before the kernel
-#       base, and make osbase() report the start address of cmdargs() instead?
-var cmdargs_sz = 256; # words, including pointers, characters, and nuls
-extern OSBASE;
+var cmdargs_sz = 0;
 var cmdargs = OSBASE - cmdargs_sz;
 
 # Space to build names for undirent()

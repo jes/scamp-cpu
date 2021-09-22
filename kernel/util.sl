@@ -360,3 +360,9 @@ var powers_of_2 = asm {
     .word 0x4000
     .word 0x8000
 };
+
+var strlen = func(s) {
+    var n = 0;
+    while (*(s++)) n++;
+    return n;
+};

@@ -2,7 +2,7 @@ SOURCES = *.sl
 
 .PHONY: all prof test clean
 
-all: os.disk kernel.anhex
+all: os.disk
 
 prof: kernel.prof kernel.anhex
 	../emulator/profhtml -x kernel.anhex < kernel.prof > kernel.prof.html
@@ -20,11 +20,8 @@ os.disk.blank:
 	../fs/mkfs > os.disk.blank
 
 kernel.hex: head.s kernel.opt.s foot.s
-	cat head.s kernel.opt.s foot.s | ../asm/asm > kernel.hex.tmp
+	cat head.s kernel.opt.s foot.s | ../asm/asm --verbose-file kernel.anhex.tmp > kernel.hex.tmp
 	mv kernel.hex.tmp kernel.hex
-
-kernel.anhex: head.s kernel.opt.s foot.s
-	cat head.s kernel.opt.s foot.s | ../asm/asm -v > kernel.anhex.tmp
 	mv kernel.anhex.tmp kernel.anhex
 
 kernel.opt.s: kernel.s

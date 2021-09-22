@@ -66,6 +66,7 @@ var sys_exit_impl = func(rc) {
     sys_read(kfd, &ret, 1);
     sys_read(kfd, &CWDBLK, 1);
     sys_read(kfd, fdtable, 128);
+    sys_read(kfd, &cmdargs_sz, 1);
     sys_read(kfd, cmdargs, cmdargs_sz);
     sys_close(kfd);
 
@@ -152,6 +153,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
     sys_write(kfd, &ret, 1);
     sys_write(kfd, &CWDBLK, 1);
     sys_write(kfd, fdtable, 128);
+    sys_write(kfd, &cmdargs_sz, 1);
     sys_write(kfd, cmdargs, cmdargs_sz);
     sys_close(kfd);
 
@@ -184,13 +186,22 @@ var jmp_to_user = asm {
 var cmdargp;
 var cmdarg_idx;
 var build_cmdargs = func(firstarg, args) {
-    # count the number of arguments
+    # count the number & size of arguments
     var nargs = 0;
-    if (firstarg) nargs++;
-    while (args[nargs]) nargs++;
+    var args_sz = 0;
+    if (firstarg) {
+        nargs++;
+        args_sz = args_sz + strlen(firstarg) + 1;
+    };
+    var i = 0;
+    while (args[i]) {
+        args_sz = args_sz + strlen(args[i]) + 1;
+        nargs++;
+        i++;
+    };
 
     var addarg = func(arg) {
-        var max_cmdargp = cmdargs + cmdargs_sz - 2;
+        var max_cmdargp = cmdargs + cmdargs_sz;
 
         *(cmdargs+cmdarg_idx++) = cmdargp;
         var i = 0;
@@ -203,11 +214,14 @@ var build_cmdargs = func(firstarg, args) {
         if (cmdargp == max_cmdargp) throw(TOOLONG);
     };
 
+    cmdargs_sz = args_sz + nargs + 2;
+    cmdargs = OSBASE - cmdargs_sz;
+
     # copy the args into cmdargs
     cmdargp = cmdargs + nargs + 1;
     cmdarg_idx = 0;
-    var i = 0;
     if (firstarg) addarg(firstarg);
+    i = 0;
     while (args[i]) addarg(args[i++]);
 
     *(cmdargs+cmdarg_idx) = 0;
@@ -278,10 +292,8 @@ var sys_exec_impl = func(args) {
 
         # load the interpreter
         # TODO: [bug] "args" is a pointer to user memory, which we just overwrote
-        #       with the contents of the script! should instead shift all the
-        #       cmdargs up and stick "name" in at the bottom? or read only the
-        #       first 2 characters to find out if it's a shebang before overwriting
-        #       the rest of the user memory?
+        #       with the contents of the script! should we instead just stick
+        #       "name" in at the bottom of the cmdargs we just built?
         build_cmdargs(name, args);
         load_program(name);
     };
