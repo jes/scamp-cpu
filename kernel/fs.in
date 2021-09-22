@@ -39,6 +39,8 @@ put ../sys/mandelfix.bin /bin/mandelfix
 put ../sys/fc.bin /bin/fc
 put ../sys/snake.bin /bin/snake
 put ../sys/reset.bin /bin/reset
+put ../sys/true.bin /bin/true
+put ../sys/while.bin /bin/while
 
 mkdir lib
 put ../sys/lib.o /lib/lib.o
@@ -106,6 +108,8 @@ put -t ../sys/mandelfix.sl /src/mandelfix.sl
 put -t ../sys/fc.sl /src/fc.sl
 put -t ../sys/snake.sl /src/snake.sl
 put -t ../sys/reset.sl /src/reset.sl
+put -t ../sys/true.sl /src/true.sl
+put -t ../sys/while.sl /src/while.sl
 
 mkdir src/lib
 put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
