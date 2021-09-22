@@ -5,6 +5,7 @@ include "sys.sl";
 
 var fix_prec = 8;
 var fixpi;
+var fixhalfpi;
 
 # forward declarations
 var fixinit;
@@ -27,6 +28,7 @@ var fixcos;
 fixinit = func(frac) {
     fix_prec = frac;
     fixpi = fixatof("3.1415927");
+    fixhalfpi = div(fixpi, 2);
 };
 
 fixatofbase = func(s, base) {
@@ -291,25 +293,51 @@ fixceil = func(f) {
     else return fixfloor(f)+1;
 };
 
-# TODO: characterise error
+var FIXSINSIZE = 37;
+# table of sin(x) values with fix_prec=13; these are then shifted to the target
+# precision when returned by fixsin()
+var FIXSINTABLE = [0x0000, 0x0165, 0x02c9, 0x042d, 0x058e, 0x06ed, 0x0848, 0x099f, 0x0af1, 0x0c3e, 0x0d86, 0x0ec6, 0x0fff, 0x1131, 0x125a, 0x137a, 0x1491, 0x159e, 0x16a0, 0x1797, 0x1883, 0x1963, 0x1a36, 0x1afd, 0x1bb6, 0x1c62, 0x1d00, 0x1d90, 0x1e11, 0x1e84, 0x1ee8, 0x1f3d, 0x1f83, 0x1fb9, 0x1fe0, 0x1ff8, 0x2000, 0x2000];
+
+# TODO: [bug] at fix_prec=12, maximum error should be less than 1/4096 (the
+# smallest representable value), but we observe errors higher than this; why?
+# https://img.incoherency.co.uk/3525
 fixsin = func(f) {
-    while (f > fixpi) f = f - fixpi;
-    while (f < -fixpi) f = f + fixpi;
-    var f2 = fixmul(f, f);
-    var f3 = fixmul(f, f2);
-    var f5 = fixmul(f3, f2);
-    var f7 = fixmul(f5, f2);
-    return f - div(f3, 6) - div(f5, 120) - div(f7, 5040);
+    var neg = 0;
+    if (f < 0) {
+        f = -f;
+        neg = !neg;
+    };
+    var twopi = fixpi+fixpi;
+    while (f gt twopi) f = f - twopi;
+    if (f gt fixpi) {
+        f = f - fixpi;
+        neg = !neg;
+    };
+    if (f gt fixhalfpi) f = fixpi - f;
+
+    # TODO: [perf] is a mul() and fixdiv() faster than linear search of a 37-element table?
+    #var pos = mul(FIXSINSIZE, fixdiv(f, fixhalfpi));
+    #var idx = fixftoi(pos);
+    #var k = fixfrac(pos);
+
+    var pos = 0;
+    var idx = 0;
+    var step = div(fixhalfpi, FIXSINSIZE-1); # TODO: [perf] pre-compute
+    while (f gt (pos+step)) {
+        pos = pos + step;
+        idx++;
+    };
+    var k = fixdiv(f-pos, step);
+
+    var a = FIXSINTABLE[idx];
+    var b = FIXSINTABLE[idx+1];
+    var sin = fixlerp(a, b, k);
+    if (fix_prec < 13) sin = shr(sin, 13-fix_prec);
+
+    if (neg) return -sin
+    else return sin;
 };
 
-# TODO: characterise error
-fixcos = func(f) {
-    while (f > fixpi) f = f - fixpi;
-    while (f < -fixpi) f = f + fixpi;
-    var f2 = fixmul(f, f);
-    var f4 = fixmul(f2, f2);
-    var f6 = fixmul(f4, f2);
-    return fixitof(1) - div(f2, 2) + div(f4, 24) + div(f6, 720);
-};
+fixcos = func(f) return fixsin(f + fixhalfpi);
 
 fixinit(fix_prec);
