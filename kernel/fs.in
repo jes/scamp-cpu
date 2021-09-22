@@ -42,8 +42,18 @@ put ../sys/reset.bin /bin/reset
 
 mkdir lib
 put ../sys/lib.o /lib/lib.o
+put ../sys/libfixed.o /lib/libfixed.o
+put ../sys/libbigint.o /lib/libbigint.o
+put ../sys/libbigfix.o /lib/libbigfix.o
 put -t ../sys/lib.s /lib/lib.s
+put -t ../sys/libfixed.s /lib/libfixed.s
+put -t ../sys/libbigint.s /lib/libbigint.s
+put -t ../sys/libbigfix.s /lib/libbigfix.s
 put -t ../sys/lib.h /lib/lib.h
+put -t ../sys/libfixed.h /lib/libfixed.h
+put -t ../sys/libbigint.h /lib/libbigint.h
+put -t ../sys/libbigfix.h /lib/libbigfix.h
+
 put -t ../sys/lib/head.s /lib/head.s
 put -t ../sys/lib/foot.s /lib/foot.s
 put -t ../sys/include-lib.h /lib/grarr.sl
@@ -58,6 +68,7 @@ put -t ../sys/include-lib.h /lib/strbuf.sl
 put -t ../sys/include-lib.h /lib/bufio.sl
 put -t ../sys/include-lib.h /lib/bigint.sl
 put -t ../sys/include-lib.h /lib/hash.sl
+put -t ../sys/include-lib.h /lib/fixed.sl
 
 mkdir src
 put -t ../sys/cat.sl /src/cat.sl

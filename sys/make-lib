@@ -1,17 +1,34 @@
-#!/bin/sh
+#!/bin/bash
 
 # if you add something here you also need to add a line to ../kernel/fs.in to put
 # "include-lib.h" in /lib/foo.h
-LIBS="grarr.sl malloc.sl parse.sl stdio.sl stdlib.sl string.sl sys.sl xprintf.sl strbuf.sl bufio.sl bigint.sl hash.sl xscanf.sl"
+LIBS="grarr.sl malloc.sl parse.sl stdio.sl stdlib.sl string.sl sys.sl xprintf.sl strbuf.sl bufio.sl hash.sl xscanf.sl"
 
-for f in $LIBS;
-do
-    echo "include \"$f\";"
-done > lib.sl
+makelib() {
+    name=$1
+    shift
 
-../compiler/slangc lib.sl | ../compiler/peepopt | ../compiler/peepopt > lib.s.build
-cat lib/libhead.s lib.s.build | ../asm/asm --asm-header lib.s.tmp --slang-header lib.h > lib.hex.tmp
-cat lib.s.head lib.s.tmp > lib.s
-../util/hex2bin lib.hex.tmp > lib.o.tmp
-mv lib.o.tmp lib.o
-cat lib/libhead.s lib.s.build | ../asm/asm -v > lib.anhex
+    echo " ... makelib $name"
+
+    for f in $LIBS;
+    do
+        echo "include \"$f\";"
+    done > lib$name.sl
+
+    while (( "$#" )); do
+        echo "include \"$1\";"
+        shift
+    done >> lib$name.sl
+
+    ../compiler/slangc lib$name.sl | ../compiler/peepopt | ../compiler/peepopt > lib$name.s.build
+    cat lib/libhead.s lib$name.s.build | ../asm/asm --asm-header lib$name.s.tmp --slang-header lib$name.h > lib$name.hex.tmp
+    echo ".blob /lib/lib$name.o" | cat - lib$name.s.tmp > lib$name.s
+    ../util/hex2bin lib$name.hex.tmp > lib$name.o.tmp
+    mv lib$name.o.tmp lib$name.o
+    cat lib/libhead.s lib$name.s.build | ../asm/asm -v > lib$name.anhex
+}
+
+makelib ""
+makelib fixed fixed.sl
+makelib bigint bigint.sl
+makelib bigfix bigint.sl fixed.sl

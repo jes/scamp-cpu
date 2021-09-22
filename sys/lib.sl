@@ -8,7 +8,5 @@ include "sys.sl";
 include "xprintf.sl";
 include "strbuf.sl";
 include "bufio.sl";
-include "bigint.sl";
 include "hash.sl";
 include "xscanf.sl";
-include "fixed.sl";

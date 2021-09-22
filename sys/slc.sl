@@ -5,6 +5,7 @@
 include "stdio.sl";
 include "sys.sl";
 include "malloc.sl";
+include "getopt.sl";
 
 # redirect "name" to "fd" with the given "mode"; return an fd that stores
 # the previous state, suitable for use with "unredirect()";
@@ -59,22 +60,40 @@ var cat = func(name) {
     close(fd);
 };
 
-# TODO: [nice] option parsing
+var usage = func(rc) {
+    fputs(2, "usage: slc [-l LIB] < SRC > BIN\n");
+    exit(rc);
+};
+
+var libname = "";
+var args = getopt(cmdargs()+1, "l", func(ch, arg) {
+    if (ch == 'l') libname = strdup(arg)
+    else if (ch == 'h') usage(0)
+    else usage(1);
+});
+if (*args) usage(1);
 
 var rc;
 
+# copy the required lib into "/lib/slc-lib.h"
+var libhfile = sprintf("/lib/lib%s.h", [libname]);
+var libsfile = sprintf("/lib/lib%s.s", [libname]);
+var prev_out = redirect(1, "/lib/slc-lib.h", O_WRITE|O_CREAT);
+cat(libhfile);
+unredirect(1, prev_out);
+
 # direct stdout to "/tmp/1.s" and run slangc
 fprintf(2, "slangc...\n", 0);
-var prev_out = redirect(1, "/tmp/1.s", O_WRITE|O_CREAT);
+prev_out = redirect(1, "/tmp/1.s", O_WRITE|O_CREAT);
 rc = system(["/bin/slangc"]);
 if (rc != 0) exit(rc);
 unredirect(1, prev_out);
 
-# cat "/lib/head.s /lib/lib.s /tmp/1.s /lib/foot.s" into "/tmp/2.s"
+# cat "/lib/head.s /lib/lib$libname.s /tmp/1.s /lib/foot.s" into "/tmp/2.s"
 fprintf(2, "cat...\n", 0);
 prev_out = redirect(1, "/tmp/2.s", O_WRITE|O_CREAT);
 cat("/lib/head.s");
-cat("/lib/lib.s");
+cat(libsfile);
 cat("/tmp/1.s");
 cat("/lib/foot.s");
 unredirect(1, prev_out);

@@ -27,4 +27,4 @@ lib.o: $(LIBS) make-lib
 	./make-lib
 
 clean:
-	rm -f *.bin *.hex *.anhex *.s *.tmp lib.o lib.s.build lib.h
+	rm -f *.bin *.hex *.anhex *.s *.tmp lib*.o lib*.s.build lib*.h

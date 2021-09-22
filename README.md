@@ -49,7 +49,7 @@ The computer already works, and I suspect it will never be "finished", but some 
 
  - [ ] make kernel self-hosting (compile within SCAMP/os & write to disk)
  - [ ] make library blob self-hosting (compile within SCAMP/os)
- - [ ] support multiple different library blobs (e.g. to toggle the large parts on/off)
+ - [x] support multiple different library blobs (e.g. to toggle the large parts on/off)
  - [ ] write an strace-like debugging tool
  - [ ] write a DDT-like debugging tool
  - [ ] write a peephole optimiser to run within SCAMP/os
