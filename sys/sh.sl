@@ -10,6 +10,8 @@ include "strbuf.sl";
 include "string.sl";
 include "sys.sl";
 
+var sherr;
+
 # return static "path/name" if name exists in path, otherwise return 0
 var tryname_sz = 128;
 var tryname = malloc(tryname_sz);
@@ -192,59 +194,10 @@ var CommandLine = func(x) {
     };
 };
 
-# parse the input string and return an array of args
-# caller needs to free the returned array and each of
-# the strings in it
-var parse_input = func(str) {
-    parse_strp = str;
-    parse_args = grnew();
-
-    in_redirect = 0;
-    out_redirect = 0;
-    err_redirect = 0;
-
-    parse_init(func() {
-        if (*parse_strp) return *(parse_strp++);
-        return EOF;
-    });
-
-    skip();
-    if (!parse(CommandLine,0)) {
-        grfree(parse_args);
-        return 0;
-    };
-    if (nextchar() != EOF) {
-        grfree(parse_args);
-        return 0;
-    };
-
-    grpush(parse_args, 0);
-
-    var args_arr = malloc(grlen(parse_args));
-    memcpy(args_arr, grbase(parse_args), grlen(parse_args));
-    grfree(parse_args);
-
-    return args_arr;
-};
-
-# parse & execute the given string
-var execute = func(str) {
-    var args = parse_input(str);
-    if (!args) {
-        fprintf(2, "sh: parse error\n", 0);
-        return 1;
-    };
-    if (!args[0]) return 0;
-
+var execute_arr = func(args) {
     # handle internal commands
     var p;
     if (internal(args)) {
-        p = args;
-        while (*p) free(*(p++));
-        free(args);
-        free(in_redirect);
-        free(out_redirect);
-        free(err_redirect);
         return 0;
     };
 
@@ -252,12 +205,6 @@ var execute = func(str) {
     var path = search(args[0]);
     if (!path) {
         fprintf(2, "sh: %s: not found in path\n", [args[0]]);
-        p = args;
-        while (*p) free(*(p++));
-        free(args);
-        free(in_redirect);
-        free(out_redirect);
-        free(err_redirect);
         return 1;
     };
     var oldargs0 = args[0];
@@ -279,15 +226,68 @@ var execute = func(str) {
 
     if (rc < 0) fprintf(2, "sh: %s: %s\n", [args[0], strerror(rc)]);
 
-    p = args;
+    return rc;
+};
+
+var execute_parse_args = func() {
+    grpush(parse_args, 0);
+
+    var args_arr = malloc(grlen(parse_args));
+    memcpy(args_arr, grbase(parse_args), grlen(parse_args));
+    grfree(parse_args);
+
+    var rc = execute_arr(args_arr);
+
+    var p = args_arr;
     while (*p) free(*(p++));
-    free(args);
+    free(args_arr);
+
+    return rc;
+};
+
+# parse the input string and return an array of args
+# caller needs to free the returned array and each of
+# the strings in it
+var parse_input = func(str) {
+    parse_strp = str;
+    parse_args = grnew();
+
+    in_redirect = 0;
+    out_redirect = 0;
+    err_redirect = 0;
+
+    parse_init(func() {
+        if (*parse_strp) return *(parse_strp++);
+        return EOF;
+    });
+
+    skip();
+    if (!parse(CommandLine,0)) {
+        grfree(parse_args);
+        sherr = "parse error";
+        return 1;
+    };
+    if (nextchar() != EOF) {
+        grfree(parse_args);
+        sherr = "parse error";
+        return 1;
+    };
+
+    var rc = execute_parse_args();
 
     # free names of redirection filenames
     free(in_redirect);
     free(out_redirect);
     free(err_redirect);
 
+    return rc;
+};
+
+# parse & execute the given string
+var execute = func(str) {
+    sherr = 0;
+    var rc = parse_input(str);
+    if (sherr) fprintf(2, "sh: %s\n", [sherr]);
     return rc;
 };
 
