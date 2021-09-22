@@ -40,7 +40,7 @@ The computer already works, and I suspect it will never be "finished", but some 
 
 #### Hardware
 
- - [ ] make some levers that sit on the case at the side of the cards to aid removal of the cards
+ - [x] make some levers that sit on the case at the side of the cards to aid removal of the cards
  - [ ] build a hardware multiplication card (and maybe division?)
  - [ ] build a hardware RNG
  - [x] make the CompactFlash interface more reliable
