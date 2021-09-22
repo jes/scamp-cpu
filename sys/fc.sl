@@ -48,6 +48,9 @@ var operator = func(ch) {
     } else if (ch == 't') {
         a = pop();
         push(fixtan(a));
+    } else if (ch == 'r') {
+        a = pop();
+        push(fixsqrt(a));
     } else if (!iswhite(ch)) {
         fprintf(2, "%c: unrecognised operator\n", [ch]);
     };

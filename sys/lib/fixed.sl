@@ -25,6 +25,7 @@ var fixceil;
 var fixsin;
 var fixcos;
 var fixtan;
+var fixsqrt;
 
 fixinit = func(frac) {
     fix_prec = frac;
@@ -350,5 +351,32 @@ fixsin = func(f) {
 fixcos = func(f) return fixsin(f + fixhalfpi);
 
 fixtan = func(f) return fixdiv(fixsin(f), fixcos(f));
+
+# binary search-based square root -- what are better algorithms?
+# TODO: [bug] overflow if f^2 doesn't fit within precision
+fixsqrt = func(f) {
+    var min = 0;
+    var max = f;
+
+    if (f < 0) return 0;
+
+    var mid;
+    var midsqr;
+
+    while (min lt max) {
+        mid = min + shr(max-min,1);
+        midsqr = fixmul(mid,mid);
+
+        if (midsqr lt f) {
+            min = mid+1;
+        } else if (midsqr gt f) {
+            max = mid-1;
+        } else {
+            return mid;
+        };
+    };
+
+    return max;
+};
 
 fixinit(fix_prec);
