@@ -60,7 +60,7 @@ The computer already works, and I suspect it will never be "finished", but some 
  - [ ] make the shell support pipe syntax (e.g. `foo | bar | baz`)
  - [ ] write a big-fixed-point arithmetic library
  - [ ] fixed-point mathematics: pow,sqrt
- - [ ] fixed-point trigonometry: sin,cos,tan,asin,acos,atan,atan2
+ - [ ] fixed-point trigonometry: sin,cos,tan,asin,acos,atan,atan2 (partly done)
  - [ ] solve some of this year's [Advent of Code](https://adventofcode.com/) using the SCAMP hardware
  - [ ] write a FORTH implementation (should it run on bare metal or under SCAMP/os?)
  - [ ] write a Z-machine interpreter and port some text adventures
