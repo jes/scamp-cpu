@@ -238,6 +238,11 @@ var execute_arr = func(args) {
 };
 
 execute_parse_args = func() {
+    if (grlen(parse_args) == 0) {
+        grfree(parse_args);
+        return 0;
+    };
+
     grpush(parse_args, 0);
 
     var args_arr = malloc(grlen(parse_args));
