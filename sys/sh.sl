@@ -107,11 +107,15 @@ var parse_strp;
 var parse_args;
 
 var in_redirect;
+var in_is_tmp;
 var out_redirect;
 var err_redirect;
 
 var maxargument = 256;
 var ARGUMENT = malloc(maxargument);
+
+# forward declarations
+var execute_parse_args;
 
 var BareWord = func(x) {
     *ARGUMENT = peekchar();
@@ -159,6 +163,7 @@ var IORedirection = func(x) {
     if (parse(CharSkip,'<')) {
         if (!parse(BareWord,0)) die("< needs argument",0);
         in_redirect = strdup(ARGUMENT);
+        in_is_tmp = 0;
         return 1;
     } else if (parse(CharSkip,'>')) {
         if (!parse(BareWord,0)) die("> needs argument",0);
@@ -185,9 +190,12 @@ var CommandLine = func(x) {
         } else if (parse(IORedirection,0)) {
             # ...
         } else if (parse(Pipe,0)) {
-            # TODO: execute what we have, with output going to a tmp file,
-            #       then clear out parse_args, set input from the tmp file,
-            #       and continue?
+            out_redirect = strdup(tmpnam());
+            execute_parse_args();
+            parse_args = grnew();
+            in_redirect = out_redirect;
+            in_is_tmp = 1;
+            out_redirect = 0;
         } else {
             return 1;
         };
@@ -229,7 +237,7 @@ var execute_arr = func(args) {
     return rc;
 };
 
-var execute_parse_args = func() {
+execute_parse_args = func() {
     grpush(parse_args, 0);
 
     var args_arr = malloc(grlen(parse_args));
@@ -253,6 +261,7 @@ var parse_input = func(str) {
     parse_args = grnew();
 
     in_redirect = 0;
+    in_is_tmp = 0;
     out_redirect = 0;
     err_redirect = 0;
 
@@ -276,6 +285,7 @@ var parse_input = func(str) {
     var rc = execute_parse_args();
 
     # free names of redirection filenames
+    if (in_is_tmp) unlink(in_redirect);
     free(in_redirect);
     free(out_redirect);
     free(err_redirect);
