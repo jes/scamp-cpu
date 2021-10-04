@@ -173,6 +173,9 @@ var ser_read = func(fd, buf, sz) {
 
     if (p[SERFLAGS] & SER_DISABLE) return 0;
 
+    if (fd != 3) ser_poll(3);
+    ser_poll(fd);
+
     # return number of characters that can be read without blocking
     if (sz == 0) {
         sz = ser_readmaxpos(bufp) - ser_readpos(bufp);
@@ -187,6 +190,9 @@ var ser_read = func(fd, buf, sz) {
         ch = ser_bufget(bufp);
         if (ch == -1) {
             if (sz != 0) break; # return what we have, if any
+
+            if (fd != 3) ser_poll(3);
+
             continue; # otherwise wait for some input
         };
 
