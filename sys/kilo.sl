@@ -22,6 +22,7 @@ var TABSTOP = 4; # must be a power of 2 !
 var QUIT_TIMES = 3;
 var INSERT_MODE = 0;
 var NAV_MODE = 1;
+var SCROLL_STEP = 8;
 
 # key constants
 var BACKSPACE = 127;
@@ -905,19 +906,21 @@ scroll = func() {
     if (cy < grlen(rows)) rx = cx2rx(grget(rows, cy), cx);
 
     if (rx < coloff) {
-        coloff = rx;
+        coloff = rx - SCROLL_STEP;
+        if (coloff < 0) coloff = 0;
         markalldirty();
     };
     if (rx >= coloff + COLS) {
-        coloff = rx - COLS + 1;
+        coloff = rx - COLS + 1 + SCROLL_STEP;
         markalldirty();
     };
     if (cy < rowoff) {
-        rowoff = cy;
+        rowoff = cy - SCROLL_STEP;
+        if (rowoff < 0) rowoff = 0;
         markalldirty();
     };
     if (cy >= rowoff + ROWS) {
-        rowoff = cy - ROWS + 1;
+        rowoff = cy - ROWS + 1 + SCROLL_STEP;
         markalldirty();
     };
 };
