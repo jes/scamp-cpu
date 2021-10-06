@@ -54,6 +54,7 @@ The computer already works, and I suspect it will never be "finished", but some 
  - [ ] write a DDT-like debugging tool
  - [ ] write a peephole optimiser to run within SCAMP/os
  - [ ] find out whether changing the calling convention to return values on the stack is overall better or worse
+ - [ ] utilities: du,df,fsck
 
 #### Other software
 
