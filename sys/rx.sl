@@ -11,6 +11,8 @@ var CH_NAK = 0x15;
 var packet = 1;
 var buf = malloc(132);
 
+serflags(4, 0); # raw mode
+
 var readpacket = func() {
     var need = 132;
     var bufp = buf;
