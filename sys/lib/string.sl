@@ -145,6 +145,10 @@ var strcpy = func(dest, src) {
     return dd;
 };
 
+var strcat = func(dest, src) {
+    return strcpy(dest+strlen(dest), src);
+};
+
 var strdup = func(s) {
     var ss = malloc(strlen(s)+1);
     strcpy(ss, s);
