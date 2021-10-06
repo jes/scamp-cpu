@@ -77,7 +77,7 @@ var du = func(dir) {
             p = p + strlen(p)+1;
         };
     };
-
+    close(fd);
     free(dirbuf);
 
     chkchdir("..");
