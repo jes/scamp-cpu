@@ -43,6 +43,7 @@ put ../sys/true.bin /bin/true
 put ../sys/while.bin /bin/while
 put ../sys/rx.bin /bin/rx
 put ../sys/sx.bin /bin/sx
+put ../sys/du.bin /bin/du
 
 mkdir lib
 put ../sys/lib.o /lib/lib.o
@@ -114,6 +115,7 @@ put -t ../sys/true.sl /src/true.sl
 put -t ../sys/while.sl /src/while.sl
 put -t ../sys/rx.sl /src/rx.sl
 put -t ../sys/sx.sl /src/sx.sl
+put -t ../sys/du.sl /src/du.sl
 
 mkdir src/lib
 put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
