@@ -2,12 +2,15 @@
 #
 # TODO: [perf] long-term, this should swap to disk so that it can sort longer inputs
 
+include "bigint.sl";
 include "bufio.sl";
 include "grarr.sl";
 include "malloc.sl";
 include "stdlib.sl";
 include "string.sl";
 include "getopt.sl";
+
+biginit(4);
 
 var help = func(rc) {
     puts("usage: sort [options] < INPUT
@@ -25,9 +28,18 @@ var num = 0;
 
 var cmp = func(a, b) {
     var n;
+    var biga;
+    var bigb;
 
-    if (num) n = atoi(a) - atoi(b)
-    else n = strcmp(a, b);
+    if (num) {
+        # TODO: [perf] compare characters instead of using bigint
+        biga = bigatoi(a);
+        bigb = bigatoi(b);
+        n = bigcmp(biga, bigb);
+        bigfree(biga); bigfree(bigb);
+    } else {
+        n = strcmp(a, b);
+    };
 
     if (rev) return -n;
     return n;
