@@ -359,6 +359,7 @@ fixsqrt = func(f) {
     var max = f;
 
     if (f < 0) return 0;
+    if (f lt fixitof(1)) max = fixitof(1);
 
     var mid;
     var midsqr;
