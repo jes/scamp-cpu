@@ -8,6 +8,9 @@ include "malloc.sl";
 include "stdlib.sl";
 include "string.sl";
 
+# TODO: [nice] -r
+# TODO: [nice] -n
+
 var in = bfdopen(0, O_READ);
 var out = bfdopen(1, O_WRITE);
 
