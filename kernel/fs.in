@@ -41,6 +41,7 @@ put ../sys/snake.bin /bin/snake
 put ../sys/reset.bin /bin/reset
 put ../sys/true.bin /bin/true
 put ../sys/while.bin /bin/while
+put ../sys/rx.bin /bin/rx
 
 mkdir lib
 put ../sys/lib.o /lib/lib.o
@@ -110,6 +111,7 @@ put -t ../sys/snake.sl /src/snake.sl
 put -t ../sys/reset.sl /src/reset.sl
 put -t ../sys/true.sl /src/true.sl
 put -t ../sys/while.sl /src/while.sl
+put -t ../sys/rx.sl /src/rx.sl
 
 mkdir src/lib
 put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
