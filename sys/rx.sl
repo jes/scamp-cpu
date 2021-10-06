@@ -47,6 +47,7 @@ nak();
 while (1) {
     readpacket();
     if (*buf == CH_EOT) {
+        nak();
         readpacket();
         if (*buf != CH_EOT) {
             nak();
