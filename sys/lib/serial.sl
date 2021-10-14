@@ -1,0 +1,114 @@
+# serial port protocol handling
+
+# the "_p" functions allow retrieval of responses "piecewise" via a callback
+
+include "stdio.sl";
+include "malloc.sl";
+include "strbuf.sl";
+
+var ser_readfd = 4;
+var ser_writefd = 4;
+var ser_textbuf_sz = 256;
+var ser_textbuf = malloc(ser_textbuf_sz);
+
+# forward declarations
+var ser_get;
+var ser_put;
+var ser_get_p;
+var ser_put_p;
+var ser_request;
+var ser_request_p;
+var ser_puts_cb;
+var ser_sync;
+var ser_readbytes;
+
+ser_get = func(endpoint, path, content) return ser_request("get", endpoint, path, content);
+ser_put = func(endpoint, path, content) return ser_request("put", endpoint, path, content);
+
+ser_get_p = func(endpoint, path, content, cb) return ser_request_p("get", endpoint, path, content, cb);
+ser_put_p = func(endpoint, path, content, cb) return ser_request_p("put", endpoint, path, content, cb);
+
+# make a request over the serial connection, return 1 if ok and 0 otherwise
+# call cb(ok, chunklen, content) for each chunk of content
+# TODO: [bug] what about request bodies too large to buffer in memory?
+# TODO: [bug] what about request/response bodies that contain nul bytes?
+ser_request_p = func(method, endpoint, path, content, cb) {
+    if (!content) content = "";
+
+    # put serial port in raw mode
+    serflags(ser_readfd, 0);
+    serflags(ser_writefd, 0);
+
+    # send request
+    fprintf(ser_writefd, "%s %s %u %s\n", [method, endpoint, strlen(content), path]);
+    fprintf(ser_writefd, "%s\n", [content]);
+
+    # read response header
+    # TODO: [bug] buffer overflow on reading into textbuf
+    # TODO: [bug] fscanf format string should need a trailing "\n", but the xscanf bug means it always consumes 1 more character than asked
+    var length;
+    fscanf(ser_readfd, "%s %d", [ser_textbuf, &length]);
+
+    var ok = (strcmp(ser_textbuf, "ok") == 0);
+
+    # read response body
+    # TODO: [perf] would it be better to read a full "ser_textbuf_sz" characters before calling cb()?
+    var need = length;
+    var want;
+    var n;
+    while (need) {
+        want = need;
+        if (want > ser_textbuf_sz) want = ser_textbuf_sz;
+
+        n = read(ser_readfd, ser_textbuf, want);
+        if (n == 0) {
+            fprintf(2, "error: read: eof on serial\n", 0);
+            exit(1);
+        };
+        if (n < 0) {
+            fprintf(2, "error: read: %s\n", [strerror(n)]);
+            exit(1);
+        };
+        cb(ok, n, ser_textbuf);
+        need = need - n;
+    };
+
+    # read trailing \n
+    if (fgetc(ser_readfd) != '\n') ok = 0;
+    return ok;
+};
+
+var ser_request_sb;
+ser_request = func(method, endpoint, path, content) {
+    ser_request_sb = sbnew();
+    var ok = ser_request_p(method, endpoint, path, content, func(ok, chunklen, content) {
+        while (chunklen--) sbputc(ser_request_sb, *(content++));
+    });
+    var str = strdup(sbbase(ser_request_sb));
+    sbfree(ser_request_sb);
+    return [ok, str];
+};
+
+ser_puts_cb = func(ok, chunklen, content) {
+    while (chunklen--)
+        putchar(*(content++));
+};
+
+# sync the serial connection by making a ping request and waiting for the reply
+# TODO: [bug] this doesn't work; what if we're stuck inside the body of a contentful request?
+#             how do we sync then? should there be an escape character that always syncs up?
+ser_sync = func() {
+    var response;
+    var n;
+    var str;
+    var sunc = 0;
+    while (!sunc) {
+        n = random();
+        str = strdup(utoa(n));
+        response = ser_get("ping", str, 0);
+        free(str);
+        if (response[0] && (strncmp(response[1], "pong:", 5) == 0) && (atoi(response[1]+5) == n)) sunc = 1;
+        free(response[1]);
+        if (!sunc) fputs(2, "syncing...\n");
+    };
+};

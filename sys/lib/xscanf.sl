@@ -16,6 +16,7 @@ include "stdlib.sl";
 # TODO: [nice] field width specifier
 # TODO: [nice] %x?
 # TODO: [nice] can we support extensible formats like with xpreg()?
+# TODO: [bug] always consumes 1 character more than requested
 var xscanf_bufsz = 64;
 var xscanf_buf = asm { .gap 64 };
 var xscanf = func(fmt, args, getc_cb) {

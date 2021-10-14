@@ -5,6 +5,7 @@ mkdir etc
 put -t motd /etc/motd
 
 mkdir bin
+put ../sys/aoc.bin /bin/aoc
 put ../sys/asm.bin /bin/asm
 put ../sys/baud.bin /bin/baud
 put ../sys/cat.bin /bin/cat
@@ -76,6 +77,7 @@ put -t ../sys/include-lib.h /lib/hash.sl
 put -t ../sys/include-lib.h /lib/fixed.sl
 
 mkdir src
+put -t ../sys/aoc.sl /src/aoc.sl
 put -t ../sys/asm.sl /src/asm.sl
 put -t ../sys/asmparser.sl /src/asmparser.sl
 put -t ../sys/baud.sl /src/baud.sl
@@ -127,6 +129,7 @@ put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
 put -t ../sys/lib/hash.sl /src/lib/hash.sl
 put -t ../sys/lib/malloc.sl /src/lib/malloc.sl
 put -t ../sys/lib/parse.sl /src/lib/parse.sl
+put -t ../sys/lib/serial.sl /src/lib/serial.sl
 put -t ../sys/lib/stdio.sl /src/lib/stdio.sl
 put -t ../sys/lib/stdlib.sl /src/lib/stdlib.sl
 put -t ../sys/lib/strbuf.sl /src/lib/strbuf.sl
