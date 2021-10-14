@@ -66,7 +66,6 @@ sub submit {
     })->res->dom;
 
     my $html = $dom->find('article p')->join("\n");
-    print STDERR "html = $html\n";
     $html =~ s/<\/?\w+.*?>//g;
     $html =~ s/ \[Return to Day \d+\]//g;
     $html = decode_entities($html);
