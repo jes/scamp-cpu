@@ -5,45 +5,45 @@ mkdir etc
 put -t motd /etc/motd
 
 mkdir bin
-put ../sys/init.bin /bin/init
-put ../sys/cat.bin /bin/cat
-put ../sys/mkdir.bin /bin/mkdir
-put ../sys/ls.bin /bin/ls
-put ../sys/sh.bin /bin/sh
-put ../sys/pwd.bin /bin/pwd
-put ../sys/echo.bin /bin/echo
-put ../sys/stat.bin /bin/stat
-put ../sys/rm.bin /bin/rm
-put ../sys/slangc.bin /bin/slangc
 put ../sys/asm.bin /bin/asm
-put ../sys/hd.bin /bin/hd
-put ../sys/grep.bin /bin/grep
-put ../sys/more.bin /bin/more
-put ../sys/wc.bin /bin/wc
-put ../sys/head.bin /bin/head
-put ../sys/mv.bin /bin/mv
-put ../sys/slc.bin /bin/slc
-put ../sys/kilo.bin /bin/kilo
-put ../sys/reboot.bin /bin/reboot
-put ../sys/diskid.bin /bin/diskid
 put ../sys/baud.bin /bin/baud
+put ../sys/cat.bin /bin/cat
 put ../sys/cp.bin /bin/cp
 put ../sys/dc.bin /bin/dc
-put ../sys/keys.bin /bin/keys
-put ../sys/isprime.bin /bin/isprime
-put ../sys/hamurabi.bin /bin/hamurabi
-put ../sys/opts.bin /bin/opts
-put ../sys/mandel.bin /bin/mandel
-put ../sys/sort.bin /bin/sort
-put ../sys/mandelfix.bin /bin/mandelfix
-put ../sys/fc.bin /bin/fc
-put ../sys/snake.bin /bin/snake
-put ../sys/reset.bin /bin/reset
-put ../sys/true.bin /bin/true
-put ../sys/while.bin /bin/while
-put ../sys/rx.bin /bin/rx
-put ../sys/sx.bin /bin/sx
+put ../sys/diskid.bin /bin/diskid
 put ../sys/du.bin /bin/du
+put ../sys/echo.bin /bin/echo
+put ../sys/fc.bin /bin/fc
+put ../sys/grep.bin /bin/grep
+put ../sys/hamurabi.bin /bin/hamurabi
+put ../sys/hd.bin /bin/hd
+put ../sys/head.bin /bin/head
+put ../sys/init.bin /bin/init
+put ../sys/isprime.bin /bin/isprime
+put ../sys/keys.bin /bin/keys
+put ../sys/kilo.bin /bin/kilo
+put ../sys/ls.bin /bin/ls
+put ../sys/mandel.bin /bin/mandel
+put ../sys/mandelfix.bin /bin/mandelfix
+put ../sys/mkdir.bin /bin/mkdir
+put ../sys/more.bin /bin/more
+put ../sys/mv.bin /bin/mv
+put ../sys/opts.bin /bin/opts
+put ../sys/pwd.bin /bin/pwd
+put ../sys/reboot.bin /bin/reboot
+put ../sys/reset.bin /bin/reset
+put ../sys/rm.bin /bin/rm
+put ../sys/rx.bin /bin/rx
+put ../sys/sh.bin /bin/sh
+put ../sys/slangc.bin /bin/slangc
+put ../sys/slc.bin /bin/slc
+put ../sys/snake.bin /bin/snake
+put ../sys/sort.bin /bin/sort
+put ../sys/stat.bin /bin/stat
+put ../sys/sx.bin /bin/sx
+put ../sys/true.bin /bin/true
+put ../sys/wc.bin /bin/wc
+put ../sys/while.bin /bin/while
 
 mkdir lib
 put ../sys/lib.o /lib/lib.o
@@ -76,63 +76,63 @@ put -t ../sys/include-lib.h /lib/hash.sl
 put -t ../sys/include-lib.h /lib/fixed.sl
 
 mkdir src
-put -t ../sys/cat.sl /src/cat.sl
-put -t ../sys/echo.sl /src/echo.sl
-put -t ../sys/init.sl /src/init.sl
-put -t ../sys/ls.sl /src/ls.sl
-put -t ../sys/mkdir.sl /src/mkdir.sl
-put -t ../sys/pwd.sl /src/pwd.sl
-put -t ../sys/rm.sl /src/rm.sl
-put -t ../sys/sh.sl /src/sh.sl
-put -t ../sys/slangc.sl /src/slangc.sl
-put -t ../sys/stat.sl /src/stat.sl
 put -t ../sys/asm.sl /src/asm.sl
 put -t ../sys/asmparser.sl /src/asmparser.sl
-put -t ../sys/hd.sl /src/hd.sl
-put -t ../sys/grep.sl /src/grep.sl
-put -t ../sys/more.sl /src/more.sl
-put -t ../sys/wc.sl /src/wc.sl
-put -t ../sys/head.sl /src/head.sl
-put -t ../sys/mv.sl /src/mv.sl
-put -t ../sys/slc.sl /src/slc.sl
-put -t ../sys/kilo.sl /src/kilo.sl
-put -t ../sys/reboot.sl /src/reboot.sl
-put -t ../sys/diskid.sl /src/diskid.sl
 put -t ../sys/baud.sl /src/baud.sl
+put -t ../sys/cat.sl /src/cat.sl
 put -t ../sys/cp.sl /src/cp.sl
 put -t ../sys/dc.sl /src/dc.sl
-put -t ../sys/keys.sl /src/keys.sl
-put -t ../sys/isprime.sl /src/isprime.sl
-put -t ../sys/hamurabi.sl /src/hamurabi.sl
-put -t ../sys/opts.sl /src/opts.sl
-put -t ../sys/mandel.sl /src/mandel.sl
-put -t ../sys/sort.sl /src/sort.sl
-put -t ../sys/mandelfix.sl /src/mandelfix.sl
-put -t ../sys/fc.sl /src/fc.sl
-put -t ../sys/snake.sl /src/snake.sl
-put -t ../sys/reset.sl /src/reset.sl
-put -t ../sys/true.sl /src/true.sl
-put -t ../sys/while.sl /src/while.sl
-put -t ../sys/rx.sl /src/rx.sl
-put -t ../sys/sx.sl /src/sx.sl
+put -t ../sys/diskid.sl /src/diskid.sl
 put -t ../sys/du.sl /src/du.sl
+put -t ../sys/echo.sl /src/echo.sl
+put -t ../sys/fc.sl /src/fc.sl
+put -t ../sys/grep.sl /src/grep.sl
+put -t ../sys/hamurabi.sl /src/hamurabi.sl
+put -t ../sys/hd.sl /src/hd.sl
+put -t ../sys/head.sl /src/head.sl
+put -t ../sys/init.sl /src/init.sl
+put -t ../sys/isprime.sl /src/isprime.sl
+put -t ../sys/keys.sl /src/keys.sl
+put -t ../sys/kilo.sl /src/kilo.sl
+put -t ../sys/ls.sl /src/ls.sl
+put -t ../sys/mandel.sl /src/mandel.sl
+put -t ../sys/mandelfix.sl /src/mandelfix.sl
+put -t ../sys/mkdir.sl /src/mkdir.sl
+put -t ../sys/more.sl /src/more.sl
+put -t ../sys/mv.sl /src/mv.sl
+put -t ../sys/opts.sl /src/opts.sl
+put -t ../sys/pwd.sl /src/pwd.sl
+put -t ../sys/reboot.sl /src/reboot.sl
+put -t ../sys/reset.sl /src/reset.sl
+put -t ../sys/rm.sl /src/rm.sl
+put -t ../sys/rx.sl /src/rx.sl
+put -t ../sys/sh.sl /src/sh.sl
+put -t ../sys/slangc.sl /src/slangc.sl
+put -t ../sys/slc.sl /src/slc.sl
+put -t ../sys/snake.sl /src/snake.sl
+put -t ../sys/sort.sl /src/sort.sl
+put -t ../sys/stat.sl /src/stat.sl
+put -t ../sys/sx.sl /src/sx.sl
+put -t ../sys/true.sl /src/true.sl
+put -t ../sys/wc.sl /src/wc.sl
+put -t ../sys/while.sl /src/while.sl
 
 mkdir src/lib
+put -t ../sys/lib/bigint.sl /src/lib/bigint.sl
+put -t ../sys/lib/bufio.sl /src/lib/bufio.sl
+put -t ../sys/lib/fixed.sl /src/lib/fixed.sl
+put -t ../sys/lib/getopt.sl /src/lib/getopt.sl
+put -t ../sys/lib/glob.sl /src/lib/glob.sl
 put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
+put -t ../sys/lib/hash.sl /src/lib/hash.sl
 put -t ../sys/lib/malloc.sl /src/lib/malloc.sl
 put -t ../sys/lib/parse.sl /src/lib/parse.sl
 put -t ../sys/lib/stdio.sl /src/lib/stdio.sl
 put -t ../sys/lib/stdlib.sl /src/lib/stdlib.sl
+put -t ../sys/lib/strbuf.sl /src/lib/strbuf.sl
 put -t ../sys/lib/string.sl /src/lib/string.sl
 put -t ../sys/lib/sys.sl /src/lib/sys.sl
 put -t ../sys/lib/xprintf.sl /src/lib/xprintf.sl
-put -t ../sys/lib/glob.sl /src/lib/glob.sl
-put -t ../sys/lib/hash.sl /src/lib/hash.sl
-put -t ../sys/lib/bigint.sl /src/lib/bigint.sl
-put -t ../sys/lib/strbuf.sl /src/lib/strbuf.sl
-put -t ../sys/lib/bufio.sl /src/lib/bufio.sl
-put -t ../sys/lib/getopt.sl /src/lib/getopt.sl
-put -t ../sys/lib/fixed.sl /src/lib/fixed.sl
 put -t ../sys/lib/xscanf.sl /src/lib/xscanf.sl
 
 mkdir doc
