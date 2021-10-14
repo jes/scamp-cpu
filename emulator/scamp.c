@@ -784,7 +784,7 @@ int main(int argc, char **argv) {
     }
 
     if (cyclecount)
-        fprintf(stderr, "[cycles] Halted after %lu cycles.\n", steps);
+        fprintf(stderr, "[cycles] Halted after %lu cycles.\r\n", steps);
 
 #ifdef PROFILING
     if (profile_fp)
