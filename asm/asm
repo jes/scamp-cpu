@@ -23,10 +23,16 @@ GetOptions(
 ) or help(1);
 
 my $instructions = load_instructions();
+my %instrs_by_op;
+for my $inst (keys %$instructions) {
+    my $op = $inst;
+    $op =~ s/ .*//g;
+    push @{ $instrs_by_op{$op} }, $inst;
+}
 
-my %macro = (
-    'sp' => 'r255',
-);
+my %macro;
+my @macros;
+addmacro(sp => '(0xffff)');
 
 my %label = ();
 my $pc = 0;
@@ -34,7 +40,12 @@ my @code;
 
 # add macros for ".def r0 (0xff00)" for 0..255
 # TODO: maybe add a flag to turn off the the default macros?
-$macro{"r$_"} = sprintf("(0xff%02x)", $_) for (0..255);
+for (0..255) {
+    $macro{"r$_"} = 1;
+}
+push @macros, sub {
+    my $s = shift; $s =~ s/\br(\d+)\b/sprintf("(0xff%02x)", $1)/ge; return $s;
+};
 
 while (my $line = <>) {
     chomp $line;
@@ -47,11 +58,7 @@ while (my $line = <>) {
     $line =~ s/\s+$//;
 
     # apply macro substitutions
-    my $was;
-    do {
-        $was = $line;
-        $line =~ s/\b$_\b/$macro{$_}/g for keys %macro;
-    } until ($line eq $was); # apply macros until no change
+    $line = $_->($line) for @macros;
 
     # resolve hex
     $line =~ s/\b0x([0-9a-f]+)\b/hex($1)/gei;
@@ -79,7 +86,7 @@ while (my $line = <>) {
         my $name = namearg($args[0]);
         die "error: line $.: duplicate macro name: $name\n" if exists $macro{$name};
         $line =~ s/\s*$op\s*$name\s*//;
-        $macro{$name} = $line;
+        addmacro($name, $line);
     } elsif ($op eq '.at') {
         params($op, 1, @args);
         my $at = numarg($args[0]);
@@ -122,7 +129,7 @@ while (my $line = <>) {
 
         # find instructions that match the pattern
         my @match;
-        for my $i (keys %$instructions) {
+        for my $i (@{ $instrs_by_op{$op}||[] }) {
             push @match, $i if $i =~ /^$re$/;
         }
         die "error: line $.: unrecognised operation: $line\n" if !@match;
@@ -321,6 +328,15 @@ sub load_instructions {
     my $c = join('', <$fh>);
     close $fh;
     return decode_json($c);
+}
+
+sub addmacro {
+    my ($from, $to) = @_;
+
+    die "duplicate macro: $from" if $macro{$from};
+    $macro{$from} = 1;
+
+    push @macros, eval('sub { my $s=shift; $s =~ s/\b' . "\Q$from\E" . '\b/' . "\Q$to\E" . '/g; return $s; }');
 }
 
 sub help {
