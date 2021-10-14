@@ -111,19 +111,19 @@ var in_is_tmp;
 var out_redirect;
 var err_redirect;
 
-var maxargument = 256;
+var maxargument = 2048;
 var ARGUMENT = malloc(maxargument);
 
 # forward declarations
 var execute_parse_args;
 
-var BareWord = func(x) {
+var StringExcept = func(except) {
     *ARGUMENT = peekchar();
-    if (!parse(NotAnyChar, "|<> \t\r\n`'\"")) return 0;
+    if (!parse(NotAnyChar, except)) return 0;
     var i = 1;
     while (i < maxargument) {
         *(ARGUMENT+i) = peekchar();
-        if (!parse(NotAnyChar, "|<> \t\r\n`'\"")) {
+        if (!parse(NotAnyChar, except)) {
             *(ARGUMENT+i) = 0;
             skip();
             return 1;
@@ -133,11 +133,24 @@ var BareWord = func(x) {
     };
     die("argument too long:%d,%d,%d",[ARGUMENT[0],ARGUMENT[4], ARGUMENT[7]]);
 };
+var BareWord = func(x) return StringExcept("|<> \t\r\n`'\"");
 
-# TODO: [nice] implement backticks and quotes
+# TODO: [nice] implement backticks
 var Backticks = func(x) { return 0; };
-var SingleQuotes = func(x) { return 0; };
-var DoubleQuotes = func(x) { return 0; };
+var SingleQuotes = func(x) {
+    if (!parse(Char,'\'')) return 0;
+    if (!parse(StringExcept,"'")) return 0;
+    if (!parse(Char,'\'')) return 0;
+    grpush(parse_args, strdup(ARGUMENT));
+    return 1;
+};
+var DoubleQuotes = func(x) {
+    if (!parse(Char,'"')) return 0;
+    if (!parse(StringExcept,"\"")) return 0;
+    if (!parse(Char,'"')) return 0;
+    grpush(parse_args, strdup(ARGUMENT));
+    return 1;
+};
 
 var Argument = func(x) {
     var g;
