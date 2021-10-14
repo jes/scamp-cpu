@@ -89,6 +89,10 @@ char *uart_outp;
 
 struct uart8250 console;
 
+#ifndef EMSCRIPTEN
+struct uart8250 serialport;
+#endif
+
 void randomise_ram(void) {
     int i;
 
@@ -201,6 +205,17 @@ uint16_t alu(uint16_t argx, uint16_t argy) {
     return val;
 }
 
+#ifndef EMSCRIPTEN
+int opentty(char *name) {
+    int fd = open(name, O_RDWR);
+    if (fd == -1) {
+        fprintf(stderr, "open %s: %s\n", name, strerror(errno));
+        exit(1);
+    }
+    return fd;
+}
+#endif
+
 /* return 1 if data available to read, 0 if not, -1 if poll error */
 int uart_ready(struct uart8250 *uart) {
     struct pollfd pfd;
@@ -305,13 +320,15 @@ uint8_t uart_in(struct uart8250 *uart, int addr) {
 }
 
 #ifdef EMSCRIPTEN
-void uart_putchar(int ch) {
+void uart_putchar(struct uart8250 *uart, int ch) {
     *(uart_outp++) = ch;
     if (uart_outp == uart_outbuf + UART_BUFSZ - 1) uart_outp--;
     *uart_outp = 0;
 }
 #else
-#define uart_putchar putchar
+void uart_putchar(struct uart8250 *uart, int ch) {
+    write(uart->outfd, &ch, 1);
+}
 #endif
 
 void uart_out(struct uart8250 *uart, int addr, uint8_t val) {
@@ -332,7 +349,7 @@ void uart_out(struct uart8250 *uart, int addr, uint8_t val) {
         uart->txempty = 0;
 
         /* XXX: when we are tracking baud rate, the following can move: */
-        uart_putchar(uart->txbuf);
+        uart_putchar(uart, uart->txbuf);
         uart->txempty = 1;
     }
 }
@@ -359,6 +376,11 @@ uint16_t in(uint16_t addr) {
     if (addr >= console.base_address && addr < console.base_address + 8) {
         r = uart_in(&console, addr-console.base_address);
     }
+#ifndef EMSCRIPTEN
+    if (addr >= serialport.base_address && addr < serialport.base_address + 8) {
+        r = uart_in(&serialport, addr-serialport.base_address);
+    }
+#endif
     return r;
 }
 
@@ -402,6 +424,11 @@ void out(uint16_t val, uint16_t addr) {
     if (addr >= console.base_address && addr < console.base_address + 8) {
         uart_out(&console, addr-console.base_address, val);
     }
+#ifndef EMSCRIPTEN
+    if (addr >= serialport.base_address && addr < serialport.base_address + 8) {
+        uart_out(&serialport, addr-serialport.base_address, val);
+    }
+#endif
 
 #ifdef PROFILING
     if (addr == 1 && run_profile) halt = 1;
@@ -580,6 +607,7 @@ void help(void) {
 "  -p,--profile FILE  Write profiling data to FILE\n"
 #endif
 "  -r,--run FILE      Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
+"  -S,--serial FILE   Use FILE (e.g. /dev/pts/...) for the secondary serial port\n"
 "  -s,--stack         Trace the stack\n"
 "  -t,--test          Check whether the test ROM passes the tests\n"
 "  -w,--watch ADDR    Watch for changes to the given address and print them on stderr\n"
@@ -656,6 +684,14 @@ int main(int argc, char **argv) {
     console.outfd = 1; /* stdout */
     console.txempty = 1;
 
+#ifndef EMSCRIPTEN
+    serialport.is_console = 0;
+    serialport.base_address = 144;
+    serialport.infd = -1;
+    serialport.outfd = -1;
+    serialport.txempty = 1;
+#endif
+
     randomise_ram();
 
 #ifdef EMSCRIPTEN
@@ -670,18 +706,19 @@ int main(int argc, char **argv) {
     /* parse options */
     while (1) {
         static struct option opts[] = {
-            {"cycles",no_argument, &cyclecount,1},
-            {"debug", no_argument, &debug,     1},
-            {"freq",  required_argument,  0, 'f'},
-            {"image", required_argument,  0, 'i'},
+            {"cycles",  no_argument, &cyclecount,1},
+            {"debug",   no_argument, &debug,     1},
+            {"freq",    required_argument, 0, 'f'},
+            {"image",   required_argument, 0, 'i'},
 #ifdef PROFILING
-            {"profile",required_argument, 0, 'p'},
+            {"profile", required_argument, 0, 'p'},
 #endif
-            {"run",   required_argument,  0, 'r'},
-            {"stack", no_argument, &stacktrace,1},
-            {"test",  no_argument, &test,      1},
-            {"watch", required_argument,  0, 'w'},
-            {"help",  no_argument, &show_help, 1},
+            {"run",     required_argument, 0, 'r'},
+            {"serial",  required_argument, 0, 'S'},
+            {"stack",   no_argument, &stacktrace,1},
+            {"test",    no_argument, &test,   1},
+            {"watch",   required_argument, 0, 'w'},
+            {"help",    no_argument, &show_help, 1},
             {0, 0, 0, 0},
         };
 
@@ -700,6 +737,7 @@ int main(int argc, char **argv) {
             load_ram(0x100, optarg);
             jmp0x100 = 1;
         }
+        if (c == 'S') serialport.infd = serialport.outfd = opentty(optarg);
         if (c == 's') stacktrace = 1;
         if (c == 't') test = 1;
         if (c == 'w') watch = atoi(optarg);
