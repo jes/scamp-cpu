@@ -1,4 +1,5 @@
 # sx - send a file with xmodem to secondary serial port
+# TODO: [nice] show debug info if "-v" or similar
 
 include "stdio.sl";
 include "sys.sl";
@@ -25,7 +26,7 @@ var readblock = func() {
         };
         if (n == 0) {
             seeneof = 1;
-            while (need) *(bufp++) = CH_SUB;
+            while (need--) *(bufp++) = CH_SUB;
             break;
         };
         need = need - n;
@@ -41,6 +42,8 @@ var chk = func() {
     };
     buf[131] = sum&0xff;
 };
+
+serflags(4, 0); # raw mode
 
 # wait for initial NAK from remote side
 while (fgetc(4) != CH_NAK);
