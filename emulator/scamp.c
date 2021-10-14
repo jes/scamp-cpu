@@ -291,7 +291,7 @@ uint8_t uart_in(struct uart8250 *uart, int addr) {
     switch (addr) {
         case 0:
             if (uart->dlab) return uart->clockdiv >> 8; /* divisor latch lsb */
-            else            return uart_getchar(&console); /* rxbuf */
+            else            return uart_getchar(uart); /* rxbuf */
         case 1:
             if (uart->dlab) return uart->clockdiv & 0xff; /* divisor latch msb */
             else            return 0; /* interrupt enable register */
