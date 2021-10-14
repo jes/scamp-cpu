@@ -137,6 +137,7 @@ put -t ../sys/lib/xscanf.sl /src/lib/xscanf.sl
 
 mkdir doc
 put -t ../doc/ALU.md /doc/alu
+put -t ../doc/AOC.md /doc/aoc
 put -t ../doc/ASSEMBLER.md /doc/assembler
 put -t ../doc/BOOT.md /doc/boot
 put -t ../doc/CARDS.md /doc/cards
