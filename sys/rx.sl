@@ -1,4 +1,5 @@
 # rx - receive a file with xmodem from secondary serial port
+# TODO: [nice] show debug info if "-v" or similar
 
 include "stdio.sl";
 include "sys.sl";
