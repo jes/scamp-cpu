@@ -16,10 +16,14 @@ $aoc->read_session("$ENV{HOME}/.aoc-session");
 
 $serial->handle(get => 'aoc' => sub {
     my ($path) = @_;
-    die "bad path" if $path !~ m!^/(\d+)/(\d+)$!;
-    my ($year, $day) = ($1, $2);
+    die "bad path" if $path !~ m!^/(\d+)/(\d+)(/input)?$!;
+    my ($year, $day, $input) = ($1, $2, $3);
 
-    return $aoc->get($year, $day);
+    if ($input) {
+        return $aoc->get_input($year, $day);
+    } else {
+        return $aoc->get($year, $day);
+    }
 });
 
 $serial->handle(put => 'aoc' => sub {

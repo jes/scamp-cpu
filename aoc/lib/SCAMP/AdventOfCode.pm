@@ -55,6 +55,13 @@ sub get {
     return $html;
 }
 
+sub get_input {
+    my ($self, $year, $day) = @_;
+
+    my $input = $self->{ua}->get("$self->{host}/$year/day/$day/input")->res->body;
+    return $input;
+}
+
 sub submit {
     my ($self, $year, $day, $part, $answer) = @_;
 
