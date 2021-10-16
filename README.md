@@ -40,28 +40,23 @@ The computer already works, and I suspect it will never be "finished", but some 
 
 #### Hardware
 
- - [x] make some levers that sit on the case at the side of the cards to aid removal of the cards
  - [ ] build a hardware multiplication card (and maybe division?)
  - [ ] build a hardware RNG
- - [x] make the CompactFlash interface more reliable
 
 #### Low-level software
 
  - [ ] make kernel self-hosting (compile within SCAMP/os & write to disk)
  - [ ] make library blob self-hosting (compile within SCAMP/os)
- - [x] support multiple different library blobs (e.g. to toggle the large parts on/off)
  - [ ] write an strace-like debugging tool
  - [ ] write a DDT-like debugging tool
  - [ ] write a peephole optimiser to run within SCAMP/os
  - [ ] find out whether changing the calling convention to return values on the stack is overall better or worse
- - [ ] utilities: du,df,fsck
+ - [ ] move fsck to "userspace"
 
 #### Other software
 
- - [x] make the shell support pipe syntax (e.g. `foo | bar | baz`)
  - [ ] write a big-fixed-point arithmetic library
- - [ ] fixed-point mathematics: pow,sqrt
- - [ ] fixed-point trigonometry: sin,cos,tan,asin,acos,atan,atan2 (partly done)
+ - [ ] fixed-point mathematics: pow,tan,asin,acos,atan,atan2
  - [ ] solve some of this year's [Advent of Code](https://adventofcode.com/) using the SCAMP hardware
  - [ ] write a FORTH implementation (should it run on bare metal or under SCAMP/os?)
  - [ ] write a Z-machine interpreter and port some text adventures
