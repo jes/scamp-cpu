@@ -1,7 +1,6 @@
 #!/bin/sh
 
 # XXX: This is a script to build the kernel inside SCAMP/os, *not* for cross-compiling
-# XXX: The assembler runs out of memory before successfully building the kernel, so this doesn't work yet
 
 echo slangc...
 slangc < kernel.sl > /tmp/1.s

@@ -16,7 +16,7 @@ var asm_constant;
 var pc_start = 0;
 var asm_pc;
 
-var maxliteral = 512;
+var maxliteral = 128;
 var literal_buf = malloc(maxliteral);
 var maxidentifier = maxliteral;
 var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
@@ -25,11 +25,10 @@ var IDENTIFIERS;
 var STRINGS;
 var code_filename;
 var code_fd;
-var code_buf = malloc(257);
 var code_bio;
 var unbounds_filename;
 var unbounds_fd;
-var unbounds_buf = malloc(257);
+var unbounds_bio;
 
 var lookup = func(name) {
     return htgetkv(IDENTIFIERS, name);
@@ -53,7 +52,7 @@ var add_unbound = func(name,addr) {
     # TODO: [perf] when we buffer writes, we'll sometimes have to add_unbound()
     #       for some address that is still in the buffer; we can just update it
     #       in memory instead of writing it to disk
-    write(unbounds_fd, [name,addr], 2);
+    bwrite(unbounds_bio, [name,addr], 2);
 };
 
 var reserved = func(name) {
@@ -378,7 +377,7 @@ emit_i16 = func() {
     };
 };
 
-# read code from "code_filename", resolve unbound names using "unbounds_fd", and
+# read code from "code_filename", resolve unbound names using "unbounds_bio", and
 # write resulting code to stdout
 var resolve_unbounds = func() {
     # "unbounds" are created in-order, so we can just read one at a time and get
@@ -388,13 +387,11 @@ var resolve_unbounds = func() {
     var v;
     var val;
 
-    var unbounds_bio = bfdopen(unbounds_fd, O_READ);
     name = bgetc(unbounds_bio);
     addr = bgetc(unbounds_bio);
 
     var fd = open(code_filename, O_READ);
     if (fd < 0) die("open %s: %s", [code_filename, strerror(fd)]);
-    setbuf(fd, code_buf);
 
     var code = malloc(254);
 
@@ -403,6 +400,7 @@ var resolve_unbounds = func() {
     while (1) {
         # 1. read a block of code
         n = read(fd, code, 254);
+        fputc(2, '.');
         if (n < 0) die("read code: %s\n", [strerror(n)]);
         if (n == 0) break;
 
@@ -418,16 +416,15 @@ var resolve_unbounds = func() {
             addr = bgetc(unbounds_bio);
         };
 
-        pc = pc + 254;
+        pc = pc + n;
 
         # 5. write the block of code
         n = write(1, code, n);
         if (n <= 0) die("write code: %s\n", [strerror(n)]);
     };
+    fputc(2, '\n');
     close(fd);
     free(code);
-
-    bfree(unbounds_bio);
 };
 
 IDENTIFIERS = htnew();
@@ -441,11 +438,7 @@ code_bio = bfdopen(code_fd, O_WRITE);
 unbounds_filename = strdup(tmpnam());
 unbounds_fd = open(unbounds_filename, O_WRITE|O_CREAT);
 if (unbounds_fd < 0) die("open %s: %s", [unbounds_filename, strerror(unbounds_fd)]);
-
-setbuf(0,malloc(257));
-setbuf(1,malloc(257));
-setbuf(code_fd,code_buf);
-setbuf(unbounds_fd,unbounds_buf);
+unbounds_bio = bfdopen(unbounds_fd, O_WRITE);
 
 fprintf(2, "1st pass...\n", 0);
 var inbuf = bfdopen(0, O_READ);
@@ -460,14 +453,14 @@ if (nextchar() != EOF) die("garbage after end",0);
 bclose(code_bio);
 
 # reopen unbounds file for reading
-close(unbounds_fd);
+bclose(unbounds_bio);
 unbounds_fd = open(unbounds_filename, O_READ);
 if (unbounds_fd < 0) die("open %s: %s", [unbounds_filename, strerror(unbounds_fd)]);
-setbuf(unbounds_fd,unbounds_buf);
+unbounds_bio = bfdopen(unbounds_fd, O_READ);
 
 fputc(2, '\n');
 fprintf(2, "2nd pass...\n", 0);
 resolve_unbounds();
 unlink(code_filename);
-close(unbounds_fd);
+bclose(unbounds_bio);
 unlink(unbounds_filename);
