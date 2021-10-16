@@ -49,6 +49,7 @@ The computer already works, and I suspect it will never be "finished", but some 
  - [ ] make library blob self-hosting (compile within SCAMP/os)
  - [ ] write an strace-like debugging tool
  - [ ] write a DDT-like debugging tool
+ - [ ] work out how much impact each part of the peephole optimiser has, and lose the irrelevant parts
  - [ ] write a peephole optimiser to run within SCAMP/os
  - [ ] find out whether changing the calling convention to return values on the stack is overall better or worse
  - [ ] move fsck to "userspace"
