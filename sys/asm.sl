@@ -449,7 +449,10 @@ setbuf(unbounds_fd,unbounds_buf);
 
 fprintf(2, "1st pass...\n", 0);
 var inbuf = bfdopen(0, O_READ);
+var charcount = 0;
 parse_init(func() {
+    charcount++;
+    if ((charcount & 0x3ff) == 0) fputc(2, '.');
     return bgetc(inbuf);
 });
 parse(Assembly,0);
@@ -462,6 +465,7 @@ unbounds_fd = open(unbounds_filename, O_READ);
 if (unbounds_fd < 0) die("open %s: %s", [unbounds_filename, strerror(unbounds_fd)]);
 setbuf(unbounds_fd,unbounds_buf);
 
+fputc(2, '\n');
 fprintf(2, "2nd pass...\n", 0);
 resolve_unbounds();
 unlink(code_filename);

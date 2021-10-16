@@ -375,6 +375,12 @@ var open_include = func(file, path) {
     return fd;
 };
 
+var charcount = 0;
+var parsedchar = func() {
+    charcount++;
+    if ((charcount & 0x3ff) == 0) fputc(2, '.');
+};
+
 var include_fd;
 var include_inbuf;
 Include = func(x) {
@@ -404,6 +410,7 @@ Include = func(x) {
 
     include_inbuf = bfdopen(include_fd, O_READ);
     parse_init(func() {
+        parsedchar();
         return bgetc(include_inbuf);
     });
     parse_filename = strdup(file);
@@ -1059,6 +1066,7 @@ OUT = bfdopen(1, O_WRITE);
 var inbuf = bfdopen(0, O_READ);
 
 parse_init(func() {
+    parsedchar();
     return bgetc(inbuf);
 });
 parse(Program,0);
@@ -1109,3 +1117,5 @@ grwalk(ARRAYS, func(tuple) {
 
 plabel(end); bputs(OUT, ":\n");
 bclose(OUT);
+
+fputc(2, '\n');
