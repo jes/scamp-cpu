@@ -279,6 +279,28 @@ to the previous value:
 Return a random integer. Input on serial ports permutes the state of the RNG, so if
 you try to use the RNG before any input is observed, it won't be very random.
 
+### 0xfee9: blkread(blknum)
+
+    Return: pointer to block content
+    Implemented: no
+    Errors: n/a
+
+Read a block (256 words) from disk and return a pointer to its contents.
+Blocks 0-63 are reserved for storing the kernel.
+Blocks 64-79 are the free space bitmap.
+Blocks 80+ are disk contents.
+
+### 0xfee8: blkwrite(blknum, data)
+
+    Return: 0
+    Implemented: no
+    Errors: n/a
+
+Write a block (256 words) to disk. Use carefully.
+Blocks 0-63 are reserved for storing the kernel.
+Blocks 64-79 are the free space bitmap.
+Blocks 80+ are disk contents.
+
 ## Errors
 
 Errors are generally returned from system calls as `-ERR`, with the following meanings:
