@@ -140,6 +140,27 @@ put -t ../sys/lib/sys.sl /src/lib/sys.sl
 put -t ../sys/lib/xprintf.sl /src/lib/xprintf.sl
 put -t ../sys/lib/xscanf.sl /src/lib/xscanf.sl
 
+mkdir src/kernel
+put -t head.s /src/kernel/head.s
+put -t foot.s /src/kernel/foot.s
+put -t blkdev.sl /src/kernel/blkdev.sl
+put -t cf.sl /src/kernel/cf.sl
+put -t data.sl /src/kernel/data.sl
+put -t dir.sl /src/kernel/dir.sl
+put -t fs.sl /src/kernel/fs.sl
+put -t kernel-name.sl /src/kernel/kernel-name.sl
+put -t kernel.sl /src/kernel/kernel.sl
+put -t kprintf.sl /src/kernel/kprintf.sl
+put -t serial.sl /src/kernel/serial.sl
+put -t sys_dir.sl /src/kernel/sys_dir.sl
+put -t sys_fs.sl /src/kernel/sys_fs.sl
+put -t sys_io.sl /src/kernel/sys_io.sl
+put -t sys_proc.sl /src/kernel/sys_proc.sl
+put -t sys_random.sl /src/kernel/sys_random.sl
+put -t sys.sl /src/kernel/sys.sl
+put -t util.sl /src/kernel/util.sl
+put -t build.sh /src/kernel/build.sh
+
 mkdir doc
 put -t ../doc/ALU.md /doc/alu
 put -t ../doc/AOC.md /doc/aoc
