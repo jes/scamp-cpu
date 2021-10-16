@@ -60,7 +60,7 @@ The computer already works, and I suspect it will never be "finished", but some 
  - [ ] solve some of this year's [Advent of Code](https://adventofcode.com/) using the SCAMP hardware
  - [ ] write a FORTH implementation (should it run on bare metal or under SCAMP/os?)
  - [ ] write a Z-machine interpreter and port some text adventures
- - [ ] write some games (pong? breakout? snake? tetris?)
+ - [ ] write some games (pong? breakout? tetris?)
 
 If you happen to want to work on any of the above, I'd be happy to help you!
 
