@@ -29,9 +29,6 @@ var blkisfree = func(blk) {
     var blkgroup  = byteshr4(blk & 0x0fff);
     var i         = blk & 0x0f;
 
-    # upper 8 bits refer to lower 8 block numbers: swap them
-    i = i^8;
-
     var usedmap = 0x100;
 
     var addr = shl(bitmapblk,8) | blkgroup;
