@@ -7,8 +7,10 @@ _OSBASE: .word OSBASE
 #nosym
 INITIAL_SP: .word 0
 
-.at 0xfeea
+.at 0xfee8
 # system call vectors
+_sys_blkwrite: .word 0
+_sys_blkread:  .word 0
 _sys_random:   .word 0
 _sys_serflags: .word 0
 _sys_cmdargs:  .word 0

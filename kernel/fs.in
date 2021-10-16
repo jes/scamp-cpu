@@ -12,6 +12,7 @@ put ../sys/cat.bin /bin/cat
 put ../sys/cp.bin /bin/cp
 put ../sys/dc.bin /bin/dc
 put ../sys/diskid.bin /bin/diskid
+put ../sys/df.bin /bin/df
 put ../sys/du.bin /bin/du
 put ../sys/echo.bin /bin/echo
 put ../sys/fc.bin /bin/fc
@@ -85,6 +86,7 @@ put -t ../sys/cat.sl /src/cat.sl
 put -t ../sys/cp.sl /src/cp.sl
 put -t ../sys/dc.sl /src/dc.sl
 put -t ../sys/diskid.sl /src/diskid.sl
+put -t ../sys/df.sl /src/df.sl
 put -t ../sys/du.sl /src/du.sl
 put -t ../sys/echo.sl /src/echo.sl
 put -t ../sys/fc.sl /src/fc.sl

@@ -282,7 +282,7 @@ you try to use the RNG before any input is observed, it won't be very random.
 ### 0xfee9: blkread(blknum)
 
     Return: pointer to block content
-    Implemented: no
+    Implemented: yes
     Errors: n/a
 
 Read a block (256 words) from disk and return a pointer to its contents.
@@ -293,7 +293,7 @@ Blocks 80+ are disk contents.
 ### 0xfee8: blkwrite(blknum, data)
 
     Return: 0
-    Implemented: no
+    Implemented: yes
     Errors: n/a
 
 Write a block (256 words) to disk. Use carefully.

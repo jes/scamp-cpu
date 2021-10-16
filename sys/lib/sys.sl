@@ -1,5 +1,7 @@
 # System calls
 
+extern sys_blkwrite;
+extern sys_blkread;
 extern sys_random;
 extern sys_serflags;
 extern sys_cmdargs;
@@ -23,6 +25,8 @@ extern sys_system;
 extern sys_exec;
 extern sys_exit;
 
+var blkwrite = sys_blkwrite;
+var blkread  = sys_blkread;
 var random   = sys_random;
 var serflags = sys_serflags;
 var cmdargs  = sys_cmdargs;

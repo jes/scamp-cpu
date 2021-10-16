@@ -84,3 +84,22 @@ sys_serflags = func(fd, flags) {
 
     return oldflags;
 };
+
+sys_blkread = func(blknum) {
+    ser_poll(3);
+    blkread(blknum, BLKBUF);
+    return BLKBUF;
+};
+
+sys_blkwrite = func(blknum, data) {
+    ser_poll(3);
+
+    # TODO: [perf] maybe call cf_blkwrite() directly so we don't need to memcpy via BLKBUF?
+    #       the reason we need to copy to BLKBUF is because blkwrite() uses buf[256] to store
+    #       the number of the block that was written so that subsequent blkread() calls can use
+    #       the cached data without hitting the disk
+    memcpy(BLKBUF, data, BLKSZ);
+    blkwrite(blknum, BLKBUF);
+
+    return 0;
+};

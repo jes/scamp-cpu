@@ -1,5 +1,7 @@
 # system call declarations
 
+extern sys_blkwrite;
+extern sys_blkread;
 extern sys_random;
 extern sys_serflags;
 extern sys_cmdargs;
