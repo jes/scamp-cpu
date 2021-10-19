@@ -89,6 +89,8 @@ rc = system(["/bin/slangc"]);
 if (rc != 0) exit(rc);
 unredirect(1, prev_out);
 
+# TODO: [perf] optionall run peepopt
+
 # cat "/lib/head.s /lib/lib$libname.s /tmp/1.s /lib/foot.s" into "/tmp/2.s"
 fprintf(2, "cat...\n", 0);
 prev_out = redirect(1, "/tmp/2.s", O_WRITE|O_CREAT);
