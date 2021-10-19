@@ -54,6 +54,8 @@ The computer already works, and I suspect it will never be "finished", but some 
  - [ ] find out whether changing the calling convention to return values on the stack is overall better or worse
  - [ ] move fsck to "userspace"
  - [ ] better facility for memory profiling (mainly to stop kilo and asm from running out of memory on large inputs)
+ - [ ] atexit()
+ - [ ] some way to trap on ^C
 
 #### Other software
 
