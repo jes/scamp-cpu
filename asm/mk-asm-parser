@@ -6,7 +6,12 @@
 # "i8l" and "i8h" have to be constants in 0x0000..0x00ff and 0xff00..0xffff
 # "i16" can be any constant, or a label
 #
-# TODO: [nice] Whitespace just turns into "skip()"?
+# TODO: [mem] instead of writing SLANG code with [] arrays, write asm code instead so that
+#       we don't waste a load of memory on initialising the arrays
+# TODO: [bug] the problem with this is that it references "IndirectionEquals" etc. by name
+#       before such a time that those functions are initialised; we need to come up with a
+#       way either for asm.sl to initialise them before including asmparser.sl, or else
+#       to not use them until after they're initialised
 
 use strict;
 use warnings;
@@ -22,6 +27,9 @@ my %mnemonic;
 my %argparser;
 my $argparsernum = 0;
 
+my %interned;
+my $internlabel = 0;
+
 for my $instr (sort keys %$instructions) {
     my $opcode = $instructions->{$instr}{opcode};
 
@@ -36,7 +44,7 @@ for my $mnem (sort keys %mnemonic) {
 print parser_footer() . "\n";
 
 sub mkargparser {
-    my ($args, $opcode) = @_;
+    my ($args) = @_;
 
     return '' if $argparser{$args};
 
@@ -51,48 +59,46 @@ sub mkargparser {
     my $src = '';
 
     $src .= "# $args\n";
-    $src .= "var $name = func(opcode) {\n";
+    $src .= "var $name = asm {\n";
 
     my $i16 = 0;
     my $i8 = 0;
 
     my $str = '';
 
+    my @parts;
     while ($args =~ /(i8l|i8h|i16|\(i8h\)|\(i16\)|\(\d+\)|.)/g) {
         my $bit = $1;
         if ($bit =~ /i8l|i8h|i16|\(i8h\)|\(i16\)|\(\d+\)/) {
             if ($str) {
                 if (length($str) == 1) {
-                    $src .= "    if (!Char('$str')) return 0;\n";
+                    push @parts, "    .word myChar\n    .word " . sprintf("0x%02x", ord($str)) . "\n";
                 } else {
-                    $src .= "    if (!String(\"$str\")) return 0;\n";
+                    push @parts, "    .word myString\n    .word " . intern($str) . "\n";
                 }
                 $str = '';
             }
 
             if ($bit eq 'i8l') {
                 $i8 = 1;
-                $src .= "    if (!I8l(0)) return 0;\n";
+                push @parts, "    .word myI8l\n    .word 0\n";
             } elsif ($bit eq 'i8h') {
                 $i8 = 1;
-                $src .= "    if (!I8h(0)) return 0;\n";
+                push @parts, "    .word myI8h\n    .word 0\n";
             } elsif ($bit eq 'i16') {
                 $i16 = 1;
-                $src .= "    if (!I16(0)) return 0;\n";
+                push @parts, "    .word myI16\n    .word 0\n";
             } elsif ($bit eq '(i8h)') {
                 $i8 = 1;
-                $src .= "    if (!Indirection(8)) return 0;\n";
+                push @parts, "    .word myIndirection\n    .word 8\n";
             } elsif ($bit eq '(i16)') {
                 $i16 = 1;
-                $src .= "    if (!Indirection(16)) return 0;\n";
+                push @parts, "    .word myIndirection\n    .word 16\n";
             } elsif ($bit =~ /^\(\d+\)$/) {
                 # indirection on a constant - abuse Indirection(16)
                 $bit =~ /(\d+)/;
                 my $val = $1;
-                $src .= "    var asm_i16_bak = asm_i16;\n";
-                $src .= "    if (!Indirection(16)) return 0;\n";
-                $src .= "    if (i16_identifier || asm_i16 != $val) return 0;\n";
-                $src .= "    asm_i16 = asm_i16_bak;\n";
+                push @parts, "    .word myIndirectionEquals\n    .word $val\n";
             } else {
                 die "unrecognised bit: $bit";
             }
@@ -101,23 +107,21 @@ sub mkargparser {
         }
     }
     if ($str) {
-        $src .= "    if (!String(\"$str\")) return 0;\n";
+        if (length($str) == 1) {
+            push @parts, "    .word myChar\n    .word " . sprintf("0x%02x", ord($str)) . "\n";
+        } else {
+            push @parts, "    .word myString\n    .word " . intern($str) . "\n";
+        }
     }
 
-    $src .= "    if (!Endline(0)) return 0;\n";
-    $src .= "    skip();\n";
+    my $emit_val = 0;
+    $emit_val |= 1 if $i8;
+    $emit_val |= 2 if $i16;
+    $src .= "    .word $emit_val,\n";
 
-    if ($i8) {
-        $src .= "    emit(opcode | asm_i8);\n";
-    } else {
-        $src .= "    emit(opcode);\n";
-    }
+    $src .= join("", @parts);
 
-    if ($i16) {
-        $src .= "    emit_i16();\n";
-    }
-
-    $src .= "    return 1;\n";
+    $src .= "    .word 0\n";
     $src .= "};\n";
 
     return $src;
@@ -138,19 +142,16 @@ sub mkparser {
 
     for my $mode (@instrs) {
         my ($instr, $opcode, $cycles) = @$mode;
-        $src .= mkargparser($instr, $opcode);
+        $src .= mkargparser($instr);
     }
 
-    $src .= "var Instr_".safemnem($mnem)." = func(x) {\n";
-    $src .= "    if (!String(\"$mnem\")) return 0;\n";
-    $src .= "    if (parse(NotAnyChar,\" \\t\\r\\n\")) return 0;\n"; # mnemonic name must end on word boundary
-    $src .= "    while(parse(AnyChar,\" \\t\\r\"));\n"; # skip spaces
+    $src .= "var Instr_".safemnem($mnem)." = [\n";
+    $src .= "    \"$mnem\",\n";
     for my $mode (@instrs) {
         my ($instr, $opcode, $cycles) = @$mode;
-        $src .= "    if (parse(" . argparser($instr) . ",0x".sprintf("%04x",$opcode<<8).")) return 1;\n";
+        $src .= "    " . argparser($instr) . "," . sprintf("0x%04x",$opcode<<8) . ",\n";
     }
-    $src .= "    die(\"illegal $mnem instruction\",0);\n";
-    $src .= "};\n";
+    $src .= "];\n";
 
     return $src;
 }
@@ -166,13 +167,23 @@ sub parser_header {
     $src .= "var I8l;\n";
     $src .= "var I8h;\n";
     $src .= "var I16;\n";
-    $src .= "var Endline;\n";
     $src .= "var Indirection;\n";
+    $src .= "var IndirectionEquals;\n";
+    $src .= "var Instr_args;\n";
+    $src .= "var Instr_anyargs;\n";
     $src .= "var emit;\n";
     $src .= "var emit_i16;\n";
     $src .= "var asm_i8;\n";
     $src .= "var asm_i16;\n";
     $src .= "var i16_identifier;\n";
+    $src .= "var opcode;\n";
+
+    # TODO: [perf] find a way to avoid the indirect function call
+    $src .= "asm {\n";
+    for my $func (qw(Char String I8l I8h I16 Indirection IndirectionEquals)) {
+        $src .= "my$func: jmp (_$func)\n";
+    }
+    $src .= "};\n";
 
     return $src;
 }
@@ -192,15 +203,29 @@ sub parser_footer {
             $src .= "    if (ch == '$ch') {\n";
             $group = $ch;
         }
-        $src .= "        if (parse(Instr_".safemnem($mnem).",0)) return 1;\n";
+        $src .= "        if (parse(Instr_anyargs,Instr_".safemnem($mnem).")) return 1;\n";
     }
 
     $src .= "    };\n" if $group;
 
     $src .= "    return 0;\n";
+    $src .= "};\n\n";
+
+    $src .= "asm {\n";
+    for my $str (sort { $interned{$a} cmp $interned{$b} } keys %interned) {
+        $src .= "$interned{$str}: .str \"$str\0\"\n";
+    }
     $src .= "};\n";
 
     return $src;
+}
+
+sub intern {
+    my ($str) = @_;
+
+    $interned{$str} //= "str" . ($internlabel++);
+
+    return $interned{$str};
 }
 
 sub safemnem {

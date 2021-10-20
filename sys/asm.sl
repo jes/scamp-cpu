@@ -150,7 +150,7 @@ I16 = func(x) {
 
 # "Endline" is similar to "skip" except it doesn't match if it stops before
 # reaching the end of the line
-Endline = func(x) {
+var Endline = func(x) {
     while (parse(AnyChar," \t\r")); # skip over whitespace
     if (parse(Char,'#')) { # skip comment
         while (parse(NotChar,'\n'));
@@ -195,6 +195,15 @@ Indirection = func(width) {
     return 1;
 };
 
+IndirectionEquals = func(val) {
+    # XXX: abuse Indirection(16)
+    var asm_i16_bak = asm_i16;
+    if (!Indirection(16)) return 0;
+    if (i16_identifier || asm_i16 != val) return 0;
+    asm_i16 = asm_i16_bak;
+    return 1;
+};
+
 var Def = func(x) {
     # TODO: [nice] this should maybe allow arbitrary string replacement, not just numeric constants
     if (!String(".d")) return 0;
@@ -225,7 +234,6 @@ var At = func(x) {
     } else {
         while (asm_pc != at) {
             emit(0);
-            asm_pc++;
         };
     };
 
@@ -298,6 +306,7 @@ var emitblob = func(name) {
         if (n == 0) break;
         if (n < 0) die("read %s: %s", [name, strerror(fd)]);
         if (bwrite(code_bio, buf, n) != n) die("write() didn't write enough",0);
+        if ((asm_pc + n) lt asm_pc) die(".blob %s: overflows address space", [name]);
         asm_pc = asm_pc + n;
     };
 
@@ -357,9 +366,41 @@ var Assembly = func(x) {
     };
 };
 
+Instr_args = func(v) {
+    var emit_val = v[0];
+    v++;
+    var f;
+    var arg;
+    while (*v) {
+        f = *(v++);
+        arg = *(v++);
+        if (!f(arg)) return 0;
+    };
+    if (!Endline(0)) return 0;
+    skip();
+    if (emit_val & 1) emit(opcode | asm_i8)
+    else emit(opcode);
+    if (emit_val & 2) emit_i16();
+    return 1;
+};
+
+Instr_anyargs = func(v) {
+    var name = *(v++);
+    if (!String(name)) return 0;
+    if (parse(NotAnyChar," \t\r\n")) return 0;
+    while(parse(AnyChar," \t\r"));
+    while (*v) {
+        opcode = *(v+1);
+        if (parse(Instr_args,*v)) return 1;
+        v = v + 2;
+    };
+    die("illegal %s instruction", [name]);
+};
+
 emit = func(v) {
     bputc(code_bio, v);
     asm_pc++;
+    if (asm_pc == 0) die("address space overflows",0);
 };
 
 emit_i16 = func() {
