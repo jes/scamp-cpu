@@ -47,6 +47,7 @@ The computer already works, and I suspect it will never be "finished", but some 
 
  - [ ] make kernel self-hosting (compile within SCAMP/os & write to disk)
  - [ ] make library blob self-hosting (compile within SCAMP/os)
+ - [ ] make `kilo` self-hosting (compile within SCAMP/os - currently a "string literal is too long")
  - [ ] write an strace-like debugging tool
  - [ ] write a DDT-like debugging tool
  - [ ] work out how much impact each part of the peephole optimiser has, and lose the irrelevant parts
