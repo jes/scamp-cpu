@@ -2,8 +2,6 @@
 #
 # TODO: [nice] -v "annotated hex" mode
 # TODO: [nice] tidy up variable names and code layout, comment stuff that's not clear
-# TODO: [bug] the assembler currently runs out of memory on large programs during
-#       the 1st pass (currently this is only "asm" I think)
 
 include "asmparser.sl";
 include "bufio.sl";

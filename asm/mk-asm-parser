@@ -117,7 +117,7 @@ sub mkargparser {
     my $emit_val = 0;
     $emit_val |= 1 if $i8;
     $emit_val |= 2 if $i16;
-    $src .= "    .word $emit_val,\n";
+    $src .= "    .word $emit_val\n";
 
     $src .= join("", @parts);
 
@@ -213,7 +213,7 @@ sub parser_footer {
 
     $src .= "asm {\n";
     for my $str (sort { $interned{$a} cmp $interned{$b} } keys %interned) {
-        $src .= "$interned{$str}: .str \"$str\0\"\n";
+        $src .= "$interned{$str}: .str \"$str\\0\"\n";
     }
     $src .= "};\n";
 
