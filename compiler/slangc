@@ -484,6 +484,7 @@ sub escapedchar {
 sub StringLiteral {
     return 0 if !parse(\&Char,'"');
     my $string = StringLiteralText();
+    die "string literal too long" if length($string) >= 512;
     my $label;
     if (exists $STRINGS{$string}) {
         $label = $STRINGS{$string};

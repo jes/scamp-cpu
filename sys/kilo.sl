@@ -938,18 +938,22 @@ helpscreen = func() {
  * In navigation mode, some ordinary characters perform navigation or other\r
    actions.\r
  * In navigation mode, typing digits is number input for rapid movements.\r
-\r
+");
+puts("\r
     CTRL KEYS                         |   NAV KEYS\r
     ----------------------------------+-----------------------------------\r
     ^X quit                           |   h/j/k/l  vim style movement\r
     ^O save file                      |   0 goto start of line\r
     ^Z spawn child shell              |   $ goto end of line\r
     ^K delete to end of line          |   i enter insert mode\r
-    ^F find text                      |   a enter insert mode 1 char right\r
+");
+puts("    ^F find text                      |   a enter insert mode 1 char right\r
     ^N toggle navigation mode         |   / find text\r
     ^E show this help                 |   w move forward a word\r
     ^U page up                        |   b move back a word\r
     ^D page down                      |   x delete character\r
+");
+puts("
     ^L redraw screen                  |   g/G goto line\r
                                       |   z[tzb] reposition screen offset\r
 \r
