@@ -2,6 +2,9 @@
 # give source on stdin
 # get binary on stdout
 
+# TODO: [nice] flag "-O" to use optimisation
+# TODO: [nice] flags "-H" and "-F" to set head.s and foot.s paths
+
 include "stdio.sl";
 include "sys.sl";
 include "malloc.sl";
