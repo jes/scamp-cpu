@@ -20,7 +20,6 @@ var maxidentifier = maxliteral;
 var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 
 var IDENTIFIERS;
-var STRINGS;
 var code_filename;
 var code_fd;
 var code_bio;
@@ -38,11 +37,14 @@ var store = func(name,val) {
 
 # return a pointer to an existing stored copy of "name", or strdup() one if there is none
 var intern = func(name) {
-    var v = htgetkv(STRINGS, name);
-    if (v) return cdr(v);
-
+    var v = htgetkv(IDENTIFIERS, name);
+    if (v) return car(v);
+    # TODO: [bug?] we abuse IDENTIFIERS as a string interning table; currently
+    #       don't think it matters because the only time we intern() a string is
+    #       when we either already have it in IDENTIFIERS, or we're about to put
+    #       it in
     name = strdup(name);
-    htput(STRINGS, name, name);
+    htput(IDENTIFIERS, name, 0);
     return name;
 };
 
@@ -209,7 +211,8 @@ var Def = func(x) {
 
     skip();
     if (!Identifier(0)) die(".def needs identifier",0);
-    var name = intern(IDENTIFIER);
+    # we strdup() rather than intern() because names ought to be unique anyway
+    var name = strdup(IDENTIFIER);
     skip();
     if (!Constant(0)) die(".def needs constant",0);
     store(name,asm_constant);
@@ -340,7 +343,8 @@ var Label = func(x) {
     skip();
     if (!CharSkip(':')) return 0;
 
-    store(intern(IDENTIFIER), asm_pc);
+    # we strdup() rather than intern() because labels ought to be unique anyway
+    store(strdup(IDENTIFIER), asm_pc);
     return 1;
 };
 
@@ -467,7 +471,6 @@ var resolve_unbounds = func() {
 };
 
 IDENTIFIERS = htnew();
-STRINGS = htnew();
 
 code_filename = strdup(tmpnam());
 code_fd = open(code_filename, O_WRITE|O_CREAT);
