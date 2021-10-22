@@ -582,7 +582,7 @@ openfile = func(filename) {
         # filename doesn't exist yet
         if (openfilename) free(openfilename);
         openfilename = strdup(filename);
-        dirty = 1;
+        dirty = 0;
         return 0;
     };
     if (fd < 0) fatal("open %s: %s", [filename, strerror(fd)]);
