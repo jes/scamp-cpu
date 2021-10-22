@@ -68,38 +68,28 @@ var htgrow = func(ht) {
     ht[2] = newarr;
 };
 
-#var hashstr = func(str) {
-#    var h = 0;
-#    var i = 997;
-#    while (*str)
-#        h = h+h+h + *(str++) + i++;
-#    return h;
-#};
 # usage: hashstr(str)
+# djb2 hash function: http://www.cse.yorku.ca/~oz/hash.html
 var hashstr = asm {
     pop x
     ld r1, x # str
     ld r0, 0 # h
-    ld r2, 997 # i
+    ld r2, 5381 # i
 
     hashstr_loop:
         # while (*str)
         test (r1)
         jz hashstr_ret
 
-        # h = h+h+h
-        ld r3, r0
-        add r3, r0
-        add r3, r0
-        ld r0, r3
+        # h = 33*h
+        ld x, r0
+        shl3 x
+        shl2 x
+        add r0, x
 
         # + *(str++)
         ld x, (r1++)
         add r0, x
-
-        # + i++
-        add r0, r2
-        inc r2
 
         jmp hashstr_loop
 
