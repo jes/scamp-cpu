@@ -355,7 +355,6 @@ var trap_sp = *SP;
 var restarted = 0;
 var restart = asm { }; # we'll return to here when ^C is typed
 if (restarted) {
-    # TODO: [nice] when we have a proper line editor in sh, clear the input buffer here
     fputc(2, '\n');
 };
 restarted = 1;

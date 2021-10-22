@@ -121,6 +121,12 @@ var ser_poll = func(fd) {
 
         if (cooked_mode) {
             if (ch == 3 && pid != 0) { # ctrl-c
+                # clear input buffer
+                ser_setreadpos(bufp, 0);
+                ser_setreadmaxpos(bufp, 0);
+                ser_setwritepos(bufp, 0);
+
+                # trap or exit
                 if (trapfunc) trapfunc()
                 else sys_exit(255);
             };
