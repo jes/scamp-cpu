@@ -70,11 +70,11 @@ var htgrow = func(ht) {
 
 # usage: hashstr(str)
 # djb2 hash function: http://www.cse.yorku.ca/~oz/hash.html
+# constant changed from 5381 to 19997 because empirically it results in faster assembly of kernel
 var hashstr = asm {
     pop x
     ld r1, x # str
-    ld r0, 0 # h
-    ld r2, 5381 # i
+    ld r0, 19997 # h
 
     hashstr_loop:
         # while (*str)
