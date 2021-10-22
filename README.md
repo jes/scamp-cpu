@@ -48,7 +48,6 @@ The computer already works, and I suspect it will never be "finished", but some 
  - [ ] make library blob self-hosting (compile within SCAMP/os)
  - [ ] write an strace-like debugging tool
  - [ ] write a DDT-like debugging tool
- - [ ] find out whether changing the calling convention to return values on the stack is overall better or worse
  - [ ] move fsck to "userspace"
  - [ ] better facility for memory profiling (mainly to stop kilo and asm from running out of memory on large inputs)
  - [ ] atexit()
