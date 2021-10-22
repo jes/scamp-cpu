@@ -15,6 +15,7 @@ jr+ 1
 _TOP: .word 0
 
 # system call vectors
+.def _sys_trap     0xfee7
 .def _sys_blkwrite 0xfee8
 .def _sys_blkread  0xfee9
 .def _sys_random   0xfeea

@@ -349,6 +349,13 @@ if (*args) {
 };
 
 var buf = malloc(256);
+
+var SP = 0xffff;
+var trap_sp = *SP;
+var restart = asm { }; # we'll return to here when ^C is typed
+trap(restart);
+*SP = trap_sp;
+
 while (1) {
     if (in_fd == 0) fputs(2, "$ "); # TODO: [nice] not if stderr is not a terminal
     if (fgets(in_fd, buf, 256) == 0) break;

@@ -1,5 +1,6 @@
 # System calls
 
+extern sys_trap;
 extern sys_blkwrite;
 extern sys_blkread;
 extern sys_random;
@@ -25,6 +26,7 @@ extern sys_system;
 extern sys_exec;
 extern sys_exit;
 
+var trap     = sys_trap;
 var blkwrite = sys_blkwrite;
 var blkread  = sys_blkread;
 var random   = sys_random;

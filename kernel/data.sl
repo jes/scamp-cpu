@@ -140,3 +140,5 @@ var O_KERNELFD = 0x20;
 var pid = 0;
 
 var rngstate = 0;
+
+var trapfunc = 0;

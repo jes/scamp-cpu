@@ -48,7 +48,7 @@ var sys_exit_impl = func(rc) {
     var n;
     var p = 0x100;
     while (1) {
-        n = sys_read(ufd, p, 254);
+        n = sys_read(ufd, p, 16384);
         if (n == 0) break;
         if (n < 0) throw(n);
         p = p + n;
@@ -65,10 +65,11 @@ var sys_exit_impl = func(rc) {
     sys_read(kfd, &sp, 1);
     sys_read(kfd, &ret, 1);
     sys_read(kfd, &CWDBLK, 1);
-    sys_read(kfd, fdtable, 128);
     sys_read(kfd, &cmdargs_sz, 1);
     sys_read(kfd, &cmdargs, 1);
     sys_read(kfd, cmdargs, cmdargs_sz);
+    sys_read(kfd, &trapfunc, 1);
+    sys_read(kfd, fdtable, 128);
     sys_close(kfd);
 
     sys_unlink(userfile);
@@ -148,15 +149,17 @@ var sys_system_impl  = func(top, args, sp, ret) {
     #  - stack pointer
     #  - return address
     #  - CWDBLK
-    #  - fdtable
     #  - cmdargs
+    #  - trapfunc
+    #  - fdtable (has to come last because it'll overwrite our fd)
     sys_write(kfd, &sp, 1);
     sys_write(kfd, &ret, 1);
     sys_write(kfd, &CWDBLK, 1);
-    sys_write(kfd, fdtable, 128);
     sys_write(kfd, &cmdargs_sz, 1);
     sys_write(kfd, &cmdargs, 1);
     sys_write(kfd, cmdargs, cmdargs_sz);
+    sys_write(kfd, &trapfunc, 1);
+    sys_write(kfd, fdtable, 128);
     sys_close(kfd);
 
     # execute the "child" process
@@ -302,6 +305,7 @@ var sys_exec_impl = func(args) {
 
     # jump to it
     allowcatch();
+    trapfunc = 0;
     jmp_to_user();
     kpanic("returned to exec");
 };
@@ -321,4 +325,9 @@ sys_exec = asm {
     ld sp, (_exec_sp)
     ld r254, (_exec_ret)
     ret
+};
+
+sys_trap = func(f) {
+    trapfunc = f;
+    return 0;
 };

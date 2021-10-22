@@ -120,7 +120,10 @@ var ser_poll = func(fd) {
         rngstate = rngstate + ch;
 
         if (cooked_mode) {
-            if (ch == 3 && pid != 0) sys_exit(255); # ctrl-c
+            if (ch == 3 && pid != 0) { # ctrl-c
+                if (trapfunc) trapfunc()
+                else sys_exit(255);
+            };
             if (ch == 12) { # ctrl-l
                 ser_write(fd, [0x1b, '[', '2', 'J'], 4); # clear screen
                 ser_write(fd, [0x1b, '[', 'H'], 3); # home cursor

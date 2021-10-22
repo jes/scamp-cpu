@@ -1,5 +1,6 @@
 # system call declarations
 
+extern sys_trap;
 extern sys_blkwrite;
 extern sys_blkread;
 extern sys_random;

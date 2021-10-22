@@ -301,6 +301,18 @@ Blocks 0-63 are reserved for storing the kernel.
 Blocks 64-79 are the free space bitmap.
 Blocks 80+ are disk contents.
 
+### 0xfee8: trap(func)
+
+    Return: 0
+    Implemented: yes
+    Errors: n/a
+
+Set the trap function. This is a function that will be called, with no
+arguments, when ^C is typed at the console. Set `func` to 0 to revert
+to the default behaviour of exiting. The trap function need not return,
+but should make sure to set the stack pointer to something sensible if
+it doesn't.
+
 ## Errors
 
 Errors are generally returned from system calls as `-ERR`, with the following meanings:

@@ -51,7 +51,6 @@ The computer already works, and I suspect it will never be "finished", but some 
  - [ ] move fsck to "userspace"
  - [ ] better facility for memory profiling (mainly to stop kilo and asm from running out of memory on large inputs)
  - [ ] atexit()
- - [ ] some way to trap on ^C
 
 #### Other software
 
