@@ -192,9 +192,7 @@ var ser_read = func(fd, buf, sz) {
         ch = ser_bufget(bufp);
         if (ch == -1) {
             if (sz != 0) break; # return what we have, if any
-
             if (fd != 3) ser_poll(3);
-
             continue; # otherwise wait for some input
         };
 
