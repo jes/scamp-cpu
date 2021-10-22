@@ -230,6 +230,22 @@ var htget = func(ht, key) {
     return 0;
 };
 
+# htput() but skipping the htfind() where possible, using the "p" pointer
+# already passed in
+var htputp = func(ht, p, key, val) {
+    # create more space if 75% full
+    var used = htused(ht);
+    var size = htsize(ht);
+    if (used+used+used+used gt size+size+size) {
+        htgrow(ht);
+        p = htfind(ht, key);
+    };
+
+    if (!*p) ht[1] = ht[1] + 1;
+    p[0] = key;
+    p[1] = val;
+};
+
 # "key" is a string
 htput = func(ht, key, val) {
     # create more space if 75% full

@@ -37,14 +37,14 @@ var store = func(name,val) {
 
 # return a pointer to an existing stored copy of "name", or strdup() one if there is none
 var intern = func(name) {
-    var v = htgetkv(IDENTIFIERS, name);
-    if (v) return car(v);
+    var p = htfind(IDENTIFIERS, name);
+    if (*p) return *p;
     # TODO: [bug?] we abuse IDENTIFIERS as a string interning table; currently
     #       don't think it matters because the only time we intern() a string is
     #       when we either already have it in IDENTIFIERS, or we're about to put
     #       it in
     name = strdup(name);
-    htput(IDENTIFIERS, name, 0);
+    htputp(IDENTIFIERS, p, name, 0);
     return name;
 };
 
