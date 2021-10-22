@@ -109,21 +109,110 @@ var hashstr = asm {
 
 # return pointer to slot in ht for key
 # (mainly for "internal" use - library users probably want htget/htput)
-var htfind = func(ht, key) {
-    var n = hashstr(key);
-    # idx = n mod htsize
-    var idx = n & (htsize(ht)-1);
+#var htfind = func(ht, key) {
+#    var n = hashstr(key);
+#    # idx = n mod htsize
+#    var idx = n & (htsize(ht)-1);
+#
+#    # linear probe to find the key, or the next free slot
+#    var p = ht[2]+idx+idx;
+#    var endp = ht[2]+htsize(ht)+htsize(ht);
+#    while (*p) {
+#        if (strcmp(key, *p) == 0) break; # found
+#        p = p + 2;
+#        if (p == endp) p = ht[2];
+#    };
+#
+#    return p;
+#};
+# usage: htfind(ht, key)
+var htfind = asm {
+    # store return address
+    ld (htfind_ret), r254
 
-    # linear probe to find the key, or the next free slot
-    var p = ht[2]+idx+idx;
-    var endp = ht[2]+htsize(ht)+htsize(ht);
-    while (*p) {
-        if (strcmp(key, *p) == 0) break; # found
-        p = p + 2;
-        if (p == endp) p = ht[2];
-    };
+    pop x
+    ld (htfind_key), x
+    pop x
+    ld (htfind_ht), x
 
-    return p;
+    # n = hashstr(key)
+    ld x, (htfind_key)
+    push x
+    call (_hashstr)
+    ld (htfind_n), r0
+
+    # s = htsize(ht)
+    ld x, (htfind_ht)
+    push x
+    call (_htsize)
+    ld (htfind_s), r0
+
+    # idx = n & (s-1)
+    ld x, (htfind_s)
+    dec x
+    and x, (htfind_n)
+    ld (htfind_idx), x
+
+    # p = ht[2]+idx+idx
+    ld x, (htfind_ht)
+    add x, 2
+    ld x, (x)
+    add x, (htfind_idx)
+    add x, (htfind_idx)
+    ld (htfind_p), x
+
+    # endp = ht[2]+s+s
+    ld x, (htfind_ht)
+    add x, 2
+    ld x, (x)
+    add x, (htfind_s)
+    add x, (htfind_s)
+    ld (htfind_endp), x
+
+    # while(*p)
+htfind_loop:
+    ld x, (htfind_p)
+    test (x)
+    jz htfind_done
+
+    # if (strcmp(key, *p) == 0) break; # found
+    ld x, (htfind_key)
+    push x
+    ld x, (htfind_p)
+    ld x, (x)
+    push x
+    call (_strcmp)
+    test r0
+    jz htfind_done
+
+    # p = p + 2;
+    add (htfind_p), 2
+
+    # if (p == endp) p = ht[2];
+    ld x, (htfind_p)
+    sub x, (htfind_endp)
+    jnz htfind_loop
+
+    ld x, (htfind_ht)
+    add x, 2
+    ld x, (x)
+    ld (htfind_p), x
+
+    jmp htfind_loop
+
+htfind_done:
+    # return p
+    ld r0, (htfind_p)
+    jmp (htfind_ret)
+
+htfind_ht: .word 0
+htfind_key: .word 0
+htfind_ret: .word 0
+htfind_n: .word 0
+htfind_s: .word 0
+htfind_idx: .word 0
+htfind_p: .word 0
+htfind_endp: .word 0
 };
 
 # return [key,val] for "key", if found, or 0 otherwise
