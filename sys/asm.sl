@@ -408,13 +408,8 @@ emit = func(v) {
 emit_i16 = func() {
     var v;
     if (i16_identifier) {
-        v = lookup(i16_identifier);
-        if (v) {
-            emit(cdr(v));
-        } else {
-            add_unbound(i16_identifier, asm_pc);
-            emit(0);
-        };
+        add_unbound(i16_identifier, asm_pc);
+        emit(0);
     } else {
         emit(asm_i16);
     };
