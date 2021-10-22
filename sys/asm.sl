@@ -20,6 +20,7 @@ var maxidentifier = maxliteral;
 var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 
 var IDENTIFIERS;
+var INTERN_CONST = 0xface;
 var code_filename;
 var code_fd;
 var code_bio;
@@ -44,7 +45,7 @@ var intern = func(name) {
     #       when we either already have it in IDENTIFIERS, or we're about to put
     #       it in
     name = strdup(name);
-    htputp(IDENTIFIERS, p, name, 0);
+    htputp(IDENTIFIERS, p, name, INTERN_CONST);
     return name;
 };
 
@@ -120,6 +121,10 @@ var Constant = func(x) {
     if (!Identifier(0)) return 0;
     var v = lookup(IDENTIFIER);
     if (!v) return 0;
+    # we don't accept identifiers equal to INTERN_CONST because they might
+    # just be intern()'d strings rather than actual known values (but
+    # ignoring them should normally not be a problem)
+    if (cdr(v) == INTERN_CONST) return 0;
     asm_constant = cdr(v);
     return 1;
 };
