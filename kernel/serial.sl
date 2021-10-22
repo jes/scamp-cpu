@@ -130,7 +130,7 @@ var ser_poll = func(fd) {
                 # block the entire system until they type ctrl-q
                 while (1) {
                     if (inp(lsrport)&1) {
-                        if (inp(readport) == 17) break; # ctrl-q
+                        if ((inp(readport)&0xff) == 17) break; # ctrl-q
                     };
                 };
                 continue;
