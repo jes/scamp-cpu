@@ -31,7 +31,6 @@ put ../sys/mkdir.bin /bin/mkdir
 put ../sys/more.bin /bin/more
 put ../sys/mv.bin /bin/mv
 put ../sys/opts.bin /bin/opts
-put ../sys/peepopt.bin /bin/peepopt
 put ../sys/pwd.bin /bin/pwd
 put ../sys/reboot.bin /bin/reboot
 put ../sys/reset.bin /bin/reset
@@ -106,7 +105,6 @@ put -t ../sys/mkdir.sl /src/mkdir.sl
 put -t ../sys/more.sl /src/more.sl
 put -t ../sys/mv.sl /src/mv.sl
 put -t ../sys/opts.sl /src/opts.sl
-put -t ../sys/peepopt.sl /src/peepopt.sl
 put -t ../sys/pwd.sl /src/pwd.sl
 put -t ../sys/reboot.sl /src/reboot.sl
 put -t ../sys/reset.sl /src/reset.sl

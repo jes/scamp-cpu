@@ -93,25 +93,16 @@ rc = system(["/bin/slangc"]);
 if (rc != 0) exit(rc);
 unredirect(1, prev_out);
 
-# run peepopt on "/tmp/1.s"
-fprintf(2, "peepopt...\n", 0);
-var prev_in = redirect(0, "/tmp/1.s", O_READ);
-prev_out = redirect(1, "/tmp/2.s", O_WRITE|O_CREAT);
-rc = system(["/bin/peepopt"]);
-if (rc != 0) exit(rc);
-unredirect(0, prev_in);
-unredirect(1, prev_out);
-
-# cat "/lib/head.s /lib/lib$libname.s /tmp/2.s /lib/foot.s" into "/tmp/3.s"
+# cat "/lib/head.s /lib/lib$libname.s /tmp/1.s /lib/foot.s" into "/tmp/2.s"
 fprintf(2, "cat...\n", 0);
-prev_out = redirect(1, "/tmp/3.s", O_WRITE|O_CREAT);
+prev_out = redirect(1, "/tmp/2.s", O_WRITE|O_CREAT);
 cat("/lib/head.s");
 cat(libsfile);
-cat("/tmp/2.s");
+cat("/tmp/1.s");
 cat("/lib/foot.s");
 unredirect(1, prev_out);
 
-# assemble "/tmp/3.s" to stdout
+# assemble "/tmp/2.s" to stdout
 fprintf(2, "asm...\n", 0);
-prev_in = redirect(0, "/tmp/3.s", O_READ);
+var prev_in = redirect(0, "/tmp/2.s", O_READ);
 exec(["/bin/asm"]);
