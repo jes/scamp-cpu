@@ -57,6 +57,7 @@ var add_unbound = func(name,addr) {
 
 var reserved = func(name) {
     if (strcmp(name,"x") == 0) return 1;
+    if (strcmp(name,"y") == 0) return 1;
     if (strcmp(name,"sp") == 0) return 1;
     if (*name == 'r') {
         name++;
