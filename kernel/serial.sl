@@ -173,7 +173,6 @@ var ser_read = func(fd, buf, sz) {
 
     if (p[SERFLAGS] & SER_DISABLE) return 0;
 
-    if (fd != 3) ser_poll(3);
     ser_poll(fd);
 
     # return number of characters that can be read without blocking
