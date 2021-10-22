@@ -4,7 +4,7 @@ SCAMP is my homebrew 16-bit CPU. It stands for something like "Simple Computing 
 
 The CPU is very primitive. It doesn't support interrupts, and has no MMU, and no concept of privilege levels. It currently runs
 at 1 MHz, above that the CompactFlash interface falls over. It runs a homebrew operating system, with a homebrew
-programming language and compiler, and can self-host many of the system utilities (but not all).
+programming language and compiler, and can self-host the kernel and all of the system utilities.
 The environment tastes a bit like an early Unix, but works like CP/M. I plan to use the computer to complete as much
 as possible of this year's [Advent of Code](https://adventofcode.com/).
 
@@ -45,7 +45,6 @@ The computer already works, and I suspect it will never be "finished", but some 
 
 #### Low-level software
 
- - [ ] make kernel self-hosting (compile within SCAMP/os & write to disk)
  - [ ] make library blob self-hosting (compile within SCAMP/os)
  - [ ] write an strace-like debugging tool
  - [ ] write a DDT-like debugging tool
