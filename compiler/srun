@@ -4,7 +4,7 @@
 set -e
 
 if [ "$1" = "" ]; then
-    echo "usage: run foo.s"
+    echo "usage: srun foo.s"
     exit 1
 fi
 

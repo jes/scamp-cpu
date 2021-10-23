@@ -2,12 +2,17 @@ include "stdlib.sl";
 
 var EOF = -1;
 
+var serport = 136;
+var lsrport = 141;
+
 var getchar = func() {
-    return inp(2);
+    while (!(inp(lsrport)&1));
+    return inp(serport);
 };
 
 var putchar = func(ch) {
-    outp(2, ch);
+    if (ch == '\n') outp(serport, '\r');
+    outp(serport, ch);
 };
 
 # read at most size-1 characters into s, and terminate with a 0
@@ -32,17 +37,8 @@ var gets = func(s, size) {
 };
 
 # take a pointer to a nul-terminated string, and print it
-var puts = asm {
-    pop x
-    test (x)
-    jnz puts_loop
-    ret
-    puts_loop:
-        out 2, (x)
-        inc x
-        test (x)
-        jnz puts_loop
-    ret
+var puts = func(s) {
+    while (*s) putchar(*(s++));
 };
 
 # usage: printf(fmt, [arg1, arg2, ...]);
