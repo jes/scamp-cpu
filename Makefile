@@ -50,7 +50,6 @@ test8250-high.hex: test8250.hex
 
 test: ucode-low.hex ucode-high.hex testrom-low.hex testrom-high.hex emulator
 	make -C emulator/ test
-	cd compiler/ && ./run-test.sh
 	cd fs/ && ./run-test.sh
 	cd verilog/ && ./run-tests.sh
 
