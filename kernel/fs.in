@@ -150,7 +150,7 @@ put -t cf.sl /src/kernel/cf.sl
 put -t data.sl /src/kernel/data.sl
 put -t dir.sl /src/kernel/dir.sl
 put -t fs.sl /src/kernel/fs.sl
-put -t kernel-name.sl /src/kernel/kernel-name.sl
+put -t kernel-name-selfhost.sl /src/kernel/kernel-name.sl
 put -t kernel.sl /src/kernel/kernel.sl
 put -t kprintf.sl /src/kernel/kprintf.sl
 put -t serial.sl /src/kernel/serial.sl
