@@ -4,13 +4,13 @@ d  0  1  ..
 .  ..  foo  
 d  0  1  .
 d  0  1  ..
-f  14  1  testfile1
+f  7  1  testfile1
 Hello, world!
 d  0  1  .
 d  0  1  ..
 65454 blocks free out of 65536 total
 65427 blocks free out of 65536 total
-.  ..  foo  a  b  c  d  e  f  g  h  i  j  k  l  m  n  o  p  q  r  s  t  y  v  w  x  y  z  
+.  ..  foo  a  b  c  d  e  f  g  h  i  j  k  l  m  n  o  p  q  r  s  t  u  v  w  x  y  z  
 d  0  1  .
 d  0  2  ..
 rm: not found: foo/testfile1
@@ -55,4 +55,5 @@ We will create a civilization of the Mind in Cyberspace. May it be more humane a
 
 Davos, Switzerland
 February 8, 1996
+
 65361 blocks free out of 65536 total
