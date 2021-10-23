@@ -340,11 +340,14 @@ var genop = func(op) {
 var funcreturn = func() {
     if (!LOCALS) die("can't return from global scope",0);
 
-    # restore r254
-    myputs("ld x, "); myputs(itoa(-BP_REL)); myputs("(sp)\n");
-    myputs("ld r254, x\n");
-    # move sp over parameters
-    myputs("ret "); myputs(itoa(NPARAMS-BP_REL)); myputs("\n");
+    # here we make use of the "add" instruction's clobber of the X register;
+    # "add sp, N" can be fulfilled with either "add (i16), i8l" or "add r, i16";
+    # in both cases, the X register is left containing the value of sp *prior*
+    # to the addition, so we then use "jmp i8l(x)" to jump to an address grabbed
+    # from the stack, at a point relative to where the *previous* stack pointer
+    # pointed
+    myputs("add sp, "); myputs(itoa(NPARAMS-BP_REL)); myputs(" #peepopt:xclobber\n");
+    myputs("jmp "); myputs(itoa(-BP_REL)); myputs("(x)\n");
 };
 
 Program = func(x) {
