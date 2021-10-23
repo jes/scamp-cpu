@@ -179,6 +179,7 @@ put -t ../doc/OS.md /doc/os
 put -t ../doc/PIC.md /doc/pic
 put -t ../doc/SUSPEND.md /doc/suspend
 put -t ../doc/SYSCALLS.md /doc/syscalls
+put -t ../doc/SELFHOST-TEST.md /doc/selfhost-test
 put -t ../doc/UCODE.md /doc/ucode
 
 mkdir proc
