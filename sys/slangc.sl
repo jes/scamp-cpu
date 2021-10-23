@@ -374,7 +374,7 @@ Statement = func(x) {
     if (parse(Continue,0)) return 1;
     if (parse(Return,0)) return 1;
     if (parse(Assignment,0)) return 1;
-    if (parse(Expression,0)) {
+    if (Expression(0)) {
         popx();
         return 1;
     };
@@ -699,7 +699,7 @@ AnyTerm = func(x) {
     if (parse(PostOp,0)) return 1;
     if (parse(UnaryExpression,0)) return 1;
     if (parse(ParenExpression,0)) return 1;
-    if (!parse(Identifier,0)) return 0;
+    if (!Identifier(0)) return 0;
     pushvar(IDENTIFIER);
     return 1;
 };
@@ -708,14 +708,14 @@ Constant = func(x) {
     if (parse(NumericLiteral,0)) return 1;
     if (parse(StringLiteral,0)) return 1;
     if (parse(FunctionDeclaration,0)) return 1;
-    if (parse(InlineAsm,0)) return 1;
+    if (InlineAsm(0)) return 1;
     return 0;
 };
 
 NumericLiteral = func(x) {
     if (parse(HexLiteral,0)) return 1;
     if (parse(CharacterLiteral,0)) return 1;
-    if (parse(DecimalLiteral,0)) return 1;
+    if (DecimalLiteral(0)) return 1;
     return 0;
 };
 
@@ -765,7 +765,7 @@ CharacterLiteral = func(x) {
     } else {
         genliteral(ch);
     };
-    if (parse(CharSkip,'\'')) return 1;
+    if (CharSkip('\'')) return 1;
     die("illegal character literal",0);
 };
 
