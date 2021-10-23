@@ -352,7 +352,7 @@ var funcreturn = func() {
 
 Program = func(x) {
     skip();
-    parse(Statements,0);
+    Statements(0);
     return 1;
 };
 
@@ -402,8 +402,8 @@ var parsedchar = func() {
 var include_fd;
 var include_inbuf;
 Include = func(x) {
-    if (!parse(Keyword,"include")) return 0;
-    if (!parse(Char,'"')) return 0;
+    if (!Keyword("include")) return 0;
+    if (!Char('"')) return 0;
     var file = StringLiteralText();
 
     # don't include the same file twice
@@ -434,7 +434,7 @@ Include = func(x) {
     parse_filename = strdup(file);
 
     # parse the included file
-    if (!parse(Program,0)) die("expected statements",0);
+    if (!Program(0)) die("expected statements",0);
 
     bclose(include_inbuf);
 
@@ -454,23 +454,23 @@ Include = func(x) {
 };
 
 Block = func(x) {
-    if (!parse(CharSkip,'{')) return 0;
-    parse(Statements,0);
-    if (!parse(CharSkip,'}')) die("block needs closing brace",0);
+    if (!CharSkip('{')) return 0;
+    Statements(0);
+    if (!CharSkip('}')) die("block needs closing brace",0);
     return 1;
 };
 
 Extern = func(x) {
-    if (!parse(Keyword,"extern")) return 0;
-    if (!parse(Identifier,0)) die("extern needs identifier",0);
+    if (!Keyword("extern")) return 0;
+    if (!Identifier(0)) die("extern needs identifier",0);
     addextern(strdup(IDENTIFIER));
     return 1;
 };
 
 Declaration = func(x) {
-    if (!parse(Keyword,"var")) return 0;
+    if (!Keyword("var")) return 0;
     if (BLOCKLEVEL != 0) die("var not allowed here",0);
-    if (!parse(Identifier,0)) die("var needs identifier",0);
+    if (!Identifier(0)) die("var needs identifier",0);
     var name = strdup(IDENTIFIER);
     if (!LOCALS) {
         if (findglobal(name)) die("duplicate declaration of global: %s",[name]);
@@ -490,7 +490,7 @@ Declaration = func(x) {
     # otherwise, we implicitly allocate space for $id by *not* popping
     # the result of evaluating the expression:
 
-    if (!parse(Expression,0)) die("initialisation needs expression",0);
+    if (!Expression(0)) die("initialisation needs expression",0);
     if (!LOCALS) poptovar(name);
     # TODO: [perf] if 'name' is a global, and the expression was a constant
     #       (e.g. it's a function, inline asm, string, array literal, etc.) then
@@ -500,10 +500,10 @@ Declaration = func(x) {
 };
 
 Conditional = func(x) {
-    if (!parse(Keyword,"if")) return 0;
+    if (!Keyword("if")) return 0;
     BLOCKLEVEL++;
-    if (!parse(CharSkip,'(')) die("if condition needs open paren",0);
-    if (!parse(Expression,0)) die("if condition needs expression",0);
+    if (!CharSkip('(')) die("if condition needs open paren",0);
+    if (!Expression(0)) die("if condition needs expression",0);
 
     # if top of stack is 0, jmp falselabel
     var falselabel = label();
@@ -511,15 +511,15 @@ Conditional = func(x) {
     myputs("test x\n");
     myputs("jz "); plabel(falselabel); myputs("\n");
 
-    if (!parse(CharSkip,')')) die("if condition needs close paren",0);
-    if (!parse(Statement,0)) die("if needs body",0);
+    if (!CharSkip(')')) die("if condition needs close paren",0);
+    if (!Statement(0)) die("if needs body",0);
 
     var endiflabel;
     if (parse(Keyword,"else")) {
         endiflabel = label();
         myputs("jmp L"); myputs(itoa(endiflabel)); myputs("\n");
         plabel(falselabel); myputs(":\n");
-        if (!parse(Statement,0)) die("else needs body",0);
+        if (!Statement(0)) die("else needs body",0);
         plabel(endiflabel); myputs(":\n");
     } else {
         plabel(falselabel); myputs(":\n");
@@ -529,9 +529,9 @@ Conditional = func(x) {
 };
 
 Loop = func(x) {
-    if (!parse(Keyword,"while")) return 0;
+    if (!Keyword("while")) return 0;
     BLOCKLEVEL++;
-    if (!parse(CharSkip,'(')) die("while condition needs open paren",0);
+    if (!CharSkip('(')) die("while condition needs open paren",0);
 
     var oldbreaklabel = BREAKLABEL;
     var oldcontlabel = CONTLABEL;
@@ -543,16 +543,16 @@ Loop = func(x) {
 
     plabel(loop); myputs(":\n");
 
-    if (!parse(Expression,0)) die("while condition needs expression",0);
+    if (!Expression(0)) die("while condition needs expression",0);
 
     # if top of stack is 0, jmp endloop
     popx();
     myputs("test x\n");
     myputs("jz "); plabel(endloop); myputs("\n");
 
-    if (!parse(CharSkip,')')) die("while condition needs close paren",0);
+    if (!CharSkip(')')) die("while condition needs close paren",0);
 
-    parse(Statement,0); # optional
+    Statement(0); # optional
     myputs("jmp "); plabel(loop); myputs("\n");
     plabel(endloop); myputs(":\n");
 
@@ -563,22 +563,22 @@ Loop = func(x) {
 };
 
 Break = func(x) {
-    if (!parse(Keyword,"break")) return 0;
+    if (!Keyword("break")) return 0;
     if (!BREAKLABEL) die("can't break here",0);
     myputs("jmp "); plabel(BREAKLABEL); myputs("\n");
     return 1;
 };
 
 Continue = func(x) {
-    if (!parse(Keyword,"continue")) return 0;
+    if (!Keyword("continue")) return 0;
     if (!CONTLABEL) die("can't continue here",0);
     myputs("jmp "); plabel(CONTLABEL); myputs("\n");
     return 1;
 };
 
 Return = func(x) {
-    if (!parse(Keyword,"return")) return 0;
-    if (!parse(Expression,0)) die("return needs expression",0);
+    if (!Keyword("return")) return 0;
+    if (!Expression(0)) die("return needs expression",0);
     popx();
     myputs("ld r0, x\n");
     funcreturn();
@@ -600,8 +600,8 @@ Assignment = func(x) {
 
             while (1) {
                 # now put the index on the stack
-                if (!parse(Expression,0)) die("array index needs expression\n",0);
-                if (!parse(CharSkip,']')) die("array index needs close bracket\n",0);
+                if (!Expression(0)) die("array index needs expression\n",0);
+                if (!CharSkip(']')) die("array index needs close bracket\n",0);
 
                 # and add them together
                 popx();
@@ -620,11 +620,11 @@ Assignment = func(x) {
             };
         };
     } else {
-        if (!parse(CharSkip,'*')) return 0;
-        if (!parse(Term,0)) die("can't dereference non-expression",0);
+        if (!CharSkip('*')) return 0;
+        if (!Term(0)) die("can't dereference non-expression",0);
     };
-    if (!parse(CharSkip,'=')) return 0;
-    if (!parse(Expression,0)) die("assignment needs rvalue",0);
+    if (!CharSkip('=')) return 0;
+    if (!Expression(0)) die("assignment needs rvalue",0);
 
     if (id) {
         poptovar(id);
@@ -638,7 +638,7 @@ Assignment = func(x) {
     return 1;
 };
 
-Expression = func(x) { return parse(ExpressionLevel,0); };
+Expression = func(x) { return ExpressionLevel(0); };
 
 var operators = [
     ["&", "|", "^"],
@@ -647,7 +647,7 @@ var operators = [
     ["+", "-"],
 ];
 ExpressionLevel = func(lvl) {
-    if (!operators[lvl]) return parse(Term,0);
+    if (!operators[lvl]) return Term(0);
 
     var apply_op = 0;
     var p;
@@ -673,11 +673,11 @@ ExpressionLevel = func(lvl) {
 };
 
 Term = func(x) {
-    if (!parse(AnyTerm,0)) return 0;
+    if (!AnyTerm(0)) return 0;
     while (1) { # index into array
         if (!parse(CharSkip,'[')) break;
-        if (!parse(Expression,0)) die("array index needs expression",0);
-        if (!parse(CharSkip,']')) die("array index needs close bracket",0);
+        if (!Expression(0)) die("array index needs expression",0);
+        if (!CharSkip(']')) die("array index needs close bracket",0);
 
         # stack now has array and index on it: pop, add together, dereference, push
         popx();
@@ -721,7 +721,7 @@ NumericLiteral = func(x) {
 
 var NumLiteral = func(alphabet,base,neg) {
     *literal_buf = peekchar();
-    if (!parse(AnyChar,alphabet)) return 0;
+    if (!AnyChar(alphabet)) return 0;
     var i = 1;
     while (i < maxliteral) {
         *(literal_buf+i) = peekchar();
@@ -738,7 +738,7 @@ var NumLiteral = func(alphabet,base,neg) {
 };
 
 HexLiteral = func(x) {
-    if (!parse(String,"0x")) return 0;
+    if (!String("0x")) return 0;
     return NumLiteral("0123456789abcdefABCDEF",16,0);
 };
 
@@ -758,7 +758,7 @@ var escapedchar = func(ch) {
 };
 
 CharacterLiteral = func(x) {
-    if (!parse(Char,'\'')) return 0;
+    if (!Char('\'')) return 0;
     var ch = nextchar();
     if (ch == '\\') {
         genliteral(escapedchar(nextchar()));
@@ -770,7 +770,7 @@ CharacterLiteral = func(x) {
 };
 
 StringLiteral = func(x) {
-    if (!parse(Char,'"')) return 0;
+    if (!Char('"')) return 0;
     var str = StringLiteralText();
     var strlabel = addstring(str);
     myputs("ld x, "); plabel(strlabel); myputs("\n");
@@ -798,7 +798,7 @@ StringLiteralText = func() {
 };
 
 ArrayLiteral = func(x) {
-    if (!parse(CharSkip,'[')) return 0;
+    if (!CharSkip('[')) return 0;
 
     var l = label();
     var length = 0;
@@ -818,7 +818,7 @@ ArrayLiteral = func(x) {
         if (!parse(CharSkip,',')) break;
     };
 
-    if (!parse(CharSkip,']')) die("array literal needs close bracket",0);
+    if (!CharSkip(']')) die("array literal needs close bracket",0);
 
     myputs("ld x, "); plabel(l); myputs("\n");
     pushx();
@@ -842,8 +842,8 @@ Parameters = func(x) {
 };
 
 FunctionDeclaration = func(x) {
-    if (!parse(Keyword,"func")) return 0;
-    if (!parse(CharSkip,'(')) die("func needs open paren",0);
+    if (!Keyword("func")) return 0;
+    if (!CharSkip('(')) die("func needs open paren",0);
 
     var params = Parameters(0);
     var functionlabel = label();
@@ -870,8 +870,8 @@ FunctionDeclaration = func(x) {
     while (p-- > params)
         addlocal(*p, bp_rel++);
 
-    if (!parse(CharSkip,')')) die("func needs close paren",0);
-    parse(Statement,0); # optional
+    if (!CharSkip(')')) die("func needs close paren",0);
+    Statement(0); # optional
     funcreturn();
     endscope();
     LOCALS = oldscope;
@@ -886,8 +886,8 @@ FunctionDeclaration = func(x) {
 };
 
 InlineAsm = func(x) {
-    if (!parse(Keyword,"asm")) return 0;
-    if (!parse(CharSkip,'{')) return 0;
+    if (!Keyword("asm")) return 0;
+    if (!CharSkip('{')) return 0;
 
     var end = label();
     var asm = label();
@@ -912,13 +912,13 @@ InlineAsm = func(x) {
 };
 
 FunctionCall = func(x) {
-    if (!parse(Identifier,0)) return 0;
-    if (!parse(CharSkip,'(')) return 0;
+    if (!Identifier(0)) return 0;
+    if (!CharSkip('(')) return 0;
 
     var name = strdup(IDENTIFIER);
 
     var nargs = Arguments();
-    if (!parse(CharSkip,')')) die("argument list needs closing paren",0);
+    if (!CharSkip(')')) die("argument list needs closing paren",0);
 
     pushvar(name);
     free(name);
@@ -953,7 +953,7 @@ PreOp = func(x) {
         return 0;
     };
     skip();
-    if (!parse(Identifier,0)) return 0;
+    if (!Identifier(0)) return 0;
     skip();
     pushvar(IDENTIFIER);
     popx();
@@ -965,7 +965,7 @@ PreOp = func(x) {
 };
 
 PostOp = func(x) {
-    if (!parse(Identifier,0)) return 0;
+    if (!Identifier(0)) return 0;
     skip();
     var op;
     if (parse(String,"++")) {
@@ -986,8 +986,8 @@ PostOp = func(x) {
 };
 
 AddressOf = func(x) {
-    if (!parse(CharSkip,'&')) return 0;
-    if (!parse(Identifier,0)) die("address-of (&) needs identifier",0);
+    if (!CharSkip('&')) return 0;
+    if (!Identifier(0)) die("address-of (&) needs identifier",0);
 
     var v;
     var bp_rel;
@@ -1016,9 +1016,9 @@ AddressOf = func(x) {
 
 UnaryExpression = func(x) {
     var op = peekchar();
-    if (!parse(AnyChar,"!~*+-")) return 0;
+    if (!AnyChar("!~*+-")) return 0;
     skip();
-    if (!parse(Term,0)) die("unary operator %c needs operand",[op]);
+    if (!Term(0)) die("unary operator %c needs operand",[op]);
 
     var end;
 
@@ -1047,14 +1047,14 @@ UnaryExpression = func(x) {
 };
 
 ParenExpression = func(x) {
-    if (!parse(CharSkip,'(')) return 0;
-    if (parse(Expression,0)) return parse(CharSkip,')');
+    if (!CharSkip('(')) return 0;
+    if (Expression(0)) return CharSkip(')');
     return 0;
 };
 
 Identifier = func(x) {
     *IDENTIFIER = peekchar();
-    if (!parse(AlphaUnderChar,0)) return 0;
+    if (!AlphaUnderChar(0)) return 0;
     var i = 1;
     while (i < maxidentifier) {
         *(IDENTIFIER+i) = peekchar();
