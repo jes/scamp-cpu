@@ -14,6 +14,7 @@ var fs_read = func(fd, buf, sz) {
     var blkbuf = *(fdbase+FDDATA+2);
     var remain;
     var read;
+    var direct;
 
     # return number of chars left in this block?
     if (sz == 0) {
@@ -24,8 +25,16 @@ var fs_read = func(fd, buf, sz) {
     if (!blkbuf) blkbuf = BLKBUF;
 
     while (sz) {
+        # can we read this block directly into the user buffer?
+        direct = (sz ge 254) && (posinblk == 0);
+
         # read the current block of the file
-        blkread(blknum, blkbuf);
+        if (direct) {
+            cf_blkread(blknum, blkbuf, buf+readsz);
+            blkbuf[256] = 0; # invalidate the cached contents of blkbuf
+        } else {
+            blkread(blknum, blkbuf);
+        };
 
         remain = blklen(blkbuf) - posinblk;
 
@@ -33,9 +42,9 @@ var fs_read = func(fd, buf, sz) {
         else if (sz lt remain) read = sz
         else                   read = remain;
 
-        # copy data to user buffer
+        # copy data to user buffer if we didn't read it there directly
         # "posinblk+2" skips over the block header
-        memcpy(buf+readsz, blkbuf+posinblk+2, read);
+        if (!direct) memcpy(buf+readsz, blkbuf+posinblk+2, read);
 
         readsz = readsz + read;
         sz = sz - read;

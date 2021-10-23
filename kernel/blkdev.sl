@@ -15,7 +15,7 @@ var blkread = func(num, buf) {
 
     *(buf+256) = num;
 
-    return cf_blkread(num, buf);
+    return cf_blkread(num, buf, buf+2);
 };
 
 # write the BLKBUF to the given block number

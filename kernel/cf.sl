@@ -83,19 +83,31 @@ var cf_blkselect = func(num) {
     outp(CFCYLLOREG, shr8(num));
 };
 
-# usage: asm_cf_blkread(buf)
+# usage: asm_cf_blkread(headbuf, bodybuf)
 var asm_cf_blkread = asm {
     .def CFDATAREG 264
 
     ld r0, 16 # number of loop iterations (BLKSZ/16 == 256/16 == 16)
     pop x
-    ld r3, x # pointer to write to
+    ld r3, x # pointer to write body to
+    pop x
+    ld r4, x # pointer to write header to
 
+    # read the header (first 2 words)
+    in x, CFDATAREG
+    ld (r4++), x
+    in x, CFDATAREG
+    ld (r4), x
+
+    jmp asm_cf_blkread_begin
+
+    # read the body
     asm_cf_blkread_loop:
         in x, CFDATAREG
         ld (r3++), x
         in x, CFDATAREG
         ld (r3++), x
+    asm_cf_blkread_begin:
         in x, CFDATAREG
         ld (r3++), x
         in x, CFDATAREG
@@ -129,7 +141,7 @@ var asm_cf_blkread = asm {
     ret
 };
 
-var cf_blkread = func(num, buf) {
+var cf_blkread = func(num, headbuf, bodybuf) {
     cf_blkselect(num);
 
     # only 1 block
@@ -143,7 +155,7 @@ var cf_blkread = func(num, buf) {
     # wait for CFRDY and CFDRQ
     cf_wait(CFRDY | CFDRQ);
 
-    return asm_cf_blkread(buf);
+    return asm_cf_blkread(headbuf, bodybuf);
 };
 
 # usage: asm_cf_blkwrite(buf)
