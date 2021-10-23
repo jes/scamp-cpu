@@ -8,7 +8,7 @@ include "malloc.sl";
 var bufsz = 256;
 var buf = malloc(bufsz);
 
-var line = malloc(8);
+var linebuf = malloc(8);
 var pos = 0;
 var first = 1;
 
@@ -28,7 +28,7 @@ var show_text_line = func() {
     var i = 0;
     var ch;
     while (i < end) {
-        ch = line[i++] & 0xff;
+        ch = linebuf[i++] & 0xff;
         if (ch >= ' ' && ch <= '~') bputc(out, ch)
         else bputc(out, '.');
     };
@@ -43,7 +43,7 @@ var output = func(ch) {
         bprintf(out, "%04x: ", [pos]);
     };
 
-    *(line+(pos&7)) = ch;
+    *(linebuf+(pos&7)) = ch;
 
     bprintf(out, " %04x", [ch]);
 };

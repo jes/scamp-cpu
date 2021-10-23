@@ -122,6 +122,7 @@ put -t ../sys/sx.sl /src/sx.sl
 put -t ../sys/true.sl /src/true.sl
 put -t ../sys/wc.sl /src/wc.sl
 put -t ../sys/while.sl /src/while.sl
+put -t ../sys/build.sh /src/build.sh
 
 mkdir src/lib
 put -t ../sys/lib/bigint.sl /src/lib/bigint.sl
