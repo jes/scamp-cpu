@@ -48,7 +48,7 @@ var sys_exit_impl = func(rc) {
     var n;
     var p = 0x100;
     while (1) {
-        n = sys_read(ufd, p, 16384);
+        n = sys_read(ufd, p, 16256);
         if (n == 0) break;
         if (n < 0) throw(n);
         p = p + n;
@@ -239,7 +239,7 @@ var load_program = func(name) {
     var p = 0x100;
     var n;
     while (1) {
-        n = sys_read(fd, p, 16384);
+        n = sys_read(fd, p, 16256);
         if (n == 0) break;
         if (n < 0) {
             sys_close(fd);
