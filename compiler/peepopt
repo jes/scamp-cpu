@@ -32,8 +32,6 @@ my $l17state = 0;
 my $l17i1;
 my $l17i2;
 my $l17reg;
-my $l18state = 0;
-my $l18i;
 
 my $off = 0;
 
@@ -349,7 +347,7 @@ sub level16 {
 # turn:
 #  ld x, I1(sp); push x; ld x, I2(sp); ld rN, x; pop x
 # into:
-#  ld x, I2-1(sp); ld rN, x; ld x, I1(sp)
+#  ld x, I2(sp); ld rN, x; ld x, I1(sp)
 sub level17 {
     my ($line) = @_;
 
@@ -366,46 +364,16 @@ sub level17 {
         $l17reg = $1;
     } elsif ($l17state == 4 && $line eq 'pop x') {
         $l17i2--; # because we lost a "push x"
-        level18("ld x, $l17i2(sp)");
-        level18("ld $l17reg, x");
-        level18("ld x, $l17i1(sp)");
+        print "ld x, $l17i2(sp)\n";
+        print "ld $l17reg, x\n";
+        print "ld x, $l17i1(sp)\n";
         $l17state = 0;
     } else {
-        level18("ld x, $l17i1(sp)") if $l17state >= 1;
-        level18("push x") if $l17state >= 2;
-        level18("ld x, $l17i2(sp)") if $l17state >= 3;
-        level18("ld $l17reg, x") if $l17state >= 4;
+        print "ld x, $l17i1(sp)\n" if $l17state >= 1;
+        print "push x\n" if $l17state >= 2;
+        print "ld x, $l17i2(sp)\n" if $l17state >= 3;
+        print "ld $l17reg, x\n" if $l17state >= 4;
         $l17state = 0;
-        level18("$line");
-    }
-}
-
-# turn:
-#   ld x, r0; push x; ld x, I(sp); ld r0, x; pop x
-# into:
-#   ld x, I-1(sp)
-sub level18 {
-    my ($line) = @_;
-
-    if ($l18state == 0 && $line eq 'ld x, r0') {
-        $l18state++;
-    } elsif ($l18state == 1 && $line eq 'push x') {
-        $l18state++;
-    } elsif ($l18state == 2 && $line =~ /^ld x, (\d+)\(sp\)$/) {
-        $l18state++;
-        $l18i = $1;
-    } elsif ($l18state == 3 && $line eq 'ld r0, x') {
-        $l18state++;
-    } elsif ($l18state == 4 && $line eq 'pop x') {
-        $l18i--; # because we lost a "push x"
-        print "ld x, $l18i(sp)\n";
-        $l18state = 0;
-    } else {
-        print "ld x, r0\n" if $l18state >= 1;
-        print "push x\n" if $l18state >= 2;
-        print "ld x, $l18i(sp)\n" if $l18state >= 3;
-        print "ld r0, x\n" if $l18state >= 4;
-        $l18state = 0;
         print "$line\n";
     }
 }
