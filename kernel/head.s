@@ -1,4 +1,4 @@
-.def OSBASE 0xcf00
+.def OSBASE 0xd000
 .at OSBASE
 
 .def STACKSZ 64
