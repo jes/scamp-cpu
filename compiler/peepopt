@@ -26,6 +26,8 @@ my $l14count = 0;
 my $l15state = 0;
 my $l15val;
 my $l15offset;
+my $l16state = 0;
+my $l16label;
 
 my $off = 0;
 
@@ -289,19 +291,51 @@ sub level15 {
         $l15state++;
     } elsif ($l15state == 4 && $line eq 'ld (r252), x') {
         if ($l15offset == 0) { # XXX: can we ever hit this case?
-            print "ld (sp), $l15val\n";
+            level16("ld (sp), $l15val");
         } else {
-            print "ld r252, sp\n";
-            print "add r252, $l15offset\n";
-            print "ld (r252), $l15val\n";
+            level16("ld r252, sp");
+            level16("add r252, $l15offset");
+            level16("ld (r252), $l15val");
         }
         $l15state = 0;
     } else {
-        print "push $l15val\n" if $l15state >= 1;
-        print "ld r252, sp\n" if $l15state >= 2;
-        print "add r252, $l15offset\n", if $l15state >= 3;
-        print "pop x\n" if $l15state >= 4;
+        level16("push $l15val") if $l15state >= 1;
+        level16("ld r252, sp") if $l15state >= 2;
+        level16("add r252, $l15offset") if $l15state >= 3;
+        level16("pop x") if $l15state >= 4;
         $l15state = 0;
+        level16("$line");
+    }
+}
+
+# turn:
+#   ld x, 0; jnz L1; ld x, 1; L1:; test x; jz L2
+# into:
+#   jnz L2
+sub level16 {
+    my ($line) = @_;
+
+    if ($l16state == 0 && $line eq 'ld x, 0') {
+        $l16state++;
+    } elsif ($l16state == 1 && $line =~ /^jnz (\w+)$/) {
+        $l16state++;
+        $l16label = $1;
+    } elsif ($l16state == 2 && $line eq 'ld x, 1') {
+        $l16state++;
+    } elsif ($l16state == 3 && $line eq "$l16label:") {
+        $l16state++;
+    } elsif ($l16state == 4 && $line eq 'test x') {
+        $l16state++;
+    } elsif ($l16state == 5 && $line =~ /^jz (\w+)$/) {
+        print "jnz $1\n";
+        $l16state = 0;
+    } else {
+        print "ld x, 0\n" if $l16state >= 1;
+        print "jnz $l16label\n" if $l16state >= 2;
+        print "ld x, 1\n" if $l16state >= 3;
+        print "$l16label:\n" if $l16state >= 4;
+        print "test x\n" if $l16state >= 5;
+        $l16state = 0;
         print "$line\n";
     }
 }
