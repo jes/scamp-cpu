@@ -98,10 +98,11 @@ sub level2 {
 
 # turn "ld x, CONSTANT; ld REG, x" into "ld REG, CONSTANT"
 # turn "ld x, CONSTANT; ld (REG), x" into "ld (REG), CONSTANT"
+# turn "ld x, (LABEL); ld REG, x" into "ld REG, (LABEL)"
 sub level3 {
     my ($line) = @_;
 
-    if ($line =~ /^ld x, (\d+)$/) {
+    if ($line =~ /^ld x, (\d+|\(\w+\))$/ && $1 !~ /^\((?:sp|x|y|r\d+)\)$/) {
         $l3ldx = $1;
     } elsif (defined $l3ldx && $line =~ /^ld r(\d+), x$/) {
         level4("ld r$1, $l3ldx");
