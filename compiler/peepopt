@@ -133,7 +133,7 @@ sub level3 {
 sub level4 {
     my ($line) = @_;
 
-    if ($l4state == 0 && $line =~ /^ld r(\d+), (\d+)$/) {
+    if ($l4state == 0 && $line =~ /^ld r(\d+), (\d+|\(\w+\))$/ && $2 !~ /^\((?:sp|x|y|r\d+)\)$/) {
         $l4reg = $1;
         $l4constant = $2;
         $l4state = 1;
