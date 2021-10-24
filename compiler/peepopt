@@ -67,6 +67,8 @@ sub level1 {
         level2("ret");
     } elsif ($line eq 'ld x, 0(x)') {
         level2("ld x, (x)");
+    } elsif ($line =~ /^ld r\d+, / && $line !~ /sp|r255/) {
+        level2($line);
     } else {
         level2("push x") for 1..$l1level;
         level2($line);
@@ -82,7 +84,7 @@ sub level2 {
         push @l2, $1;
     } elsif ($line eq 'pop x' && @l2) {
         $l2ldx = pop @l2;
-    } elsif ($line =~ /call|x|sp|r255|push|pop|jmp|jlt|jgt|jle|jge|jz|jnz|:/) { # XXX: writes to (0xffff) won't trigger this
+    } elsif ($line =~ /call|ret|x|sp|r255|push|pop|jmp|jlt|jgt|jle|jge|jz|jnz|:/) { # XXX: writes to (0xffff) won't trigger this
         if (defined $l2ldx) {
             level3("ld x, $l2ldx");
             $l2ldx = undef;
