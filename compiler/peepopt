@@ -28,6 +28,10 @@ my $l15val;
 my $l15offset;
 my $l16state = 0;
 my $l16label;
+my $l17state = 0;
+my $l17i1;
+my $l17i2;
+my $l17reg;
 
 my $off = 0;
 
@@ -327,15 +331,49 @@ sub level16 {
     } elsif ($l16state == 4 && $line eq 'test x') {
         $l16state++;
     } elsif ($l16state == 5 && $line =~ /^jz (\w+)$/) {
-        print "jnz $1\n";
+        level17("jnz $1");
         $l16state = 0;
     } else {
-        print "ld x, 0\n" if $l16state >= 1;
-        print "jnz $l16label\n" if $l16state >= 2;
-        print "ld x, 1\n" if $l16state >= 3;
-        print "$l16label:\n" if $l16state >= 4;
-        print "test x\n" if $l16state >= 5;
+        level17("ld x, 0") if $l16state >= 1;
+        level17("jnz $l16label") if $l16state >= 2;
+        level17("ld x, 1") if $l16state >= 3;
+        level17("$l16label:") if $l16state >= 4;
+        level17("test x") if $l16state >= 5;
         $l16state = 0;
+        level17("$line");
+    }
+}
+
+# turn:
+#  ld x, I1(sp); push x; ld x, I2(sp); ld rN, x; pop x
+# into:
+#  ld x, I2(sp); ld rN, x; ld x, I1(sp)
+sub level17 {
+    my ($line) = @_;
+
+    if ($l17state == 0 && $line =~ /^ld x, (\d+)\(sp\)$/) {
+        $l17state++;
+        $l17i1 = $1;
+    } elsif ($l17state == 1 && $line eq 'push x') {
+        $l17state++;
+    } elsif ($l17state == 2 && $line =~ /^ld x, (\d+)\(sp\)$/) {
+        $l17state++;
+        $l17i2 = $1;
+    } elsif ($l17state == 3 && $line =~ /^ld (r\d+), x$/) {
+        $l17state++;
+        $l17reg = $1;
+    } elsif ($l17state == 4 && $line eq 'pop x') {
+        $l17i2--; # because we lost a "push x"
+        print "ld x, $l17i2(sp)\n";
+        print "ld $l17reg, x\n";
+        print "ld x, $l17i1(sp)\n";
+        $l17state = 0;
+    } else {
+        print "ld x, $l17i1(sp)\n" if $l17state >= 1;
+        print "push x\n" if $l17state >= 2;
+        print "ld x, $l17i2(sp)\n" if $l17state >= 3;
+        print "ld $l17reg, x\n" if $l17state >= 4;
+        $l17state = 0;
         print "$line\n";
     }
 }
