@@ -51,6 +51,8 @@ The computer already works, and I suspect it will never be "finished", but some 
  - [ ] move fsck to "userspace"
  - [ ] better facility for memory profiling (mainly to stop kilo and asm from running out of memory on large inputs)
  - [ ] atexit()
+ - [ ] static initialisation of globals from constants (e.g. `var x = 5` at global scope should not take any code to initialise)
+ - [ ] "const" variables (e.g. `const x = 5` should lead to `x` being replaced with the constant value `5` where possible)
 
 #### Other software
 
