@@ -429,13 +429,13 @@ sub Term {
 }
 
 sub AnyTerm {
-    return 1 if parse(\&Constant) || parse(\&ArrayLiteral) || parse(\&FunctionCall) || parse(\&AddressOf) || parse(\&PreOp) || parse(\&PostOp) || parse(\&UnaryExpression) || parse(\&ParenExpression);
+    return 1 if parse(\&Constant) || parse(\&FunctionCall) || parse(\&AddressOf) || parse(\&PreOp) || parse(\&PostOp) || parse(\&UnaryExpression) || parse(\&ParenExpression);
     return 0 if !parse(\&Identifier);
     pushvar($IDENTIFIER);
     return 1;
 }
 
-sub Constant { return parse(\&NumericLiteral) || parse(\&StringLiteral) || parse(\&FunctionDeclaration) || parse(\&InlineAsm); }
+sub Constant { return parse(\&NumericLiteral) || parse(\&StringLiteral) || parse(\&ArrayLiteral) || parse(\&FunctionDeclaration) || parse(\&InlineAsm); }
 sub NumericLiteral { return parse(\&HexLiteral) || parse(\&CharacterLiteral) || parse(\&DecimalLiteral); }
 
 sub HexLiteral {

@@ -692,7 +692,6 @@ Term = func(x) {
 
 AnyTerm = func(x) {
     if (parse(Constant,0)) return 1;
-    if (parse(ArrayLiteral,0)) return 1;
     if (parse(FunctionCall,0)) return 1;
     if (parse(AddressOf,0)) return 1;
     if (parse(PreOp,0)) return 1;
@@ -707,6 +706,7 @@ AnyTerm = func(x) {
 Constant = func(x) {
     if (parse(NumericLiteral,0)) return 1;
     if (parse(StringLiteral,0)) return 1;
+    if (parse(ArrayLiteral,0)) return 1;
     if (parse(FunctionDeclaration,0)) return 1;
     if (InlineAsm(0)) return 1;
     return 0;
