@@ -129,6 +129,6 @@ unredirect(1, prev_out);
 fprintf(2, "asm...\n", 0);
 redirect(0, "/tmp/2.s", O_READ);
 if (outfile) {
-    redirect(1, "/tmp/2.s", O_WRITE|O_CREAT);
+    redirect(1, outfile, O_WRITE|O_CREAT);
 };
 exec(["/bin/asm"]);
