@@ -4,7 +4,8 @@
 
 # TODO: [nice] flag "-O" to use optimisation
 # TODO: [nice] flags "-H" and "-F" to set head.s and foot.s paths
-# TODO: [nice] syntax for "slc foo.sl" to read from "foo.sl" and write to "foo"
+# TODO: [nice] "-o" to set output filename
+# TODO: [nice] better usage text
 
 include "stdio.sl";
 include "sys.sl";
@@ -64,18 +65,40 @@ var cat = func(name) {
     close(fd);
 };
 
+# primarily: "foo.sl" => "foo"
+# else, "foo" => "foo.bin"
+var mkoutname = func(s) {
+    var l = strlen(s);
+    var ss = malloc(l+4);
+    strcpy(ss, s);
+
+    if (strcmp(ss+l-3, ".sl") == 0) {
+        ss[l-3] = 0;
+    } else {
+        strcpy(ss+l, ".bin");
+    };
+
+    return ss;
+};
+
 var usage = func(rc) {
-    fputs(2, "usage: slc [-l LIB] < SRC > BIN\n");
+    fputs(2, "usage: slc [-l LIB] < SRC.sl > BIN\n");
+    fputs(2, "       slc [-l LIB] SRC.sl\n");
     exit(rc);
 };
 
 var libname = "";
+var outfile;
 var args = getopt(cmdargs()+1, "l", func(ch, arg) {
     if (ch == 'l') libname = strdup(arg)
     else if (ch == 'h') usage(0)
     else usage(1);
 });
-if (*args) usage(1);
+if (args[1]) usage(1);
+if (args[0]) {
+    redirect(0, args[0], O_READ); # stdin comes from the named file
+    outfile = mkoutname(args[0]); # stdout goes to an appropriate name
+};
 
 var rc;
 
@@ -102,7 +125,10 @@ cat("/tmp/1.s");
 cat("/lib/foot.s");
 unredirect(1, prev_out);
 
-# assemble "/tmp/2.s" to stdout
+# assemble "/tmp/2.s"
 fprintf(2, "asm...\n", 0);
-var prev_in = redirect(0, "/tmp/2.s", O_READ);
+redirect(0, "/tmp/2.s", O_READ);
+if (outfile) {
+    redirect(1, "/tmp/2.s", O_WRITE|O_CREAT);
+};
 exec(["/bin/asm"]);
