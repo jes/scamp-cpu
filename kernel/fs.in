@@ -37,6 +37,7 @@ put ../sys/reboot.bin /bin/reboot
 put ../sys/reset.bin /bin/reset
 put ../sys/rm.bin /bin/rm
 put ../sys/rx.bin /bin/rx
+put ../sys/ser.bin /bin/ser
 put ../sys/sh.bin /bin/sh
 put ../sys/slangc.bin /bin/slangc
 put ../sys/slc.bin /bin/slc
@@ -112,6 +113,7 @@ put -t ../sys/reboot.sl /src/reboot.sl
 put -t ../sys/reset.sl /src/reset.sl
 put -t ../sys/rm.sl /src/rm.sl
 put -t ../sys/rx.sl /src/rx.sl
+put -t ../sys/ser.sl /src/ser.sl
 put -t ../sys/sh.sl /src/sh.sl
 put -t ../sys/slangc.sl /src/slangc.sl
 put -t ../sys/slc.sl /src/slc.sl
