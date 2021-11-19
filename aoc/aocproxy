@@ -7,6 +7,7 @@ use FindBin;
 use lib "$FindBin::Bin/lib/";
 
 use SCAMP::AdventOfCode;
+use SCAMP::Files;
 use SCAMP::Serial;
 
 my $serial = SCAMP::Serial->new(*STDIN, *STDOUT);
@@ -16,5 +17,7 @@ my $aoc = SCAMP::AdventOfCode->new();
 $aoc->read_session("$ENV{HOME}/.aoc-session");
 $aoc->attach($serial);
 
+my $files = SCAMP::Files->new();
+$files->attach($serial);
 
 $serial->run;
