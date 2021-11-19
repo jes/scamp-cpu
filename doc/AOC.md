@@ -13,3 +13,15 @@ to the same path.
 
 Then we could put the extended Xmodem implementation in a library for convenient access, and make
 a handy CLI for grabbing problem statements and submitting solutions.
+
+## Usage
+
+This is roughlyimplemented now.
+
+Go into `aoc/`. For the emulator, start the proxy with:
+
+    $ socat pty,raw,link=../serial exec:./aocproxy
+
+For the real computer, something like:
+
+    $ ./aocproxy < /dev/ttyUSB0 > /dev/ttyUSB0
