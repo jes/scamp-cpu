@@ -16,7 +16,7 @@ a handy CLI for grabbing problem statements and submitting solutions.
 
 ## Usage
 
-This is roughlyimplemented now.
+This is roughly implemented now.
 
 Go into `aoc/`. For the emulator, start the proxy with:
 
