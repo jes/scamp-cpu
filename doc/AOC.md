@@ -20,8 +20,12 @@ This is roughlyimplemented now.
 
 Go into `aoc/`. For the emulator, start the proxy with:
 
-    $ socat pty,raw,link=../serial exec:./aocproxy
+    scamp-cpu/aoc$ socat pty,raw,echo=0,link=../serial exec:./aocproxy
+
+And run the emulator with:
+
+    scamp-cpu/kernel$ ./run --serial ../serial
 
 For the real computer, something like:
 
-    $ ./aocproxy < /dev/ttyUSB0 > /dev/ttyUSB0
+    scamp-cpu/aoc$ ./aocproxy < /dev/ttyUSB0 > /dev/ttyUSB0
