@@ -10,30 +10,11 @@ use SCAMP::AdventOfCode;
 use SCAMP::Serial;
 
 my $serial = SCAMP::Serial->new(*STDIN, *STDOUT);
+
 my $aoc = SCAMP::AdventOfCode->new();
 -f "$ENV{HOME}/.aoc-session" or die "Please write your Advent of Code session cookie value to $ENV{HOME}/.aoc-session\n";
 $aoc->read_session("$ENV{HOME}/.aoc-session");
+$aoc->attach($serial);
 
-$serial->handle(get => 'aoc' => sub {
-    my ($path) = @_;
-    die "bad path" if $path !~ m!^/(\d+)/(\d+)(/input)?$!;
-    my ($year, $day, $input) = ($1, $2, $3);
-
-    if ($input) {
-        return $aoc->get_input($year, $day);
-    } else {
-        return $aoc->get($year, $day);
-    }
-});
-
-$serial->handle(put => 'aoc' => sub {
-    my ($path, $content) = @_;
-    die "bad path" if $path !~ m!^/(\d+)/(\d+)/([12])$!;
-    my ($year, $day, $part) = ($1, $2, $3);
-
-    $content =~ s/^\s+//gs;
-    $content =~ s/\s+$//gs;
-    return $aoc->submit($year, $day, $part, $content);
-});
 
 $serial->run;

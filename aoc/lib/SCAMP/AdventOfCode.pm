@@ -79,4 +79,30 @@ sub submit {
     return $html;
 }
 
+sub attach {
+    my ($self, $serial) = @_;
+
+    $serial->handle(get => 'aoc' => sub {
+        my ($path) = @_;
+        die "bad path" if $path !~ m!^/(\d+)/(\d+)(/input)?$!;
+        my ($year, $day, $input) = ($1, $2, $3);
+
+        if ($input) {
+            return $self->get_input($year, $day);
+        } else {
+            return $self->get($year, $day);
+        }
+    });
+
+    $serial->handle(put => 'aoc' => sub {
+        my ($path, $content) = @_;
+        die "bad path" if $path !~ m!^/(\d+)/(\d+)/([12])$!;
+        my ($year, $day, $part) = ($1, $2, $3);
+
+        $content =~ s/^\s+//gs;
+        $content =~ s/\s+$//gs;
+        return $self->submit($year, $day, $part, $content);
+    });
+}
+
 1;
