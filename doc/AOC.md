@@ -29,3 +29,47 @@ And run the emulator with:
 For the real computer, something like:
 
     scamp-cpu/aoc$ ./aocproxy < /dev/ttyUSB0 > /dev/ttyUSB0
+
+## Serial protocol
+
+All requests are initiated from the SCAMP side ("client") and handled by the Linux side ("server").
+
+### Packet encoding
+
+All content transferred is wraped in xmodem-style packets, of the form:
+
+    SOH SIZE CONTENT CHECKSUM
+
+`SIZE` refers to the size of the `CONTENT`, so the total packet length is `SIZE + 3`.
+
+After either the client or server sends a packet, the other side should respond with an ACK character.
+If the checksum didn't match, the other side should respond with a NAK character.
+
+When an ACK is received, the next packet can be sent.
+When a NAK is received instead of an ACK, the same packet should be resent.
+
+### Checksum
+
+All bytes of the packet, including the checksum, should be summed up, and the result taken
+modulo 256, and the result should be 0.
+
+### Request
+
+All requests take the form:
+
+    METHOD TYPE SIZE PATH
+    BODY
+
+Where `METHOD` is typically `get` or `put`, `TYPE` is the type of request, e.g. `aoc` for Advent of
+Code, `SIZE` is the size of the request `BODY`, and `PATH` is the path to request.
+
+Examples:
+
+    get aoc 0 /2020/1
+
+This request has no body (`SIZE == 0`).
+
+    put aoc 5 /2020/1/1
+    12345
+
+This request has a body of length 5.
