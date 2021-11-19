@@ -35,3 +35,5 @@ sub attach {
         return 'ok';
     });
 }
+
+1;
