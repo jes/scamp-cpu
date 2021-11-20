@@ -66,8 +66,8 @@ sub writebytes {
     # TODO: [perf] make serial.sl fast enough to consume the entire packet at full speed
     # print $fh $bytes;
     for my $c (split //, $bytes) {
-        print $fh $c;
-        usleep(5000);
+        usleep(1000);
+        print $c;
     }
 }
 
@@ -123,7 +123,7 @@ sub writepacket {
         my $response = $self->readbytes(1);
         last if $response eq "\x06"; # ACK - success
         next if $response eq "\x15"; # NAK - resend
-        warn "unexpected packet response: " . sprintf("0x%02x", ord($response));
+        die "unexpected packet response: " . sprintf("0x%02x", ord($response));
     }
 }
 

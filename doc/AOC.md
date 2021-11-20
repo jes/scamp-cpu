@@ -28,7 +28,7 @@ And run the emulator with:
 
 For the real computer, something like:
 
-    scamp-cpu/aoc$ socat /dev/ttyUSB0,raw,echo=0 exec:./aocproxy
+    scamp-cpu/aoc$ ./aocproxy < /dev/ttyUSB0 > /dev/ttyUSB0
 
 ## Serial protocol
 
