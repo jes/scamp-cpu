@@ -29,3 +29,28 @@ And run the emulator with:
 For the real computer, something like:
 
     scamp-cpu/aoc$ ./aocproxy < /dev/ttyUSB0 > /dev/ttyUSB0
+
+## Serial protocol
+
+All requests are initiated from the SCAMP side ("client") and handled by the Linux side ("server").
+
+### Request
+
+All requests take the form:
+
+    METHOD TYPE SIZE PATH
+    BODY
+
+Where `METHOD` is typically `get` or `put`, `TYPE` is the type of request, e.g. `aoc` for Advent of
+Code, `SIZE` is the size of the request `BODY`, and `PATH` is the path to request.
+
+Examples:
+
+    get aoc 0 /2020/1
+
+This request has no body (`SIZE == 0`).
+
+    put aoc 5 /2020/1/1
+    12345
+
+This request has a body of length 5.
