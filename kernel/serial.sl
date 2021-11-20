@@ -242,7 +242,6 @@ ser_write = func(fd, buf, sz) {
     var baseport = p[BASEPORT];
     var cooked_mode = p[SERFLAGS] & SER_COOKED;
     var ch;
-    var szsz = sz;
 
     if (p[SERFLAGS] & SER_DISABLE) return 0;
 
@@ -255,7 +254,7 @@ ser_write = func(fd, buf, sz) {
 
         ser_writech(baseport, ch);
     };
-    return szsz;
+    return sz;
 };
 
 var ser_init = func() {
