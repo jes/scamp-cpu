@@ -74,6 +74,7 @@ var EXISTS = -7;
 # serial flags
 var SER_COOKED  = 1;
 var SER_DISABLE = 2;
+var SER_LONGREAD = 4;
 
 var strerror = func(err) {
     if (err == 0) return "success";

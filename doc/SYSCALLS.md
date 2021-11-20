@@ -263,6 +263,7 @@ If `fd` refers to a serial port, set the flags to `flags`. `flags` is a bitmask 
 
     SER_COOKED  = 1; # enable cooked mode
     SER_DISABLE = 2; # disable serial device in kernel (e.g. for direct I/O)
+    SER_LONGREAD = 4; # make read() calls block and fill the buffer before returning
 
 To find out what `flags` is set to without changing it, just set it to 0 and then back
 to the previous value:
