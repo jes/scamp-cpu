@@ -18,7 +18,6 @@ var ser_get_p;
 var ser_put_p;
 var ser_readbytes;
 var ser_writebytes;
-var ser_ackpacket;
 var ser_readpacket;
 var ser_writepacket;
 var ser_read;
@@ -73,12 +72,7 @@ ser_writebytes = func(buf, sz) {
     };
 };
 
-ser_ackpacket = func() {
-    ser_writebytes([0x06], 1);
-};
-
 # read packet into buf and return size
-# make sure you call ser_ackpacket() when you're ready for another
 ser_readpacket = func(buf) {
     var soh;
     var size;
@@ -112,7 +106,8 @@ ser_readpacket = func(buf) {
             continue;
         };
 
-        # checksum good; don't ACK yet because we need to wait until we're ready for more
+        # checksum good: send ACK and return size
+        ser_writebytes([0x06], 1);
         return size;
     };
 };
@@ -134,7 +129,8 @@ ser_writepacket = func(buf, sz) {
     var ack;
 
     while (1) {
-        ser_writebytes([soh,sz], 2);
+        ser_writebytes(&soh, 1);
+        ser_writebytes(&sz, 1);
         ser_writebytes(buf, sz);
         ser_writebytes(&checksum, 1);
 
@@ -142,6 +138,7 @@ ser_writepacket = func(buf, sz) {
         if (ack == 0x06) break; # ACK - success
         if (ack == 0x15) continue; # NAK - resend
         fprintf(2, "unexpected packet response: %02x\n", [ack]);
+        exit(1);
     };
 };
 
@@ -152,7 +149,6 @@ ser_read = func(buf, sz) {
 
     while (sz) {
         n = ser_readpacket(buf);
-        ser_ackpacket();
         buf = buf + n;
         sz = sz - n;
         # TODO: [bug] buffer overflows before we exit
@@ -168,7 +164,6 @@ ser_readline = func(buf, maxsz) {
 
     while (1) {
         n = ser_readpacket(buf);
-        ser_ackpacket();
         buf = buf + n;
         maxsz = maxsz - n;
         # TODO: [bug] buffer overflows before we exit
@@ -200,7 +195,7 @@ ser_request_p = func(method, endpoint, path, content, cb) {
     if (!content) content = "";
 
     # put serial port in raw mode
-    serflags(ser_readfd, SER_LONGREAD);
+    serflags(ser_readfd, 0);
     serflags(ser_writefd, 0);
 
     # send request
@@ -225,7 +220,6 @@ ser_request_p = func(method, endpoint, path, content, cb) {
         n = ser_readpacket(ser_textbuf);
         if (n > length) n = length;
         cb(ok, n, ser_textbuf);
-        ser_ackpacket();
         length = length - n;
     };
 
