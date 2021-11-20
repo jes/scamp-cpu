@@ -100,8 +100,9 @@ var BUFPTR = FDDATA+1;
 var SERFLAGS = FDDATA+2;
 
 # serial port flags
-var SER_COOKED  = 1;
-var SER_DISABLE = 2;
+var SER_COOKED   = 1;
+var SER_DISABLE  = 2;
+var SER_LONGREAD = 4;
 
 # Block device state
 var BLKSZ = 256; # 256 words, 512 bytes
