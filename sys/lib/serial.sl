@@ -1,5 +1,8 @@
 # serial port protocol handling
 
+# TODO: [perf] this is all too slow to do anything with the data we read other
+#       than buffer it in memory, else we drop bytes :(
+
 # the "_p" functions allow retrieval of responses "piecewise" via a callback
 
 include "stdio.sl";
