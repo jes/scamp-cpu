@@ -21,7 +21,10 @@ var str = malloc(16384);
 var strp = str;
 # TODO: [bug] buffer overflow
 var cb = func(ok, len, content) {
-    while (len--) *(strp++) = *(content++);
+    while (len--) {
+        fputc(2, *content);
+        *(strp++) = *(content++);
+    };
     *strp = 0;
 };
 
