@@ -22,6 +22,13 @@ var sbputs = func(sb, s) {
     };
 };
 
+var sbwrite = func(sb, s, len) {
+    while (len--) {
+        sbputc(sb, *s);
+        s++;
+    };
+};
+
 var sbprintf_sb;
 var sbprintf = func(sb, fmt, args) {
     sbprintf_sb = sb;
