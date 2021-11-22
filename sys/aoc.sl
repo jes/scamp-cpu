@@ -18,6 +18,7 @@ var path;
 var ok;
 
 var str = malloc(16384);
+*str = 0;
 var strp = str;
 # TODO: [bug] buffer overflow
 var cb = func(ok, len, content) {
