@@ -1,5 +1,7 @@
 # Supporting constants in the compiler
 
+Some of this stuff is implemented on the "const" branch, and it looks promising, but it doesn't work yet.
+
 ## Constant expressions
 
 Currently the different types of constant expression are:
