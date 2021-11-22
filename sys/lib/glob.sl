@@ -91,11 +91,13 @@ var glob = func(pattern) {
         i = 0;
         p = dirbuf;
         while (i != n) {
-            if (glob_match(pattern, p)) {
-                if (dir) {
-                    grpush(g, sprintf("%s/%s", [dir, p]));
-                } else {
-                    grpush(g, strdup(p));
+            if ((*pattern != '*') || (*p != '.')) { # don't let '*' match a leading '.'
+                if (glob_match(pattern, p)) {
+                    if (dir) {
+                        grpush(g, sprintf("%s/%s", [dir, p]));
+                    } else {
+                        grpush(g, strdup(p));
+                    };
                 };
             };
             # skip to the next name
