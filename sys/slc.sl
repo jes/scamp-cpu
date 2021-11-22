@@ -94,7 +94,7 @@ var args = getopt(cmdargs()+1, "l", func(ch, arg) {
     else if (ch == 'h') usage(0)
     else usage(1);
 });
-if (args[1]) usage(1);
+if (args[0] && args[1]) usage(1);
 if (args[0]) {
     redirect(0, args[0], O_READ); # stdin comes from the named file
     outfile = mkoutname(args[0]); # stdout goes to an appropriate name
