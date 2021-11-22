@@ -1,4 +1,4 @@
-# read /proc/*.kernel and report the state of the process state
+# read /proc/*.kernel and report the state of the process stack
 #
 # TODO: [bug] without knowing our real pid, we can only use the contents of /proc
 #       to try to work it out, which means, for example, if the computer is reset
