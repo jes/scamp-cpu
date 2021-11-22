@@ -37,10 +37,12 @@ my $scope = {
 };
 my %STRINGS;
 my @ARRAYS;
+my %constants;
 my @GLOBALS_ORDER;
 my %INCLUDED;
 my $globalscope = $scope;
 my $IDENTIFIER;
+my $CONSTANT;
 my $BLOCKLEVEL = 0;
 my $BREAKLABEL;
 my $CONTLABEL;
@@ -116,7 +118,7 @@ sub Statements {
 }
 
 sub Statement {
-    return 1 if parse(\&Include) || parse(\&Block) || parse(\&Extern) || parse(\&Declaration) || parse(\&Conditional) || parse(\&Loop) || parse(\&Break) || parse(\&Continue) || parse(\&Return) || parse(\&Assignment);
+    return 1 if parse(\&Include) || parse(\&Block) || parse(\&Extern) || parse(\&Declaration) || parse(\&ConstDeclaration) || parse(\&Conditional) || parse(\&Loop) || parse(\&Break) || parse(\&Continue) || parse(\&Return) || parse(\&Assignment);
     if (parse(\&Expression)) {
         print "# discard expression value\n";
         popx();
@@ -184,9 +186,9 @@ sub Declaration {
     die "var not allowed here\n" if $BLOCKLEVEL != 0;
     die "var needs identifier\n" if !parse(\&Identifier);
     my $id = $IDENTIFIER;
-    die "duplicate declaration in scope: $id\n" if $scope->{symbols}{$id};
+    die "duplicate declaration in scope: $id\n" if $scope->{symbols}{$id} || ($scope->{global} && $constants{$id});
 
-    warn "local var overrides global: $id\n" if $globalscope->{symbols}{$id};
+    warn "local var overrides global: $id\n" if $globalscope->{symbols}{$id} || $constants{$id};
 
     # add name to scope
     $scope->{symbols}{$id} = {
@@ -213,6 +215,22 @@ sub Declaration {
     print "#nosym\n" if $scope->{global};
 
     poptovar($id) if $scope->{global};
+
+    return 1;
+}
+
+sub ConstDeclaration {
+    return 0 if !parse(\&Keyword,'const');
+    die "const not allowed here\n" if $BLOCKLEVEL != 0;
+    die "const needs identifier\n" if !parse(\&Identifier);
+    my $id = $IDENTIFIER;
+    die "const only allowed at global scope\n" if !$scope->{global};
+    die "duplicate declaration in scope: $id\n" if $scope->{symbols}{$id} || $constants{$id};
+
+    die "const needs assignment\n" if !parse(\&CharSkip,'=');
+    die "const needs value\n" if !parse(\&ConstantValue);
+
+    $constants{$id} = $CONSTANT;
 
     return 1;
 }
@@ -429,13 +447,19 @@ sub Term {
 }
 
 sub AnyTerm {
-    return 1 if parse(\&Constant) || parse(\&FunctionCall) || parse(\&AddressOf) || parse(\&PreOp) || parse(\&PostOp) || parse(\&UnaryExpression) || parse(\&ParenExpression);
+    return 1 if parse(\&FunctionCall) || parse(\&Constant) || parse(\&AddressOf) || parse(\&PreOp) || parse(\&PostOp) || parse(\&UnaryExpression) || parse(\&ParenExpression);
     return 0 if !parse(\&Identifier);
     pushvar($IDENTIFIER);
     return 1;
 }
 
-sub Constant { return parse(\&NumericLiteral) || parse(\&StringLiteral) || parse(\&ArrayLiteral) || parse(\&FunctionDeclaration) || parse(\&InlineAsm); }
+sub Constant {
+    return 0 if !parse(\&ConstantValue);
+    genliteral($CONSTANT);
+    return 1;
+}
+
+sub ConstantValue { return parse(\&NumericLiteral) || parse(\&StringLiteral) || parse(\&ArrayLiteral) || parse(\&FunctionDeclaration) || parse(\&InlineAsm) || parse(\&NamedConstant); }
 sub NumericLiteral { return parse(\&HexLiteral) || parse(\&CharacterLiteral) || parse(\&DecimalLiteral); }
 
 sub HexLiteral {
@@ -444,8 +468,7 @@ sub HexLiteral {
     die "illegal hex literal\n" if !matchChar(qr/[0-9a-fA-F]/);
     while (matchChar(qr/[0-9a-fA-F]/)) { }
 
-    my $val = substr($s, $pos0, $pos-$pos0);
-    genliteral(hex($val));
+    $CONSTANT = hex(substr($s, $pos0, $pos-$pos0));
     skip();
     return 1;
 }
@@ -456,8 +479,7 @@ sub DecimalLiteral {
     return 0 if !matchChar(qr/\d/);
     while (matchChar(qr/\d/)) {}
 
-    my $val = substr($s, $pos0, $pos-$pos0);
-    genliteral($val);
+    $CONSTANT = substr($s, $pos0, $pos-$pos0);
     skip();
     return 1;
 }
@@ -466,13 +488,21 @@ sub CharacterLiteral {
     return 0 if !parse(\&Char,"'");
     my $c = nextchar();
     if ($c eq '\\') {
-        genliteral(ord(escapedchar(nextchar())));
+        $CONSTANT = ord(escapedchar(nextchar()));
     } else {
-        genliteral(ord($c));
+        $CONSTANT = ord($c);
     }
     
     return 1 if parse(\&CharSkip,"'");
     die "illegal character literal\n";
+}
+
+sub NamedConstant {
+    return 0 if !parse(\&Identifier);
+    my $id = $IDENTIFIER;
+    return 0 if !exists $constants{$id};
+    $CONSTANT = $constants{$id};
+    return 1;
 }
 
 sub escapedchar {
@@ -491,8 +521,7 @@ sub StringLiteral {
     } else {
         $label = label();
     }
-    print "ld x, $label\n";
-    pushx();
+    $CONSTANT = $label;
     $STRINGS{$string} = $label;
     return 1;
 }
@@ -534,8 +563,7 @@ sub ArrayLiteral {
 
     die "array literal needs close bracket\n" if !parse(\&CharSkip,']');
 
-    print "ld x, $label\n";
-    pushx();
+    $CONSTANT = $label;
 
     push @ARRAYS, {
         label => $label,
@@ -587,8 +615,7 @@ sub FunctionDeclaration {
 
     print "# end function declaration\n\n";
     print "$functionend:\n";
-    print "ld x, $functionlabel\n";
-    pushx();
+    $CONSTANT = $functionlabel;
     return 1;
 }
 
@@ -611,8 +638,7 @@ sub InlineAsm {
     print "#peepopt:on\n";
 
     print "$end:\n";
-    print "ld x, $asm\n";
-    pushx();
+    $CONSTANT = $asm;
 
     return 1;
 }
@@ -629,6 +655,8 @@ sub Parameters {
 sub FunctionCall {
     return 0 if !(parse(\&Identifier) && parse(\&CharSkip,'('));
     my $id = $IDENTIFIER;
+
+    return 0 if !symlookup($id) && !exists $constants{$id};
 
     print "# parseFunctionCall:\n";
 
@@ -709,7 +737,7 @@ sub AddressOf {
     my $id = $IDENTIFIER;
 
     my $sym = symlookup($id);
-    die "unrecognised identifier: $id\n" if !$sym;
+    die "AddressOf: unrecognised identifier: $id\n" if !$sym;
     if ($sym->{type} eq 'global') {
         print "# &$id (global)\n";
         print "ld x, _$id\n";
@@ -874,7 +902,7 @@ sub pushx {
 sub poptovar {
     my ($name) = @_;
     my $sym = symlookup($name);
-    die "unrecognised identifier: $name\n" if !$sym;
+    die "poptovar: unrecognised identifier: $name\n" if !$sym;
     if ($sym->{type} eq 'global') {
         print "# poptovar: global $name\n";
         popx();
@@ -891,7 +919,12 @@ sub poptovar {
 sub pushvar {
     my ($name) = @_;
     my $sym = symlookup($name);
-    die "unrecognised identifier: $name\n" if !$sym;
+    if (!$sym && $constants{$name}) {
+        print "ld x, $constants{$name}\n";
+        pushx();
+        return;
+    }
+    die "pushvar: unrecognised identifier: $name\n" if !$sym;
     if ($sym->{type} eq 'global') {
         print "# pushvar: global $name\n";
         print "ld x, (_$name)\n";
@@ -919,6 +952,13 @@ sub funcreturn {
 
 sub genliteral {
     my ($val) = @_;
+
+    if ($val =~ /^l__/) {
+        print "ld x, $val\n";
+        pushx();
+        return;
+    }
+
     $val += 0x10000 if $val < 0; # make everything positive
     die "numeric literal out of range: $val\n" if $val < 0 || $val > 0xffff;
 

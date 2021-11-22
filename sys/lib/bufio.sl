@@ -111,7 +111,7 @@ var bgetc = asm {
     ld r2, (x) # buflen
     test r2
     jnz _bgetc_not_eof
-    ld r0, (_EOF)
+    ld r0, 0xffff # EOF
     ret
 
     _bgetc_not_eof:

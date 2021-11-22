@@ -1,23 +1,23 @@
 # "Kernel" utilities
 
 # Error codes
-var EOF = -1;
-var NOTFOUND = -2;
-var NOTFILE = -3;
-var NOTDIR = -4;
-var BADFD = -5;
-var TOOLONG = -6;
-var EXISTS = -7;
+const EOF = -1;
+const NOTFOUND = -2;
+const NOTFILE = -3;
+const NOTDIR = -4;
+const BADFD = -5;
+const TOOLONG = -6;
+const EXISTS = -7;
 
 # usage: inp(addr)
-var inp = asm {
+const inp = asm {
     pop x
     in r0, x
     ret
 };
 
 # usage: outp(addr, value)
-var outp = asm {
+const outp = asm {
     pop x
     ld r0, x
     pop x
@@ -25,7 +25,7 @@ var outp = asm {
     ret
 };
 
-var kputc = asm {
+const kputc = asm {
     .def SERIALDEV 136
     .def SERIALDEVLSR 141
     kputc:
@@ -40,7 +40,7 @@ var kputc = asm {
 };
 
 # take a pointer to a nul-terminated string, and print it
-var kputs = asm {
+const kputs = asm {
     ld r253, r254
     pop x
     ld r0, x
@@ -57,7 +57,7 @@ var kputs = asm {
     jmp r253 # ret
 };
 
-var khalt = func() {
+const khalt = func() {
     outp(3, 0); # halt the emulator
     while(1);
 };
@@ -76,7 +76,7 @@ var kpanic = func(s) {
 #};
 
 # usage: memcpy(dest, src, len)
-var memcpy = asm {
+const memcpy = asm {
     pop x
     ld r1, x # len
     pop x
@@ -144,12 +144,12 @@ var memcpy = asm {
     .word memcpy7
 };
 
-var memset = func(s, c, n) {
+const memset = func(s, c, n) {
     while (n--) *(s++) = c;
 };
 
 # >>8 1 arg from the stack and return the result in r0
-var shr8 = asm {
+const shr8 = asm {
     pop x
     ld r0, x
     ld r1, r254 # stash return address
@@ -175,7 +175,7 @@ var shr8 = asm {
 };
 
 # >>12 1 arg from the stack and return the result in r0
-var shr12 = asm {
+const shr12 = asm {
     pop x
     ld r0, x
     ld r1, r254 # stash return address
@@ -194,7 +194,7 @@ var shr12 = asm {
 
 # >>4 1 arg from the stack and return the result in r0
 # note upper byte is ignored
-var byteshr4 = asm {
+const byteshr4 = asm {
     pop x
     ld r0, x
     ld r1, r254 # stash return address
@@ -221,7 +221,7 @@ var byteshr4 = asm {
 
 # usage: shl(i,n)
 # compute "i << n", return it in r0
-var shl = asm {
+const shl = asm {
     pop x
     ld r1, 15
     sub r1, x # r1 = 15 - n
@@ -257,7 +257,7 @@ var shl = asm {
 #   pathbegins("foo/bar/fsdfs","foo") = 1
 #   pathbegins("foo/bar/fsdfs","f") = 0
 #   pathbegins("foo/bar/fsdfs","foo/bar") = 0
-var pathbegins = func(path, name) {
+const pathbegins = func(path, name) {
     while (*path && *name && *path != '/') {
         if (*path != *name) return 0;
         path++;
@@ -278,7 +278,7 @@ var pathbegins = func(path, name) {
 #   if (setjmp(jmpbuf)) {
 #       ... long jump occurred ...
 #   };
-var setjmp = asm {
+const setjmp = asm {
     pop x
     ld r1, x # r1 = jmpbuf
     ld r2, 1(sp) # r2 = caller's stashed return address
@@ -299,13 +299,13 @@ do_setjmp: # x = jmpbuf pointer, r2 = stashed return
 # when system calls call other system calls, any throw()s created
 # in the sub-calls need to go tot he top one instead
 var catch_allowed = 1;
-var denycatch = func() catch_allowed = 0;
-var allowcatch = func() catch_allowed = 1;
+const denycatch = func() catch_allowed = 0;
+const allowcatch = func() catch_allowed = 1;
 
 # return 0 on first call, and update state for throw();
 # when throw() is called, return the value that was thrown
 # ("catch()" is equivalent to "setjmp(throw_jmpbuf)")
-var catch = asm {
+const catch = asm {
     # first check if catch() is allowed, and no-op if not
     test (_catch_allowed)
     jnz catch_ok
@@ -323,7 +323,7 @@ var catch = asm {
 # as if setjmp() had returned "val"
 # example:
 #   longjmp(jmpbuf, val);
-var longjmp = asm {
+const longjmp = asm {
     pop x
     ld r0, x # return val
     pop x # x = jmpbuf
@@ -339,9 +339,9 @@ var longjmp = asm {
 var throw_jmpbuf = [0,0,0];
 
 # use setjmp/longjmp to return the error to the last place that called catch()
-var throw = func(n) longjmp(throw_jmpbuf, n);
+const throw = func(n) longjmp(throw_jmpbuf, n);
 
-var powers_of_2 = asm {
+const powers_of_2 = asm {
     powers_of_2:
     .word 0x0001
     .word 0x0002
@@ -361,7 +361,7 @@ var powers_of_2 = asm {
     .word 0x8000
 };
 
-var strlen = func(s) {
+const strlen = func(s) {
     var n = 0;
     while (*(s++)) n++;
     return n;

@@ -30,7 +30,7 @@ var allwords = bignew(0);
 var words = 0;
 var alllines = bignew(0);
 var lines = 0;
-var LIMIT = 16384;
+const LIMIT = 16384;
 
 var wc = func(bio) {
     var ch;

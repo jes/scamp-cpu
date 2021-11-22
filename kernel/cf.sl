@@ -7,32 +7,32 @@
 
 include "util.sl";
 
-var CFBASE = 264;
+const CFBASE = 264;
 
-var CFDATAREG   = CFBASE+0;
-var CFERRREG    = CFBASE+1;
-var CFBLKCNTREG = CFBASE+2;
-var CFBLKNUMREG = CFBASE+3;
-var CFCYLLOREG  = CFBASE+4;
-var CFCYLHIREG  = CFBASE+5;
-var CFHEADREG   = CFBASE+6;
-var CFSTATUSREG = CFBASE+7;
-var CFCMDREG    = CFBASE+7;
+const CFDATAREG   = 264;
+const CFERRREG    = 265;
+const CFBLKCNTREG = 266;
+const CFBLKNUMREG = 267;
+const CFCYLLOREG  = 268;
+const CFCYLHIREG  = 269;
+const CFHEADREG   = 270;
+const CFSTATUSREG = 271;
+const CFCMDREG    = 271;
 
-var CFREADCMD  = 0x20;
-var CFWRITECMD = 0x30;
+const CFREADCMD  = 0x20;
+const CFWRITECMD = 0x30;
 
-var CFERR  = 0x01;
-var CFCORR = 0x04;
-var CFDRQ  = 0x08;
-var CFDSC  = 0x10;
-var CFDWF  = 0x20;
-var CFRDY  = 0x40;
-var CFBUSY = 0x80;
+const CFERR  = 0x01;
+const CFCORR = 0x04;
+const CFDRQ  = 0x08;
+const CFDSC  = 0x10;
+const CFDWF  = 0x20;
+const CFRDY  = 0x40;
+const CFBUSY = 0x80;
 
 # wait until CF status matches "mask"
 # usage: cf_wait(mask)
-var cf_wait = asm {
+const cf_wait = asm {
     .def CFSTATUSREG 271
     .def CFBUSY 0x80
 
@@ -73,7 +73,7 @@ var cf_wait = asm {
     cf_timeout_str: .str "CompactFlash timeout\0"
 };
 
-var cf_blkselect = func(num) {
+const cf_blkselect = func(num) {
     # least-significant byte
     cf_wait(CFRDY);
     outp(CFBLKNUMREG, num&0xff);
@@ -84,7 +84,7 @@ var cf_blkselect = func(num) {
 };
 
 # usage: asm_cf_blkread(headbuf, bodybuf)
-var asm_cf_blkread = asm {
+const asm_cf_blkread = asm {
     .def CFDATAREG 264
 
     ld r0, 16 # number of loop iterations (BLKSZ/16 == 256/16 == 16)
@@ -141,7 +141,7 @@ var asm_cf_blkread = asm {
     ret
 };
 
-var cf_blkread = func(num, headbuf, bodybuf) {
+const cf_blkread = func(num, headbuf, bodybuf) {
     cf_blkselect(num);
 
     # only 1 block
@@ -159,7 +159,7 @@ var cf_blkread = func(num, headbuf, bodybuf) {
 };
 
 # usage: asm_cf_blkwrite(buf)
-var asm_cf_blkwrite = asm {
+const asm_cf_blkwrite = asm {
     ld r0, 16 # number of loop iterations (BLKSZ/16 == 256/16 == 16)
     pop x
     ld r3, x # pointer to read from
@@ -202,7 +202,7 @@ var asm_cf_blkwrite = asm {
     ret
 };
 
-var cf_blkwrite = func(num, buf) {
+const cf_blkwrite = func(num, buf) {
     cf_blkselect(num);
 
     # only 1 block

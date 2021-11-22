@@ -8,7 +8,7 @@
 include "cf.sl";
 
 # read the given block number into the BLKBUF
-var blkread = func(num, buf) {
+const blkread = func(num, buf) {
     if (!buf) buf = BLKBUF;
 
     if (buf[256] == num) return 0;
@@ -19,7 +19,7 @@ var blkread = func(num, buf) {
 };
 
 # write the BLKBUF to the given block number
-var blkwrite = func(num, buf) {
+const blkwrite = func(num, buf) {
     if (!buf) buf = BLKBUF;
 
     *(buf+256) = num;
@@ -28,39 +28,39 @@ var blkwrite = func(num, buf) {
 };
 
 # get the "type"/"length"/"next" field of the current block
-var blktype = func(buf) {
+const blktype = func(buf) {
     if (!buf) buf = BLKBUF;
     return buf[0] & 0xff00;
 };
-var blklen = func(buf) {
+const blklen = func(buf) {
     if (!buf) buf = BLKBUF;
     return buf[0] & 0x00ff;
 };
-var blknext = func(buf) {
+const blknext = func(buf) {
     if (!buf) buf = BLKBUF;
     return buf[1];
 };
 
 # set the "type"/"length"/"next" field of the current block
-var blksettype = func(typ, buf) {
+const blksettype = func(typ, buf) {
     if (!buf) buf = BLKBUF;
     *(buf+0) = typ | blklen(buf);
 };
-var blksetlen = func(len, buf) {
+const blksetlen = func(len, buf) {
     if (!buf) buf = BLKBUF;
     *(buf+0) = blktype(buf) | len;
 };
-var blksetnext = func(blk, buf) {
+const blksetnext = func(blk, buf) {
     if (!buf) buf = BLKBUF;
     *(buf+1) = blk;
 };
 
-var FREEBLKBUF = asm { .gap 257 };
+const FREEBLKBUF = asm { .gap 257 };
 var freeblkblk = 0;
 var freeblkgroup = 0;
 
 # find a free block and update "blknextfree"
-var blkfindfree = func() {
+const blkfindfree = func() {
     var bitmapblk = 0;
     var blkgroup;
 
@@ -97,7 +97,7 @@ var blkfindfree = func() {
 };
 
 # Mark the given block as used/unused ("used" should be 0 or 1)
-var blksetused = func(blk, used) {
+const blksetused = func(blk, used) {
     # block "blk" corresponds to:
     #   bitmapblk = blk / 4096
     #   blkgroup  = (blk%4096) / 16
@@ -117,7 +117,7 @@ var blksetused = func(blk, used) {
 
 # recursively truncate the file from the given block number
 # and offset into the block contents
-var blktrunc = func(blknum, startat) {
+const blktrunc = func(blknum, startat) {
     var nextblknum;
 
     # 1. truncate the current block at the current point

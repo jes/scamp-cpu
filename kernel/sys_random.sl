@@ -1,6 +1,6 @@
 # RNG
 
-var shr9 = asm {
+const shr9 = asm {
     pop x
     ld r0, x
     ld r1, r254 # stash return address

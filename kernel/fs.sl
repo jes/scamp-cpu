@@ -6,7 +6,7 @@ include "sys.sl";
 
 var fs_sync;
 
-var fs_read = func(fd, buf, sz) {
+const fs_read = func(fd, buf, sz) {
     var fdbase = fdbaseptr(fd);
     var readsz = 0;
     var blknum = *(fdbase+FDDATA);
@@ -61,7 +61,7 @@ var fs_read = func(fd, buf, sz) {
     return readsz;
 };
 
-var fs_write = func(fd, buf, sz) {
+const fs_write = func(fd, buf, sz) {
     var fdbase = fdbaseptr(fd);
     var writesz = 0;
     var blknum = *(fdbase+FDDATA);
@@ -154,12 +154,12 @@ fs_sync = func(fd) {
     if (writefunc && blkbuf && blkbuf[256] != 0) blkwrite(blknum, blkbuf);
 };
 
-var fs_close = func(fd) {
+const fs_close = func(fd) {
     fs_sync(fd);
 };
 
 # truncate the given fd at the current position
-var fs_trunc = func(fd) {
+const fs_trunc = func(fd) {
     var fdbase = fdbaseptr(fd);
     var blknum = *(fdbase+FDDATA);
     var posinblk = *(fdbase+FDDATA+1);

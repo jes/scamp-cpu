@@ -4,11 +4,11 @@
 include "stdio.sl";
 include "sys.sl";
 
-var CH_SOH = 0x01;
-var CH_EOT = 0x04;
-var CH_ACK = 0x06;
-var CH_NAK = 0x15;
-var CH_SUB = 0x1a;
+const CH_SOH = 0x01;
+const CH_EOT = 0x04;
+const CH_ACK = 0x06;
+const CH_NAK = 0x15;
+const CH_SUB = 0x1a;
 
 var packet = 1;
 var buf = malloc(132);

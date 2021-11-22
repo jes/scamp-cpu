@@ -4,7 +4,7 @@
 # "name" has max. length of 30 characters
 # example:
 #    dirent(BLKBUF+off, "foo.txt", 1234)
-var dirent = func(dirent, name, blknum) {
+const dirent = func(dirent, name, blknum) {
     var s = name;
     var i = 0;
 
@@ -27,7 +27,7 @@ var dirent = func(dirent, name, blknum) {
 # decode the dirent starting at dirent into a name and block number;
 # store a pointer to a (static) string containing the name in *pname,
 # and store the block number in *pblknum
-var undirent = func(dirent, pname, pblknum) {
+const undirent = func(dirent, pname, pblknum) {
     var p = dirent;
     var s = undirent_str;
 
@@ -56,7 +56,7 @@ var undirent = func(dirent, pname, pblknum) {
 #   dirblknum:     number of directory block that this name is in
 #   dirent_offset: word offset of the dirent for this name in "dirblknum"
 # cb() should return 1 to continue searching or 0 to bail early
-var dirwalk = func(dirblk, cb) {
+const dirwalk = func(dirblk, cb) {
     var off;
     var name;
     var blknum;
@@ -95,7 +95,7 @@ var dir_blknum;
 var dir_dirblknum;
 var dir_parentblknum;
 var dir_curblknum;
-var dirfindname = func(dirblk, findname) {
+const dirfindname = func(dirblk, findname) {
     dir_name = findname;
     while (*dir_name == '/') dir_name++;
 
@@ -146,7 +146,7 @@ var dirfindname = func(dirblk, findname) {
 # if "firstblock" is 0, "mktype" should set the type of block to allocate
 # if "firstblock" is nonzero, "mktype" is ignored
 var dir_lastblk;
-var dirmkname = func(dirblk, mkname, mktype, firstblock) {
+const dirmkname = func(dirblk, mkname, mktype, firstblock) {
     dir_name = mkname;
     while (*dir_name == '/') dir_name++;
 
@@ -237,7 +237,7 @@ var dirmkname = func(dirblk, mkname, mktype, firstblock) {
 # "dirblk" should be the next block for "parentblk";
 # "blkbuf" can be the block buffer to use, or 0 to use BLKBUF, either way note
 # that it will get clobbered
-var dirgc = func(parentblk, dirblk, blkbuf) {
+const dirgc = func(parentblk, dirblk, blkbuf) {
     if (!parentblk) return 0;
 
     if (!blkbuf) blkbuf = BLKBUF;

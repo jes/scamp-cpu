@@ -4,9 +4,9 @@ include "util.sl";
 include "data.sl";
 include "sys.sl";
 
-var ser_bufsz = 140;
-var ser_buflen = ser_bufsz - 3;
-var ser_buf_area = asm {
+const ser_bufsz = 140;
+const ser_buflen = 137;#ser_bufsz - 3;
+const ser_buf_area = asm {
     # BUFSPACE needs to be bufsz multiplied by no. of devices
     .def CONSOLE_BUFSPACE 280
     ser_buf_area: .gap CONSOLE_BUFSPACE
@@ -17,30 +17,30 @@ extern ser_bufspace;
 
 var ser_write;
 
-var ser_readpos = func(bufp) return bufp[0];
-var ser_readmaxpos = func(bufp) return bufp[1];
-var ser_writepos = func(bufp) return bufp[2];
-var ser_nextwritepos = func(bufp) {
+const ser_readpos = func(bufp) return bufp[0];
+const ser_readmaxpos = func(bufp) return bufp[1];
+const ser_writepos = func(bufp) return bufp[2];
+const ser_nextwritepos = func(bufp) {
     if (ser_writepos(bufp) == ser_buflen-1) return 0;
     return ser_writepos(bufp)+1;
 };
-var ser_buf = func(bufp) return bufp+3;
-var ser_setreadpos = func(bufp,pos) *(bufp+0) = pos;
-var ser_setreadmaxpos = func(bufp,pos) *(bufp+1) = pos;
-var ser_setwritepos = func(bufp,pos) *(bufp+2) = pos;
+const ser_buf = func(bufp) return bufp+3;
+const ser_setreadpos = func(bufp,pos) *(bufp+0) = pos;
+const ser_setreadmaxpos = func(bufp,pos) *(bufp+1) = pos;
+const ser_setwritepos = func(bufp,pos) *(bufp+2) = pos;
 
 # return 1 if the buffer is full, 0 otherwise
-var ser_buffull = func(bufp) {
+const ser_buffull = func(bufp) {
     return (ser_nextwritepos(bufp) == ser_readpos(bufp));
 };
 
 # return 1 if the buffer is empty, 0 otherwise
-var ser_bufempty = func(bufp) {
+const ser_bufempty = func(bufp) {
     return (ser_readpos(bufp) == ser_readmaxpos(bufp));
 };
 
 # return a character from the buffer, or -1 if none
-var ser_bufget = func(bufp) {
+const ser_bufget = func(bufp) {
     # need to check "!ser_buffull(bufp)" so that a single long line doesn't block
     # the entire stream
     if (ser_bufempty(bufp) && !ser_buffull(bufp)) return -1;
@@ -61,7 +61,7 @@ var ser_bufget = func(bufp) {
 };
 
 # add "ch" to the buffer, or do nothing if the buffer is full
-var ser_bufput = func(bufp, ch) {
+const ser_bufput = func(bufp, ch) {
     var buf = ser_buf(bufp);
     var writepos = ser_writepos(bufp);
 
@@ -75,7 +75,7 @@ var ser_bufput = func(bufp, ch) {
 };
 
 # remove last char from "fd"'s buffer and console
-var ser_backspace = func(fd, bufp) {
+const ser_backspace = func(fd, bufp) {
     var writepos = ser_writepos(bufp);
 
     if (writepos == ser_readpos(bufp)) return 0;
@@ -98,7 +98,7 @@ var ser_backspace = func(fd, bufp) {
 #       how can we make sure to handle ^C even if the user did a bunch of typing?
 #       maybe only drop them in cooked mode?
 # TODO: [bug] this seems to fall over when the buffer fills up
-var ser_poll = func(fd) {
+const ser_poll = func(fd) {
     rngstate++;
     var p = fdbaseptr(fd);
     var writeimpl = p[WRITEFD];
@@ -173,7 +173,7 @@ var ser_poll = func(fd) {
     };
 };
 
-var ser_read = func(fd, buf, sz) {
+const ser_read = func(fd, buf, sz) {
     var p = fdbaseptr(fd);
     var bufp = p[BUFPTR];
     var cooked_mode = p[SERFLAGS] & SER_COOKED;
@@ -217,7 +217,7 @@ var ser_read = func(fd, buf, sz) {
 };
 
 # usage: ser_writech(baseport, ch)
-var ser_writech = asm {
+const ser_writech = asm {
     pop x
     ld r1, x # r1 = ch
     pop x
@@ -257,7 +257,7 @@ ser_write = func(fd, buf, sz) {
     return sz;
 };
 
-var ser_init = func() {
+const ser_init = func() {
     var ser_fds = [3, 4];
     var ser_baseports = [136, 144];
     var i = 0;

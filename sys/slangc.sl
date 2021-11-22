@@ -64,10 +64,10 @@ var ParenExpression;
 var Identifier;
 
 # space to store numeric and stirng literals
-var maxliteral = 512;
+const maxliteral = 512;
 var literal_buf = malloc(maxliteral);
 # space to store identifier value parsed by Identifier()
-var maxidentifier = maxliteral;
+const maxidentifier = maxliteral;
 var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 
 var INCLUDED;
@@ -88,11 +88,11 @@ var LABELNUM = 1;
 var OUT;
 
 var pending_push = 0;
-var pushx = func() {
+const pushx = func() {
     pending_push++;
     SP_OFF--;
 };
-var popx = func() {
+const popx = func() {
     if (pending_push > 0) pending_push--
     else bputs(OUT, "pop x\n");
     SP_OFF++;

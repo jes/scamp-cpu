@@ -13,7 +13,7 @@ sys_osbase = sys_cmdargs;
 
 # usage: return_to_parent(sp, ret, rc)
 # restore stack pointer and return address, and return rc
-var return_to_parent = asm {
+const return_to_parent = asm {
     pop x
     ld r0, x
     pop x
@@ -179,7 +179,7 @@ sys_system = asm {
     jmp (_sys_system_impl)
 };
 
-var jmp_to_user = asm {
+const jmp_to_user = asm {
     # put sp below kernel so that a misbehaving program is less likely to trash the kernel
     ld sp, OSBASE
     dec sp
@@ -190,7 +190,7 @@ var jmp_to_user = asm {
 
 var cmdargp;
 var cmdarg_idx;
-var build_cmdargs = func(firstarg, args) {
+const build_cmdargs = func(firstarg, args) {
     # count the number & size of arguments
     var nargs = 0;
     var args_sz = 0;
@@ -232,7 +232,7 @@ var build_cmdargs = func(firstarg, args) {
     *(cmdargs+cmdarg_idx) = 0;
 };
 
-var load_program = func(name) {
+const load_program = func(name) {
     # load file from disk
     var fd = sys_open(name, O_READ|O_KERNELFD);
     if (fd < 0) throw(fd);

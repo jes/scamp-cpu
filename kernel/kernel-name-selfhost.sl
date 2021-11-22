@@ -1,1 +1,1 @@
-var KERNEL_NAME="self-hosted";
+const KERNEL_NAME="self-hosted";
