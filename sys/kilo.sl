@@ -628,11 +628,12 @@ savefile = func() {
 
     # TODO: [bug] on errors from open() or write(), setstatusmsg() to say
     #       what happened
-    # TODO: [nice] write something like "Writing %s..." to the status bar
-    #       while saving
 
     var fd = open(openfilename, O_WRITE|O_CREAT);
     if (fd < 0) fatal("open %s: %s", [openfilename, strerror(fd)]);
+
+    setstatusmsg("Writing %s...", [openfilename]);
+    drawstatusmsg();
 
     var buf = malloc(257);
     setbuf(fd, buf);
@@ -888,6 +889,7 @@ drawstatus = func() {
 };
 
 drawstatusmsg = func() {
+    raw_printf("%c[%d;%dH", [ESC, 25, 1]); # position cursor
     writeesc("[K"); # clear line
     if (statusmsg) raw_write(statusmsg);
 };
