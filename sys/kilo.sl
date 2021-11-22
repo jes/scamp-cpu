@@ -679,6 +679,9 @@ find = func() {
             find_dir = 1;
         };
 
+        setstatusmsg("Finding %s...", [query]);
+        drawstatusmsg();
+
         var cur = find_last;
 
         var i = 0;
