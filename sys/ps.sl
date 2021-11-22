@@ -34,6 +34,7 @@ var showproc = func(pid) {
     read(fd, args, args_sz);
     read(fd, &trapfunc, 1);
     read(fd, fdtable, 128);
+    close(fd);
 
     printf("%d  ", [pid]);
 
