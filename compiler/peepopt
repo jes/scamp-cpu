@@ -172,7 +172,7 @@ sub level5 {
 sub level6 {
     my ($line) = @_;
 
-    if ($line =~ /^ld x, (\([a-zA-Z0-9_]+\))$/ && !defined $l6ldx) {
+    if ($line =~ /^ld x, (\(?[a-zA-Z0-9_]+\)?)$/ && !defined $l6ldx) {
         $l6ldx = $1;
     } elsif ($line eq 'call x' && defined $l6ldx) {
         level7("call $l6ldx");
