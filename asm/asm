@@ -236,7 +236,7 @@ sub write_output {
             next;
         }
 
-        if ($c =~ /\D/) {
+        if ($c !~ /^-?\d+$/) {
             die "error: label $c not found\n" if !exists $label{$c};
             $c = $label{$c};
         }
