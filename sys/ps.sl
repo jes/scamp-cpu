@@ -39,10 +39,11 @@ var showproc = func(pid) {
     printf("%d  ", [pid]);
 
     var args_off = args - args_ptr;
-    while (*args) {
-        puts(*args + args_off);
-        args++;
-        if (*args) putchar(' ');
+    var p = args;
+    while (*p) {
+        puts(*p + args_off);
+        p++;
+        if (*p) putchar(' ');
     };
     putchar('\n');
 
