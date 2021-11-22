@@ -207,6 +207,7 @@ var strnstr = func(haystack, needle, len) {
     var lenneedle = strlen(needle);
 
     len = len - lenneedle + 1;
+    if (len < 0) return 0;
 
     while ((*haystack) && len) {
         if (strncmp(haystack, needle, lenneedle) == 0)
