@@ -1,5 +1,5 @@
 LIBS = lib/*.sl
-BINS = cat.bin init.bin ls.bin mkdir.bin sh.bin pwd.bin echo.bin stat.bin rm.bin slangc.bin asm.bin hd.bin grep.bin more.bin wc.bin head.bin mv.bin slc.bin kilo.bin reboot.bin diskid.bin baud.bin cp.bin dc.bin keys.bin isprime.bin hamurabi.bin opts.bin mandel.bin sort.bin mandelfix.bin fc.bin snake.bin reset.bin true.bin while.bin rx.bin sx.bin du.bin aoc.bin df.bin kwr.bin ser.bin rsh.bin
+BINS = cat.bin init.bin ls.bin mkdir.bin sh.bin pwd.bin echo.bin stat.bin rm.bin slangc.bin asm.bin hd.bin grep.bin more.bin wc.bin head.bin mv.bin slc.bin kilo.bin reboot.bin diskid.bin baud.bin cp.bin dc.bin keys.bin isprime.bin hamurabi.bin opts.bin mandel.bin sort.bin mandelfix.bin fc.bin snake.bin reset.bin true.bin while.bin rx.bin sx.bin du.bin aoc.bin df.bin kwr.bin ser.bin rsh.bin ps.bin
 
 .PHONY: all test clean
 
