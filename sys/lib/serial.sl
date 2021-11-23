@@ -97,21 +97,19 @@ ser_puts_cb = func(ok, chunklen, content) {
         putchar(*(content++));
 };
 
-# sync the serial connection by making a ping request and waiting for the reply
+# sync the serial connection by waiting until nothing is waiting
 # TODO: [bug] this doesn't work; what if we're stuck inside the body of a contentful request?
 #             how do we sync then? should there be an escape character that always syncs up?
 ser_sync = func() {
-    var response;
-    var n;
-    var str;
-    var sunc = 0;
-    while (!sunc) {
-        n = random();
-        str = strdup(utoa(n));
-        response = ser_get("ping", str, 0);
-        free(str);
-        if (response[0] && (strncmp(response[1], "pong:", 5) == 0) && (atoi(response[1]+5) == n)) sunc = 1;
-        free(response[1]);
-        if (!sunc) fputs(2, "syncing...\n");
+    # give a few blank lines so that the other side knows to reset
+    fputs(ser_writefd, "\n\n\n\n\n");
+
+    # wait until the other side isn't trying to send anything
+    var i;
+    while (1) {
+        i = 1000;
+        while ((read(ser_writefd, 0, 0) == 0) && --i);
+        if (i == 0) break;
+        read(ser_writefd, 0, 1);
     };
 };

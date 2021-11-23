@@ -29,6 +29,8 @@ var cb = func(ok, len, content) {
     *strp = 0;
 };
 
+ser_sync();
+
 if (strcmp(args[0], "get") == 0) {
     if ((!args[1]) || (!args[2]) || args[3]) {
         fprintf(2, "usage: %s\n", [usage_get]);

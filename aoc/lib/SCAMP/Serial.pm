@@ -81,11 +81,13 @@ sub run {
 
     while (my $line = <$rfh>) {
         $line =~ s/\r?\n?$//;
+        next if $line eq '';
+
+        print STDERR "$line: ";
 
         try {
             $line =~ /^(\w+) (\w+) (\d+) (.*)$/ or die "unrecognised request\n";
             my ($method, $type, $size, $path) = ($1, $2, $3, $4);
-            print STDERR "$method $type $size $path: ";
             my $content = $self->read($size);
             if ($self->{handlers}{$method}{$type}) {
                 my $response = $self->{handlers}{$method}{$type}->($path, $content);

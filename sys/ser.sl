@@ -40,6 +40,8 @@ var bputs_cb = func(ok, chunklen, content) {
 
 var r;
 
+ser_sync();
+
 if (strcmp(args[0], "get") == 0) {
     localfile = bopen(args[2], O_WRITE|O_CREAT);
     ser_get_p("file", args[1], 0, bputs_cb);
