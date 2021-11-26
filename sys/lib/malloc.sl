@@ -1,6 +1,7 @@
 # Based on the "Example Storage Allocator" from chapter 8 of K&R Second Edition
 
 var malloc;
+var free;
 var realloc;
 
 include "stdio.sl";
@@ -29,7 +30,7 @@ var sbrk = func(sz) {
 var freep = [0, 0];
 *freep = freep;
 
-var free = func(ap) {
+free = func(ap) {
     if (ap == 0) return 0;
 
     # TODO: [bug] this test is ~broken now that _TOP is in head.s instead of foot.s

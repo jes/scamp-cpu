@@ -3,6 +3,7 @@ var strlen;
 include "malloc.sl";
 include "xprintf.sl";
 include "xscanf.sl";
+include "grarr.sl";
 
 # usage: strcmp(s1,s2)
 # return a value:
@@ -227,4 +228,23 @@ var strchr = func(s, ch) {
     };
 
     return 0;
+};
+
+var strtok_gr = 0;
+var strtok = func(s, sep) {
+    if (!strtok_gr) strtok_gr = grnew();
+    grtrunc(strtok_gr, 0);
+
+    var i = 0;
+    while (*s) {
+        while (*s && (*s == sep)) s++;
+        if (*s) grpush(strtok_gr, s);
+        while (*s && (*s != sep)) s++;
+        if (*s) {
+            *s = 0;
+            s++;
+        };
+    };
+    grpush(strtok_gr, 0);
+    return grbase(strtok_gr);
 };

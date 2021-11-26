@@ -7,10 +7,15 @@
 # gr[1] = allocated space for elements
 # gr[2] = pointer to element space
 
+var grnew;
+var grpush;
+var grtrunc;
+var grbase;
+
 include "malloc.sl";
 include "stdlib.sl";
 
-var grnew = func() {
+grnew = func() {
     var gr = malloc(3);
     *gr = 0;
     gr[1] = 32;
@@ -23,7 +28,7 @@ var grfree = func(gr) {
     free(gr);
 };
 
-var grpush = func(gr, el) {
+grpush = func(gr, el) {
     var n;
     if (gr[0] == gr[1]) { # need more space
         n = gr[1] + 32; # increase the length
@@ -45,12 +50,12 @@ var grpop = func(gr) {
     return val;
 };
 
-var grtrunc = func(gr, at) {
+grtrunc = func(gr, at) {
     var len = gr[0];
     if (at lt len) *gr = at;
 };
 
-var grbase = func(gr) return gr[2];
+grbase = func(gr) return gr[2];
 
 var grset = func(gr, i, el) {
     var p = gr[2];
