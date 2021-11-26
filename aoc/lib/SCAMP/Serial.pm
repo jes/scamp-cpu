@@ -79,6 +79,7 @@ sub run {
 
     my $rfh = $self->{readfh};
 
+    print STDERR "> ";
     while (my $line = <$rfh>) {
         $line =~ s/\r?\n?$//;
         next if $line eq '';
@@ -94,6 +95,8 @@ sub run {
                 my $size = length($response);
                 print STDERR "ok $size\n";
                 $self->write("ok $size\n$response\n");
+            } else {
+                die "no handler for '$method $type'\n";
             }
         } catch {
             $_ =~ s/\n/ /g;
@@ -101,6 +104,8 @@ sub run {
             print STDERR "error $size: $_\n";
             $self->write("error $size\n$_\n");
         };
+
+        print STDERR "> ";
     }
 }
 
