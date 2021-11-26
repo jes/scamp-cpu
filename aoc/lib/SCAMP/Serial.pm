@@ -12,6 +12,8 @@ use IO::Handle;
 use Time::HiRes qw(usleep);
 use Try::Tiny;
 
+my $SLEEP_US = 9000;
+
 sub new {
     my ($pkg, $readfile, $writefile) = @_;
 
@@ -69,7 +71,7 @@ sub write {
     my $fh = $self->{writefh};
 
     for my $c (split //, $data) {
-        usleep(10000);
+        usleep($SLEEP_US);
         print $fh $c;
     }
 }
