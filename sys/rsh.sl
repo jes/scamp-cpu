@@ -2,6 +2,8 @@
 
 include "sys.sl";
 
+serflags(4, SER_COOKED);
+
 copyfd(0, 4);
 copyfd(1, 4);
 copyfd(2, 4);
