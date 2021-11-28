@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+# install the latest disk image to the given device, preserving the contents of /home
+
+set -e
+set -o pipefail
+
+dev=$1
+
+if [ $# -eq 0 ]; then
+    echo "usage: install DEVICE"
+    exit 1
+fi
+
+echo "Copy image from $dev..."
+dd if=$dev of=dev.disk
+echo "Fix endianness..."
+../util/swap-endian < dev.disk > dev2.disk
+echo "Make fresh disk image..."
+rm os.disk
+make os.disk
+echo "Copy contents of /home..."
+echo "grab dev2.disk /home" | ../fs/fs os.disk
+echo "Fix endianness..."
+../util/swap-endian < os.disk > os2.disk
+echo "Write image to $dev..."
+dd if=os2.disk of=$dev

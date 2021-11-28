@@ -15,9 +15,9 @@ my $ROOTBLOCK = $SKIP_BLOCKS + $BITMAP_BLOCKS;
 my $DIRENT_SIZE = 32;
 
 sub new {
-    my ($pkg, $diskfile) = @_;
+    my ($pkg, $diskfile, %opts) = @_;
 
-    my $self = bless {}, $pkg;
+    my $self = bless \%opts, $pkg;
 
     $self->{file} = $diskfile;
     $self->{cwd} = '';
@@ -560,7 +560,7 @@ sub load {
     open(my $fh, '<', $self->{file})
         or die "can't read $self->{file}: $!\n";
     my $n = read($fh, $self->{disk}, $FS_SIZE);
-    die "read: expected $FS_SIZE bytes but only got $n\n" if $n != $FS_SIZE;
+    die "read: expected $FS_SIZE bytes but only got $n\n" if ($n != $FS_SIZE) && (!$self->{ignore_size});
     close $fh;
 }
 
