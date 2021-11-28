@@ -27,10 +27,16 @@ if (!args[0] || !args[1] || !args[2]) usage();
 var rc = 0;
 
 var localfile;
-var bputs_cb = func(ok, chunklen, content) {
+var filebuf = malloc(16384);
+*filebuf = 0;
+var filep = filebuf;
+var filelen = 0;
+var cb = func(ok, chunklen, content) {
     if (ok) {
-        while (chunklen--)
-            bputc(localfile, *(content++));
+        filelen = filelen + chunklen;
+        while (chunklen--) {
+            *(filep++) = *(content++);
+        };
     } else {
         rc = 1;
         while (chunklen--)
@@ -44,7 +50,13 @@ ser_sync();
 
 if (strcmp(args[0], "get") == 0) {
     localfile = bopen(args[2], O_WRITE|O_CREAT);
-    ser_get_p("file", args[1], 0, bputs_cb);
+    if (!localfile) {
+        fprintf(2, "error: can't open %s\n", [args[2]]);
+        exit(1);
+    };
+    if (ser_get_p("file", args[1], 0, cb)) {
+        bwrite(localfile, filebuf, filelen);
+    };
     bclose(localfile);
 } else if (strcmp(args[0], "put") == 0) {
     r = ser_put("file", args[2], slurp(args[1]));
