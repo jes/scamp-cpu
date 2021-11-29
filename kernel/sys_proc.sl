@@ -47,8 +47,12 @@ var sys_exit_impl = func(rc) {
     if (ufd < 0) throw(ufd);
     var n;
     var p = 0x100;
+    var maxread;
     while (1) {
-        n = sys_read(ufd, p, 16256);
+        maxread = OSBASE - p;
+        if (maxread == 0) kpanic("exit: user too big");
+        if (maxread gt 16256) maxread = 16256;
+        n = sys_read(ufd, p, maxread);
         if (n == 0) break;
         if (n < 0) throw(n);
         p = p + n;
