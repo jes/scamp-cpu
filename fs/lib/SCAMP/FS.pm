@@ -132,8 +132,6 @@ sub chdir {
 sub mkdir {
     my ($self, $dir) = @_;
 
-    # TODO: don't allow duplicate names
-
     my $abs = $self->abspath($dir);
     die "$dir: already exists\n" if $self->find($abs);
     my ($parents,$child) = $self->splitpath($abs);

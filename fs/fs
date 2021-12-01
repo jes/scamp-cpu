@@ -264,6 +264,7 @@ sub _grab {
             $fs->put("$dir/$name", $fs2->get("$dir/$name"));
         } else {
             # directory
+            $fs->mkdir("$dir/$name");
             _grab($fs2, "$dir/$name");
         }
     }
