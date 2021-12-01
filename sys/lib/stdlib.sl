@@ -351,7 +351,16 @@ var utoa = func(num) return utoabase(num, 10);
 var islower = func(ch) return ch >= 'a' && ch <= 'z';
 var isupper = func(ch) return ch >= 'A' && ch <= 'Z';
 var isalpha = func(ch) return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
-var isdigit = func(ch) return ch >= '0' && ch <= '9';
+var isdigit = asm {
+    pop x
+    sub x, 0x30 # '0'
+    ld r0, 0
+    jlt r254
+    sub x, 9
+    jgt r254
+    inc r0
+    ret
+};
 var isalnum = func(ch) {
     if (ch >= 'a' && ch <= 'z') return 1;
     if (ch >= 'A' && ch <= 'Z') return 1;
