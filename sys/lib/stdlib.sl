@@ -426,7 +426,51 @@ var atoibase = func(s, base) {
     return v;
 };
 
-var atoi = func(s) return atoibase(s, 10);
+var atoi = asm {
+    pop x
+    ld r1, x # str
+    ld r0, 0 # result
+
+    # is it negative?
+    ld r2, 0 # negative
+    cmp (r1), 0x2d # '-'
+    jnz atoi_loop
+    inc r2
+    inc r1
+
+    atoi_loop:
+        # x = *(str++)
+        ld x, (r1++)
+
+        # if (!x) break
+        test x
+        jz atoi_ret
+
+        # x = x - '0'
+        sub x, 0x30 # '0'
+
+        # if (x < 0 || x > 9) break
+        jlt atoi_ret
+        cmp x, 9
+        jgt atoi_ret
+
+        # result = (10 * result) + x
+        ld r3, x
+        shl r0
+        add r3, r0
+        shl2 r0
+        add r0, r3
+
+        jmp atoi_loop
+
+    atoi_ret:
+
+    # invert if negative, and return
+    test r2
+    jz r254
+    neg r0
+    jmp r254
+};
 
 # usage: inp(addr)
 var inp = asm {
