@@ -136,6 +136,8 @@ Daniel Tufvesson has a post that is a good starting point for understanding the 
 Michał Cierniak has a good blog post about [CompactFlash + 8255 interface card](https://ciernioo.wordpress.com/2015/02/10/compact-flash-8255-interface-card/) with lots
 of detail on how his CompactFlash interface works.
 
+[James Sharman](https://www.youtube.com/c/weirdboyjim) is building an interesting 8-bit pipelined CPU, and has good videos with lots of explanation on how it works.
+
 SCAMP is featured on the [Homebrew CPU ring](https://www.homebrewcpuring.org/) which also features many other interesting homebrew CPU designs.
 
 ## Contact
