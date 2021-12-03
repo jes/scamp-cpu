@@ -111,3 +111,10 @@ var tmpnam = func() {
 
     return tmpnam_buf;
 };
+
+var assert = func(true, fmt, args) {
+    if (!true) {
+        fprintf(2, fmt, args);
+        exit(1);
+    };
+};
