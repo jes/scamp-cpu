@@ -31,6 +31,8 @@ var cb = func(ok, len, content) {
 
 ser_sync();
 
+var to_stdout = 1;
+
 if (strcmp(args[0], "get") == 0) {
     if ((!args[1]) || (!args[2]) || args[3]) {
         fprintf(2, "usage: %s\n", [usage_get]);
@@ -52,11 +54,13 @@ if (strcmp(args[0], "get") == 0) {
     };
     path = sprintf("/%s/%s/%s", [args[1], args[2], args[3]]);
     ok = ser_put_p("aoc", path, args[4], cb);
+    to_stdout = 0;
 } else {
     fprintf(2, "usage: %s\n       %s\n", [usage_get, usage_submit]);
     exit(1);
 };
 
-puts(str);
-
-if (!ok) putchar('\n');
+if (to_stdout) {
+    puts(str);
+    if (!ok) putchar('\n');
+};
