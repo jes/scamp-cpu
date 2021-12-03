@@ -103,6 +103,7 @@ var savefile;
 var find;
 
 # output
+var raw_writech;
 var writeesc;
 var refresh;
 var drawrow;
@@ -272,14 +273,14 @@ readkey = func() {
 
 ### ROW OPERATIONS
 
-rowlen = func(r) return grlen(r);
-row2chars = func(r) return grbase(r);
+rowlen = grlen;
+row2chars = grbase;
 
 cx2rx = func(row, cx) {
     var s = row2chars(row);
     var x = 0;
     var i = 0;
-    while (i < cx) {
+    while (i - cx) {
         if (s[i] == '\t') x = x + TABSTOP-1 - (x & (TABSTOP-1));
         x++;
         i++;
@@ -291,7 +292,7 @@ rx2cx = func(row, rx) {
     var s = row2chars(row);
     var x = 0;
     var i = 0;
-    while (x < rx) {
+    while (x - rx) {
         if (s[i] == '\t') x = x + TABSTOP-1 - (x & (TABSTOP-1));
         x++;
         i++;
@@ -470,8 +471,15 @@ navchar = func(c) {
 insertchar = func(c) {
     if (cy == grlen(rows)) appendrow(grnew());
 
-    markrowdirty(cy);
-    rowinsertchar(grget(rows,cy), cx, c);
+    var row = grget(rows, cy);
+
+    if ((c >= ' ') && (rx < COLS) && (cx == rowlen(row))) {
+        raw_writech(c);
+    } else {
+        markrowdirty(cy);
+    };
+
+    rowinsertchar(row, cx, c);
     cx++;
 };
 
@@ -722,7 +730,7 @@ find = func() {
 ### OUTPUT
 
 # usage: raw_writech(ch)
-var raw_writech = asm {
+raw_writech = asm {
     pop x
     ld r1, x # r1 = ch
 
