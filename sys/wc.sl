@@ -6,7 +6,7 @@ include "stdlib.sl";
 include "sys.sl";
 
 var usage = func() {
-    fputs(2,"usage: wc [-cwl]\n");
+    fputs(2,"usage: wc [-cwl] FILE\n");
     exit(1);
 };
 
@@ -20,7 +20,9 @@ var more = getopt(cmdargs()+1, "", func(ch, arg) {
     else if (ch == 'l') argl = 1
     else usage();
 });
-if (*more) usage();
+var infile;
+if (more[0]) infile = more[0];
+if (more[1]) usage();
 
 var inwhite = 1;
 
@@ -70,7 +72,13 @@ var wc = func(bio) {
     bigaddw(alllines, lines);
 };
 
-var in = bfdopen(0, O_READ);
+var in;
+if (infile) {
+    in = bopen(infile, O_READ);
+    assert(in, "wc: can't open %s\n", [infile]);
+} else {
+    in = bfdopen(0, O_READ);
+};
 wc(in);
 bclose(in);
 
