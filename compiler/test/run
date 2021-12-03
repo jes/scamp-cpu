@@ -8,6 +8,6 @@ if [ "$1" = "" ]; then
     exit 1
 fi
 
-./slangc < $1 > prog.s
+../slangc < $1 > prog.s
 shift
 ./srun prog.s $@

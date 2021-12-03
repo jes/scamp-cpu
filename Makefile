@@ -52,6 +52,7 @@ test: ucode-low.hex ucode-high.hex testrom-low.hex testrom-high.hex emulator
 	make -C emulator/ test
 	cd fs/ && ./run-test.sh
 	cd verilog/ && ./run-tests.sh
+	cd compiler/test && ./run-test.sh
 
 asm/instructions.json: ucode/ucode.s
 	./ucode/mk-instructions-json < ucode/ucode.s > asm/instructions.json.tmp
