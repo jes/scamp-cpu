@@ -30,12 +30,9 @@ var str = malloc(16384);
 *str = 0;
 var strp = str;
 # TODO: [bug] buffer overflow
-var cb = func(ok, len, content) {
-    while (len--) {
-        fputc(2, *content);
-        *(strp++) = *(content++);
-    };
-    *strp = 0;
+var cb = func(ok, ch) {
+    fputc(2, ch);
+    *(strp++) = ch;
 };
 
 ser_sync();
@@ -70,6 +67,8 @@ if (strcmp(args[0], "get") == 0) {
     fprintf(2, "usage: %s\n       %s\n", [usage_get, usage_submit]);
     exit(1);
 };
+
+*strp = 0;
 
 if (ok && show_size) {
     fprintf(2, "%d characters\n", [strlen(str)]);

@@ -32,7 +32,7 @@ ser_get_p = func(endpoint, path, content, cb) return ser_request_p("get", endpoi
 ser_put_p = func(endpoint, path, content, cb) return ser_request_p("put", endpoint, path, content, cb);
 
 # make a request over the serial connection, return 1 if ok and 0 otherwise
-# call cb(ok, chunklen, content) for each chunk of content
+# call cb(ok, ch) for each character of content
 # TODO: [bug] what about request bodies too large to buffer in memory?
 # TODO: [bug] what about request/response bodies that contain nul bytes?
 ser_request_p = func(method, endpoint, path, content, cb) {
@@ -55,15 +55,11 @@ ser_request_p = func(method, endpoint, path, content, cb) {
     var ok = (strcmp(ser_textbuf, "ok") == 0);
 
     # read response body
-    # TODO: [perf] would it be better to read a full "ser_textbuf_sz" characters before calling cb()?
     var need = length;
-    var want;
     var n;
+    var ch;
     while (need) {
-        want = need;
-        if (want > ser_textbuf_sz) want = ser_textbuf_sz;
-
-        n = read(ser_readfd, ser_textbuf, want);
+        n = read(ser_readfd, &ch, 1);
         if (n == 0) {
             fprintf(2, "error: read: eof on serial\n", 0);
             exit(1);
@@ -72,8 +68,8 @@ ser_request_p = func(method, endpoint, path, content, cb) {
             fprintf(2, "error: read: %s\n", [strerror(n)]);
             exit(1);
         };
-        cb(ok, n, ser_textbuf);
-        need = need - n;
+        cb(ok, ch);
+        need--;
     };
 
     # read trailing \n

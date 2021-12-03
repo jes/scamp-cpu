@@ -31,16 +31,13 @@ var filebuf = malloc(16384);
 *filebuf = 0;
 var filep = filebuf;
 var filelen = 0;
-var cb = func(ok, chunklen, content) {
+var cb = func(ok, ch) {
     if (ok) {
-        filelen = filelen + chunklen;
-        while (chunklen--) {
-            *(filep++) = *(content++);
-        };
+        filelen++;
+        *(filep++) = ch;
     } else {
         rc = 1;
-        while (chunklen--)
-            fputc(2, *(content++));
+        fputc(2, ch);
     };
 };
 
