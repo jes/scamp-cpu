@@ -14,6 +14,7 @@ include "sys.sl";
 # definitions
 var ESC = 0x1b;
 var ROWS = 23; # rows of file content - should be 2 rows short of total screen rows
+var PAGE_ROWS = 12; # number of rows to page on page up/page down
 var HALFROWS = div(ROWS, 2);
 var COLS = 80;
 var CTRL_KEY = func(k) return k&0x1f;
@@ -1157,15 +1158,15 @@ processkey = func() {
     } else if (c == CTRL_KEY('n')) {
         mode = !mode;
     } else if (c == PAGE_UP || c == CTRL_KEY('u')) {
-        cy = cy - ROWS;
-        rowoff = rowoff - ROWS;
+        cy = cy - PAGE_ROWS;
+        rowoff = rowoff - PAGE_ROWS;
         if (cy < 0) cy = 0;
         if (rowoff < 0) rowoff = 0;
         move(0);
         markalldirty();
     } else if (c == PAGE_DOWN || c == CTRL_KEY('d')) {
-        cy = cy + ROWS;
-        rowoff = rowoff + ROWS;
+        cy = cy + PAGE_ROWS;
+        rowoff = rowoff + PAGE_ROWS;
         if (cy >= grlen(rows)) cy = grlen(rows)-1;
         if (rowoff >= grlen(rows)) rowoff = grlen(rows)-1;
         move(0);
