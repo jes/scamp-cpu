@@ -76,7 +76,7 @@ sub submit {
     $html =~ s/<\/?\w+.*?>//g;
     $html =~ s/ \[Return to Day \d+\]//g;
     $html = decode_entities($html);
-    return $html;
+    return $html . "\n";
 }
 
 sub attach {
