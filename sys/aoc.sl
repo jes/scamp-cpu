@@ -3,6 +3,15 @@
 include "serial.sl";
 include "strbuf.sl";
 
+var linecount = func(s) {
+    var c = 0;
+    while (*s) {
+        if (*s == '\n') c++;
+        s++;
+    };
+    return c;
+};
+
 var args = cmdargs()+1;
 
 var usage_get = "aoc get YEAR DAY";
@@ -32,6 +41,7 @@ var cb = func(ok, len, content) {
 ser_sync();
 
 var to_stdout = 1;
+var show_size = 0;
 
 if (strcmp(args[0], "get") == 0) {
     if ((!args[1]) || (!args[2]) || args[3]) {
@@ -47,6 +57,7 @@ if (strcmp(args[0], "get") == 0) {
     };
     path = sprintf("/%s/%s/input", [args[1], args[2]]);
     ok = ser_get_p("aoc", path, 0, cb);
+    show_size = 1;
 } else if (strcmp(args[0], "submit") == 0) {
     if ((!args[1]) || (!args[2]) || (!args[3]) || (!args[4]) || args[5]) {
         fprintf(2, "usage: %s\n", [usage_submit]);
@@ -58,6 +69,11 @@ if (strcmp(args[0], "get") == 0) {
 } else {
     fprintf(2, "usage: %s\n       %s\n", [usage_get, usage_submit]);
     exit(1);
+};
+
+if (ok && show_size) {
+    fprintf(2, "%d characters\n", [strlen(str)]);
+    fprintf(2, "%d lines\n", [linecount(str)]);
 };
 
 if (to_stdout) {
