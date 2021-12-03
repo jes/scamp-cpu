@@ -76,7 +76,7 @@ var cp = func(src, dst) {
 
 var args = cmdargs()+1;
 if (!args[0] || !args[1] || args[2]) {
-    fprintf(2, "usage: cp SRC DEST\n");
+    fprintf(2, "usage: cp SRC DEST\n", 0);
     exit(1);
 };
 
