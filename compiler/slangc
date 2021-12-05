@@ -186,8 +186,6 @@ sub Declaration {
     my $id = $IDENTIFIER;
     die "duplicate declaration in scope: $id\n" if $scope->{symbols}{$id};
 
-    warn "local var overrides global: $id\n" if $globalscope->{symbols}{$id};
-
     # add name to scope
     $scope->{symbols}{$id} = {
         type => $scope->{global} ? 'global' : 'local',

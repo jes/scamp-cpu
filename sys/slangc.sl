@@ -476,7 +476,6 @@ Declaration = func(x) {
         if (findglobal(name)) die("duplicate declaration of global: %s",[name]);
         addglobal(name);
     } else {
-        if (findglobal(name)) warn("local var %s overrides global",[name]);
         addlocal(name, BP_REL--);
     };
     # for locals, if there's no initialiser, just decrement sp
