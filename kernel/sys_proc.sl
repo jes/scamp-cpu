@@ -107,19 +107,13 @@ var sys_system_impl  = func(top, args, sp, ret) {
     *(userfile+6) = pid+'0';
     *(kernelfile+6) = pid+'0';
 
-    var exit_on_catch = 0;
-
     var err = catch();
     denycatch();
     if (err) {
         allowcatch();
-        if (exit_on_catch) {
-            return sys_exit(err);
-        } else {
-            if (unlink_userfile) sys_unlink(userfile);
-            if (unlink_kernelfile) sys_unlink(kernelfile);
-            return err;
-        };
+        if (unlink_userfile) sys_unlink(userfile);
+        if (unlink_kernelfile) sys_unlink(kernelfile);
+        return err;
     };
 
     # sync buffers (before writing fdtable to disk)
@@ -168,9 +162,9 @@ var sys_system_impl  = func(top, args, sp, ret) {
 
     # execute the "child" process
     pid++;
-    exit_on_catch = 1;
-    err = sys_exec(args);
-    throw(err);
+    allowcatch();
+    # if exec() returns then we exit() to get back to the parent process
+    sys_exit(sys_exec(args));
 };
 
 # call sys_system_impl() with the return address, stack pointer, and system() arguments
