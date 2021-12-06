@@ -101,49 +101,63 @@ var sizecmp = func(a, b) {
     else return 1;
 };
 
-var ls = func(name) {
-    var fd = opendir(name);
-    if (fd < 0) {
-        fprintf(2, "ls: opendir %s: %s\n", [name, strerror(fd)]);
-        rc = 1;
-        return 0;
-    };
+var isdir = func(name) {
+    var statbuf = memostat(name);
+    if (!statbuf) return -1;
+    return *statbuf == 0;
+};
 
+var ls = func(name) {
+    var names = grnew();
+
+    var fd;
     var n;
     var p;
-    var names = grnew();
-    while (1) {
-        n = readdir(fd, buf, bufsz);
-        if (n == 0) break;
-        if (n < 0) {
-            fprintf(2, "ls: readdir %s: %s\n", [name, strerror(n)]);
+    var dir = isdir(name);
+    if (dir == -1) return 0; # stat error, already printed by memostat()
+    if (dir) {
+        fd = opendir(name);
+        if (fd < 0) {
+            fprintf(2, "ls: opendir %s: %s\n", [name, strerror(fd)]);
             rc = 1;
-            break;
+            return 0;
         };
 
-        p = buf;
-        while (n--) {
-            if (show_hidden || (*p != '.'))
-                grpush(names, strdup(p));
-            p = p + strlen(p)+1;
-        };
-    };
-    close(fd);
+        while (1) {
+            n = readdir(fd, buf, bufsz);
+            if (n == 0) break;
+            if (n < 0) {
+                fprintf(2, "ls: readdir %s: %s\n", [name, strerror(n)]);
+                rc = 1;
+                break;
+            };
 
-    # change directory so that we can stat() the files in sizecmp(),ls_long()
-    n = getcwd(buf, bufsz);
-    if (n < 0) {
-        fprintf(2, "ls: getcwd: %s\n", [strerror(n)]);
-        rc = 1;
-        grwalk(names, free);
-        grfree(names);
-        return 0;
-    };
-    n = chdir(name);
-    if (n < 0) {
-        fprintf(2, "ls: chdir %s: %s\n", [name, strerror(n)]);
-        rc = 1;
-        return 0;
+            p = buf;
+            while (n--) {
+                if (show_hidden || (*p != '.'))
+                    grpush(names, strdup(p));
+                p = p + strlen(p)+1;
+            };
+        };
+        close(fd);
+
+        # change directory so that we can stat() the files in sizecmp(),ls_long()
+        n = getcwd(buf, bufsz);
+        if (n < 0) {
+            fprintf(2, "ls: getcwd: %s\n", [strerror(n)]);
+            rc = 1;
+            grwalk(names, free);
+            grfree(names);
+            return 0;
+        };
+        n = chdir(name);
+        if (n < 0) {
+            fprintf(2, "ls: chdir %s: %s\n", [name, strerror(n)]);
+            rc = 1;
+            return 0;
+        };
+    } else { # single file
+        grpush(names, strdup(name));
     };
 
     if (size_sort) grsort(names, sizecmp)
@@ -199,7 +213,7 @@ if (nargs == 0) {
     ls(".");
 } else {
     while (*args) {
-        if (nargs > 1) printf("%s:\n", [*args]);
+        if (nargs > 1 && isdir(*args)) printf("%s:\n", [*args]);
         ls(*args);
         args++;
     };
