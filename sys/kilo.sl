@@ -23,7 +23,7 @@ var TABSTOP = 4; # must be a power of 2 !
 var QUIT_TIMES = 3;
 var INSERT_MODE = 0;
 var NAV_MODE = 1;
-var SCROLL_STEP = 8;
+var SCROLL_STEP = 16;
 
 # key constants
 var BACKSPACE = 127;
