@@ -971,8 +971,7 @@ puts("
     ^L redraw screen                  |   g/G goto line\r
                                       |   z[tzb] reposition screen offset\r
 \r
-         PRESS ANY KEY TO CLOSE\r
-");
+         PRESS ANY KEY TO CLOSE");
 
     readkey();
 };
