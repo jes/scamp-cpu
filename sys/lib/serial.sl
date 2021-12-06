@@ -80,8 +80,8 @@ ser_request_p = func(method, endpoint, path, content, cb) {
 var ser_request_sb;
 ser_request = func(method, endpoint, path, content) {
     ser_request_sb = sbnew();
-    var ok = ser_request_p(method, endpoint, path, content, func(ok, chunklen, content) {
-        while (chunklen--) sbputc(ser_request_sb, *(content++));
+    var ok = ser_request_p(method, endpoint, path, content, func(ok, ch) {
+        sbputc(ser_request_sb, ch);
     });
     var str = strdup(sbbase(ser_request_sb));
     sbfree(ser_request_sb);
