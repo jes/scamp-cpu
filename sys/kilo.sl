@@ -130,6 +130,7 @@ var processkey;
 
 quit = func(rc) {
     unrawmode();
+    puts("Goodbye.\n");
     exit(rc);
 };
 
