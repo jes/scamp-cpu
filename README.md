@@ -14,7 +14,7 @@ My Advent of Code solutions are here: https://github.com/jes/aoc2021
 
 Here are some pictures:
 
-<img src="doc/card-cage.jpeg" height="500"> <img src="doc/case.jpeg" height="500">
+<img src="doc/computer.jpeg" height="500"> <img src="doc/card-cage.jpeg" height="500">
 
 Here's a sample session in the emulator recorded with `asciinema`:
 
