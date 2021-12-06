@@ -10,6 +10,8 @@ as possible of this year's [Advent of Code](https://adventofcode.com/).
 
 I have some blog posts here: https://incoherency.co.uk/blog/tags/cpu.html and a web-based emulator available here: https://incoherency.co.uk/scamp/
 
+My Advent of Code solutions are here: https://github.com/jes/aoc2021
+
 Here are some pictures:
 
 <img src="doc/card-cage.jpeg" height="500"> <img src="doc/case.jpeg" height="500">
