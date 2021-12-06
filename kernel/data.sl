@@ -25,6 +25,10 @@ var FDDATA  = 4;
 #   3: serial port 0 (console)
 var nfds = 16;
 var KERNELFD = nfds-1;
+# TODO: [nice] add some system call to allow the user process to specify extra
+#       storage for extra file descriptors, and then file descriptors from
+#       "nfds" upwards are in the user memory rather than the main fdtable; but
+#       what happens upon system()? are the extra ones just lost?
 var fdtable = 0xff40;
 
 # fd base pointer is (fdtable + fd*8)
