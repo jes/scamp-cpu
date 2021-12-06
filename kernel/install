@@ -17,7 +17,7 @@ sudo dd if=$dev of=dev.disk
 echo "Fix endianness..."
 ../util/swap-endian < dev.disk > dev2.disk
 echo "Make fresh disk image..."
-rm os.disk
+rm -f os.disk
 make os.disk
 echo "Copy contents of /home..."
 echo "grab dev2.disk /home" | ../fs/fs os.disk
