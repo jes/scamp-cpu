@@ -1,4 +1,4 @@
-kernel kernel.hex 0xd000
+kernel kernel.hex 0xd100
 limit 62270
 
 mkdir etc

@@ -115,6 +115,10 @@ var myputc = func(c) {
 var label = func() { return LABELNUM++; };
 var plabel = func(l) { myputs("L"); myputs(itoa(l)); };
 
+var magnitude_op   = [">",     "<",     ">=",    "<=",    "gt",    "lt",    "ge",    "le"];
+var magnitude_func = [label(), label(), label(), label(), label(), label(), label(), label()];
+var magnitude_used = [0,       0,       0,       0,       0,       0,       0,       0];
+
 # return 1 if "name" is a global or extern, 0 otherwise
 var findglobal = func(name) {
     if (htgetkv(GLOBALS, name)) return 1;
@@ -228,44 +232,23 @@ var genliteral = func(v) {
 };
 
 var genop = func(op) {
+    var i;
+    if ((*op == '>') || (*op == '<') || (*op == 'g') || (*op == 'l')) {
+        i = 0;
+        while (i != 8) {
+            if (strcmp(magnitude_op[i], op) == 0) {
+                myputs("call "); plabel(magnitude_func[i]); myputs("\n");
+                SP_OFF++; # 2 args consumed, 1 result pushed
+                magnitude_used[i] = 1;
+                return 0;
+            };
+            i++;
+        };
+    };
+
     popx();
     myputs("ld r0, x\n");
     popx();
-
-    var signcmp = func(subxr0, match, wantlt) {
-        var wantgt = !wantlt;
-        var nomatch = !match;
-
-        # subtract 2nd argument from first, if result is less than zero, then 2nd
-        # argument is bigger than first
-        var lt = label();
-        var docmp = label();
-
-        myputs("ld r1, r0\n");
-        myputs("ld r2, x\n");
-        myputs("ld r3, x\n");
-        myputs("and r1, 32768 #peepopt:test\n"); # r1 = r0 & 0x8000
-        myputs("and r2, 32768 #peepopt:test\n"); # r2 = x & 0x8000
-        myputs("sub r1, r2 #peepopt:test\n");
-        myputs("jz "); plabel(docmp); myputs("\n"); # only directly compare x and r0 if they're both negative or both positive
-
-        # just compare signs
-        myputs("test r2\n");
-        bprintf(OUT, "ld x, %d\n", [wantlt]); # doesn't clobber flags
-        myputs("jnz "); plabel(lt); myputs("\n");
-        bprintf(OUT, "ld x, %d\n", [wantgt]); # doesn't clobber flags
-        myputs("jmp "); plabel(lt); myputs("\n");
-
-        # do the actual magnitude comparison
-        plabel(docmp); myputs(":\n");
-        myputs("ld x, r3\n");
-        if (subxr0) myputs("sub x, r0 #peepopt:test\n")
-        else        myputs("sub r0, x #peepopt:test\n");
-        bprintf(OUT, "ld x, %d\n", [match]); # doesn't clobber flags
-        myputs("jlt "); plabel(lt); myputs("\n");
-        bprintf(OUT, "ld x, %d\n", [nomatch]);
-        plabel(lt); myputs(":\n");
-    };
 
     var end;
 
@@ -295,22 +278,6 @@ var genop = func(op) {
         myputs("jnz "); plabel(end); myputs("\n");
         myputs("ld x, 1\n");
         plabel(end); myputs(":\n");
-    } else if (strcmp(op,">=") == 0) {
-        signcmp(1, 0, 0);
-    } else if (strcmp(op,"<=") == 0) {
-        signcmp(0, 0, 1);
-    } else if (strcmp(op,">") == 0) {
-        signcmp(0, 1, 0);
-    } else if (strcmp(op,"<") == 0) {
-        signcmp(1, 1, 1);
-    } else if (strcmp(op,"ge") == 0) {
-        signcmp(1, 0, 1);
-    } else if (strcmp(op,"le") == 0) {
-        signcmp(0, 0, 0);
-    } else if (strcmp(op,"gt") == 0) {
-        signcmp(0, 1, 1);
-    } else if (strcmp(op,"lt") == 0) {
-        signcmp(1, 1, 0);
     } else if (strcmp(op,"&&") == 0) {
         end = label();
         myputs("test x\n");
@@ -335,6 +302,62 @@ var genop = func(op) {
     };
 
     pushx();
+};
+
+var make_magnitude_functions = func() {
+    var signcmp = func(subxr0, match, wantlt) {
+        var wantgt = !wantlt;
+        var nomatch = !match;
+
+        myputs("pop x\n");
+        myputs("ld r0, x\n");
+        myputs("and x, 32768 #peepopt:test\n");
+        myputs("ld r1, x\n");
+
+        myputs("pop x\n");
+        myputs("and x, 32768 #peepopt:test\n");
+
+        # subtract 2nd argument from first, if result is less than zero, then 2nd
+        # argument is bigger than first
+        var lt = label();
+        var docmp = label();
+
+        myputs("sub r1, x #peepopt:test\n");
+        myputs("jz "); plabel(docmp); myputs("\n"); # only directly compare x and r0 if they're both negative or both positive
+
+        # just compare signs
+        myputs("test x\n");
+        bprintf(OUT, "ld x, %d\n", [wantlt]); # doesn't clobber flags
+        myputs("jnz "); plabel(lt); myputs("\n");
+        bprintf(OUT, "ld x, %d\n", [wantgt]); # doesn't clobber flags
+        myputs("jmp "); plabel(lt); myputs("\n");
+
+        # do the actual magnitude comparison
+        plabel(docmp); myputs(":\n");
+        myputs("ld x, (sp)\n");
+        if (subxr0) myputs("sub x, r0 #peepopt:test\n")
+        else        myputs("sub r0, x #peepopt:test\n");
+        bprintf(OUT, "ld x, %d\n", [match]); # doesn't clobber flags
+        myputs("jlt "); plabel(lt); myputs("\n");
+        bprintf(OUT, "ld x, %d\n", [nomatch]);
+        plabel(lt); myputs(":\n");
+
+        myputs("push x\n");
+        myputs("ret\n");
+    };
+
+    # >, <, >=, <=, gt, lt, ge, le
+    var subxr0 = [0,1,1,0,0,1,1,0];
+    var match = [1,1,0,0,1,1,0,0];
+    var wantlt = [0,1,0,1,1,0,1,0];
+    var i = 0;
+    while (i < 8) {
+        if (magnitude_used[i]) {
+            plabel(magnitude_func[i]); myputs(":\n");
+            signcmp(subxr0[i], match[i], wantlt[i]);
+        };
+        i++;
+    };
 };
 
 var funcreturn = func() {
@@ -1096,6 +1119,8 @@ if (SP_OFF != 0) die("expected to be left at SP_OFF==0 after program, found %d (
 # jump over the globals
 var end = label();
 myputs("jmp "); plabel(end); myputs("\n");
+
+make_magnitude_functions();
 
 htwalk(GLOBALS, func(name, val) {
     myputc('_'); myputs(name); myputs(": .w 0\n");

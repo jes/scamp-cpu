@@ -46,11 +46,20 @@ my $BREAKLABEL;
 my $CONTLABEL;
 my $SP_OFF = 0;
 
+my %magnitude_func;
+my %used_magnitude_func;
+for my $op (">", "<", ">=", "<=", "gt", "lt", "ge", "le") {
+    $magnitude_func{$op} = label();
+}
+
 parse(\&Program);
 
 my $end = label();
 # jump over the globals and strings
 print "jmp $end\n";
+
+# generate code for the required magnitude comparison operators
+make_magnitude_functions();
 
 # allocate space for globals
 for my $global (@GLOBALS_ORDER) {
@@ -946,42 +955,18 @@ sub genop {
     );
 
     print "# operator: $op\n";
+
+    # magnitude operators are implemented as "functions" because they're large
+    if ($op =~ />|<|g|l/) {
+        $used_magnitude_func{$op} = 1;
+        print "call $magnitude_func{$op}\n";
+        $SP_OFF++; # 2 args consumed, 1 result pushed
+        return;
+    }
+
     popx();
     print "ld r0, x\n";
     popx();
-
-    my $signcmp = sub {
-        my ($xr0, $match, $wantlt) = @_;
-        my $nomatch = $match ? 0 : 1;
-        my $wantgt = $wantlt ? 0 : 1;
-
-        # subtract 2nd argument from first, if result is less than zero, then 2nd argument is bigger than first
-        my $lt = label();
-        my $docmp = label();
-        print "ld r1, r0\n";
-        print "ld r2, x\n";
-        print "ld r3, x\n";
-        print "and r1, 32768 #peepopt:test\n"; # r1 = r0 & 0x8000
-        print "and r2, 32768 #peepopt:test\n"; # r2 = x & 0x8000
-        print "sub r1, r2 #peepopt:test\n";
-        print "jz $docmp\n"; # only directly compare x and r0 if they're both negative or both positive
-
-        # just compare signs
-        print "test r2\n";
-        print "ld x, $wantlt\n"; # doesn't clobber flags
-        print "jnz $lt\n";
-        print "ld x, $wantgt\n";
-        print "jmp $lt\n";
-
-        # do the actual magnitude comparison
-        print "$docmp:\n";
-        print "ld x, r3\n";
-        print "sub $xr0 #peepopt:test\n";
-        print "ld x, $match\n"; # doesn't clobber flags
-        print "jlt $lt\n";
-        print "ld x, $nomatch\n";
-        print "$lt:\n";
-    };
 
     if ($mnemonic{$op}) {
         print "$mnemonic{$op} x, r0\n";
@@ -1003,16 +988,6 @@ sub genop {
         print "jnz $end\n";
         print "ld x, 1\n";
         print "$end:\n";
-    } elsif ($op =~ /^(>=|<=|>|<)$/) {
-        my $xr0 = ($op =~ /^(>=|<)$/) ? "x, r0" : "r0, x";
-        my $match = $op =~ /=/ ? 0 : 1;
-        my $wantlt = ($op =~ />/) ? 0 : 1;
-        $signcmp->($xr0, $match, $wantlt);
-    } elsif ($op =~ /^(l|g)(t|e)$/) {
-        my $xr0 = ($op =~ /^(ge|lt)$/) ? "x, r0" : "r0, x";
-        my $match = ($op =~ /e/) ? 0 : 1;
-        my $wantlt = ($op =~ /l/) ? 0 : 1;
-        $signcmp->($xr0, $match, $wantlt);
     } elsif ($op eq '&&') {
         my $false = label();
         print "test x\n";
@@ -1036,4 +1011,61 @@ sub genop {
     }
 
     pushx();
+}
+
+sub make_magnitude_functions {
+    my $signcmp = sub {
+        my ($xr0, $match, $wantlt) = @_;
+        my $nomatch = $match ? 0 : 1;
+        my $wantgt = $wantlt ? 0 : 1;
+
+        print "pop x\n";
+        print "ld r0, x\n";
+        print "and x, 32768 #peepopt:test\n"; # r1 = r0 & 0x8000
+        print "ld r1, x\n";
+
+        print "pop x\n";
+        print "and x, 32768 #peepopt:test\n"; # x = x & 0x8000
+
+        # subtract 2nd argument from first, if result is less than zero, then 2nd argument is bigger than first
+        my $lt = label();
+        my $docmp = label();
+        print "sub r1, x #peepopt:test\n";
+        print "jz $docmp\n"; # only directly compare x and r0 if they're both negative or both positive
+
+        # just compare signs
+        print "test x\n";
+        print "ld x, $wantlt\n"; # doesn't clobber flags
+        print "jnz $lt\n";
+        print "ld x, $wantgt\n";
+        print "jmp $lt\n";
+
+        # do the actual magnitude comparison
+        print "$docmp:\n";
+        print "ld x, (sp)\n";
+        print "sub $xr0 #peepopt:test\n";
+        print "ld x, $match\n"; # doesn't clobber flags
+        print "jlt $lt\n";
+        print "ld x, $nomatch\n";
+        print "$lt:\n";
+
+        print "push x\n";
+        print "ret\n";
+    };
+    for my $op (">", "<", ">=", "<=", "gt", "lt", "ge", "le") {
+        next if !$used_magnitude_func{$op};
+        print "# operator $op implementation\n";
+        print "$magnitude_func{$op}:\n";
+        if ($op =~ /^(>=|<=|>|<)$/) {
+            my $xr0 = ($op =~ /^(>=|<)$/) ? "x, r0" : "r0, x";
+            my $match = $op =~ /=/ ? 0 : 1;
+            my $wantlt = ($op =~ />/) ? 0 : 1;
+            $signcmp->($xr0, $match, $wantlt);
+        } elsif ($op =~ /^(l|g)(t|e)$/) {
+            my $xr0 = ($op =~ /^(ge|lt)$/) ? "x, r0" : "r0, x";
+            my $match = ($op =~ /e/) ? 0 : 1;
+            my $wantlt = ($op =~ /l/) ? 0 : 1;
+            $signcmp->($xr0, $match, $wantlt);
+        }
+    }
 }
