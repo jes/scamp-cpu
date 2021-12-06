@@ -157,3 +157,9 @@ var cons = func(a,b) {
     tuple[1] = b;
     return tuple;
 };
+
+var zmalloc = func(sz) {
+    var p = malloc(sz);
+    while (sz--) *(p++) = 0;
+    return p;
+};
