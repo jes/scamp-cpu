@@ -44,7 +44,7 @@ sub read_session {
 
 # https://github.com/dragosvecerdea/advent-of-code-cli/blob/main/src/utils/scrapers.js
 sub get {
-    my ($self, $year, $day) = @_;
+    my ($self, $year, $day, $break) = @_;
 
     my $dom = $self->{ua}->get("$self->{host}/$year/day/$day")->res->dom;
 
@@ -52,6 +52,11 @@ sub get {
     $html =~ s/<\/h2>/\n/g;
     $html =~ s/<\/?\w+.*?>//g;
     $html = decode_entities($html);
+
+    if ($break && $html =~ /\Q$break\E/) {
+        $html =~ s/^.*\Q$break\E/$break/s;
+    }
+
     return $html;
 }
 
@@ -84,11 +89,15 @@ sub attach {
 
     $serial->handle(get => 'aoc' => sub {
         my ($path) = @_;
-        die "bad path" if $path !~ m!^/(\d+)/(\d+)(/input)?$!;
-        my ($year, $day, $input) = ($1, $2, $3);
+        die "bad path" if $path !~ m!^/(\d+)/(\d+)(/input|/part2)?$!;
+        my ($year, $day, $extra) = ($1, $2, $3);
 
-        if ($input) {
+        $extra ||= '';
+
+        if ($extra eq '/input') {
             return $self->get_input($year, $day);
+        } elsif ($extra eq '/part2') {
+            return $self->get($year, $day, '--- Part Two ---');
         } else {
             return $self->get($year, $day);
         }
