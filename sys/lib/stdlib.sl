@@ -579,3 +579,14 @@ xpreg('s', func(s) { return s });
 xpreg('d', itoa);
 xpreg('u', utoa);
 xpreg('x', func(v) { return utoabase(v, 16) });
+
+# swap the values in the 2 pointers, e.g.:
+# var x = 5;
+# var y = 10;
+# swap(&x, &y);
+# # now x=10, y=5
+var swap = func(a, b) {
+    var t = *a;
+    *a = *b;
+    *b = t;
+};
