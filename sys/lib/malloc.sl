@@ -160,6 +160,6 @@ var cons = func(a,b) {
 
 var zmalloc = func(sz) {
     var p = malloc(sz);
-    while (sz--) *(p++) = 0;
+    while (sz--) *(p+sz) = 0;
     return p;
 };
