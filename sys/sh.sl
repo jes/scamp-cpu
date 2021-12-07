@@ -100,7 +100,6 @@ var unredirect = func(fd, prev) {
     close(prev);
 };
 
-# TODO: [bug] make "die" non-fatal
 # TODO: [nice] communicate parse errors better
 
 var parse_strp;
@@ -360,6 +359,12 @@ if (restarted) {
 restarted = 1;
 trap(restart);
 *SP = trap_sp;
+
+# override the die() from parse.sl so that it is non-fatal
+die = func(fmt, args){
+    fprintf(2, fmt, args);
+    restart();
+};
 
 while (1) {
     if (in_fd == 0) fputs(2, "$ "); # TODO: [nice] not if stderr is not a terminal
