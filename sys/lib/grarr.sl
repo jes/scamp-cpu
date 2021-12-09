@@ -15,11 +15,13 @@ var grbase;
 include "malloc.sl";
 include "stdlib.sl";
 
+var grarr_maxgrow = 1024;
+
 grnew = func() {
     var gr = malloc(3);
     *gr = 0;
     gr[1] = 32;
-    gr[2] = malloc(32);
+    gr[2] = malloc(gr[1]);
     return gr;
 };
 
@@ -30,8 +32,11 @@ var grfree = func(gr) {
 
 grpush = func(gr, el) {
     var n;
+    var grow;
     if (gr[0] == gr[1]) { # need more space
-        n = gr[1] + 32; # increase the length
+        grow = gr[1];
+        if (grow > grarr_maxgrow) grow = grarr_maxgrow;
+        n = gr[1] + grow; # increase the length
         gr[2] = realloc(gr[2], n);
         gr[1] = n;
     };
