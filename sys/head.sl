@@ -12,5 +12,8 @@ if (!*args || *(args+1)) {
 
 var N = atoi(*args);
 
+setbuf(0, malloc(257));
+setbuf(1, malloc(257));
+
 while (gets(buf,bufsz) && N--)
     puts(buf);
