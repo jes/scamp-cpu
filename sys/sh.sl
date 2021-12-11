@@ -325,7 +325,7 @@ var args = getopt(cmdargs()+1, "", func(ch, arg) {
     if (ch == 'c') {
         dashc = 1;
     } else {
-        fprintf(2, "sh: error: unrecognised option -%c", [ch]);
+        fprintf(2, "sh: error: unrecognised option -%c\n", [ch]);
         exit(1);
     };
 });

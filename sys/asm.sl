@@ -445,7 +445,7 @@ var resolve_unbounds = func() {
         # 1. read a block of code
         n = read(fd, code, 254);
         fputc(2, '.');
-        if (n < 0) die("read code: %s\n", [strerror(n)]);
+        if (n < 0) die("read code: %s", [strerror(n)]);
         if (n == 0) break;
 
         # 2. while next unbound addr lies within the block:
@@ -464,7 +464,7 @@ var resolve_unbounds = func() {
 
         # 5. write the block of code
         n = write(1, code, n);
-        if (n <= 0) die("write code: %s\n", [strerror(n)]);
+        if (n <= 0) die("write code: %s", [strerror(n)]);
     };
     fputc(2, '\n');
     close(fd);

@@ -20,7 +20,7 @@ var redirect = func(fd, name, mode) {
 
     var filefd = open(name, mode);
     if (filefd < 0) {
-        fprintf(2, "can't open %s: %s", [name, strerror(filefd)]);
+        fprintf(2, "can't open %s: %s\n", [name, strerror(filefd)]);
         exit(1);
     };
 

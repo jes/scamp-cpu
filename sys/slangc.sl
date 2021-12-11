@@ -622,8 +622,8 @@ Assignment = func(x) {
 
             while (1) {
                 # now put the index on the stack
-                if (!Expression(0)) die("array index needs expression\n",0);
-                if (!CharSkip(']')) die("array index needs close bracket\n",0);
+                if (!Expression(0)) die("array index needs expression",0);
+                if (!CharSkip(']')) die("array index needs close bracket",0);
 
                 # and add them together
                 popx();
