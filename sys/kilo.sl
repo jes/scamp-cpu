@@ -84,6 +84,7 @@ var markalldirty;
 var markallclean;
 var need_redraw = malloc(ROWS);
 var full_redraw;
+var indentrows;
 
 ### editor operations
 var navchar;
@@ -398,6 +399,26 @@ markallclean = func() {
     memset(need_redraw, 0, ROWS);
 };
 
+indentrows = func(nrows, levels) {
+    if (nrows == 0) nrows = 1;
+    var i = 0;
+    var row;
+    while (nrows--) {
+        cx = 0;
+        if (levels > 0) {
+            i = levels;
+            while (i--)
+                insertchar('\t');
+        } else {
+            i = -levels;
+            while (i-- && charat(0, cy) == '\t')
+                rowdelchar(grget(rows, cy), 0);
+        };
+        markrowdirty(cy);
+        if (nrows) move(ARROW_DOWN);
+    };
+};
+
 ### EDITOR OPERATIONS
 
 var movecount = 0;
@@ -433,6 +454,8 @@ navchar = func(c) {
     else if (c == 'f') findchar(readkey(), ARROW_RIGHT)
     else if (c == 'F') findchar(readkey(), ARROW_LEFT)
     else if (c == 'J') joinline(cy)
+    else if (c == '>') indentrows(movecount, 1)
+    else if (c == '<') indentrows(movecount, -1)
     else if (c == 'd') {
         c = readkey();
         if (c == 'd') {
@@ -563,9 +586,9 @@ delchars = func(n) {
 };
 
 charat = func(x, y) {
-    if (y == grlen(rows)) return 0;
+    if (y >= grlen(rows)) return 0;
     var row = grget(rows, y);
-    if (x == rowlen(row)) return 0;
+    if (x >= rowlen(row)) return 0;
     return grget(row, x);
 };
 
