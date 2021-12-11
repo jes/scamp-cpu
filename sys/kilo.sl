@@ -459,11 +459,21 @@ navchar = func(c) {
     else if (c == 'd') {
         c = readkey();
         if (c == 'd') {
-            delrow(cy);
-            markbelowdirty(cy);
-            if (cy < grlen(rows)) {
-                if (cx >= rowlen(grget(rows, cy))) cx = rowlen(grget(rows,cy));
-            } else cx = 0;
+            if (movecount == 0) movecount = 1;
+            while (movecount--) {
+                delrow(cy);
+                markbelowdirty(cy);
+                if (cy < grlen(rows)) {
+                    if (cx >= rowlen(grget(rows, cy))) cx = rowlen(grget(rows,cy));
+                } else cx = 0;
+            };
+        } else if (c == 'G') {
+            while (grlen(rows) > cy)
+                delrow(grlen(rows)-1);
+        } else if (c == 'g') {
+            while (cy--) delrow(0);
+            markalldirty();
+            cy = 0;
         };
     } else if (c == 'c') {
         c = readkey();
