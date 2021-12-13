@@ -13,7 +13,7 @@ if [ $# -eq 0 ]; then
 fi
 
 echo "Copy image from $dev..."
-sudo dd if=$dev of=dev.disk
+sudo dd if=$dev of=dev.disk bs=1k count=34k
 echo "Fix endianness..."
 ../util/swap-endian < dev.disk > dev2.disk
 echo "Make fresh disk image..."
@@ -24,4 +24,4 @@ echo "grab dev2.disk /home" | ../fs/fs os.disk
 echo "Fix endianness..."
 ../util/swap-endian < os.disk > os2.disk
 echo "Write image to $dev..."
-sudo dd if=os2.disk of=$dev
+sudo dd if=os2.disk of=$dev bs=1k
