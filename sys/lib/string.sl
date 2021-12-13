@@ -161,7 +161,7 @@ var sprintf_len;
 var sprintf_output;
 var sprintf_p;
 var sprintf = func(fmt, args) {
-    sprintf_len = 64;
+    sprintf_len = 8;
     sprintf_output = malloc(sprintf_len);
     sprintf_p = sprintf_output;
 
