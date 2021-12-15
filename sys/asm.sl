@@ -304,6 +304,9 @@ var emitblob = func(name) {
     var fd = open(name, O_READ);
     if (fd < 0) die("open %s: %s", [name, strerror(fd)]);
 
+    # TODO: [perf] instead of emitting the blob to code_bio now, just remember
+    #       how long it is and what address we need to put it at, and output
+    #       it during resolve_unbounds()
     var bufsz = 1016;
     var buf = malloc(bufsz);
     var n;
