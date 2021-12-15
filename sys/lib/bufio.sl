@@ -187,13 +187,12 @@ var bputc = asm {
     ld (r4), x
 
     # increment bufpos and store back to bio object
-    inc r5
     ld x, r5
+    inc x
     ld (r3), x
 
     # if (bufpos == BIO_BUFSZ) bflush(bio)
-    ld x, (_BIO_BUFSZ)
-    sub r5, x
+    sub x, 254 # BIO_BUFSZ
     jz bputc_bflush
     ret
 
