@@ -95,7 +95,7 @@ var bgetc = asm {
     # if (bufpos == buflen)
     sub r2, r3
     jnz _bgetc_nextchar
-    #   _bslurp(bio):
+    #   _bslurp(bio);
     ld x, r254
     push x
     ld x, (_bgetc_bio)
@@ -159,7 +159,8 @@ var bgets = func(bio, s, size) {
 #var bputc = func(bio, ch) {
 #    var bufpos = bio[2];
 #    *(bio+4+bufpos) = ch;
-#    bio[2] = bufpos+1;
+#    bufpos++;
+#    bio[2] = bufpos;
 #    if (bufpos == BIO_BUFSZ) bflush(bio);
 #};
 #
