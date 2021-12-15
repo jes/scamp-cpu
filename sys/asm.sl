@@ -476,7 +476,8 @@ var resolve_unbounds = func() {
 
 IDENTIFIERS = htnew();
 
-code_filename = strdup(tmpnam());
+#code_filename = strdup(tmpnam());
+code_filename = "/tmp/asm-1stpass";
 code_fd = open(code_filename, O_WRITE|O_CREAT);
 if (code_fd < 0) die("open %s: %s", [code_filename, strerror(code_fd)]);
 code_bio = bfdopen(code_fd, O_WRITE);
@@ -507,6 +508,6 @@ unbounds_bio = bfdopen(unbounds_fd, O_READ);
 fputc(2, '\n');
 fprintf(2, "2nd pass...\n", 0);
 resolve_unbounds();
-unlink(code_filename);
+#unlink(code_filename);
 bclose(unbounds_bio);
 unlink(unbounds_filename);
