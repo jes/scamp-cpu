@@ -163,3 +163,26 @@ var zmalloc = func(sz) {
     while (sz--) *(p+sz) = 0;
     return p;
 };
+
+# vector zmalloc, for example:
+#   var p = vzmalloc([10,5,3]);
+# the final element is p[9][4][2];
+var vzmalloc = func(szs) {
+    if (!szs[0]) return 0;
+    if (!szs[1]) return zmalloc(szs[0]);
+    var i = 0;
+    var p = malloc(szs[0]);
+    while (i != szs[0])
+        p[i++] = vzmalloc(szs+1);
+    return p;
+};
+
+# free memory allocated with vzmalloc
+var vfree = func(p, szs) {
+    if (!szs[0]) return 0;
+    if (!szs[1]) return free(p);
+    var i = 0;
+    while (i != szs[0])
+        vfree(p[i++]);
+    return 0;
+};
