@@ -184,5 +184,6 @@ var vfree = func(p, szs) {
     var i = 0;
     while (i != szs[0])
         vfree(p[i++]);
+    free(p);
     return 0;
 };
