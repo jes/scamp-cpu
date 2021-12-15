@@ -138,6 +138,7 @@ put -t ../sys/lib/getopt.sl /src/lib/getopt.sl
 put -t ../sys/lib/glob.sl /src/lib/glob.sl
 put -t ../sys/lib/grarr.sl /src/lib/grarr.sl
 put -t ../sys/lib/hash.sl /src/lib/hash.sl
+put -t ../sys/lib/heap.sl /src/lib/heap.sl
 put -t ../sys/lib/malloc.sl /src/lib/malloc.sl
 put -t ../sys/lib/parse.sl /src/lib/parse.sl
 put -t ../sys/lib/serial.sl /src/lib/serial.sl
