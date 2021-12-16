@@ -39,7 +39,7 @@ var cat = func(name) {
     close(fd);
 };
 
-clearout("/tmp");
+#clearout("/tmp");
 clearout("/proc");
 cat("/etc/motd");
 chdir("/home");
