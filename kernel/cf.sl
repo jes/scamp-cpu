@@ -99,45 +99,28 @@ var asm_cf_blkread = asm {
     in x, CFDATAREG
     ld (r4), x
 
-    dec r3 # because we pre-increment
-
+    ld x, r3
     jmp asm_cf_blkread_begin
 
     # read the body
     asm_cf_blkread_loop:
-        in x, CFDATAREG
-        ld (++r3), x
-        in x, CFDATAREG
-        ld (++r3), x
+        in (x++), CFDATAREG
+        in (x++), CFDATAREG
     asm_cf_blkread_begin:
-        in x, CFDATAREG
-        ld (++r3), x
-        in x, CFDATAREG
-        ld (++r3), x
-        in x, CFDATAREG
-        ld (++r3), x
-        in x, CFDATAREG
-        ld (++r3), x
-        in x, CFDATAREG
-        ld (++r3), x
-        in x, CFDATAREG
-        ld (++r3), x
-        in x, CFDATAREG
-        ld (++r3), x
-        in x, CFDATAREG
-        ld (++r3), x
-        in x, CFDATAREG
-        ld (++r3), x
-        in x, CFDATAREG
-        ld (++r3), x
-        in x, CFDATAREG
-        ld (++r3), x
-        in x, CFDATAREG
-        ld (++r3), x
-        in x, CFDATAREG
-        ld (++r3), x
-        in x, CFDATAREG
-        ld (++r3), x
+        in (x++), CFDATAREG
+        in (x++), CFDATAREG
+        in (x++), CFDATAREG
+        in (x++), CFDATAREG
+        in (x++), CFDATAREG
+        in (x++), CFDATAREG
+        in (x++), CFDATAREG
+        in (x++), CFDATAREG
+        in (x++), CFDATAREG
+        in (x++), CFDATAREG
+        in (x++), CFDATAREG
+        in (x++), CFDATAREG
+        in (x++), CFDATAREG
+        in (x++), CFDATAREG
         dec r0
         jnz asm_cf_blkread_loop
     ret
@@ -163,44 +146,25 @@ var cf_blkread = func(num, headbuf, bodybuf) {
 # usage: asm_cf_blkwrite(buf)
 var asm_cf_blkwrite = asm {
     ld r0, 16 # number of loop iterations (BLKSZ/16 == 256/16 == 16)
-    pop x
-    ld r3, x # pointer to read from
-
-    dec r3 # because we pre-increment
+    pop x # pointer to read from
 
     asm_cf_blkwrite_loop:
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
-        ld x, (++r3)
-        out CFDATAREG, x
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
+        out CFDATAREG, (x++)
         dec r0
         jnz asm_cf_blkwrite_loop
     ret

@@ -1310,7 +1310,13 @@ in ((i8h)), i16: # Input from address <tt>i16</tt> to the value in <tt>(r)</tt>.
     MO AI
     MI YO
 
-nop:
+in (x++), i16:
+    PO AI
+    MO AI P+
+    DO YI
+    XO AI
+    YO MI
+    X+1 XI
 
 neg x: # Arithmetic negate <tt>x</tt>.
     XI -X
@@ -1448,6 +1454,14 @@ out i16, ((i8h)): # Output the value in <tt>(r)</tt> to address <tt>i16</tt>.
     MO AI P+
     YO DI
 
+out i16, (x++):
+    XO AI
+    MO YI
+    PO AI
+    MO AI P+
+    YO DI
+    X+1 XI
+
 ret: # Jump to <tt>r254</tt>.
     -2 AI
     MO JMP
@@ -1465,7 +1479,6 @@ jmp i8l(x): # Jump to the address in <tt>(x+i8l)</tt>.
     X+Y AI
     MO JMP
 
-nop:
 nop:
 nop: # Do nothing.
 
