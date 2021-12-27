@@ -38,6 +38,7 @@ for my $a (qw(0 1 2 3 4 5 6 7 8 9 a b c d e f)) {
 
         my @clobbers = @{ $i->{clobbers}||[] };
         @clobbers = grep {!/x/} @clobbers if $inst =~ /^\S+ x\b/;
+        @clobbers = grep {!/x/} @clobbers if $inst =~ /x\+\+/;
         @clobbers = grep {!/y/} @clobbers if $inst =~ /^\S+ y\b/;
 
         my $clobbers_flags = 0;
