@@ -80,6 +80,9 @@ var memcpy = asm {
     ld r3, x # dest
     ld r0, x # return
 
+    dec r2 # because we pre-increment
+    dec r3 # because we pre-increment
+
     # the memcpy loop is unrolled into groups of 8 words; when the
     # length to copy is not a multiple of 8 we need to jump into the
     # loop to skip over the first few copies
@@ -98,29 +101,29 @@ var memcpy = asm {
     jmp r4
 
     memcpy_loop:
-        ld x, (r2++)
-        ld (r3++), x
+        ld x, (++r2)
+        ld (++r3), x
     memcpy7:
-        ld x, (r2++)
-        ld (r3++), x
+        ld x, (++r2)
+        ld (++r3), x
     memcpy6:
-        ld x, (r2++)
-        ld (r3++), x
+        ld x, (++r2)
+        ld (++r3), x
     memcpy5:
-        ld x, (r2++)
-        ld (r3++), x
+        ld x, (++r2)
+        ld (++r3), x
     memcpy4:
-        ld x, (r2++)
-        ld (r3++), x
+        ld x, (++r2)
+        ld (++r3), x
     memcpy3:
-        ld x, (r2++)
-        ld (r3++), x
+        ld x, (++r2)
+        ld (++r3), x
     memcpy2:
-        ld x, (r2++)
-        ld (r3++), x
+        ld x, (++r2)
+        ld (++r3), x
     memcpy1:
-        ld x, (r2++)
-        ld (r3++), x
+        ld x, (++r2)
+        ld (++r3), x
     memcpy0:
         sub r1, 8
         jnz memcpy_loop
