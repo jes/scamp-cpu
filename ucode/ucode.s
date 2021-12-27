@@ -1310,7 +1310,7 @@ in ((i8h)), i16: # Input from address <tt>i16</tt> to the value in <tt>(r)</tt>.
     MO AI
     MI YO
 
-in (x++), i16:
+in (x++), i16: # Input from address <tt>i16</tt> to the value in <tt>(x)</tt>. Post-increment <tt>x</tt>.
     PO AI
     MO AI P+
     DO YI
@@ -1454,7 +1454,7 @@ out i16, ((i8h)): # Output the value in <tt>(r)</tt> to address <tt>i16</tt>.
     MO AI P+
     YO DI
 
-out i16, (x++):
+out i16, (x++): # Output the value in <tt>(x)</tt> to address <tt>i16</tt>. Post-increment <tt>x</tt>.
     XO AI
     MO YI
     PO AI
