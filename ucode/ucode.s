@@ -91,13 +91,9 @@ add (i8h), (i16): # Add <tt>(i16)</tt> to the value in <tt>r</tt>.
     MO YI
     MI Y+X
 
-call i16: # Set <tt>r254</tt> to the return address. Jump to <tt>i16</tt>.
-    # clobbers: r254
-    -2 AI
-    PO YI
-    Y+1 MI
-    PO AI
-    MO JMP
+add y, i8l: # Add <tt>i8l</tt> to <tt>y</tt>.
+    IOL XI
+    YI X+Y
 
 sub x, (i8h): # Subtract <tt>r</tt> from <tt>x</tt>.
     IOH AI
@@ -493,6 +489,14 @@ or (i8h), (i16): # OR the value in <tt>(i16)</tt> into <tt>r</tt>.
     MO YI
     MI Y|X
 
+call i16: # Set <tt>r254</tt> to the return address. Jump to <tt>i16</tt>.
+    # clobbers: r254
+    -2 AI
+    PO YI
+    Y+1 MI
+    PO AI
+    MO JMP
+
 xor x, y: # XOR <tt>y</tt> with <tt>x</tt>.
     # clobbers: r254
     -2 AI
@@ -500,99 +504,6 @@ xor x, y: # XOR <tt>y</tt> with <tt>x</tt>.
     YI ~(X&Y)
     MO XI
     XI X&Y
-
-nand x, (i8h): # NAND <tt>r</tt> with <tt>x</tt>.
-    IOH AI
-    MO YI
-    XI ~(X&Y)
-
-nand x, i16: # NAND <tt>i16</tt> with <tt>x</tt>.
-    PO AI
-    MO YI P+
-    XI ~(X&Y)
-
-nand x, (i16): # NAND the value in <tt>(i16)</tt> with <tt>x</tt>.
-    PO AI
-    MO AI P+
-    MO YI
-    XI ~(X&Y)
-
-nand x, ((i8h)): # NAND the value in <tt>(r)</tt> with <tt>x</tt>.
-    IOH AI
-    MO AI
-    MO YI
-    XI ~(X&Y)
-
-nand x, ((i8h)++): # NAND the value in <tt>(r)</tt> with <tt>x</tt>. Post-increment <tt>r</tt>.
-    IOH AI
-    MO YI
-    Y+1 MI
-    YO AI
-    MO YI
-    XI ~(X&Y)
-
-nand x, ((i8h)--): # NAND the value in <tt>(r)</tt> with <tt>x</tt>. Post-decrement <tt>r</tt>.
-    IOH AI
-    MO YI
-    Y-1 MI
-    YO AI
-    MO YI
-    XI ~(X&Y)
-
-nand x, i8l: # NAND <tt>i8l</tt> with <tt>x</tt>.
-    IOL YI
-    XI ~(X&Y)
-
-nand x, i8h: # NAND <tt>i8h</tt> with <tt>x</tt>.
-    IOH YI
-    XI ~(X&Y)
-
-nand (i8h), x: # NAND <tt>x</tt> with <tt>r</tt>.
-    IOH AI
-    MO YI
-    MI ~(Y&X)
-
-nand (i16), x: # NAND <tt>x</tt> with the value in <tt>(i16)</tt>.
-    PO AI
-    MO AI P+
-    MO YI
-    MI ~(Y&X)
-
-nand (i16), i8l: # NAND <tt>i8l</tt> with the value in <tt>(i16)</tt>.
-    PO AI
-    MO AI P+
-    MO XI
-    IOL YI
-    MI ~(Y&X)
-
-nand ((i8h)), x: # NAND <tt>x</tt> with the value in <tt>(r)</tt>.
-    IOH AI
-    MO AI
-    MO YI
-    MI ~(Y&X)
-
-nand (i8h), i16: # NAND <tt>i16</tt> with <tt>r</tt>.
-    PO AI
-    MO YI P+
-    IOH AI
-    MO XI
-    MI ~(Y&X)
-
-nand ((i8h)), i16: # NAND <tt>i16</tt> with the value in <tt>(r)</tt>.
-    PO AI
-    MO XI P+
-    IOH AI
-    MO AI
-    MO YI
-    MI ~(Y&X)
-
-nand (i8h), (i16): # NAND the value in <tt>(i16)</tt> with <tt>r</tt>.
-    PO AI
-    MO AI
-    MO XI P+
-    IOH AI
-    MO YI
-    MI ~(Y&X)
 
 xor x, i8l: # XOR <tt>i8l</tt> with <tt>x</tt>.
     # clobbers: r254
@@ -602,99 +513,6 @@ xor x, i8l: # XOR <tt>i8l</tt> with <tt>x</tt>.
     YI ~(X&Y)
     MO XI
     XI X&Y
-
-nor x, (i8h): # NOR <tt>r</tt> with <tt>x</tt>.
-    IOH AI
-    MO YI
-    XI ~(X|Y)
-
-nor x, i16: # NOR <tt>i16</tt> with <tt>x</tt>.
-    PO AI
-    MO YI P+
-    XI ~(X|Y)
-
-nor x, (i16): # NOR the value in <tt>(i16)</tt>.
-    PO AI
-    MO AI P+
-    MO YI
-    XI ~(X|Y)
-
-nor x, ((i8h)): # NOR the value in <tt>(r)</tt> with <tt>x</tt>.
-    IOH AI
-    MO AI
-    MO YI
-    XI ~(X|Y)
-
-nor x, ((i8h)++): # NOR the value in <tt>(r)</tt> with <tt>x</tt>. Post-increment <tt>r</tt>.
-    IOH AI
-    MO YI
-    Y+1 MI
-    YO AI
-    MO YI
-    XI ~(X|Y)
-
-nor x, ((i8h)--): # NOR the value in <tt>(r)</tt> with <tt>x</tt>. Post-decrement <tt>r</tt>.
-    IOH AI
-    MO YI
-    Y-1 MI
-    YO AI
-    MO YI
-    XI ~(X|Y)
-
-nor x, i8l: # NOR <tt>i8l</tt> with <tt>x</tt>.
-    IOL YI
-    XI ~(X|Y)
-
-nor x, i8h: # NOR <tt>i8h</tt> with <tt>x</tt>.
-    IOH YI
-    XI ~(X|Y)
-
-nor (i8h), x: # NOR <tt>x</tt> with <tt>r</tt>.
-    IOH AI
-    MO YI
-    MI ~(Y|X)
-
-nor (i16), x: # NOR <tt>x</tt> with the value in <tt>(i16)</tt>.
-    PO AI
-    MO AI P+
-    MO YI
-    MI ~(Y|X)
-
-nor (i16), i8l: # NOR <tt>i8l</tt> with the value in <tt>(i16)</tt>.
-    PO AI
-    MO AI P+
-    MO XI
-    IOL YI
-    MI ~(Y|X)
-
-nor ((i8h)), x: # NOR <tt>x</tt> with the value in <tt>(r)</tt>.
-    IOH AI
-    MO AI
-    MO YI
-    MI ~(Y|X)
-
-nor (i8h), i16: # NOR <tt>i16</tt> with <tt>r</tt>.
-    PO AI
-    MO YI P+
-    IOH AI
-    MO XI
-    MI ~(Y|X)
-
-nor ((i8h)), i16: # NOR <tt>i16</tt> with the value in <tt>(r)</tt>.
-    PO AI
-    MO XI P+
-    IOH AI
-    MO AI
-    MO YI
-    MI ~(Y|X)
-
-nor (i8h), (i16): # NOR the value in <tt>(i16)</tt> with <tt>r</tt>.
-    PO AI
-    MO AI
-    MO XI P+
-    IOH AI
-    MO YI
-    MI ~(Y|X)
 
 xor x, i8h: # XOR <tt>i8h</tt> with <tt>x</tt>.
     # clobbers: r254
@@ -1084,6 +902,16 @@ ld (y), x: # Load <tt>x</tt> into <tt>(y)</tt>.
     YO AI
     XO MI
 
+ld (y), i8l: # Load <tt>i8l</tt> into <tt>(y)</tt>.
+    YO AI
+    IOL MI
+
+ld (y), i16: # Load <tt>i16</tt> into <tt>(y)</tt>.
+    PO AI
+    MO XI P+
+    YO AI
+    XO MI
+
 ret: # Jump to <tt>r254</tt>.
     -2 AI
     MO JMP
@@ -1095,6 +923,18 @@ ret i8l: # Increase <tt>sp</tt> by <tt>i8l</tt>. Jump to <tt>r254</tt>.
     MI X+Y
     -2 AI
     MO JMP
+
+nop:
+nop:
+nop:
+nop:
+nop:
+nop:
+nop:
+nop:
+nop:
+nop:
+nop:
 
 inc x: # Increment <tt>x</tt>.
     XI X+1
@@ -1121,8 +961,6 @@ inc (i16): # Increment the value in <tt>(i16)</tt>.
     MO YI
     MI Y+1
 
-
-
 jr+ i8l: # Jump forwards relative to the address of the next instruction. <tt>jr+ 0</tt> is a no-op.
     PO YI
     IOL XI
@@ -1139,11 +977,7 @@ jr+ (i8h): # Jump forwards relative to the address of the next instruction. <tt>
     MO XI
     JMP X+Y
 
-jr- (i8h): # Jump backwards relative to the address of the next instruction. <tt>jr- 0</tt> is a no-op. <tt>jr- 1</tt> is an infinite loop.
-    PO YI
-    IOH AI
-    MO XI
-    JMP Y-X
+nop:
 
 jmp x: # Jump to <tt>x</tt>.
     XO JMP
@@ -1517,3 +1351,4 @@ jmp i8l(x): # Jump to the address in <tt>(x+i8l)</tt>.
     MO JMP
 
 nop: # Do nothing.
+

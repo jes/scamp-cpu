@@ -32,6 +32,7 @@ my $l17state = 0;
 my $l17i1;
 my $l17i2;
 my $l17reg;
+my $l18state = 0;
 
 my $off = 0;
 
@@ -277,36 +278,32 @@ sub level14 {
 }
 
 # turn:
-#   push N; ld r252, sp; add r252, M; pop x; ld (r252), x
+#   push N; ld y, M+sp; pop x; ld (y), x
 # into:
-#   ld r252, sp; add r252, M-1; ld (r252), N
+#   ld y, M-1+sp; ld (y), N
 sub level15 {
     my ($line) = @_;
 
     if ($l15state == 0 && $line =~ /^push (\d+)$/) {
         $l15val = $1;
         $l15state++;
-    } elsif ($l15state == 1 && $line eq 'ld r252, sp') {
-        $l15state++;
-    } elsif ($l15state == 2 && $line =~ /^add r252, (\d+)$/) {
+    } elsif ($l15state == 1 && $line =~ /^ld y, (\d+)\+sp$/) {
         $l15offset = $1-1; # "minus 1" because we're getting rid of the push that preceded it
         $l15state++;
-    } elsif ($l15state == 3 && $line eq 'pop x') {
+    } elsif ($l15state == 2 && $line eq 'pop x') {
         $l15state++;
-    } elsif ($l15state == 4 && $line eq 'ld (r252), x') {
+    } elsif ($l15state == 3 && $line eq 'ld (y), x') {
         if ($l15offset == 0) { # XXX: can we ever hit this case?
             level16("ld (sp), $l15val");
         } else {
-            level16("ld r252, sp");
-            level16("add r252, $l15offset");
-            level16("ld (r252), $l15val");
+            level16("ld y, $l15offset+sp");
+            level16("ld (y), $l15val");
         }
         $l15state = 0;
     } else {
         level16("push $l15val") if $l15state >= 1;
-        level16("ld r252, sp") if $l15state >= 2;
-        level16("add r252, $l15offset") if $l15state >= 3;
-        level16("pop x") if $l15state >= 4;
+        level16("ld y, " . ($l15offset+1) . "+sp") if $l15state >= 2;
+        level16("pop x") if $l15state >= 3;
         $l15state = 0;
         level16("$line");
     }
@@ -364,16 +361,37 @@ sub level17 {
         $l17reg = $1;
     } elsif ($l17state == 4 && $line eq 'pop x') {
         $l17i2--; # because we lost a "push x"
-        print "ld x, $l17i2(sp)\n";
-        print "ld $l17reg, x\n";
-        print "ld x, $l17i1(sp)\n";
+        level18("ld x, $l17i2(sp)");
+        level18("ld $l17reg, x");
+        level18("ld x, $l17i1(sp)");
         $l17state = 0;
     } else {
-        print "ld x, $l17i1(sp)\n" if $l17state >= 1;
-        print "push x\n" if $l17state >= 2;
-        print "ld x, $l17i2(sp)\n" if $l17state >= 3;
-        print "ld $l17reg, x\n" if $l17state >= 4;
+        level18("ld x, $l17i1(sp)") if $l17state >= 1;
+        level18("push x") if $l17state >= 2;
+        level18("ld x, $l17i2(sp)") if $l17state >= 3;
+        level18("ld $l17reg, x") if $l17state >= 4;
         $l17state = 0;
+        level18("$line");
+    }
+}
+
+# turn:
+#   push x; ld y, N+sp
+# into:
+#   push x; add y, N-1
+sub level18 {
+    my ($line) = @_;
+
+    if ($l18state == 0 && $line eq 'push x') {
+        $l18state++;
+    } elsif ($l18state == 1 && $line =~ /^ld y, (\d+)\+sp$/) {
+        my $n = $1-1;
+        print "push x\n";
+        print "add y, $n #peepopt:y_is_sp+1_after_pushx\n";
+        $l18state = 0;
+    } else {
+        print "push x\n" if $l18state >= 1;
+        $l18state = 0;
         print "$line\n";
     }
 }

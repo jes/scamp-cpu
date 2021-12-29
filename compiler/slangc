@@ -22,6 +22,7 @@
 
 use strict;
 use warnings;
+no warnings 'recursion';
 
 my $s = join('',<>);
 my @s = split //, $s;
@@ -88,7 +89,6 @@ print "$end:\n";
 # call $f->(@args) and return whether it matched; if it did not match, then
 # restore $pos,$line,$col
 sub parse {
-    no warnings 'recursion';
     my ($f, @args) = @_;
     my $pos0 = $pos;
     my $line0 = $line;
