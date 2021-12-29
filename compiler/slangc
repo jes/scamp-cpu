@@ -889,10 +889,9 @@ sub poptovar {
         print "ld (_$name), x\n";
     } else {
         print "# poptovar: local $name\n";
-        print "ld r252, sp\n";
-        print "add r252, " . (($sym->{bp_rel}-$SP_OFF+0x10000)%0x10000) . "\n";
+        print "ld y, " . (($sym->{bp_rel}-$SP_OFF+0x10000)%0x10000) . "+sp\n";
         popx();
-        print "ld (r252), x\n";
+        print "ld (y), x\n";
     }
 }
 

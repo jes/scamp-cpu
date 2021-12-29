@@ -1063,16 +1063,65 @@ ld x, (x): # Load the value in <tt>(x)</tt> into <tt>x</tt>.
     XO AI
     MO XI
 
-ld y, x: # Load <tt>x</tt> into <tt>y</tt>. Only useful for <tt>xor x, y</tt>.
+ld y, x: # Load <tt>x</tt> into <tt>y</tt>.
     YI XO
 
-ld y, (i8h): # Load <tt>r</tt> into <tt>y</tt>. Only useful for <tt>xor x, y</tt>.
+ld y, (i8h): # Load <tt>r</tt> into <tt>y</tt>.
     IOH AI
     MO YI
 
-ld y, i16: # Load <tt>i16</tt> into <tt>y</tt>. Only useful for <tt>xor x, y</tt>.
+ld y, i16: # Load <tt>i16</tt> into <tt>y</tt>.
     PO AI
     MO YI P+
+
+ld y, i8l+(65535): # Load <tt>i8l+sp</tt> into <tt>y</tt>.
+    -1 AI
+    MO YI
+    IOL XI
+    X+Y YI
+
+ld (y), x: # Load <tt>x</tt> into <tt>(y)</tt>.
+    YO AI
+    XO MI
+
+ret: # Jump to <tt>r254</tt>.
+    -2 AI
+    MO JMP
+
+ret i8l: # Increase <tt>sp</tt> by <tt>i8l</tt>. Jump to <tt>r254</tt>.
+    -1 AI
+    MO YI
+    IOL XI
+    MI X+Y
+    -2 AI
+    MO JMP
+
+inc x: # Increment <tt>x</tt>.
+    XI X+1
+
+inc (i8h): # Increment <tt>r</tt>.
+    IOH AI
+    MO YI
+    MI Y+1
+
+inc (x): # Increment the value in <tt>(x)</tt>.
+    XO AI
+    MO YI
+    MI Y+1
+
+inc ((i8h)): # Increment the value in <tt>(r)</tt>.
+    IOH AI
+    MO AI
+    MO YI
+    MI Y+1
+
+inc (i16): # Increment the value in <tt>(i16)</tt>.
+    PO AI
+    MO AI P+
+    MO YI
+    MI Y+1
+
+
 
 jr+ i8l: # Jump forwards relative to the address of the next instruction. <tt>jr+ 0</tt> is a no-op.
     PO YI
@@ -1117,6 +1166,31 @@ jge x: # Jump to <tt>x</tt> if <tt>LT</tt> is not set.
 jle x: # Jump to <tt>x</tt> if <tt>Z</tt> is set or <tt>LT</tt> is set.
     XO JZ JLT
 
+dec x: # Decrement <tt>x</tt>.
+    XI X-1
+
+dec (i8h): # Decrement <tt>r</tt>.
+    IOH AI
+    MO YI
+    MI Y-1
+
+dec (x): # Decrement the value in <tt>(x)</tt>.
+    XO AI
+    MO YI
+    MI Y-1
+
+dec ((i8h)): # Decrement the value in <tt>(r)</tt>.
+    IOH AI
+    MO AI
+    MO YI
+    MI Y-1
+
+dec (i16): # Decrement the value in <tt>(i16)</tt>.
+    PO AI
+    MO AI P+
+    MO YI
+    MI Y-1
+
 in x, (i8h): # Input from address <tt>r</tt> to <tt>x</tt>.
     IOH AI
     MO AI
@@ -1144,31 +1218,6 @@ in x, ((i8h)): # Input from the address in <tt>(r)</tt> to <tt>x</tt>.
     MO AI
     MO AI
     DO XI
-
-inc x: # Increment <tt>x</tt>.
-    XI X+1
-
-inc (i8h): # Increment <tt>r</tt>.
-    IOH AI
-    MO YI
-    MI Y+1
-
-inc (x): # Increment the value in <tt>(x)</tt>.
-    XO AI
-    MO YI
-    MI Y+1
-
-inc ((i8h)): # Increment the value in <tt>(r)</tt>.
-    IOH AI
-    MO AI
-    MO YI
-    MI Y+1
-
-inc (i16): # Increment the value in <tt>(i16)</tt>.
-    PO AI
-    MO AI P+
-    MO YI
-    MI Y+1
 
 jmp i16: # Jump to <tt>i16</tt>.
     PO AI
@@ -1198,6 +1247,31 @@ jle i16: # Jump to <tt>i16</tt> if <tt>Z</tt> is set or <tt>LT</tt> is set.
     PO AI
     MO JZ JLT P+
 
+neg x: # Arithmetic negate <tt>x</tt>.
+    XI -X
+
+neg (i8h): # Arithmetic negate <tt>r</tt>.
+    IOH AI
+    MO YI
+    MI -Y
+
+neg (x): # Arithmetic negate the value in <tt>(x)</tt>.
+    XO AI
+    MO YI
+    MI -Y
+
+neg ((i8h)): # Arithmetic negate the value in <tt>(r)</tt>.
+    IOH AI
+    MO AI
+    MO YI
+    MI -Y
+
+neg (i16): # Arithmetic negate the value in <tt>(i16)</tt>.
+    PO AI
+    MO AI P+
+    MO YI
+    MI -Y
+
 in x, i8l: # Input from address <tt>i8l</tt> to <tt>x</tt>.
     IOL AI
     XO
@@ -1225,31 +1299,6 @@ in (i16), x: # Input from address <tt>x</tt> to the value in <tt>(i16)</tt>.
     PO AI
     MO AI P+
     MI YO
-
-dec x: # Decrement <tt>x</tt>.
-    XI X-1
-
-dec (i8h): # Decrement <tt>r</tt>.
-    IOH AI
-    MO YI
-    MI Y-1
-
-dec (x): # Decrement the value in <tt>(x)</tt>.
-    XO AI
-    MO YI
-    MI Y-1
-
-dec ((i8h)): # Decrement the value in <tt>(r)</tt>.
-    IOH AI
-    MO AI
-    MO YI
-    MI Y-1
-
-dec (i16): # Decrement the value in <tt>(i16)</tt>.
-    PO AI
-    MO AI P+
-    MO YI
-    MI Y-1
 
 jmp (i16): # Jump to the address in <tt>(i16)</tt>.
     PO AI
@@ -1286,6 +1335,31 @@ jle (i16): # Jump to the address in <tt>(i16)</tt> if <tt>Z</tt> is set or <tt>L
     MO AI P+
     MO JZ JLT
 
+not x: # Bitwise complement <tt>x</tt>.
+    XI ~X
+
+not (i8h): # Bitwise complement <tt>r</tt>.
+    IOH AI
+    MO YI
+    MI ~Y
+
+not (x): # Bitwise complement the value in <tt>(x)</tt>.
+    XO AI
+    MO YI
+    MI ~Y
+
+not ((i8h)): # Bitwise complement the value in <tt>(r)</tt>.
+    IOH AI
+    MO AI
+    MO YI
+    MI ~Y
+
+not (i16): # Bitwise complement the value in <tt>(i16)</tt>.
+    PO AI
+    MO AI P+
+    MO YI
+    MI ~Y
+
 in ((i8h)), x: # Input from address <tt>x</tt> to the value in <tt>(r)</tt>.
     AI XO
     XO
@@ -1317,31 +1391,6 @@ in (x++), i16: # Input from address <tt>i16</tt> to the value in <tt>(x)</tt>. P
     XO AI
     YO MI
     X+1 XI
-
-neg x: # Arithmetic negate <tt>x</tt>.
-    XI -X
-
-neg (i8h): # Arithmetic negate <tt>r</tt>.
-    IOH AI
-    MO YI
-    MI -Y
-
-neg (x): # Arithmetic negate the value in <tt>(x)</tt>.
-    XO AI
-    MO YI
-    MI -Y
-
-neg ((i8h)): # Arithmetic negate the value in <tt>(r)</tt>.
-    IOH AI
-    MO AI
-    MO YI
-    MI -Y
-
-neg (i16): # Arithmetic negate the value in <tt>(i16)</tt>.
-    PO AI
-    MO AI P+
-    MO YI
-    MI -Y
 
 out x, (i8h): # Output <tt>r</tt> to address <tt>x</tt>.
     IOH AI
@@ -1384,6 +1433,31 @@ out x, i8h: # Output <tt>i8h</tt> to address <tt>x</tt>.
     XO AI
     IOH DI
 
+test x: # Set flags based on <tt>x</tt>.
+    X
+
+test (i8h): # Set flags based on <tt>r</tt>.
+    IOH AI
+    MO YI
+    Y
+
+test (x): # Set flags based on the value in <tt>(x)</tt>.
+    XO AI
+    MO YI
+    Y
+
+test ((i8h)): # Set flags based on the value in <tt>(r)</tt>.
+    IOH AI
+    MO AI
+    MO YI
+    Y
+
+test (i16): # Set flags based on the value in <tt>(i16)</tt>.
+    PO AI
+    MO AI P+
+    MO YI
+    Y
+
 out (i8h), x: # Output <tt>x</tt> to address <tt>r</tt>.
     IOH AI
     MO AI
@@ -1404,31 +1478,6 @@ out ((i8h)), x: # Output <tt>x</tt> to the address in <tt>(r)</tt>.
 out i8l, x: # Output <tt>x</tt> to address <tt>i8l</tt>.
     IOL AI
     XO DI
-
-not x: # Bitwise complement <tt>x</tt>.
-    XI ~X
-
-not (i8h): # Bitwise complement <tt>r</tt>.
-    IOH AI
-    MO YI
-    MI ~Y
-
-not (x): # Bitwise complement the value in <tt>(x)</tt>.
-    XO AI
-    MO YI
-    MI ~Y
-
-not ((i8h)): # Bitwise complement the value in <tt>(r)</tt>.
-    IOH AI
-    MO AI
-    MO YI
-    MI ~Y
-
-not (i16): # Bitwise complement the value in <tt>(i16)</tt>.
-    PO AI
-    MO AI P+
-    MO YI
-    MI ~Y
 
 out i8h, x: # Output <tt>x</tt> to address <tt>i8h</tt>.
     IOH AI
@@ -1462,55 +1511,9 @@ out i16, (x++): # Output the value in <tt>(x)</tt> to address <tt>i16</tt>. Post
     YO DI
     X+1 XI
 
-ret: # Jump to <tt>r254</tt>.
-    -2 AI
-    MO JMP
-
-ret i8l: # Increase <tt>sp</tt> by <tt>i8l</tt>. Jump to <tt>r254</tt>.
-    -1 AI
-    MO YI
-    IOL XI
-    MI X+Y
-    -2 AI
-    MO JMP
-
 jmp i8l(x): # Jump to the address in <tt>(x+i8l)</tt>.
     IOL YI
     X+Y AI
     MO JMP
 
-nop:
 nop: # Do nothing.
-
-slownop: # Do nothing, and take 8 cycles.
-    PO
-    PO
-    PO
-    PO
-    PO
-    PO
-
-test x: # Set flags based on <tt>x</tt>.
-    X
-
-test (i8h): # Set flags based on <tt>r</tt>.
-    IOH AI
-    MO YI
-    Y
-
-test (x): # Set flags based on the value in <tt>(x)</tt>.
-    XO AI
-    MO YI
-    Y
-
-test ((i8h)): # Set flags based on the value in <tt>(r)</tt>.
-    IOH AI
-    MO AI
-    MO YI
-    Y
-
-test (i16): # Set flags based on the value in <tt>(i16)</tt>.
-    PO AI
-    MO AI P+
-    MO YI
-    Y

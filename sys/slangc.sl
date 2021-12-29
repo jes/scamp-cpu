@@ -203,10 +203,9 @@ var poptovar = func(name) {
         v = findlocal(name);
         if (v) {
             bp_rel = cdr(v);
-            myputs("ld r252, sp\n");
-            myputs("add r252, "); myputs(itoa(bp_rel-SP_OFF)); myputs("\n");
+            myputs("ld y, "); myputs(itoa(bp_rel-SP_OFF)); myputs("+sp\n");
             popx();
-            myputs("ld (r252), x\n");
+            myputs("ld (y), x\n");
             return 0;
         };
     };
