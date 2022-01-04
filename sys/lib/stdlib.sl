@@ -320,7 +320,12 @@ var utoabase = func(num, base) {
     };
 
     while (num != 0) {
-        udivmod(num, base, &d, &m);
+        if (num < base) {
+            d = 0;
+            m = num;
+        } else {
+            udivmod(num, base, &d, &m);
+        };
         *--s = itoa_alphabet[m];
         num = d;
     };
