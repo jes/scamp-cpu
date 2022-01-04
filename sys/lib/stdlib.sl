@@ -416,7 +416,9 @@ var stridx = asm {
         ret
 };
 
+var atoi;
 var atoibase = func(s, base) {
+    if (base == 10) return atoi(s);
     var v = 0;
     var neg = 0;
     if (*s == '-') {
@@ -435,7 +437,7 @@ var atoibase = func(s, base) {
     return v;
 };
 
-var atoi = asm {
+atoi = asm {
     pop x
     ld r1, x # str
     ld r0, 0 # result
