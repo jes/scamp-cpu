@@ -211,12 +211,11 @@ var asm_AnyChar = asm {
     jlt AnyChar_ret0 # EOF?
 
     AnyChar_loop:
-        ld x, (r1) # x is current character from string
+        ld x, (r1++) # x is current character from string
         test x
         jz AnyChar_ret0 # end of string?
         sub x, r0
         jz AnyChar_ret1 # matched the character?
-        inc r1
         jmp AnyChar_loop
 
     AnyChar_ret0:
