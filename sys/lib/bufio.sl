@@ -203,9 +203,41 @@ var bputc = asm {
         jmp (_bflush)
 };
 
-var bputs = func(bio, str) {
-    while (*str)
-        bputc(bio, *(str++));
+#var bputs = func(bio, str) {
+#    while (*str)
+#        bputc(bio, *(str++));
+#};
+var bputs = asm {
+    pop x # str
+    ld (bputs_str), x
+    pop x # bio
+    ld (bputs_bio), x
+
+    ld x, r254
+    push x # backup return address
+
+    bputs_loop:
+        ld x, (bputs_str)
+        test (x)
+        jz bputs_ret
+
+        ld x, (bputs_bio)
+        push x
+
+        ld x, ((bputs_str))
+        push x
+
+        call (_bputc)
+
+        inc (bputs_str)
+        jmp bputs_loop
+
+    bputs_ret:
+        pop x
+        jmp x
+
+    bputs_str: .word 0
+    bputs_bio: .word 0
 };
 
 var bread = func(bio, buf, sz) {
