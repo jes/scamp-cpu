@@ -386,15 +386,26 @@ Statements = func(x) {
 };
 
 Statement = func(x) {
-    if (parse(Include,0)) return 1;
-    if (parse(Block,0)) return 1;
-    if (parse(Extern,0)) return 1;
-    if (parse(Declaration,0)) return 1;
-    if (parse(Conditional,0)) return 1;
-    if (parse(Loop,0)) return 1;
-    if (parse(Break,0)) return 1;
-    if (parse(Continue,0)) return 1;
-    if (parse(Return,0)) return 1;
+    var ch = peekchar();
+    if (ch == 'i') {
+        if (parse(Include,0)) return 1;
+        if (parse(Conditional,0)) return 1;
+    } else if (ch == '{') {
+        if (!Block(0)) die("curly brace has to start block",0);
+        return 1;
+    } else if (ch == 'e') {
+        if (parse(Extern,0)) return 1;
+    } else if (ch == 'v') {
+        if (parse(Declaration,0)) return 1;
+    } else if (ch == 'w') {
+        if (parse(Loop,0)) return 1;
+    } else if (ch == 'b') {
+        if (parse(Break,0)) return 1;
+    } else if (ch == 'c') {
+        if (parse(Continue,0)) return 1;
+    } else if (ch == 'r') {
+        if (parse(Return,0)) return 1;
+    };
     if (parse(Assignment,0)) return 1;
     if (Expression(0)) {
         popx();
