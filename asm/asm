@@ -53,7 +53,7 @@ while (my $line = <>) {
     my $orig_line = $line;
 
     # strip comments, whitespace
-    $line =~ s/#.*//;
+    $line =~ s/#.*// unless $line =~ /^\s*\.str/;
     $line =~ s/^\s+//;
     $line =~ s/\s+$//;
 
@@ -108,7 +108,7 @@ while (my $line = <>) {
     } elsif ($op eq '.str') {
         my $str = $line;
         $str =~ s/^\s*.str\s*"//;
-        $str =~ s/"\s*$//;
+        $str =~ s/"\s*(#.*)?$//;
         $str =~ s/\\r/\r/g;
         $str =~ s/\\n/\n/g;
         $str =~ s/\\t/\t/g;
