@@ -320,7 +320,7 @@ var utoabase = func(num, base) {
     };
 
     while (num != 0) {
-        if (num < base) {
+        if (num lt base) {
             d = 0;
             m = num;
         } else {
