@@ -25,7 +25,7 @@ repl = func() {
     printf("> ", 0);
     var val;
     while (gets(buf, bufsz)) {
-        # TODO: savebin(project binary file, repl)
+        savebin("project", repl); # TODO: [nice] filename from project name
         val = eval(buf);
         printf("%d 0x%04x\n", [val, val]);
         printf("> ", 0);
@@ -81,8 +81,6 @@ savesrc = func(filename) {
 };
 
 savebin = func(filename, entrypoint) {
-    fprintf(2, "unimplemented\n", 0);
-
     # TODO: [nice] writing instructions by opcode is a bit unpleasant
 
     # 1. initialise the stack pointer

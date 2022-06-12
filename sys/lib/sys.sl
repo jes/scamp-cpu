@@ -1,5 +1,6 @@
 # System calls
 
+extern sys_savetpa;
 extern sys_trap;
 extern sys_blkwrite;
 extern sys_blkread;
@@ -54,6 +55,8 @@ var exit     = sys_exit;
 # example: system(["/bin/ls", "-l"])
 extern TOP;
 var system = func(args) sys_system(TOP, args);
+
+var savetpa = func(filename) sys_savetpa(filename, TOP);
 
 # file modes
 var O_READ    = 0x01;

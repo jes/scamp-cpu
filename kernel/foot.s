@@ -7,8 +7,9 @@ _OSBASE: .word OSBASE
 #nosym
 INITIAL_SP: .word 0
 
-.at 0xfee7
+.at 0xfee6
 # system call vectors
+_sys_savetpa:  .word 0
 _sys_trap:     .word 0
 _sys_blkwrite: .word 0
 _sys_blkread:  .word 0

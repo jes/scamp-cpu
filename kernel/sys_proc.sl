@@ -119,24 +119,10 @@ var sys_system_impl  = func(top, args, sp, ret) {
     # sync buffers (before writing fdtable to disk)
     sys_sync(-1);
 
-    # open "/proc/$pid.user" for writing
-    var ufd = sys_open(userfile, O_WRITE|O_CREAT|O_KERNELFD);
-    if (ufd < 0) throw(ufd);
+    # write out the TPA contents
     unlink_userfile = 1;
-
-    # copy bytes from 0x100..top
-    var p = 0x100;
-    var n;
-    var writesz;
-    while (p != top) {
-        writesz = top-p;
-        if (writesz gt 16384) writesz = 16384;
-        n = sys_write(ufd, p, writesz);
-        if (n < 0) throw(n);
-        if (n != writesz) kpanic("system: write too small");
-        p = p + writesz;
-    };
-    sys_close(ufd);
+    var n = sys_savetpa(userfile, top);
+    if (n < 0) throw(n);
 
     # open "/proc/$pid.kernel" for writing
     var kfd = sys_open(kernelfile, O_WRITE|O_CREAT|O_KERNELFD);
@@ -328,4 +314,30 @@ sys_exec = asm {
 sys_trap = func(f) {
     trapfunc = f;
     return 0;
+};
+
+sys_savetpa = func(filename, top) {
+    var err = catch();
+    denycatch();
+    if (err) return err;
+
+    # open filename for writing
+    var fd = sys_open(filename, O_WRITE|O_CREAT|O_KERNELFD);
+    if (fd < 0) throw(fd);
+
+    # copy bytes from 0x100..top
+    var p = 0x100;
+    var n;
+    var writesz;
+    while (p != top) {
+        writesz = top-p;
+        if (writesz gt 16384) writesz = 16384;
+        n = sys_write(fd, p, writesz);
+        if (n < 0) throw(n);
+        if (n != writesz) kpanic("savetpa: write too small");
+        p = p + writesz;
+    };
+    sys_close(fd);
+
+    return 0
 };

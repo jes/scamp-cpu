@@ -5,6 +5,7 @@
 .def _TOP 0x109
 
 # system call vectors
+.def _sys_savetpa  0xfee6
 .def _sys_trap     0xfee7
 .def _sys_blkwrite 0xfee8
 .def _sys_blkread  0xfee9

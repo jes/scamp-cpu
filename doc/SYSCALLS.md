@@ -302,7 +302,7 @@ Blocks 0-63 are reserved for storing the kernel.
 Blocks 64-79 are the free space bitmap.
 Blocks 80+ are disk contents.
 
-### 0xfee8: trap(func)
+### 0xfee7: trap(func)
 
     Return: 0
     Implemented: yes
@@ -314,7 +314,7 @@ to the default behaviour of exiting. The trap function need not return,
 but should make sure to set the stack pointer to something sensible if
 it doesn't.
 
-### 0xfee7: savetpa(filename, TOP)
+### 0xfee6: savetpa(filename, TOP)
 
     Return: 0, or ERR on error
     Implemented: no
