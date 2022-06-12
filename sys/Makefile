@@ -3,7 +3,7 @@ BINS = cat.bin init.bin ls.bin mkdir.bin sh.bin pwd.bin echo.bin stat.bin rm.bin
 
 .PHONY: all test clean
 
-all: $(BINS) lib.o
+all: $(BINS) lib.o rude-globals.sl
 
 .PRECIOUS: %.bin
 %.bin: %.hex
@@ -25,6 +25,9 @@ all: $(BINS) lib.o
 
 lib.o: $(LIBS) make-lib
 	./make-lib
+
+rude-globals.sl: lib.h mk-rude-globals
+	./mk-rude-globals > rude-globals.sl
 
 clean:
 	rm -f *.bin *.hex *.anhex *.s *.tmp lib*.o lib*.s.build lib*.h

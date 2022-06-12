@@ -85,7 +85,7 @@ var _bslurp = func(bio) {
 # usage: bgetc(bio)
 var bgetc = asm {
     pop x
-    ld (_bgetc_bio), x # bio
+    ld (bgetc_bio), x # bio
 
     inc x
     ld r2, (x) # buflen
@@ -94,45 +94,45 @@ var bgetc = asm {
 
     # if (bufpos == buflen)
     sub r2, r3
-    jnz _bgetc_nextchar
+    jnz bgetc_nextchar
     #   _bslurp(bio);
     ld x, r254
     push x
-    ld x, (_bgetc_bio)
+    ld x, (bgetc_bio)
     push x
     call (__bslurp)
     pop x
     ld r254, x
 
-    _bgetc_nextchar:
+    bgetc_nextchar:
     # if (buflen == 0) return EOF;
-    ld x, (_bgetc_bio)
+    ld x, (bgetc_bio)
     inc x
     ld r2, (x) # buflen
     test r2
-    jnz _bgetc_not_eof
+    jnz bgetc_not_eof
     ld r0, (_EOF)
     ret
 
-    _bgetc_not_eof:
+    bgetc_not_eof:
     inc x
     ld r3, (x) # bufpos
 
     # ch = *(bio+4+bufpos)
-    ld x, (_bgetc_bio)
+    ld x, (bgetc_bio)
     add x, 4
     add x, r3
     ld r0, (x)
 
     # bufpos++
     inc r3
-    ld x, (_bgetc_bio)
+    ld x, (bgetc_bio)
     add x, 2
     ld (x), r3
 
     ret
 
-    _bgetc_bio: .word 0
+    bgetc_bio: .word 0
 };
 
 # read at most size-1 characters into s, and terminate with a 0

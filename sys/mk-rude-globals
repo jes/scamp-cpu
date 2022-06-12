@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+open(my $fh, '<', 'lib.h')
+    or die "can't read lib.h: $!\n";
+while (<$fh>) {
+    chomp;
+    if (/^extern ([a-zA-Z0-9_]+);$/) {
+        print "addglobal(\"$1\", &$1);\n";
+    } else {
+        print STDERR "unrecognised: $_\n";
+    }
+}
