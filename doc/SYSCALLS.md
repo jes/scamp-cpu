@@ -314,6 +314,14 @@ to the default behaviour of exiting. The trap function need not return,
 but should make sure to set the stack pointer to something sensible if
 it doesn't.
 
+### 0xfee7: savetpa(filename, TOP)
+
+    Return: 0, or ERR on error
+    Implemented: no
+    Errors: NOTFOUND? NOTDIR? TOOLONG?
+
+Save the TPA to the given filename.
+
 ## Errors
 
 Errors are generally returned from system calls as `-ERR`, with the following meanings:

@@ -1,0 +1,256 @@
+# The ultimate SLANG development environment
+
+List of problems with last year's Advent of Code effort:
+
+ - recompiling the whole program for every small change
+ - reparsing the whole input for every run
+
+FORTH provides many of the solutions, being an interactive environment
+where you can work on the program while the dataset is still in memory.
+The downside is you have to write FORTH.
+
+So the concept here is a REPL for SLANG.
+
+When you type in a line of code it will be compiled and executed.
+When it's compiled it will have like a lib.h and lib.s that contain
+definitions for all the globals.
+
+We could provide the standard lib.s and lib.h as well, so that the
+program can make use of globals in the REPL without having to include
+them.
+
+We want every function definition stored in source form, e.g.
+
+    var f = func() { return 6; }
+
+Then "func() { return 6; }" should go into f.sl
+
+If we reassign f:
+
+    var f = func() { return 7; }
+
+Then the previous f.sl gets renamed to f.sl.1 and the new version goes into f.sl
+
+We'll only keep one "old" copy of each symbol around, so that the "undo" function
+just toggles between the current one and the previous one.
+
+We could have a way to manually save versions of functions we care about, e.g.
+to f.sl.2, that will never be overwritten by the interpreter.
+
+How do we handle the case where a function uses another function, and then we
+provide a new implementation for the other function?
+
+We could make each function be a stub that just jumps to its own function pointer
+from a global table? And when we provide a new implementation of the function we
+just update the pointer in one place. In fact: isn't this just how function calls
+in SLANG already work? A function call is just calling the address stored in
+a variable, so we can modify the variable and all existing code doesn't need
+recompiling. Great success.
+
+Simple inputs like:
+
+    var y
+    x = 5
+    printf("%d\n", x)
+    foo(x, 1, 2, "bar")
+
+Should be able to be "interpreted", without having to shell out to the compiler.
+This would be a subset of SLANG that only supports:
+
+ - declaration
+ - assignment
+ - get the value of a global
+ - integers
+ - strings (to be free'd once control returned)
+ - function calls
+
+It should output the numeric value returned by a function call. I don't think there's
+any point supporting conditionals and loops. What about stuff like:
+
+    foo(bar())
+    x = foo() + 1
+
+Probably don't bother.
+
+Other features we want include:
+
+ - if the CPU has to be reset, we should be able to get back to the current state without
+   too much trouble (i.e. save the entire state of memory before doing anything risky?)
+ - we should be able to write out our working program as a single source file which we
+   can compile and then run as a standalone program
+
+Most of the working program will just be a concatenation of the foo.sl files.
+
+But what about when some key aspect of the program has been created directly at the REPL?
+
+Then just concatenating the foo.sl files won't get an equivalent program. We could:
+
+ - write out everything typed into the REPL as a separate .sl file
+ - say that everything typed into the REPL should be side-effect free by convention
+ - have some way for the user to indicate which things at the REPL should be persisted and which should not
+
+When concatenating foo.sl files, how do we know the order? It is possible to make a circular
+dependencies so we need to write out all the declarations first, and the implementations after, like:
+
+    var a;
+    var b;
+    a = func() return b()-1;
+    b = func() return 2;
+
+It is still possible to make source programs that don't match the working program. Imagine this session:
+
+    var a = 1;
+    b = func() return 2;
+    a = b();
+    b = func() return 4;
+
+We need to write out the assignments to the globals in the order that they were last assigned? Maybe we skip
+all this concatenation stuff and just write out everything that was typed into the REPL in the order that it
+was typed, and it's up to the user to tidy it up. (How does Ipython do this??)
+
+In particular there is the problem that a global could be assigned from a previous definition of a function
+that no longer exists. I think the only general solution is to re-evaluate everything in the order it was
+typed, and have the user manually touch up the source to delete bits they don't want.
+
+We still want to store each function definition in a source file so that they can be conveniently edited.
+
+Commands to the REPL could be implemented in SLANG as well. To edit a source file we could:
+
+    var foo = func() return 1;
+    kilo("foo")
+
+Which would then open up kilo editing the latest definition of foo. Or:
+
+    revert("foo")
+    savebin("myprogram")
+    savesrc("myprogram.sl")
+
+But... shouldn't savebin() and savesrc() happen automatically before every REPL invocation?
+Maybe they should, but we still want a way to take a backup.
+
+Should savebin() be a devenv thing, or should it be a kernel thing? The kernel already
+has the code required to do it, for context switching. We could just make it a key shortcut.
+Maybe a system call as well.
+
+If we kilo("foo") and foo doesn't exist yet then we just start editing an empty file.
+
+kilo should return a number to indicate whether or not the file was changed
+
+kilo = func(name) {
+    if name exists: copy it to /tmp/name.sl
+    regardless, system("kilo /tmp/name.sl")
+    if the file was changed {
+        compilefile("/tmp/name.sl")
+        if the compile succeeded {
+            copy name.sl to name.sl.1
+            copy /tmp/name.sl to name.sl
+        }
+    } else {
+        printf("not saved\n", 0)
+    }
+}
+
+Some way to view the implementation of a function without shelling out.
+
+list = func(name) {
+    read "name.sl" and print it
+}
+
+    > list("foo")
+    foo.sl:
+    func(x) { return x*x }
+
+What happens if you try to recompile something and it is a compile error? Just doesn't
+reassign, and doesn't change the source files, and doesn't go into the REPL history?
+
+When you type:
+
+    var foo = func() { ... }
+
+I think we need to process "var foo = " separately from the rest, because we need to
+keep a table mapping names to addresses.
+
+We need to use .at to tell the assembler where the code is going to be generated, but do
+we actually know where it is going to be placed before we know how long it is? Maybe we
+don't use malloc() to position generated code? Maybe we peek inside malloc and always
+place generated code at the start of the largest free block of memory?
+
+The memory hit from developing with the devenv, compared to just having the program, might
+not be too bad because most of the space is the library blob, which will only be present once.
+
+Concepts:
+ - the state of the program we're working on in memory
+ - the source of every existing function
+ - the source of the entire REPL history
+ - binary copy of the program in memory
+ - we need a map of variable name to address in memory, to provide to the compiler
+
+In principle, executing the REPL history as a standalone program should result in
+the same output as it did in the REPL
+
+Can we forget functions? What happens if something else is still using it? Then you're an idiot.
+
+    forget("foo")
+
+Can we have some way to defragment to free up memory for data? Maybe just re-evaluate the REPL history
+since the last defrag. To resume working on a devenv program we would just load up the binary from last
+time. The only time we'd re-evaluate the source file is to reconstruct the state with a different REPL
+version or something.
+
+When you execute something, it should output the integer, and the same value in hex. And if it's
+plausibly a string, the value of the string? If it's plausibly a function, the name of the function?
+If it's plausibly the address of a global, the name of the global?
+
+Given a command line, how do we decide how to act on it?
+
+Given a command line to pass to the compiler, how do we munge it?
+
+1. global declarations need to be turned into assignments:
+
+    var foo = func() return 1; var x = 5;
+becomes
+    foo = func() return 1; x = 5;
+
+Maybe we ignore the second "var ", because it complicates the parsing. If you declare a second global
+on the same line then it just ends up being private to that function.
+
+2. add all global declarations to the devenv's globals table, so that we can pass the addresses to the compiler
+
+addglobal("foo")
+
+3. write out the globals table to corresponding .s and .h files
+
+In .h:
+    extern foo;
+
+If parsing all of the "extern ..." is time-consuming then we can start supplying them in a binary
+format, or maybe just replace "extern" with "X".
+
+In fact the ".h" file stuff could just be at the top of the same file as the source we're compiling, to
+save writing & reading 2 separate files?
+
+In .s:
+    .blob /lib/lib.o
+    .d _foo 0x1234
+
+4. choose an address to put the generated code at.
+
+Maybe we could get slangc to generate the asm code, and tell us how many words it takes up,
+and then we'll allocate space, and know where it is, so we can write .at before we run the assembler?
+
+5. run slc (or manually slangc and asm?) to turn the source into code
+
+6. put the code in memory and execute it
+
+For the typical case, of a function definition, "executing" the generated code will just assign
+the address of the function to the name, and then jump over the function definition
+
+7. We need to end the code with something that returns control to the repl.
+
+Just a "jmp (_repl)" at the end of the asm code?
+
+When we save out the state of memory as a standalone program:
+ - can we wipe out the repl implementation and give it to malloc() to use?
+   maybe better not to, because then we can have functions drop down to repl() for their own purposes
+ - can we suggest an "entry point" to use instead of repl()?
+   savebin("myprogram", main)
