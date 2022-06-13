@@ -239,7 +239,7 @@ compile = func(code) {
     var b = bfdopen(1, O_WRITE);
     writeglobals_s(b);
     bfree(b);
-    printf("jmp proceed\nreturn_address: .word 0\nproceed:ld x, r254\nld (return_address), x\n", 0);
+    printf("jmp proceed\nreturn_address: .word 0\nproceed:\nld x, r254\nld (return_address), x\n", 0);
     cat(compiledasm);
     printf("jmp (return_address)\n", 0);
     #unlink(compiledasm);
