@@ -49,6 +49,7 @@ addglobal("bputs", &bputs);
 addglobal("bread", &bread);
 addglobal("bscanf", &bscanf);
 addglobal("bscanf_bio", &bscanf_bio);
+addglobal("buf_EOF", &buf_EOF);
 addglobal("bwrite", &bwrite);
 addglobal("car", &car);
 addglobal("cdr", &cdr);

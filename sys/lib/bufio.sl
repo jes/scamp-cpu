@@ -15,6 +15,7 @@ include "xprintf.sl";
 include "xscanf.sl";
 
 var BIO_BUFSZ = 254; # align with block size on disk
+var buf_EOF = 0;
 
 # "mode" should be O_READ or O_WRITE
 var bfdopen = func(fd, mode) {
@@ -76,7 +77,7 @@ var _bslurp = func(bio) {
 #    if (bufpos == buflen) _bslurp(bio);
 #    buflen = bio[1];
 #    bufpos = bio[2];
-#    if (buflen == 0) return EOF;
+#    if (buflen == 0) { buf_EOF=1; return EOF; };
 #    var ch = *(bio+4+bufpos);
 #    bio[2] = bufpos+1;
 #    return ch;
@@ -105,12 +106,13 @@ var bgetc = asm {
     ld r254, x
 
     bgetc_nextchar:
-    # if (buflen == 0) return EOF;
+    # if (buflen == 0) buf_EOF=1; return EOF;
     ld x, (bgetc_bio)
     inc x
     ld r2, (x) # buflen
     test r2
     jnz bgetc_not_eof
+    ld (_buf_EOF), 1
     ld r0, (_EOF)
     ret
 
@@ -245,8 +247,9 @@ var bread = func(bio, buf, sz) {
     var ch;
 
     while (sz--) {
+        buf_EOF = 0;
         ch = bgetc(bio);
-        if (ch == EOF) return n;
+        if (ch == EOF && buf_EOF) return n;
         *(buf++) = ch;
         n++;
     };
