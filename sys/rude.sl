@@ -321,6 +321,8 @@ projectfile = "project";
 historyfile = sprintf("%s.sl", [projectfile]);
 
 history = bopen(historyfile, O_WRITE|O_CREAT);
+# TODO: [bug] when we reload a saved binary project, the "history" will refer to a non-open file descriptor,
+# we'd need to reopen it in append mode or something?
 if (!history) {
     fprintf(2, "project.sl: can't open for writing\n", 0);
     exit(1);
