@@ -38,11 +38,12 @@ repl = func() {
     printf("> ", 0);
     var val;
     while (gets(buf, bufsz)) {
-        savebin("project", repl); # TODO: [nice] filename from project name
         bputs(history, buf);
         bflush(history);
         val = eval(buf);
         printf("%d 0x%04x\n", [val, val]);
+        savebin("project", repl); # TODO: [nice] filename from project name
+
         printf("> ", 0);
     };
     exit(0);
