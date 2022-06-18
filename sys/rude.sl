@@ -229,9 +229,9 @@ compile = func(code) {
         return 0;
     };
 
-    # TODO: [bug] how can we work out the actual size of the
-    # code without assembling it? do we have to assemble it twice?
-    var codesz = 1000;
+    # allocate a 2K buffer at first, we'll realloc() it down once we know
+    # how much space we need
+    var codesz = 2048;
     var addr = malloc(codesz);
 
     var fullasm = "/tmp/rude-full.s";
@@ -263,9 +263,10 @@ compile = func(code) {
         fprintf(2, "can't read %s\n", [binary]);
         return 0;
     };
-    # TODO: panic if the size in the file does not match codesz
-    bread(b, addr, codesz);
-    #printf("Read binary into 0x%04x\n", [addr]);
+    var filesz = bread(b, addr, codesz);
+    assert(filesz lt codesz, "panic: compiled size exceeds 2K allocation\n", 0);
+    var addr2 = realloc(addr, filesz); # this should shrink in-place
+    assert(addr == addr2, "panic: realloc() changed code address\n", 0);
     #unlink(binary);
 
     return addr;

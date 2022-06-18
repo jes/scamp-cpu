@@ -122,12 +122,30 @@ realloc = func(p, sz) {
     var bp = p-2;
     var oldsz = bp[1];
 
+    # if we can shrink in-place, do so
+    if (sz+2 le oldsz) {
+        if (sz+4 ge oldsz) return p; # no-op if only shrinking by 0..2
+        bp[1] = sz+2;
+        bp = p+sz;
+        bp[1] = oldsz-(sz+2);
+        free(bp+2);
+        return p;
+    };
+
+    # TODO: [bug] I think the following is totally bogus; *bp only needs to point
+    # to the next block for free blocks, it is meaningless for allocated blocks (e.g.
+    # imagine we allocated the last available block, so *bp wraps back to the start,
+    # but then new allocations are done so morecore() is called, and now the next block
+    # is no longer back at the start, but *bp still points there), also it doesn't
+    # actually validate that the next block is free at all???
+    # instead we should linear search the free list to see if there's a block starting
+    # just after the end of the block we're trying to grow
+
     # if we can grow in-place, do so
     var bpnext = *bp;
     var sznext;
     if (bpnext == p+oldsz) {
-        sznext = bp[1];
-        # TODO: [nice] also support shrinking in-place
+        sznext = bp[1]; # TODO: [bug] shouldn't this be bpnext[1]? how does this ever work?
         if ((sz gt oldsz) && (oldsz+sznext le sz)) {
             bpnext = p+sz;
             bpnext[1] = sznext-(sz-oldsz);
