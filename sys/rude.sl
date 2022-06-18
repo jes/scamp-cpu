@@ -197,6 +197,12 @@ cat = func(name) {
     close(fd);
 };
 
+# TODO: [perf] if we've already compiled this code already then we can
+# just re-execute the previous copy, because compilation is idempotent
+# provided the addresses of globals don't change; we could take a hash
+# of the source and create a hash table mapping those hashes to the
+# addresses of their binaries; maybe not worth the memory footprint?
+# shouldn't be too big though, just a single table entry per input line
 compile = func(code) {
     #printf("compile [%s]\n", [code]);
 
