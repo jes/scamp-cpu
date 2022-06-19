@@ -41,7 +41,6 @@ repl = func() {
         bflush(history);
         val = eval(buf);
         printf("%d 0x%04x\n", [val, val]);
-        savebin("project", repl); # TODO: [nice] filename from project name
 
         printf("> ", 0);
     };
@@ -317,6 +316,8 @@ addglobal = func(name, val) {
 };
 
 include "rude-globals.sl";
+
+addglobal("savebin", &savebin);
 
 # TODO: [nice] grab project name from command line?
 
