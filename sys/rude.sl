@@ -230,11 +230,6 @@ compile = func(code) {
     var prev_in;
     var prev_out;
 
-    # copy the required lib into "/lib/slc-lib.h"
-    prev_out = redirect(1, "/lib/slc-lib.h", O_WRITE|O_CREAT);
-    cat("/lib/lib.h");
-    unredirect(1, prev_out);
-
     # redirect stdin to read the source file
     prev_in = redirect(0, srcfile, O_READ);
 
