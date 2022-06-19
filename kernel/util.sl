@@ -153,9 +153,12 @@ var memset = func(s, c, n) {
 
 # >>8 1 arg from the stack and return the result in r0
 var shr8 = asm {
+    # XXX: careful changing this! undirent() assumes it only
+    # clobbers r0,r1,r254
     pop x
     ld r0, x
     ld r1, r254 # stash return address
+shr8_entry:
     ld r254, 0
     tbsz r0, 0x8000
     sb r254, 0x80

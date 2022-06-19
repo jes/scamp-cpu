@@ -27,26 +27,91 @@ var dirent = func(dirent, name, blknum) {
 # decode the dirent starting at dirent into a name and block number;
 # store a pointer to a (static) string containing the name in *pname,
 # and store the block number in *pblknum
-var undirent = func(dirent, pname, pblknum) {
-    var p = dirent;
-    var s = undirent_str;
+#var undirent = func(dirent, pname, pblknum) {
+#    var p = dirent;
+#    var s = undirent_str;
+#
+#    while (p != dirent+15) {
+#        *s = shr8(*p); # high byte
+#        if (!*s) break;
+#        s++;
+#
+#        *s = *p & 0xff; # low byte
+#        if (!*s) break;
+#        s++;
+#
+#        p++;
+#    };
+#
+#    *s = 0; # nul-terminate even if the name in the dirent used all 30 chars
+#
+#    *pname = undirent_str;
+#    *pblknum = dirent[15];
+#};
+var undirent = asm {
+    # XXX: undirent() can't use r0,r1,r254 because shr8() uses them
+    pop x
+    ld r3, x # pblknum
+    pop x
+    ld r2, x # pname
+    pop x
+    ld r4, x # dirent
 
-    while (p != dirent+15) {
-        *s = shr8(*p); # high byte
-        if (!*s) break;
-        s++;
+    # stash return address
+    ld x, r254
+    push x
 
-        *s = *p & 0xff; # low byte
-        if (!*s) break;
-        s++;
+    ld r5, r4 # p = dirent
+    ld r6, (_undirent_str) # s = undirent_str
 
-        p++;
-    };
+    add r4, 15 # r4 == dirent+15
 
-    *s = 0; # nul-terminate even if the name in the dirent used all 30 chars
+    undirent_loop:
+        # if (p == dirent+15) break;
+        ld x, r5
+        sub x, r4
+        jz undirent_done
 
-    *pname = undirent_str;
-    *pblknum = dirent[15];
+        # *s = shr8(*p); # high byte
+        ld x, (r5)
+
+        ld r0, x
+        ld r1, shr8_ret_to_undirent
+        jmp shr8_entry
+        shr8_ret_to_undirent:
+
+        ld x, r0
+        ld (r6), x
+        # if (!*s) break;
+        jz undirent_done
+        # s++;
+        inc r6
+
+        # *s = *p & 0xff; # low byte
+        ld x, (r5)
+        and x, 0xff
+        ld (r6), x
+        # if (!*s) break;
+        jz undirent_done
+        # s++;
+        inc r6
+
+        # p++;
+        inc r5
+
+        jmp undirent_loop
+
+    undirent_done:
+    ld (r6), 0 # *s = 0
+    ld x, (_undirent_str)
+    ld (r2), x # *pname = undirent_str
+
+    ld x, (r4)
+    ld (r3), x # *pblknum = dirent[15]
+
+    # return
+    pop x
+    jmp x
 };
 
 # call cb(name, blknum, dirblknum, dirent_offset) for every entry in the
