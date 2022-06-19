@@ -791,8 +791,17 @@ int main(int argc, char **argv) {
         write_profile(argc, argv, elapsed_us);
 
     int i;
+    uint64_t totalcycles = 0;
+    int numsegments = 0;
     for (i = 0; i < 256; i++) {
-        if (segmented_cycles[i] > 0) fprintf(stderr, "[cycles] segment %d: %lu\r\n", i, segmented_cycles[i]);
+        if (segmented_cycles[i] > 0) {
+            fprintf(stderr, "[cycles] segment %d: %lu\r\n", i, segmented_cycles[i]);
+            totalcycles += segmented_cycles[i];
+            numsegments++;
+        }
+    }
+    if (numsegments > 1) {
+        fprintf(stderr, "[cycles] total: %lu\r\n", totalcycles);
     }
 #endif
 
