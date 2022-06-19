@@ -528,7 +528,7 @@ unbounds_fd = open(unbounds_filename, O_WRITE|O_CREAT);
 if (unbounds_fd < 0) die("open %s: %s", [unbounds_filename, strerror(unbounds_fd)]);
 unbounds_bio = bfdopen(unbounds_fd, O_WRITE);
 
-fprintf(2, "1st pass...\n", 0);
+fputs(2, "1st pass...\n");
 var inbuf = bfdopen(0, O_READ);
 var charcount = 0;
 parse_init(func() {
@@ -546,8 +546,7 @@ unbounds_fd = open(unbounds_filename, O_READ);
 if (unbounds_fd < 0) die("open %s: %s", [unbounds_filename, strerror(unbounds_fd)]);
 unbounds_bio = bfdopen(unbounds_fd, O_READ);
 
-fputc(2, '\n');
-fprintf(2, "2nd pass...\n", 0);
+fputs(2, "\n2nd pass...\n");
 resolve_unbounds();
 #unlink(code_filename);
 bclose(unbounds_bio);
