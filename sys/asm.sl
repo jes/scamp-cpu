@@ -5,6 +5,7 @@
 
 include "asmparser.sl";
 include "bufio.sl";
+include "getopt.sl";
 include "hash.sl";
 include "stdio.sl";
 include "stdlib.sl";
@@ -34,6 +35,22 @@ var lookup = func(name) {
 
 var store = func(name,val) {
     htput(IDENTIFIERS, name, val);
+};
+
+var addexterns = func(filename) {
+    var b = bopen(filename, O_READ);
+    if (!b) die("can't open %s for reading\n", [filename]);
+
+    var addr;
+    var name;
+    while(bgets(b, literal_buf, 512)) {
+        literal_buf[strlen(literal_buf)-1] = 0; # no '\n'
+        addr = literal_buf[0];
+        literal_buf[0] = '_'; # XXX: prepend an underscore to match SLANG names
+        name = strdup(literal_buf);
+        store(name, addr);
+    };
+    bclose(b);
 };
 
 # return a pointer to an existing stored copy of "name", or strdup() one if there is none
@@ -474,7 +491,31 @@ var resolve_unbounds = func() {
     free(code);
 };
 
+var help = func(rc) {
+    fprintf(2, "usage: asm [options] < ASM > BINARY
+
+options:
+    -e FILE   filename containing list of extern names
+    -h        show this help
+", 0);
+    exit(rc);
+};
+
 IDENTIFIERS = htnew();
+
+var more = getopt(cmdargs()+1, "e", func(ch,arg) {
+    if (ch == 'h') help(0)
+    else if (ch == 'e') {
+        addexterns(arg);
+    } else {
+        fprintf(2, "error: unrecognised option -%c\n", [ch]);
+        help(1);
+    };
+});
+if (*more) {
+    fprintf(2, "error: unrecognised options\n", 0);
+    help(1);
+};
 
 #code_filename = strdup(tmpnam());
 code_filename = "/tmp/asm-1stpass";

@@ -145,7 +145,7 @@ var addexterns = func(filename) {
     var name;
     while(bgets(b, literal_buf, 512)) {
         literal_buf[strlen(literal_buf)-1] = 0; # no '\n'
-        name = strdup(literal_buf);
+        name = strdup(literal_buf+1); # +1 because the first word is the address
         htput(EXTERNS, name, name);
     };
     bclose(b);

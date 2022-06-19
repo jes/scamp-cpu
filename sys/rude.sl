@@ -23,9 +23,6 @@ var compilefile;
 var newglobal;
 var addglobal;
 var forget;
-var writeglobals_h;
-var writeglobals_list;
-var writeglobals_s;
 
 var globals = htnew();
 
@@ -148,6 +145,7 @@ writesrcfile = func(code) {
     return name;
 };
 
+var writeglobals_b;
 writeglobalsfile = func() {
     var name = "/tmp/rude-globals.sl";
     var b = bopen(name, O_WRITE|O_CREAT);
@@ -156,7 +154,11 @@ writeglobalsfile = func() {
         return 0;
     };
 
-    writeglobals_list(b);
+    writeglobals_b = b;
+    htwalk(globals, func(k,v) {
+        bprintf(writeglobals_b, "%c%s\n", [v, k]);
+    });
+
     bclose(b);
 
     return name;
@@ -260,9 +262,6 @@ compile = func(code) {
     var fullasm = "/tmp/rude-full.s";
     prev_out = redirect(1, fullasm, O_WRITE|O_CREAT);
     printf(".at 0x%04x\n", [addr]);
-    var b = bfdopen(1, O_WRITE);
-    writeglobals_s(b);
-    bfree(b);
     printf("jmp proceed\nreturn_address: .word 0\nproceed:\nld x, r254\nld (return_address), x\n", 0);
     cat(compiledasm);
     printf("jmp (return_address)\n", 0);
@@ -272,7 +271,7 @@ compile = func(code) {
     prev_in = redirect(0, fullasm, O_READ);
     var binary = "/tmp/rude.bin";
     prev_out = redirect(1, binary, O_WRITE|O_CREAT);
-    rc = system(["/bin/asm"]);
+    rc = system(["/bin/asm", "-e", globalsfile]);
     unredirect(0, prev_in);
     unredirect(1, prev_out);
     #unlink(fullasm);
@@ -281,7 +280,7 @@ compile = func(code) {
         return 0;
     };
 
-    b = bopen(binary, O_READ);
+    var b = bopen(binary, O_READ);
     if (!b) {
         fprintf(2, "can't read %s\n", [binary]);
         return 0;
@@ -320,28 +319,6 @@ addglobal = func(name, val) {
         htput(globals, name, val);
         return 1;
     }
-};
-
-var writeglobals_b;
-writeglobals_h = func(b) {
-    writeglobals_b = b;
-    htwalk(globals, func(k,v) {
-        bprintf(writeglobals_b, "extern %s;\n", [k]);
-    });
-};
-
-writeglobals_list = func(b) {
-    writeglobals_b = b;
-    htwalk(globals, func(k,v) {
-        bprintf(writeglobals_b, "%s\n", [k]);
-    });
-};
-
-writeglobals_s = func(b) {
-    writeglobals_b = b;
-    htwalk(globals, func(k,v) {
-        bprintf(writeglobals_b, ".d _%s 0x%04x\n", [k, v]);
-    });
 };
 
 include "rude-globals.sl";
