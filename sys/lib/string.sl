@@ -52,16 +52,45 @@ var strncmp = func(s1,s2,n) {
     return *s1-*s2;
 };
 
-strlen = func(s) {
-    var ss = s;
-    while (*ss) ss++;
-    return ss - s;
+#strlen = func(s) {
+#    var ss = s;
+#    while (*ss) ss++;
+#    return ss - s;
+#};
+strlen = asm {
+    pop x
+    ld r0, x
+    strlen_loop:
+        inc x
+        test (x)
+        jnz strlen_loop
+    sub r0, x
+    neg r0
+    ret
 };
 
-var memset = func(s, val, len) {
-    var ss = s;
-    while (len--) *(s++) = val;
-    return ss;
+#var memset = func(s, val, len) {
+#    var ss = s;
+#    while (len--) *(s++) = val;
+#    return ss;
+#};
+var memset = asm {
+    pop x
+    ld r1, x # len
+    pop x
+    ld r2, x # val
+    pop x
+    ld r3, x # s
+    ld r0, x # return s
+    memset_loop:
+        test r1
+        jz memset_done
+        ld x, r2
+        ld (r3++), x
+        dec r1
+        jmp memset_loop
+    memset_done:
+    ret
 };
 
 #var memcpy = func(dest, src, len) {
@@ -142,11 +171,24 @@ var memcpy = asm {
     .word memcpy7
 };
 
-var strcpy = func(dest, src) {
-    var dd = dest;
-    while (*src) *(dest++) = *(src++);
-    *dest = 0;
-    return dd;
+#var strcpy = func(dest, src) {
+#    var dd = dest;
+#    while (*src) *(dest++) = *(src++);
+#    *dest = 0;
+#    return dd;
+#};
+var strcpy = asm {
+    pop x
+    ld r1, x # src
+    pop x
+    ld r2, x # dst
+    ld r0, x # return dst
+    strcpy_loop:
+        ld x, (r1++)
+        ld (r2++), x
+        test x
+        jnz strcpy_loop
+    ret
 };
 
 var strcat = func(dest, src) {
