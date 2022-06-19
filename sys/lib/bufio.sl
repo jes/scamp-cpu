@@ -147,13 +147,13 @@ var bgets = func(bio, s, size) {
     while (ch >= 0 && ch != '\n' && len < size) {
         ch = bgetc(bio);
         if (ch >= 0)
-            *(s+(len++)) = ch;
+            s[len++] = ch;
     };
 
     if (ch < 0 && len == 0)
         return 0;
 
-    *(s+len) = 0;
+    s[len] = 0;
 
     return s;
 };
