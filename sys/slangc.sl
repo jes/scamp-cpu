@@ -1121,6 +1121,7 @@ var help = func(rc) {
 
 options:
     -e FILE   filename containing list of extern names
+    -f FOOT   asm string to append to output
     -h        show this help
 ", 0);
     exit(rc);
@@ -1132,10 +1133,14 @@ STRINGS = grnew();
 EXTERNS = htnew();
 GLOBALS = htnew();
 
-var more = getopt(cmdargs()+1, "e", func(ch,arg) {
+var foot_str;
+
+var more = getopt(cmdargs()+1, "ef", func(ch,arg) {
     if (ch == 'h') help(0)
     else if (ch == 'e') {
         addexterns(arg);
+    } else if (ch == 'f') {
+        foot_str = arg;
     } else {
         fprintf(2, "error: unrecognised option -%c\n", [ch]);
         help(1);
@@ -1209,6 +1214,7 @@ grwalk(ARRAYS, func(tuple) {
 
 plabel(end); myputs(":\n");
 flushpush();
+myputs(foot_str);
 bclose(OUT);
 
 fputc(2, '\n');
