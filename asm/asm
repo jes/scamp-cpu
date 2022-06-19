@@ -13,12 +13,14 @@ my $verbose = 0;
 my $verbose_file;
 my $asm_header;
 my $slang_header;
+my $externs_list;
 
 GetOptions(
     'v|verbose' => \$verbose,
     'verbose-file=s' => \$verbose_file,
     'asm-header=s' => \$asm_header,
     'slang-header=s' => \$slang_header,
+    'externs-list=s' => \$externs_list,
     'h|help' => sub { help(0) },
 ) or help(1);
 
@@ -201,6 +203,23 @@ if ($slang_header) {
     for my $l (sort keys %label) {
         (my $slang_l = $l) =~ s/^_//;
         print $fh "extern $slang_l;\n" if $l =~ /^_/;
+    }
+    close $fh;
+}
+
+# create the externs list, if any
+if ($externs_list) {
+    open(my $fh, '>', $externs_list)
+        or die "can't write $externs_list: $!\n";
+    for my $l (sort keys %label) {
+        (my $slang_l = $l) =~ s/^_//;
+        if ($l =~ /^_/) {
+            print $fh pack('s>', $label{$l});
+            for my $c (split //, $slang_l) {
+                printf $fh "\0$c";
+            }
+            print $fh "\0\n";
+        }
     }
     close $fh;
 }

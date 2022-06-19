@@ -16,8 +16,9 @@ makelib() {
     done > lib$name.sl
 
     ../compiler/slangc lib$name.sl | ../compiler/peepopt | ../compiler/peepopt > lib$name.s.build
-    cat lib/libhead.s lib$name.s.build | ../asm/asm --asm-header lib$name.s.tmp --slang-header lib$name.h > lib$name.hex.tmp
-    echo ".blob /lib/lib$name.o" | cat - lib$name.s.tmp > lib$name.s
+
+    # XXX: we're still using lib$name.h to parse names of globals in mk-rude-globals
+    cat lib/libhead.s lib$name.s.build | ../asm/asm --slang-header lib$name.h --externs-list lib$name.list > lib$name.hex.tmp
     ../util/hex2bin lib$name.hex.tmp > lib$name.o.tmp
     mv lib$name.o.tmp lib$name.o
     cat lib/libhead.s lib$name.s.build | ../asm/asm -v > lib$name.anhex

@@ -26,7 +26,7 @@ all: $(BINS) lib.o rude-globals.sl
 lib.o: $(LIBS) make-lib
 	./make-lib
 
-rude-globals.sl: lib.h mk-rude-globals
+rude-globals.sl: lib.list mk-rude-globals
 	./mk-rude-globals > rude-globals.sl
 
 clean:

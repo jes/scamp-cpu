@@ -102,17 +102,12 @@ if (args[0]) {
 
 var rc;
 
-# copy the required lib into "/lib/slc-lib.h"
-var libhfile = sprintf("/lib/lib%s.h", [libname]);
-var libsfile = sprintf("/lib/lib%s.s", [libname]);
-var prev_out = redirect(1, "/lib/slc-lib.h", O_WRITE|O_CREAT);
-cat(libhfile);
-unredirect(1, prev_out);
+var externsfile = sprintf("/lib/lib%s.list", [libname]);
 
 # direct stdout to "/tmp/1.s" and run slangc
 fprintf(2, "slangc...\n", 0);
-prev_out = redirect(1, "/tmp/1.s", O_WRITE|O_CREAT);
-rc = system(["/bin/slangc"]);
+var prev_out = redirect(1, "/tmp/1.s", O_WRITE|O_CREAT);
+rc = system(["/bin/slangc", "-e", externsfile]);
 if (rc != 0) exit(rc);
 unredirect(1, prev_out);
 
@@ -120,7 +115,7 @@ unredirect(1, prev_out);
 fprintf(2, "cat...\n", 0);
 prev_out = redirect(1, "/tmp/2.s", O_WRITE|O_CREAT);
 cat("/lib/head.s");
-cat(libsfile);
+printf(".blob /lib/lib%s.o\n", [libname]);
 cat("/tmp/1.s");
 cat("/lib/foot.s");
 unredirect(1, prev_out);
@@ -131,4 +126,4 @@ redirect(0, "/tmp/2.s", O_READ);
 if (outfile) {
     redirect(1, outfile, O_WRITE|O_CREAT);
 };
-exec(["/bin/asm"]);
+exec(["/bin/asm", "-e", externsfile]);
