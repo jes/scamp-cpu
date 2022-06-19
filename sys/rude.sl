@@ -192,27 +192,6 @@ unredirect = func(fd, prev) {
     close(prev);
 };
 
-# save shelling out to cat
-cat = func(name) {
-    var fd = open(name, O_READ);
-    if (fd < 0) {
-        fprintf(2, "open %s: %s\n", [name, strerror(fd)]);
-        exit(1);
-    };
-
-    var n;
-    while (1) {
-        n = read(fd, buf, bufsz);
-        if (n == 0) break;
-        if (n < 0) {
-            fprintf(2, "cat: read %d: %s\n", [fd, strerror(n)]);
-            exit(1);
-        };
-        write(1, buf, n);
-    };
-    close(fd);
-};
-
 # TODO: [perf] if we've already compiled this code already then we can
 # just re-execute the previous copy, because compilation is idempotent
 # provided the addresses of globals don't change; we could take a hash
@@ -221,9 +200,7 @@ cat = func(name) {
 # shouldn't be too big though, just a single table entry per input line
 compile = func(code) {
     #printf("compile [%s]\n", [code]);
-
     var srcfile = writesrcfile(code);
-
     var globalsfile = writeglobalsfile();
 
     var prev_in;
@@ -236,8 +213,18 @@ compile = func(code) {
     var compiledasm = "/tmp/rude.s";
     prev_out = redirect(1, compiledasm, O_WRITE|O_CREAT);
 
+    # allocate a 2K buffer at first, we'll realloc() it down once we know
+    # how much space we need
+    var codesz = 2048;
+    var addr = malloc(codesz);
+
+    # write asm head now
+    puts(".at 0x");
+    printf("%04x", [addr]);
+    puts("\njmp proceed\nreturn_address: .word 0\nproceed:\nld x, r254\nld (return_address), x\n");
+
     # compile!
-    var rc = system(["/bin/slangc", "-e", globalsfile]);
+    var rc = system(["/bin/slangc", "-e", globalsfile, "-f", "jmp (return_address)\n"]);
     unredirect(0, prev_in);
     unredirect(1, prev_out);
 
@@ -248,21 +235,7 @@ compile = func(code) {
         return 0;
     };
 
-    # allocate a 2K buffer at first, we'll realloc() it down once we know
-    # how much space we need
-    var codesz = 2048;
-    var addr = malloc(codesz);
-
-    var fullasm = "/tmp/rude-full.s";
-    prev_out = redirect(1, fullasm, O_WRITE|O_CREAT);
-    printf(".at 0x%04x\n", [addr]);
-    printf("jmp proceed\nreturn_address: .word 0\nproceed:\nld x, r254\nld (return_address), x\n", 0);
-    cat(compiledasm);
-    printf("jmp (return_address)\n", 0);
-    #unlink(compiledasm);
-    unredirect(1, prev_out);
-
-    prev_in = redirect(0, fullasm, O_READ);
+    prev_in = redirect(0, compiledasm, O_READ);
     var binary = "/tmp/rude.bin";
     prev_out = redirect(1, binary, O_WRITE|O_CREAT);
     rc = system(["/bin/asm", "-e", globalsfile]);
