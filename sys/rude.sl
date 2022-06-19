@@ -14,6 +14,7 @@ var savesrc;
 var savebin;
 var varname;
 var writesrcfile;
+var writeglobalsfile;
 var redirect;
 var unredirect;
 var cat;
@@ -23,6 +24,7 @@ var newglobal;
 var addglobal;
 var forget;
 var writeglobals_h;
+var writeglobals_list;
 var writeglobals_s;
 
 var globals = htnew();
@@ -140,8 +142,21 @@ writesrcfile = func(code) {
         return 0;
     };
 
-    writeglobals_h(b);
     bputs(b, code);
+    bclose(b);
+
+    return name;
+};
+
+writeglobalsfile = func() {
+    var name = "/tmp/rude-globals.sl";
+    var b = bopen(name, O_WRITE|O_CREAT);
+    if (!b) {
+        fprintf(2, "can't write %s\n", [name]);
+        return 0;
+    };
+
+    writeglobals_list(b);
     bclose(b);
 
     return name;
@@ -208,6 +223,8 @@ compile = func(code) {
 
     var srcfile = writesrcfile(code);
 
+    var globalsfile = writeglobalsfile();
+
     var prev_in;
     var prev_out;
 
@@ -224,7 +241,7 @@ compile = func(code) {
     prev_out = redirect(1, compiledasm, O_WRITE|O_CREAT);
 
     # compile!
-    var rc = system(["/bin/slangc"]);
+    var rc = system(["/bin/slangc", "-e", globalsfile]);
     unredirect(0, prev_in);
     unredirect(1, prev_out);
 
@@ -310,6 +327,13 @@ writeglobals_h = func(b) {
     writeglobals_b = b;
     htwalk(globals, func(k,v) {
         bprintf(writeglobals_b, "extern %s;\n", [k]);
+    });
+};
+
+writeglobals_list = func(b) {
+    writeglobals_b = b;
+    htwalk(globals, func(k,v) {
+        bprintf(writeglobals_b, "%s\n", [k]);
     });
 };
 

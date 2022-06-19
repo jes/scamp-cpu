@@ -19,6 +19,7 @@
 # TODO: search paths for "include"
 
 include "bufio.sl";
+include "getopt.sl";
 include "grarr.sl";
 include "hash.sl";
 include "parse.sl";
@@ -121,6 +122,8 @@ var magnitude_used = [0,       0,       0,       0,       0,       0,       0,  
 
 # return 1 if "name" is a global or extern, 0 otherwise
 var findglobal = func(name) {
+    # TODO: [perf] would these be better the other way around?
+    #              would we be better off with only one table?
     if (htgetkv(GLOBALS, name)) return 1;
     if (htgetkv(EXTERNS, name)) return 1;
     return 0;
@@ -133,6 +136,19 @@ var addextern = func(name) {
 var addglobal = func(name) {
     if (findglobal(name)) die("duplicate global: %s",[name]);
     htput(GLOBALS, name, name);
+};
+
+var addexterns = func(filename) {
+    var b = bopen(filename, O_READ);
+    if (!b) die("can't open %s for reading\n", [filename]);
+
+    var name;
+    while(bgets(b, literal_buf, 512)) {
+        literal_buf[strlen(literal_buf)-1] = 0; # no '\n'
+        name = strdup(literal_buf);
+        htput(EXTERNS, name, name);
+    };
+    bclose(b);
 };
 
 # return pointer to (name,bp_rel) if "name" is a local, 0 otherwise
@@ -1100,11 +1116,35 @@ Identifier = func(x) {
     die("identifier too long",0);
 };
 
+var help = func(rc) {
+    fprintf(2, "usage: slangc [options] < SOURCE > ASM
+
+options:
+    -e FILE   filename containing list of extern names
+    -h        show this help
+", 0);
+    exit(rc);
+};
+
 INCLUDED = grnew();
 ARRAYS = grnew();
 STRINGS = grnew();
 EXTERNS = htnew();
 GLOBALS = htnew();
+
+var more = getopt(cmdargs()+1, "e", func(ch,arg) {
+    if (ch == 'h') help(0)
+    else if (ch == 'e') {
+        addexterns(arg);
+    } else {
+        fprintf(2, "error: unrecognised option -%c\n", [ch]);
+        help(1);
+    };
+});
+if (*more) {
+    fprintf(2, "error: unrecognised options\n", 0);
+    help(1);
+};
 
 # use dedicated input/output buffers, for performance
 setbuf(0, malloc(257));

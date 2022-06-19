@@ -26,7 +26,7 @@ include "string.sl";
 #      else if (ch == 'h') help(0)
 #      else if (ch == 'v') version()
 #      else {
-#          fprintf(2, "error: unrecognised option -%c", [ch]);
+#          fprintf(2, "error: unrecognised option -%c\n", [ch]);
 #          help(1);
 #      };
 #  });
