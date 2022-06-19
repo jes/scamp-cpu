@@ -155,7 +155,9 @@ writeglobalsfile = func() {
 
     writeglobals_b = b;
     htwalk(globals, func(k,v) {
-        bprintf(writeglobals_b, "%c%s\n", [v, k]);
+        bputc(writeglobals_b, v);
+        bputs(writeglobals_b, k);
+        bputc(writeglobals_b, '\n');
     });
 
     bclose(b);
