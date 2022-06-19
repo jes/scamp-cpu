@@ -34,7 +34,7 @@ var historyfile;
 var history;
 
 repl = func() {
-    printf("> ", 0);
+    puts("> ");
     var val;
     while (gets(buf, bufsz)) {
         bputs(history, buf);
@@ -42,7 +42,7 @@ repl = func() {
         val = eval(buf);
         printf("%d 0x%04x\n", [val, val]);
 
-        printf("> ", 0);
+        puts("> ");
     };
     exit(0);
 };
@@ -335,6 +335,6 @@ if (!history) {
 # this prints when we load up a fresh project, but not
 # when we load up a saved project, because then we are
 # jumping straight to repl()
-printf("RUDE AWAKENING\n", 0);
+puts("RUDE AWAKENING\n");
 
 repl();
