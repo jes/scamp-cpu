@@ -143,14 +143,45 @@ var cf_blkread = func(num, headbuf, bodybuf) {
     return asm_cf_blkread(headbuf, bodybuf);
 };
 
-# usage: asm_cf_blkwrite(buf)
+# read the header from the given block number into the given buf
+# TODO: [bug] is this legit? is this a violation of the CF spec or whatever?
+var cf_blkread_head = func(num, buf) {
+    cf_blkselect(num);
+
+    # only 1 block
+    cf_wait(CFRDY);
+    outp(CFBLKCNTREG, 1);
+
+    # issue "read" command
+    cf_wait(CFRDY);
+    outp(CFCMDREG, CFREADCMD);
+
+    # wait for CFRDY and CFDRQ
+    cf_wait(CFRDY | CFDRQ);
+
+    buf[0] = inp(CFDATAREG);
+    buf[1] = inp(CFDATAREG);
+};
+
+# usage: asm_cf_blkwrite(headbuf, bodybuf)
 var asm_cf_blkwrite = asm {
     ld r0, 16 # number of loop iterations (BLKSZ/16 == 256/16 == 16)
-    pop x # pointer to read from
+    pop x
+    ld r3, x # pointer to read body from
+    pop x
+    ld r4, x # pointer to read header from
+
+    # write header (first 2 words)
+    out CFDATAREG, (x++)
+    out CFDATAREG, (x++)
+
+    ld x, r3
+    jmp asm_cf_blkwrite_begin
 
     asm_cf_blkwrite_loop:
         out CFDATAREG, (x++)
         out CFDATAREG, (x++)
+    asm_cf_blkwrite_begin:
         out CFDATAREG, (x++)
         out CFDATAREG, (x++)
         out CFDATAREG, (x++)
@@ -170,7 +201,7 @@ var asm_cf_blkwrite = asm {
     ret
 };
 
-var cf_blkwrite = func(num, buf) {
+var cf_blkwrite = func(num, headbuf, bodybuf) {
     cf_blkselect(num);
 
     # only 1 block
@@ -184,5 +215,5 @@ var cf_blkwrite = func(num, buf) {
     # wait for CFRDY and CFDRQ
     cf_wait(CFRDY | CFDRQ);
 
-    return asm_cf_blkwrite(buf);
+    return asm_cf_blkwrite(headbuf, bodybuf);
 };

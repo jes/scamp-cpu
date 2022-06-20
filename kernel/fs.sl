@@ -71,13 +71,23 @@ var fs_write = func(fd, buf, sz) {
     var remain;
     var write;
     var isnewblock = 0;
+    var direct;
 
     if (!blkbuf) blkbuf = BLKBUF;
 
     while (sz) {
+        # can we write this block directly from the user buffer?
+        direct = (sz ge 254) && (posinblk == 0);
+
         # read the current block of the file
-        if (!isnewblock)
-            blkread(blknum, blkbuf);
+        if (!isnewblock) {
+            if (direct) {
+                cf_blkread_head(blknum, blkbuf); # read header only
+                blkbuf[256] = 0; # invalidate cached contents
+            } else {
+                blkread(blknum, blkbuf);
+            };
+        };
 
         # how much space remains in this block?
         remain = (BLKSZ-2)-posinblk;
@@ -96,11 +106,16 @@ var fs_write = func(fd, buf, sz) {
             nextblknum = blknext(blkbuf);
         };
 
-        # copy data to block
-        memcpy(blkbuf+posinblk+2, buf+writesz, write);
+        if (direct) {
+            # write straight from user buffer
+            cf_blkwrite(blknum, blkbuf, buf+writesz);
+        } else {
+            # copy data to block
+            memcpy(blkbuf+posinblk+2, buf+writesz, write);
 
-        # write block to disk immediately if we're using the shared buffer
-        if (blkbuf == BLKBUF) blkwrite(blknum, blkbuf);
+            # write block to disk immediately if we're using the shared buffer
+            if (blkbuf == BLKBUF) blkwrite(blknum, blkbuf);
+        };
 
         if (sz gt write && nextblknum == blknum) kpanic("write: nextblknum == blknum");
 

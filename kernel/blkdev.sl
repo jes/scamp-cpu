@@ -24,7 +24,7 @@ var blkwrite = func(num, buf) {
 
     *(buf+256) = num;
 
-    return cf_blkwrite(num, buf);
+    return cf_blkwrite(num, buf, buf+2);
 };
 
 # get the "type"/"length"/"next" field of the current block
