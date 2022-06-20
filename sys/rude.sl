@@ -202,7 +202,6 @@ unredirect = func(fd, prev) {
 compile = func(code) {
     #printf("compile [%s]\n", [code]);
     var srcfile = writesrcfile(code);
-    var globalsfile = writeglobalsfile();
 
     var prev_in;
     var prev_out;
