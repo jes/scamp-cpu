@@ -854,7 +854,6 @@ ld (x), i16: # Load <tt>i16</tt> into <tt>(x)</tt>.
     PO AI
     MO YI P+
     XO AI
-    MO AI
     MI YO
 
 ld (x), (i8h): # Load <tt>r</tt> into <tt>(x)</tt>.
