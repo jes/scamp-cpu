@@ -76,9 +76,6 @@ var sys_exit_impl = func(rc) {
     sys_read(kfd, fdtable, 128);
     sys_close(kfd);
 
-    sys_unlink(userfile);
-    sys_unlink(kernelfile);
-
     allowcatch();
     return_to_parent(sp, ret, rc);
     kpanic("returned to exit");
@@ -101,9 +98,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
     # create filenames
     # TODO: [bug] should support more than 1 digit in filenames
     var userfile = "/proc/0.user";
-    var unlink_userfile = 0;
     var kernelfile = "/proc/0.kernel";
-    var unlink_kernelfile = 0;
     *(userfile+6) = pid+'0';
     *(kernelfile+6) = pid+'0';
 
@@ -111,8 +106,6 @@ var sys_system_impl  = func(top, args, sp, ret) {
     denycatch();
     if (err) {
         allowcatch();
-        if (unlink_userfile) sys_unlink(userfile);
-        if (unlink_kernelfile) sys_unlink(kernelfile);
         return err;
     };
 
@@ -120,14 +113,12 @@ var sys_system_impl  = func(top, args, sp, ret) {
     sys_sync(-1);
 
     # write out the TPA contents
-    unlink_userfile = 1;
     var n = sys_savetpa(userfile, top);
     if (n < 0) throw(n);
 
     # open "/proc/$pid.kernel" for writing
-    var kfd = sys_open(kernelfile, O_WRITE|O_CREAT|O_KERNELFD);
+    var kfd = sys_open(kernelfile, O_WRITE|O_CREAT|O_KERNELFD|O_NOTRUNC);
     if (kfd < 0) throw(kfd);
-    unlink_kernelfile = 1;
 
     # copy into $pid.kernel:
     #  - stack pointer
@@ -322,7 +313,7 @@ sys_savetpa = func(filename, top) {
     if (err) return err;
 
     # open filename for writing
-    var fd = sys_open(filename, O_WRITE|O_CREAT|O_KERNELFD);
+    var fd = sys_open(filename, O_WRITE|O_CREAT|O_KERNELFD|O_NOTRUNC);
     if (fd < 0) throw(fd);
 
     # copy bytes from 0x100..top
