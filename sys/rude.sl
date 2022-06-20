@@ -14,7 +14,7 @@ var savesrc;
 var savebin;
 var varname;
 var writesrcfile;
-var writeglobalsfile;
+var writeglobals;
 var redirect;
 var unredirect;
 var cat;
@@ -33,7 +33,18 @@ var projectfile;
 var historyfile;
 var history;
 
+var writeglobals_b;
+var globalsfile = "/tmp/rude-globals.list";
+
 repl = func() {
+    writeglobals_b = bopen(globalsfile, O_WRITE|O_CREAT);
+    if (!writeglobals_b) {
+        fprintf(2, "can't write %s\n", [globalsfile]);
+        return 0;
+    };
+    writeglobals(writeglobals_b);
+    # we keep writeglobals_b open so that we can add new globals as they're declared
+
     puts("> ");
     var val;
     while (gets(buf, bufsz)) {
@@ -144,25 +155,13 @@ writesrcfile = func(code) {
     return name;
 };
 
-var writeglobals_b;
-writeglobalsfile = func() {
-    var name = "/tmp/rude-globals.sl";
-    var b = bopen(name, O_WRITE|O_CREAT);
-    if (!b) {
-        fprintf(2, "can't write %s\n", [name]);
-        return 0;
-    };
-
-    writeglobals_b = b;
+writeglobals = func() {
     htwalk(globals, func(k,v) {
         bputc(writeglobals_b, v);
         bputs(writeglobals_b, k);
         bputc(writeglobals_b, '\n');
     });
-
-    bclose(b);
-
-    return name;
+    bflush(writeglobals_b);
 };
 
 # redirect "name" to "fd" with the given "mode"; return an fd that stores
@@ -286,6 +285,12 @@ addglobal = func(name, val) {
         return 0;
     } else {
         htput(globals, name, val);
+        if (writeglobals_b) {
+            bputc(writeglobals_b, val);
+            bputs(writeglobals_b, name);
+            bputc(writeglobals_b, '\n');
+            bflush(writeglobals_b);
+        };
         return 1;
     }
 };
