@@ -143,10 +143,12 @@ var addexterns = func(filename) {
     if (!b) die("can't open %s for reading\n", [filename]);
 
     var name;
+    var addr = bgetc(b); # skip the address
     while(bgets(b, literal_buf, 512)) {
         literal_buf[strlen(literal_buf)-1] = 0; # no '\n'
-        name = strdup(literal_buf+1); # +1 because the first word is the address
+        name = strdup(literal_buf);
         htput(EXTERNS, name, name);
+        addr = bgetc(b); # skip the address
     };
     bclose(b);
 };

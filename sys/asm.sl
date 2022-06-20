@@ -41,14 +41,15 @@ var addexterns = func(filename) {
     var b = bopen(filename, O_READ);
     if (!b) die("can't open %s for reading\n", [filename]);
 
-    var addr;
+    literal_buf[0] = '_'; # XXX: prepend an underscore to match SLANG names
+
+    var addr = bgetc(b); # first address
     var name;
-    while(bgets(b, literal_buf, 512)) {
+    while(bgets(b, literal_buf+1, 127)) {
         literal_buf[strlen(literal_buf)-1] = 0; # no '\n'
-        addr = literal_buf[0];
-        literal_buf[0] = '_'; # XXX: prepend an underscore to match SLANG names
         name = strdup(literal_buf);
         store(name, addr);
+        addr = bgetc(b); # next address
     };
     bclose(b);
 };
