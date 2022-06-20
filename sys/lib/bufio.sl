@@ -140,22 +140,88 @@ var bgetc = asm {
 # read at most size-1 characters into s, and terminate with a 0
 # return s if any chars were read
 # return 0 if EOF was reached with no chars
-var bgets = func(bio, s, size) {
-    var ch = 0;
-    var len = 0;
+#var bgets = func(bio, s, size) {
+#    var ch = 0;
+#    var len = 0;
+#
+#    while (ch != '\n' && len < size) {
+#        ch = bgetc(bio);
+#        if (ch < 0) break;
+#        s[len++] = ch;
+#    };
+#
+#    if (len == 0)
+#        return 0;
+#
+#    s[len] = 0;
+#
+#    return s;
+#};
+var bgets = asm {
+    pop x
+    ld (bgets_size), x
+    pop x
+    ld (bgets_s), x
+    pop x
+    ld (bgets_bio), x
 
-    while (ch >= 0 && ch != '\n' && len < size) {
-        ch = bgetc(bio);
-        if (ch >= 0)
-            s[len++] = ch;
-    };
+    ld r0, 0 # ch
+    ld (bgets_len), 0
 
-    if (ch < 0 && len == 0)
-        return 0;
+    # stash return address
+    ld x, r254
+    push x
 
-    s[len] = 0;
+    bgets_loop:
+        # ch = bgetc(bio);
+        ld x, (bgets_bio)
+        push x
+        call (_bgetc)
 
-    return s;
+        # if (ch < 0) break;
+        test r0
+        jlt bgets_done
+
+        # s[len++] = ch;
+        ld x, (bgets_s)
+        add x, (bgets_len)
+        ld (x), r0
+        inc (bgets_len)
+
+        # if (ch == '\n') break;
+        cmp r0, 10
+        jz bgets_done
+
+        # if (len < size) continue;
+        ld x, (bgets_len)
+        cmp x, (bgets_size)
+        jlt bgets_loop
+    bgets_done:
+
+    # if (len == 0)
+    test (bgets_len)
+    jnz bgets_ret_s
+    #   return 0;
+    ld r0, 0
+    pop x
+    jmp x
+
+    bgets_ret_s:
+
+    # s[len] = 0;
+    ld x, (bgets_s)
+    add x, (bgets_len)
+    ld (x), 0
+
+    # return s;
+    ld r0, (bgets_s)
+    pop x
+    jmp x
+
+    bgets_s: .word 0
+    bgets_len: .word 0
+    bgets_bio: .word 0
+    bgets_size: .word 0
 };
 
 #var bputc = func(bio, ch) {
