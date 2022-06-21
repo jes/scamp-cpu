@@ -78,10 +78,7 @@ eval = func(code) {
             return 0;
         };
         printf("you declared '%s'\n", [name]);
-        if (!newglobal(name)) {
-            fprintf(2, "%s: already declared\n", [name]);
-            return 0;
-        };
+        newglobal(name);
         # TODO: [nice] don't bother trying to compile declarations without initialisation (just return now)
     };
 
