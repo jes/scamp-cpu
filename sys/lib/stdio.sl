@@ -104,7 +104,7 @@ var tmpnam = func() {
     mkdir("/tmp"); # just in case
     var fd = open(tmpnam_buf, O_WRITE|O_CREAT);
     if (fd < 0) {
-        fputs(2, "tmpnam: %s: %s\n", [tmpnam_buf, strerror(fd)]);
+        fprintf(2, "tmpnam: %s: %s\n", [tmpnam_buf, strerror(fd)]);
         exit(256);
     };
     close(fd);
