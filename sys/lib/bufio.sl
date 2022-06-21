@@ -94,7 +94,7 @@ var bgetc = asm {
     ld r3, (x) # bufpos
 
     # if (bufpos == buflen)
-    sub r2, r3
+    cmp r2, r3
     jnz bgetc_nextchar
     #   _bslurp(bio);
     ld x, r254
@@ -104,12 +104,16 @@ var bgetc = asm {
     call (__bslurp)
     pop x
     ld r254, x
+    ld x, (bgetc_bio)
+
+    # refresh buflen,bufpos
+    inc x
+    ld r2, (x) # buflen
+    inc x
+    ld r3, (x) # bufpos
 
     bgetc_nextchar:
     # if (buflen == 0) buf_EOF=1; return EOF;
-    ld x, (bgetc_bio)
-    inc x
-    ld r2, (x) # buflen
     test r2
     jnz bgetc_not_eof
     ld (_buf_EOF), 1
@@ -117,8 +121,6 @@ var bgetc = asm {
     ret
 
     bgetc_not_eof:
-    inc x
-    ld r3, (x) # bufpos
 
     # ch = *(bio+4+bufpos)
     ld x, (bgetc_bio)
