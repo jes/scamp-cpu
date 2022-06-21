@@ -88,6 +88,8 @@ var CONTLABEL;
 var LABELNUM = 1;
 var OUT;
 
+var quiet;
+
 var pending_push = 0;
 var pushx = func() {
     pending_push++;
@@ -447,7 +449,7 @@ var open_include = func(file, path) {
 var charcount = 0;
 var parsedchar = func() {
     charcount++;
-    if ((charcount & 0x3ff) == 0) fputc(2, '.');
+    if (!quiet) if ((charcount & 0x3ff) == 0) fputc(2, '.');
 };
 
 var include_fd;
@@ -1125,6 +1127,7 @@ options:
     -e FILE   filename containing list of extern names
     -f FOOT   asm string to append to output
     -h        show this help
+    -q        quiet
 ", 0);
     exit(rc);
 };
@@ -1143,6 +1146,8 @@ var more = getopt(cmdargs()+1, "ef", func(ch,arg) {
         addexterns(arg);
     } else if (ch == 'f') {
         foot_str = arg;
+    } else if (ch == 'q') {
+        quiet = 1;
     } else {
         fprintf(2, "error: unrecognised option -%c\n", [ch]);
         help(1);
@@ -1219,4 +1224,4 @@ flushpush();
 myputs(foot_str);
 bclose(OUT);
 
-fputc(2, '\n');
+if (!quiet) fputc(2, '\n');

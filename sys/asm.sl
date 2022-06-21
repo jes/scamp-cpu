@@ -15,6 +15,8 @@ var asm_constant;
 var pc_start = 0;
 var asm_pc;
 
+var quiet;
+
 var maxliteral = 128;
 var literal_buf = malloc(maxliteral);
 var maxidentifier = maxliteral;
@@ -465,7 +467,7 @@ var resolve_unbounds = func() {
     while (1) {
         # 1. read a block of code
         n = read(fd, code, 254);
-        fputc(2, '.');
+        if (!quiet) fputc(2, '.');
         if (n < 0) die("read code: %s", [strerror(n)]);
         if (n == 0) break;
 
@@ -487,7 +489,7 @@ var resolve_unbounds = func() {
         n = write(1, code, n);
         if (n <= 0) die("write code: %s", [strerror(n)]);
     };
-    fputc(2, '\n');
+    if (!quiet) fputc(2, '\n');
     close(fd);
     free(code);
 };
@@ -498,6 +500,7 @@ var help = func(rc) {
 options:
     -e FILE   filename containing list of extern names
     -h        show this help
+    -q        quiet
 ", 0);
     exit(rc);
 };
@@ -508,6 +511,8 @@ var more = getopt(cmdargs()+1, "e", func(ch,arg) {
     if (ch == 'h') help(0)
     else if (ch == 'e') {
         addexterns(arg);
+    } else if (ch == 'q') {
+        quiet = 1;
     } else {
         fprintf(2, "error: unrecognised option -%c\n", [ch]);
         help(1);
@@ -529,12 +534,12 @@ unbounds_fd = open(unbounds_filename, O_WRITE|O_CREAT);
 if (unbounds_fd < 0) die("open %s: %s", [unbounds_filename, strerror(unbounds_fd)]);
 unbounds_bio = bfdopen(unbounds_fd, O_WRITE);
 
-fputs(2, "1st pass...\n");
+if (!quiet) fputs(2, "1st pass...\n");
 var inbuf = bfdopen(0, O_READ);
 var charcount = 0;
 parse_init(func() {
     charcount++;
-    if ((charcount & 0x3ff) == 0) fputc(2, '.');
+    if (!quiet) if ((charcount & 0x3ff) == 0) fputc(2, '.');
     return bgetc(inbuf);
 });
 parse(Assembly,0);
@@ -547,7 +552,7 @@ unbounds_fd = open(unbounds_filename, O_READ);
 if (unbounds_fd < 0) die("open %s: %s", [unbounds_filename, strerror(unbounds_fd)]);
 unbounds_bio = bfdopen(unbounds_fd, O_READ);
 
-fputs(2, "\n2nd pass...\n");
+if (!quiet) fputs(2, "\n2nd pass...\n");
 resolve_unbounds();
 #unlink(code_filename);
 bclose(unbounds_bio);
