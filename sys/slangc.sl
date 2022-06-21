@@ -144,7 +144,7 @@ var addexterns = func(filename) {
 
     var name;
     var addr = bgetc(b); # skip the address
-    while(bgets(b, literal_buf, 512)) {
+    while (bgets(b, literal_buf, maxliteral)) {
         literal_buf[strlen(literal_buf)-1] = 0; # no '\n'
         name = strdup(literal_buf);
         htput(EXTERNS, name, name);

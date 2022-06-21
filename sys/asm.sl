@@ -45,7 +45,7 @@ var addexterns = func(filename) {
 
     var addr = bgetc(b); # first address
     var name;
-    while(bgets(b, literal_buf+1, 127)) {
+    while (bgets(b, literal_buf+1, maxliteral-1)) {
         literal_buf[strlen(literal_buf)-1] = 0; # no '\n'
         name = strdup(literal_buf);
         store(name, addr);
