@@ -89,8 +89,34 @@ eval = func(code) {
     return addr();
 };
 
+# TODO: [nice] recall the existing implementation of this function and edit that in kilo
 kilo = func(funcname) {
-    fprintf(2, "unimplemented\n", 0);
+    var filename = "/tmp/rude-kilo.sl";
+
+    var fd = open(filename, O_WRITE|O_CREAT);
+    if (fd < 0) {
+        fprintf(2, "can't write %s: %s\n", [filename, strerror(fd)]);
+        return 0;
+    };
+    fprintf(fd, "var %s = ", [funcname]);
+    close(fd);
+
+    system(["/bin/kilo", filename]);
+
+    fd = open(filename, O_READ);
+    if (fd < 0) {
+        fprintf(2, "can't write %s: %s\n", [filename, strerror(fd)]);
+        return 0;
+    };
+    var n = read(fd, buf, bufsz);
+    if (n == bufsz) {
+        # TODO: [bug] support files longer than bufsz
+        fprintf(2, "%s: too much data!\n", [filename]);
+    };
+    buf[n] = 0;
+    close(fd);
+
+    return eval(buf);
 };
 
 list = func(funcname) {
@@ -295,6 +321,7 @@ addglobal = func(name, val) {
 include "rude-globals.sl";
 
 addglobal("savebin", &savebin);
+addglobal("kilo", &kilo);
 
 # TODO: [nice] grab project name from command line?
 
