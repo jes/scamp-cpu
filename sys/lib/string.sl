@@ -60,10 +60,13 @@ var strncmp = func(s1,s2,n) {
 strlen = asm {
     pop x
     ld r0, x
+    test (x)
+    jz strlen_done
     strlen_loop:
         inc x
         test (x)
         jnz strlen_loop
+    strlen_done:
     sub r0, x
     neg r0
     ret
