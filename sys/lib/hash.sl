@@ -66,6 +66,8 @@ var htgrow = func(ht) {
 
     ht[0] = newsize;
     ht[2] = newarr;
+
+    return ht;
 };
 
 # usage: hashstr(str)
@@ -220,14 +222,44 @@ var htget = func(ht, key) {
     return 0;
 };
 
+#var htmaybegrow = func(ht) {
+#    # create more space if 75% full
+#    var used = htused(ht);
+#    var size = htsize(ht);
+#    if (used+used+used+used gt size+size+size) {
+#        return htgrow(ht);
+#    };
+#    return 0;
+#};
+var htmaybegrow = asm {
+    pop x
+    ld r2, x # ht
+    ld r0, (x) # size
+    ld r1, 1(x) # used
+    shl2 r1 # r1 = used*4
+    ld x, r0
+    shl r0
+    add r0, x # r0 = size*3
+
+    # if used*4 > size*3, return htgrow(ht)
+    cmp r1, r0
+    jgt needgrow
+
+    # else return 0
+    ld r0, 0
+    ret
+
+    needgrow:
+        # tail call htgrow(ht)
+        ld x, r2
+        push x
+        jmp (_htgrow)
+};
+
 # htput() but skipping the htfind() where possible, using the "p" pointer
 # already passed in
 var htputp = func(ht, p, key, val) {
-    # create more space if 75% full
-    var used = htused(ht);
-    var size = htsize(ht);
-    if (used+used+used+used gt size+size+size) {
-        htgrow(ht);
+    if (htmaybegrow(ht)) {
         p = htfind(ht, key);
     };
 
@@ -238,11 +270,7 @@ var htputp = func(ht, p, key, val) {
 
 # "key" is a string
 htput = func(ht, key, val) {
-    # create more space if 75% full
-    var used = htused(ht);
-    var size = htsize(ht);
-    if (used+used+used+used gt size+size+size)
-        htgrow(ht);
+    htmaybegrow(ht);
 
     var p = htfind(ht, key);
     if (!*p) ht[1] = ht[1] + 1;
