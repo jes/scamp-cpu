@@ -96,6 +96,7 @@ addglobal("htfree", &htfree);
 addglobal("htget", &htget);
 addglobal("htgetkv", &htgetkv);
 addglobal("htgrow", &htgrow);
+addglobal("htmaybegrow", &htmaybegrow);
 addglobal("htnew", &htnew);
 addglobal("htput", &htput);
 addglobal("htputp", &htputp);
