@@ -143,14 +143,14 @@ varname = func(code) {
 # return a static string containing its name, or 0 on error
 writesrcfile = func(code) {
     var name = "/tmp/rude.sl";
-    var b = bopen(name, O_WRITE|O_CREAT);
-    if (!b) {
+    var fd = open(name, O_WRITE|O_CREAT);
+    if (fd < 0) {
         fprintf(2, "can't write %s\n", [name]);
         return 0;
     };
 
-    bputs(b, code);
-    bclose(b);
+    write(fd,code,strlen(code));
+    close(fd);
 
     return name;
 };
