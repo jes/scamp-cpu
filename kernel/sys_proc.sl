@@ -332,3 +332,7 @@ sys_savetpa = func(filename, top) {
 
     return 0
 };
+
+sys_getpid = func() {
+    return pid;
+};

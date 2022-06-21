@@ -317,10 +317,18 @@ it doesn't.
 ### 0xfee6: savetpa(filename, TOP)
 
     Return: 0, or ERR on error
-    Implemented: no
+    Implemented: yes
     Errors: NOTFOUND? NOTDIR? TOOLONG?
 
 Save the TPA to the given filename.
+
+### 0xfee5: getpid()
+
+    Return: pid
+    Implemented: yes
+    Errors: n/a
+
+Return the PID of the current process.
 
 ## Errors
 

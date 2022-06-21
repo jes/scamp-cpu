@@ -1,5 +1,6 @@
 # system call declarations
 
+extern sys_getpid;
 extern sys_savetpa;
 extern sys_trap;
 extern sys_blkwrite;

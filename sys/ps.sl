@@ -53,7 +53,7 @@ var showproc = func(pid) {
 };
 
 var pid = 0;
-while (1) {
+while (pid < getpid()) {
     if (!showproc(pid)) break;
     pid++;
 };

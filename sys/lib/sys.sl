@@ -1,5 +1,6 @@
 # System calls
 
+extern sys_getpid;
 extern sys_savetpa;
 extern sys_trap;
 extern sys_blkwrite;
@@ -27,6 +28,7 @@ extern sys_system;
 extern sys_exec;
 extern sys_exit;
 
+var getpid   = sys_getpid;
 var trap     = sys_trap;
 var blkwrite = sys_blkwrite;
 var blkread  = sys_blkread;
