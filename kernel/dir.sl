@@ -69,13 +69,12 @@ var undirent = asm {
     undirent_loop:
         # if (p == dirent+15) break;
         ld x, r5
-        sub x, r4
+        cmp x, r4
         jz undirent_done
 
         # *s = shr8(*p); # high byte
-        ld x, (r5)
+        ld r0, (x) # passed into shr8
 
-        ld r0, x
         ld r1, shr8_ret_to_undirent
         jmp shr8_entry
         shr8_ret_to_undirent:
@@ -87,17 +86,14 @@ var undirent = asm {
         # s++;
         inc r6
 
-        # *s = *p & 0xff; # low byte
-        ld x, (r5)
+        # *s = *(p++) & 0xff; # low byte
+        ld x, (r5++)
         and x, 0xff
         ld (r6), x
         # if (!*s) break;
         jz undirent_done
         # s++;
         inc r6
-
-        # p++;
-        inc r5
 
         jmp undirent_loop
 
