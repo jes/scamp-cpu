@@ -253,6 +253,7 @@ compile = func(code) {
         return 0;
     };
     var filesz = bread(b, addr, codesz);
+    bclose(b);
     assert(filesz lt codesz, "panic: compiled size exceeds 2K allocation\n", 0);
     var addr2 = realloc(addr, filesz); # this should shrink in-place
     assert(addr == addr2, "panic: realloc() changed code address\n", 0);
