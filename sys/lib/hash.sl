@@ -76,13 +76,13 @@ var htgrow = func(ht) {
 var hashstr = asm {
     pop x
     ld r1, x # str
+
+    test (r1)
+    jz hashstr_ret
+
     ld r0, 19997 # h
 
     hashstr_loop:
-        # while (*str)
-        test (r1)
-        jz hashstr_ret
-
         # h = 33*h
         ld x, r0
         shl3 x
@@ -93,7 +93,8 @@ var hashstr = asm {
         ld x, (r1++)
         add r0, x
 
-        jmp hashstr_loop
+        test (r1)
+        jnz hashstr_loop
 
     hashstr_ret:
         ret
