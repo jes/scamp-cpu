@@ -24,6 +24,8 @@ var newglobal;
 var addglobal;
 var forget;
 
+var initial_sp = *0xffff;
+
 var globals = htnew();
 
 var bufsz = 512;
@@ -130,12 +132,8 @@ savebin = func(filename, entrypoint) {
     # TODO: [nice] writing instructions by opcode is a bit unpleasant
 
     # 1. initialise the stack pointer
-    # TODO: [nice] instead of the current stack pointer, this should
-    # really initialise to the "real" initial stack pointer, otherwise
-    # repeated application of savebin() will result in progressively
-    # smaller stack space available
     *0x100 = 0x85ff; # ld sp, i16
-    *0x101 = *0xffff; # current stack pointer value
+    *0x101 = initial_sp;
 
     # 2. write a "call entrypoint" instruction, so that we
     # don't reinitialise anything or re-enter the REPL
