@@ -8,7 +8,10 @@ include "lib.sl";
 
 var repl;
 var eval;
+var evalfile;
 var kilo;
+var newimpl;
+var revert;
 var list;
 var savesrc;
 var savebin;
@@ -17,12 +20,11 @@ var writesrcfile;
 var writeglobals;
 var redirect;
 var unredirect;
-var cat;
 var compile;
-var compilefile;
 var newglobal;
 var addglobal;
-var forget;
+var exists;
+var copy;
 
 var initial_sp = *0xffff;
 
@@ -74,37 +76,37 @@ eval = func(code) {
         # variable declaration: turn it into an assignment,
         # and add the name to the globals table
         code = code + 4;
-        name = varname(code);
+        name = varname(code, 0);
         if (!name) {
             fprintf(2, "can't parse variable name\n", 0);
             return 0;
         };
         newglobal(name);
         # TODO: [nice] don't bother trying to compile declarations without initialisation (just return now)
+    } else {
+        # detect non-declaration assignments, because we still need to newimpl()
+        name = varname(code, '=');
     };
 
     addr = compile(code);
     # TODO: [bug] if the compile failed, remove the name from the globals table if we created a new global
     if (!addr) return 0;
-    # TODO: [nice] copy name.sl to name.sl.1, tmpfile to name.sl
+
+    var global;
+    if (name) {
+        newimpl(name, "/tmp/rude.sl");
+        global = htget(globals, name);
+        if (global) {
+            global[1] = global[0]; # copy the current assignment into the "revert" slot
+        };
+        free(name);
+    };
+
     return addr();
 };
 
-# TODO: [nice] recall the existing implementation of this function and edit that in kilo
-kilo = func(funcname) {
-    var filename = "/tmp/rude-kilo.sl";
-
-    var fd = open(filename, O_WRITE|O_CREAT);
-    if (fd < 0) {
-        fprintf(2, "can't write %s: %s\n", [filename, strerror(fd)]);
-        return 0;
-    };
-    fprintf(fd, "var %s = ", [funcname]);
-    close(fd);
-
-    system(["/bin/kilo", filename]);
-
-    fd = open(filename, O_READ);
+evalfile = func(filename) {
+    var fd = open(filename, O_READ);
     if (fd < 0) {
         fprintf(2, "can't write %s: %s\n", [filename, strerror(fd)]);
         return 0;
@@ -118,6 +120,77 @@ kilo = func(funcname) {
     close(fd);
 
     return eval(buf);
+};
+
+kilo = func(funcname) {
+    var filename = "/tmp/rude-kilo.sl";
+
+    var fd;
+
+    var implname = sprintf("%s.sl", [funcname]);
+    if (exists(implname)) {
+        copy(implname, filename);
+    } else {
+        fd = open(filename, O_WRITE|O_CREAT);
+        if (fd < 0) {
+            fprintf(2, "can't write %s: %s\n", [filename, strerror(fd)]);
+            return 0;
+        };
+        fprintf(fd, "var %s = ", [funcname]);
+        close(fd);
+    };
+
+    free(implname);
+
+    # TODO: [perf] get kilo to return a status that says whether the file was
+    #       modified; if not modified, don't re-eval
+    system(["/bin/kilo", filename]);
+
+    return evalfile(filename);
+};
+
+# there's a new implementation of "name" in "filename";
+# do some book-keeping so that we keep track of it;
+# XXX: a side-effect is removal of "filename" (it gets renamed into place)
+newimpl = func(name, filename) {
+    var implname = sprintf("%s.sl", [name]);
+    var implname1 = sprintf("%s.sl.1", [name]);
+
+    # backup the old implementation
+    rename(implname, implname1);
+    # move the new implementation into palce
+    rename(filename, implname);
+
+    free(implname);
+    free(implname1);
+};
+
+revert = func(name) {
+    var implname = sprintf("%s.sl", [name]);
+    var implname1 = sprintf("%s.sl.1", [name]);
+    var implname2 = sprintf("%s.sl.2", [name]);
+
+    var t;
+    var global;
+    if (!exists(implname1)) {
+        fprintf(2, "%s: does not exist\n", [implname1]);
+    } else {
+        rename(implname, implname2);
+        rename(implname1, implname);
+        rename(implname2, implname1);
+
+        # swap the new/old pointers
+        global = htget(globals, name);
+        if (global) {
+            t = global[1];
+            global[1] = global[0];
+            global[0] = t;
+        };
+    };
+
+    free(implname);
+    free(implname1);
+    free(implname2);
 };
 
 list = func(funcname) {
@@ -150,8 +223,11 @@ savebin = func(filename, entrypoint) {
 };
 
 # parse the variable name out of the start of code, return a
-# pointer to a copy of it, or return 0 if none
-varname = func(code) {
+# pointer to a copy of it, or return 0 if none;
+# if "seekch" is nonzero, skip whitespace and require a "seekch" next,
+# otherwise return 0 instead of the name (e.g. use seekch='=' to detect
+# assignments)
+varname = func(code, seekch) {
     var p = code;
     while (iswhite(*p)) p++; # skip whitespace
     if (!isalpha(*p) && *p != '_') return 0;
@@ -161,6 +237,16 @@ varname = func(code) {
     var s = malloc(len+1);
     memcpy(s, code, len); # copy the name
     s[len] = 0;
+
+    # if we have a seekch, check that we find it
+    if (seekch) {
+        while (iswhite(*p)) p++; # skip whitespace
+        if (*p != seekch) {
+            free(s);
+            return 0;
+        };
+    };
+
     return s;
 };
 
@@ -287,14 +373,10 @@ compile = func(code) {
     return addr;
 };
 
-compilefile = func(filename) {
-    fprintf(2, "compilefile() unimplemented\n", 0);
-};
-
 # add "name" to the globals table, return 1 if successful
 # and 0 otherwise
 newglobal = func(name) {
-    var p = malloc(1);
+    var p = malloc(2); # the 2nd slot is for the "old" implementation of a function, if any
     if (addglobal(name, p)) {
         return 1;
     } else {
@@ -303,12 +385,13 @@ newglobal = func(name) {
     };
 };
 
-# add "name" to the globals table with the given value,
+# add a dup of "name" to the globals table with the given value,
 # return 1 if successful and 0 otherwise
 addglobal = func(name, val) {
     if (htget(globals, name)) {
         return 0;
     } else {
+        name = strdup(name);
         htput(globals, name, val);
         if (writeglobals_b) {
             bputc(writeglobals_b, val);
@@ -320,11 +403,46 @@ addglobal = func(name, val) {
     }
 };
 
+# return 1 if filename exists, 0 otherwise
+exists = func(name) {
+    var fd = open(name, O_READ);
+    close(fd);
+    return fd >= 0;
+};
+
+# copy file from src to dst
+copy = func(src, dst) {
+    var bs = bopen(src, O_READ);
+    if (!bs) return -1;
+    var bd = bopen(dst, O_WRITE|O_CREAT);
+    if (!bd) {
+        bclose(bs);
+        return -1;
+    };
+
+    var n;
+    while (1) {
+        n = bread(bs, buf, bufsz);
+        if (bwrite(bd, buf, n) != n) {
+            fprintf(2, "copy: short write (???)", 0);
+        };
+        if (n < 0) {
+            fprintf(2, "copy: bread: %s\n", [strerror(n)]);
+        };
+        if (n == 0) break;
+    };
+    bclose(bs);
+    bclose(bd);
+
+    return 0;
+};
+
 include "rude-globals.sl";
 
 addglobal("savebin", &savebin);
 addglobal("kilo", &kilo);
 addglobal("repl", &repl);
+addglobal("revert", &revert);
 
 # TODO: [nice] grab project name from command line?
 
