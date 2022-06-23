@@ -77,7 +77,6 @@ eval = func(code) {
             fprintf(2, "can't parse variable name\n", 0);
             return 0;
         };
-        printf("you declared '%s'\n", [name]);
         newglobal(name);
         # TODO: [nice] don't bother trying to compile declarations without initialisation (just return now)
     };
