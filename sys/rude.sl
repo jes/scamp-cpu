@@ -137,10 +137,15 @@ savebin = func(filename, entrypoint) {
     *0x100 = 0x85ff; # ld sp, i16
     *0x101 = *0xffff; # current stack pointer value
 
-    # 2. write a "jmp entrypoint" instruction, so that we
+    # 2. write a "call entrypoint" instruction, so that we
     # don't reinitialise anything or re-enter the REPL
-    *0x102 = 0xb900; # jmp i16
+    *0x102 = 0x4f00; # call i16
     *0x103 = entrypoint;
+
+    # 3. exit(0)
+    *0x104 = 0x5b00; # push 0
+    *0x105 = 0x1f00; # call (i16)
+    *0x106 = 0xfeff; # sys_exit
 
     # use the kernel to save the TPA to the file
     savetpa(filename);
@@ -321,6 +326,7 @@ include "rude-globals.sl";
 
 addglobal("savebin", &savebin);
 addglobal("kilo", &kilo);
+addglobal("repl", &repl);
 
 # TODO: [nice] grab project name from command line?
 
