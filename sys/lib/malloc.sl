@@ -116,7 +116,6 @@ malloc = func(sz) {
                 p[1] = sz;
             };
             freep = prevp;
-            fprintf(2, "malloc(%d) = 0x%04x\n", [sz, p+2]);
             return p+2; # return pointer to new space
         };
 
