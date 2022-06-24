@@ -199,7 +199,24 @@ revert = func(name) {
 };
 
 list = func(funcname) {
-    fprintf(2, "unimplemented\n", 0);
+    var implname = sprintf("%s.sl", [funcname]);
+
+    var b;
+    if (!exists(implname)) {
+        fprintf(2, "%s: does not exist\n", [implname]);
+    } else {
+        b = bopen(implname, O_READ);
+        if (!b) {
+            fprintf(2, "%s: does not exist (???)\n", [implname]);
+        } else {
+            while (bgets(b, buf, bufsz)) {
+                puts(buf);
+            };
+            bclose(b);
+        };
+    };
+
+    free(implname);
 };
 
 savesrc = func(filename) {
@@ -453,6 +470,7 @@ addglobal("savebin", &savebin);
 addglobal("kilo", &kilo);
 addglobal("repl", &repl);
 addglobal("revert", &revert);
+addglobal("list", &list);
 
 # TODO: [nice] grab project name from command line?
 
