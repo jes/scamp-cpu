@@ -157,8 +157,10 @@ newimpl = func(name, filename) {
     var implname1 = sprintf("%s.sl.1", [name]);
 
     # backup the old implementation
+    unlink(implname1);
     rename(implname, implname1);
     # move the new implementation into palce
+    unlink(implname);
     rename(filename, implname);
 
     free(implname);
@@ -175,8 +177,11 @@ revert = func(name) {
     if (!exists(implname1)) {
         fprintf(2, "%s: does not exist\n", [implname1]);
     } else {
+        unlink(implname2);
         rename(implname, implname2);
+        unlink(implname);
         rename(implname1, implname);
+        unlink(implname1);
         rename(implname2, implname1);
 
         # swap the new/old pointers
