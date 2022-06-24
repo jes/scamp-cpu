@@ -329,6 +329,10 @@ compile = func(code) {
     var codesz = 2048;
     var addr = malloc(codesz);
 
+    # XXX: make sure there are no memory allocations between the malloc(codesz)
+    # and the realloc(addr, filesz) - otherwise we'll fragment memory and run
+    # out very quickly!
+
     # write asm head now
     puts(".at 0x");
     printf("%04x", [addr]);
@@ -358,13 +362,13 @@ compile = func(code) {
         return 0;
     };
 
-    var b = bopen(binary, O_READ);
-    if (!b) {
+    var fd = open(binary, O_READ);
+    if (fd < 0) {
         fprintf(2, "can't read %s\n", [binary]);
         return 0;
     };
-    var filesz = bread(b, addr, codesz);
-    bclose(b);
+    var filesz = read(fd, addr, codesz);
+    close(fd);
     assert(filesz lt codesz, "panic: compiled size exceeds 2K allocation\n", 0);
     var addr2 = realloc(addr, filesz); # this should shrink in-place
     assert(addr == addr2, "panic: realloc() changed code address\n", 0);
