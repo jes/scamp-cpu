@@ -90,6 +90,7 @@ var morecore = func(needsz) {
 
 malloc = func(sz) {
     var p;
+    var q;
     var prevp;
     var origsz = sz;
 
@@ -101,13 +102,21 @@ malloc = func(sz) {
     while (1) {
         if (p[1] ge sz) { # big enough
             if (p[1] == sz) { # exactly
-                *prevp = p[0];
-            } else { # allocate tail end
-                p[1] = p[1]-sz; # block size gets shorter by the size of the new block
-                p = p+p[1]; # point to new block
-                p[1] = sz; # set size of new block
+                prevp[0] = p[0];
+            #} else { # allocate tail end
+            #    p[1] = p[1]-sz; # block size gets shorter by the size of the new block
+            #    p = p+p[1]; # point to new block
+            #    p[1] = sz; # set size of new block
+            #};
+            } else { # allocate head end
+                q = p+sz;
+                q[0] = p[0];
+                q[1] = p[1]-sz;
+                prevp[0] = q;
+                p[1] = sz;
             };
             freep = prevp;
+            fprintf(2, "malloc(%d) = 0x%04x\n", [sz, p+2]);
             return p+2; # return pointer to new space
         };
 
