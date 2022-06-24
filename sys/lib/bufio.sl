@@ -152,10 +152,10 @@ var bgetc = asm {
 #        s[len++] = ch;
 #    };
 #
+#    s[len] = 0;
+#
 #    if (len == 0)
 #        return 0;
-#
-#    s[len] = 0;
 #
 #    return s;
 #};
@@ -200,6 +200,11 @@ var bgets = asm {
         jlt bgets_loop
     bgets_done:
 
+    # s[len] = 0;
+    ld x, (bgets_s)
+    add x, (bgets_len)
+    ld (x), 0
+
     # if (len == 0)
     test (bgets_len)
     jnz bgets_ret_s
@@ -209,11 +214,6 @@ var bgets = asm {
     jmp x
 
     bgets_ret_s:
-
-    # s[len] = 0;
-    ld x, (bgets_s)
-    add x, (bgets_len)
-    ld (x), 0
 
     # return s;
     ld r0, (bgets_s)

@@ -38,10 +38,10 @@ var fgets = func(fd, s, size) {
             s[len++] = ch;
     };
 
+    s[len] = 0;
+
     if (ch < 0 && len == 0)
         return 0;
-
-    s[len] = 0;
 
     return s;
 };
