@@ -377,21 +377,22 @@ compile = func(code) {
 # and 0 otherwise
 newglobal = func(name) {
     var p = malloc(2); # the 2nd slot is for the "old" implementation of a function, if any
+    name = strdup(name);
     if (addglobal(name, p)) {
         return 1;
     } else {
         free(p);
+        free(name);
         return 0;
     };
 };
 
-# add a dup of "name" to the globals table with the given value,
+# add "name" to the globals table with the given value,
 # return 1 if successful and 0 otherwise
 addglobal = func(name, val) {
     if (htget(globals, name)) {
         return 0;
     } else {
-        name = strdup(name);
         htput(globals, name, val);
         if (writeglobals_b) {
             bputc(writeglobals_b, val);
