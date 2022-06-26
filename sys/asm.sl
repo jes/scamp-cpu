@@ -475,7 +475,7 @@ var resolve_unbounds = func() {
         while (addr lt pc+n) {
             # 3. replace the unbound
             v = lookup(name);
-            if (!v) die("unrecognised name %s at addr 0x%x", [name, addr]);
+            if (!v || cdr(v) == INTERN_CONST) die("unrecognised name %s at addr 0x%x", [name, addr]);
             *(code+addr-pc) = cdr(v);
 
             # 4. grab the next unbound

@@ -89,6 +89,7 @@ var LABELNUM = 1;
 var OUT;
 
 var quiet;
+var gullible; # are all unrecognised symbols assumed to be extern?
 
 var pending_push = 0;
 var pushx = func() {
@@ -124,6 +125,7 @@ var magnitude_used = [0,       0,       0,       0,       0,       0,       0,  
 
 # return 1 if "name" is a global or extern, 0 otherwise
 var findglobal = func(name) {
+    if (gullible) return 1;
     # TODO: [perf] would these be better the other way around?
     #              would we be better off with only one table?
     if (htgetkv(GLOBALS, name)) return 1;
@@ -132,11 +134,11 @@ var findglobal = func(name) {
 };
 
 var addextern = func(name) {
-    if (findglobal(name)) die("duplicate global: %s",[name]);
+    if (!gullible && findglobal(name)) die("duplicate global: %s",[name]);
     htput(EXTERNS, name, name);
 };
 var addglobal = func(name) {
-    if (findglobal(name)) die("duplicate global: %s",[name]);
+    if (!gullible && findglobal(name)) die("duplicate global: %s",[name]);
     htput(GLOBALS, name, name);
 };
 
@@ -207,8 +209,7 @@ var pushvar = func(name) {
         };
     };
 
-    v = findglobal(name);
-    if (v) {
+    if (findglobal(name)) {
         myputs("ld x, (_"); myputs(name); myputs(")\n");
         pushx();
         return 0;
@@ -230,8 +231,7 @@ var poptovar = func(name) {
         };
     };
 
-    v = findglobal(name);
-    if (v) {
+    if (findglobal(name)) {
         popx();
         myputs("ld (_"); myputs(name); myputs("), x\n");
         return 0;
@@ -526,7 +526,6 @@ Declaration = func(x) {
     if (!Identifier(0)) die("var needs identifier",0);
     var name = strdup(IDENTIFIER);
     if (!LOCALS) {
-        if (findglobal(name)) die("duplicate declaration of global: %s",[name]);
         addglobal(name);
     } else {
         addlocal(name, BP_REL--);
@@ -1054,8 +1053,7 @@ AddressOf = func(x) {
         };
     };
 
-    v = findglobal(IDENTIFIER);
-    if (v) {
+    if (findglobal(IDENTIFIER)) {
         myputs("ld x, _"); myputs(IDENTIFIER); myputs("\n");
         pushx();
         return 1;
@@ -1126,6 +1124,7 @@ var help = func(rc) {
 options:
     -e FILE   filename containing list of extern names
     -f FOOT   asm string to append to output
+    -g        assume all unrecognised symbols are extern
     -h        show this help
     -q        quiet
 ", 0);
@@ -1138,7 +1137,7 @@ STRINGS = grnew();
 EXTERNS = htnew();
 GLOBALS = htnew();
 
-var foot_str;
+var foot_str = "";
 
 var more = getopt(cmdargs()+1, "ef", func(ch,arg) {
     if (ch == 'h') help(0)
@@ -1146,6 +1145,8 @@ var more = getopt(cmdargs()+1, "ef", func(ch,arg) {
         addexterns(arg);
     } else if (ch == 'f') {
         foot_str = arg;
+    } else if (ch == 'g') {
+        gullible = 1;
     } else if (ch == 'q') {
         quiet = 1;
     } else {
