@@ -39,6 +39,7 @@ var buf = malloc(bufsz);
 var projectfile;
 var historyfile;
 var history;
+var autosave = 1;
 
 var writeglobals_b;
 var globalsfile = "/tmp/rude-globals.list";
@@ -52,6 +53,7 @@ repl = func() {
     writeglobals(writeglobals_b);
     # we keep writeglobals_b open so that we can add new globals as they're declared
 
+    if (!autosave) putchar('!');
     puts("> ");
     var val;
     while (gets(buf, bufsz)) {
@@ -60,6 +62,9 @@ repl = func() {
         val = eval(buf);
         printf("%d 0x%04x\n", [val, val]);
 
+        if (autosave) savebin("project", repl);
+
+        if (!autosave) putchar('!');
         puts("> ");
     };
     exit(0);
@@ -528,6 +533,7 @@ addglobal("kilo", &kilo);
 addglobal("repl", &repl);
 addglobal("revert", &revert);
 addglobal("list", &list);
+addglobal("autosave", &autosave);
 
 # TODO: [nice] grab project name from command line?
 
