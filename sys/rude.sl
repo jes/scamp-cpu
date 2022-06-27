@@ -7,6 +7,7 @@ include "string.sl";
 include "lib.sl";
 
 var repl;
+var internal;
 var eval;
 var evalfile;
 var kilo;
@@ -59,7 +60,11 @@ repl = func() {
     while (gets(buf, bufsz)) {
         bputs(history, buf);
         bflush(history);
-        val = eval(buf);
+        if (buf[0] == '.') {
+            val = internal(buf);
+        } else {
+            val = eval(buf);
+        };
         printf("%d 0x%04x\n", [val, val]);
 
         if (autosave) savebin("project", repl);
@@ -68,6 +73,22 @@ repl = func() {
         puts("> ");
     };
     exit(0);
+};
+
+internal = func(str) {
+    var name;
+    var val;
+    if (strncmp(str, ".kilo ", 6) == 0) {
+        name = varname(str+6, 0);
+        val = kilo(name);
+        free(name);
+    } else if (strncmp(str, ".revert ", 8) == 0) {
+        name = varname(str+6, 0);
+        val = revert(name);
+        free(name);
+    };
+
+    return val;
 };
 
 # evaluate the code; return its evaluation, or 0 if there
