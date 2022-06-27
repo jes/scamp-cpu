@@ -25,6 +25,9 @@ var newglobal;
 var addglobal;
 var exists;
 var copy;
+var interpret;
+
+var RETURN;
 
 var initial_sp = *0xffff;
 
@@ -71,7 +74,7 @@ repl = func() {
 eval = func(code) {
     while (iswhite(*code)) code++; # skip whitespace
     var name;
-    var addr;
+    var addr = 0;
     if (strncmp(code, "var ", 4) == 0) {
         # variable declaration: turn it into an assignment,
         # and add the name to the globals table
@@ -88,9 +91,14 @@ eval = func(code) {
         name = varname(code, '=');
     };
 
-    addr = compile(code);
-    # TODO: [bug] if the compile failed, remove the name from the globals table if we created a new global
-    if (!addr) return 0;
+    if (!interpret(code)) {
+        addr = compile(code);
+        # TODO: [bug] if the compile failed, remove the name from the globals table if we created a new global
+        if (!addr) {
+            if (name) free(name);
+            return 0;
+        }
+    };
 
     var global;
     if (name) {
@@ -102,7 +110,8 @@ eval = func(code) {
         free(name);
     };
 
-    return addr();
+    if (addr) return addr() # compiled code
+    else return RETURN; # interpreted code
 };
 
 evalfile = func(filename) {
@@ -462,6 +471,54 @@ copy = func(src, dst) {
     bclose(bd);
 
     return 0;
+};
+
+interpret = func(code) {
+    var name;
+
+    var is_call = 0;
+    var s;
+
+    name = varname(code, 0);
+    if (!name) return 0;
+
+    s = code + strlen(name);
+    while (iswhite(*s)) s++;
+    if (*s) {
+        # function call
+
+        # look for open paren
+        if (*s != '(') {
+            free(name);
+            return 0;
+        };
+        s++;
+        is_call = 1;
+
+        # look for close paren
+        while (iswhite(*s)) s++;
+        if (*s != ')') {
+            free(name);
+            return 0;
+        };
+        s++;
+
+        # look for end of string
+        while (iswhite(*s)) s++;
+        if (*s) {
+            free(name);
+            return 0;
+        };
+    };
+
+    var v = htget(globals, name);
+    free(name);
+    if (!v) return 0;
+
+    RETURN = *v;
+    if (is_call) RETURN = RETURN();
+
+    return 1;
 };
 
 include "rude-globals.sl";
