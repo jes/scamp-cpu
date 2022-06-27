@@ -370,7 +370,7 @@ compile = func(code) {
     puts("\njmp proceed\nreturn_address: .word 0\nproceed:\nld x, r254\nld (return_address), x\n");
 
     # compile!
-    var rc = system(["/bin/slangc", "-q", "-g", "-f", "ld r0, x\njmp (return_address)\n"]);
+    var rc = system(["/bin/slangc", "-q", "-g", "-f", "jmp (return_address)\n"]);
     unredirect(0, prev_in);
     unredirect(1, prev_out);
 
