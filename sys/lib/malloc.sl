@@ -209,7 +209,7 @@ var vfree = func(p, szs) {
     if (!szs[1]) return free(p);
     var i = 0;
     while (i != szs[0])
-        vfree(p[i++]);
+        vfree(p[i++], szs+1);
     free(p);
     return 0;
 };
