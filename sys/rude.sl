@@ -96,14 +96,12 @@ eval = func(code) {
         name = varname(code, '=');
     };
 
-    if (!interpret(code)) {
-        addr = compile(code);
-        # TODO: [bug] if the compile failed, remove the name from the globals table if we created a new global
-        if (!addr) {
-            if (name) free(name);
-            return 0;
-        }
+    if (interpret(code)) {
+        if (name) free(name);
+        return RETURN;
     };
+
+    addr = compile(code);
 
     var global;
     if (name) {
@@ -115,8 +113,8 @@ eval = func(code) {
         free(name);
     };
 
-    if (addr) return addr() # compiled code
-    else return RETURN; # interpreted code
+    if (addr) return addr()
+    else return 0;
 };
 
 evalfile = func(filename) {
