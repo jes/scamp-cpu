@@ -1003,7 +1003,7 @@ puts("    ^F find text                      |   a enter insert mode 1 char right
 ");
 puts("
     ^L redraw screen                  |   g/G goto line\r
-                                      |   z[tzb] reposition screen offset\r
+    ^R reread file                    |   z[tzb] reposition screen offset\r
 \r
          PRESS ANY KEY TO CLOSE");
 
@@ -1218,6 +1218,16 @@ processkey = func() {
         delchar();
     } else if (c == CTRL_KEY('l')) {
         markalldirty();
+    } else if (c == CTRL_KEY('r')) {
+        if (openfilename) {
+            # delete all existing lines
+            while (grlen(rows)) delrow(grlen(rows)-1);
+
+            # reopen the file
+            openfile(openfilename); # XXX: use-after-free of openfilename, but we don't care
+            markalldirty();
+            move(0);
+        };
     } else if (c == ESC) {
         mode = NAV_MODE;
     } else {
