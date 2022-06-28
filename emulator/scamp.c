@@ -747,7 +747,6 @@ int main(int argc, char **argv) {
 
     if (show_help) help();
 
-
     /* load ROMs */
     load_ucode("../ucode.hex");
     if (!jmp0x100) {
