@@ -512,23 +512,46 @@ interpret = func(code) {
     var name;
 
     var is_call = 0;
-    var s;
+    var s = code;
 
+    var assign = 0;
+
+    while (iswhite(*s)) s++;
     name = varname(code, 0);
     if (!name) return 0;
 
-    s = code + strlen(name);
+    s = s + strlen(name);
     while (iswhite(*s)) s++;
-    if (*s) {
-        # function call
 
-        # look for open paren
-        if (*s != '(') {
-            free(name);
-            return 0;
+    if (*s == '=') {
+        # assignment
+        assign = htget(globals,name);
+        if (!assign) {
+            fprintf(2, "%s: unknown name\n", [name]);
+            return 1;
         };
+        free(name);
+
+
+        s++;
+        while (iswhite(*s)) s++;
+
+
+        # get new varname
+        name = varname(s, 0);
+        if (!name) return 0;
+
+
+        s = s + strlen(name);
+        while (iswhite(*s)) s++;
+    };
+
+
+    if (*s == '(') {
+        # function call
         s++;
         is_call = 1;
+
 
         # look for close paren
         while (iswhite(*s)) s++;
@@ -544,6 +567,10 @@ interpret = func(code) {
             free(name);
             return 0;
         };
+    } else if (*s) {
+        # something we can't interpret, we need to compile it
+        free(name);
+        return 0;
     };
 
     var v = htget(globals, name);
@@ -552,6 +579,8 @@ interpret = func(code) {
 
     RETURN = *v;
     if (is_call) RETURN = RETURN();
+
+    if (assign) *assign = RETURN;
 
     return 1;
 };

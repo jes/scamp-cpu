@@ -75,6 +75,7 @@ addglobal("fscanf", &fscanf);
 addglobal("fscanf_fd", &fscanf_fd);
 addglobal("getchar", &getchar);
 addglobal("getcwd", &getcwd);
+addglobal("getpid", &getpid);
 addglobal("gets", &gets);
 addglobal("grarr_maxgrow", &grarr_maxgrow);
 addglobal("grbase", &grbase);
