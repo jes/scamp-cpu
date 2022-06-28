@@ -522,65 +522,78 @@ interpret = func(code) {
 
     name = varname(code, 0);
     if (!name) return 0;
-
     s = s + strlen(name);
-    while (iswhite(*s)) s++;
 
+    var v = htget(globals,name);
+    free(name);
+    if (!v) return 0;
+    v = *v;
+
+    while (iswhite(*s)) s++;
     if (*s == '=') {
         # assignment
-        assign = htget(globals,name);
-        if (!assign) {
-            fprintf(2, "%s: unknown name\n", [name]);
-            return 1;
-        };
-        free(name);
-
+        assign = v;
 
         s++;
         while (iswhite(*s)) s++;
 
-
         # get new varname
         name = varname(s, 0);
         if (!name) return 0;
-
-
         s = s + strlen(name);
-        while (iswhite(*s)) s++;
+
+        v = htget(globals,name);
+        free(name);
+        if (!v) return 0;
+        v = *v;
     };
 
+    var v2;
+    while (iswhite(*s)) s++;
+    while (*s == '[') {
+        # array indexing
+        s++;
+        while (iswhite(*s)) s++;
+
+        if (isdigit(*s)) {
+            v2 = atoi(s);
+            while (isdigit(*s)) s++;
+        } else {
+            # get new varname
+            name = varname(s, 0);
+            if (!name) return 0;
+            s = s + strlen(name);
+
+            v2 = htget(globals,name);
+            free(name);
+            if (!v2) return 0;
+            v2 = *v2;
+        };
+
+        v = *(v+v2);
+
+        while (iswhite(*s)) s++;
+        if (*s != ']') return 0;
+        s++;
+        while (iswhite(*s)) s++;
+    };
 
     if (*s == '(') {
         # function call
         s++;
         is_call = 1;
 
-
         # look for close paren
         while (iswhite(*s)) s++;
-        if (*s != ')') {
-            free(name);
-            return 0;
-        };
+        if (*s != ')') return 0;
         s++;
-
-        # look for end of string
-        while (iswhite(*s)) s++;
-        if (*s) {
-            free(name);
-            return 0;
-        };
-    } else if (*s) {
-        # something we can't interpret, we need to compile it
-        free(name);
-        return 0;
     };
 
-    var v = htget(globals, name);
-    free(name);
-    if (!v) return 0;
+    # if there's more string, then it's something we can't interpret
+    while (iswhite(*s)) s++;
+    if (*s) return 0;
 
-    RETURN = *v;
+    RETURN = v;
     if (is_call) RETURN = RETURN();
 
     if (assign) *assign = RETURN;
