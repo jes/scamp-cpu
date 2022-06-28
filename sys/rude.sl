@@ -517,6 +517,9 @@ interpret = func(code) {
     var assign = 0;
 
     while (iswhite(*s)) s++;
+
+    if (!*s) return 1; # empty string
+
     name = varname(code, 0);
     if (!name) return 0;
 
