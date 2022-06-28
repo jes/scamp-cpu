@@ -25,6 +25,7 @@ var compile;
 var newglobal;
 var addglobal;
 var exists;
+var filesize;
 var copy;
 var interpret;
 
@@ -144,15 +145,18 @@ evalfile = func(filename) {
         fprintf(2, "can't write %s: %s\n", [filename, strerror(fd)]);
         return 0;
     };
-    var n = read(fd, buf, bufsz);
-    if (n == bufsz) {
-        # TODO: [bug] support files longer than bufsz
+    var srcsz = filesize(filename);
+    var srcbuf = malloc(srcsz+1);
+    var n = read(fd, srcbuf, srcsz+1);
+    if (n > srcsz) {
         fprintf(2, "%s: too much data!\n", [filename]);
     };
-    buf[n] = 0;
+    srcbuf[srcsz] = 0;
     close(fd);
 
-    return eval(buf);
+    var v = eval(srcbuf);
+    free(srcbuf);
+    return v;
 };
 
 kilo = func(funcname) {
@@ -468,6 +472,13 @@ exists = func(name) {
     var fd = open(name, O_READ);
     close(fd);
     return fd >= 0;
+};
+
+# return the number of words in the file
+filesize = func(name) {
+    var statbuf = [0,0,0,0];
+    if (stat(name, statbuf) < 0) return 0;
+    return statbuf[1];
 };
 
 # copy file from src to dst
