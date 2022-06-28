@@ -508,6 +508,8 @@ copy = func(src, dst) {
     return 0;
 };
 
+# TODO: [nice] this function is overly-complex and underly-complete;
+#       we should instead parse the code into an AST and evaluate it
 interpret = func(code) {
     var name;
 
