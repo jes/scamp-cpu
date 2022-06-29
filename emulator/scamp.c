@@ -42,7 +42,7 @@ struct uart8250 {
        than the baud rate allows */
 };
 
-int test, debug, stacktrace, cyclecount, show_help, test_fail, freq=20000000, watch=-1;
+int test, debug, stacktrace, cyclecount, show_help, test_fail, freq=20000000, watch=-1, zero, memorylog;
 int halt;
 uint64_t steps;
 struct termios orig_termios;
@@ -604,6 +604,7 @@ void help(void) {
 "  -f,--freq HZ       Aim to emulate a clock of the given frequency (default: 20000000)\n"
 "  -i,--image FILE    Load disk image from given hex file\n"
 #ifdef PROFILING
+"  -m,--memorylog     Log the contents of memory to mem/frame.%%04d periodically\n"
 "  -p,--profile FILE  Write profiling data to FILE\n"
 #endif
 "  -r,--run FILE      Load the given hex file into RAM at 0x100 and run it instead of the boot ROM\n"
@@ -611,6 +612,7 @@ void help(void) {
 "  -s,--stack         Trace the stack\n"
 "  -t,--test          Check whether the test ROM passes the tests\n"
 "  -w,--watch ADDR    Watch for changes to the given address and print them on stderr\n"
+"  -z,--zero          Initialise memory to zeroes instead of random\n"
 "  -h,--help          Show this help text\n"
 "\n"
 "This emulator loads the microcode from ../ucode.hex and boot ROM from ../bootrom.hex.\n"
@@ -673,6 +675,24 @@ char *tick(int N, char *input) {
 }
 #endif
 
+#ifdef PROFILING
+/* dump memory contents and PC to file */
+void dumpmem(int frame) {
+    char name[100];
+    sprintf(name, "mem/frame.%04d", frame);
+    FILE *fp = fopen(name, "w");
+    if (!fp) {
+        fprintf(stderr, "can't write %s\n", name);
+        exit(1);
+    }
+    for (int i = 0; i < 65536; i++) {
+        fprintf(fp, "%04x\n", i<256 ? rom[i] : ram[i]);
+    }
+    fprintf(fp, "%04x\n", PC);
+    fclose(fp);
+}
+#endif
+
 int main(int argc, char **argv) {
     int jmp0x100 = 0;
     struct timeval starttime, curtime;
@@ -692,8 +712,6 @@ int main(int argc, char **argv) {
     serialport.txempty = 1;
 #endif
 
-    randomise_ram();
-
 #ifdef EMSCRIPTEN
     load_disk("os.disk");
     load_ucode("ucode.hex");
@@ -711,6 +729,7 @@ int main(int argc, char **argv) {
             {"freq",    required_argument, 0, 'f'},
             {"image",   required_argument, 0, 'i'},
 #ifdef PROFILING
+            {"memorylog",no_argument,      0, 1},
             {"profile", required_argument, 0, 'p'},
 #endif
             {"run",     required_argument, 0, 'r'},
@@ -718,6 +737,7 @@ int main(int argc, char **argv) {
             {"stack",   no_argument, &stacktrace,1},
             {"test",    no_argument, &test,   1},
             {"watch",   required_argument, 0, 'w'},
+            {"zero",    no_argument,   &zero, 1},
             {"help",    no_argument, &show_help, 1},
             {0, 0, 0, 0},
         };
@@ -731,6 +751,7 @@ int main(int argc, char **argv) {
         if (c == 'f') freq = atoi(optarg);
         if (c == 'i') load_disk(optarg);
 #ifdef PROFILING
+        if (c == 'm') memorylog = 1;
         if (c == 'p') open_profile(optarg);
 #endif
         if (c == 'r') {
@@ -741,6 +762,7 @@ int main(int argc, char **argv) {
         if (c == 's') stacktrace = 1;
         if (c == 't') test = 1;
         if (c == 'w') watch = atoi(optarg);
+        if (c == 'z') zero = 1;
 
         if (c == 'h') show_help = 1;
     }
@@ -756,9 +778,15 @@ int main(int argc, char **argv) {
         PC = 0x100;
     }
 
+    if (!zero) randomise_ram();
+
     signal(SIGINT, sighandler);
     rawmode();
     gettimeofday(&starttime, NULL);
+
+#ifdef PROFILING
+    int frame = 0;
+#endif
 
     /* run the clock */
     while (!halt) {
@@ -780,6 +808,10 @@ int main(int argc, char **argv) {
             if (elapsed_us < target_us)
                 usleep(target_us - elapsed_us);
         }
+
+#ifdef PROFILING
+        if (memorylog && steps % 200 == 0) dumpmem(frame++);
+#endif
     }
 
     if (cyclecount)
