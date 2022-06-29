@@ -281,6 +281,17 @@ sys_rename = func(oldname, newname) {
     # clear up the containing directory block if it's now empty
     dirgc(dir_parent, dirblk, 0);
 
+    # if it's a directory, update its ".." pointer
+    var dotdotlocation = dirfindname(blknum, "..");
+    if (!dotdotlocation) return 0; # probably a normal file
+
+    # read the block, rewrite the target pointer for "..", and write it back out
+    blkread(dotdotlocation[1], BLKBUF);
+    if (blktype(BLKBUF) == TYPE_DIR) {
+        BLKBUF[dotdotlocation[2] + 15] = newlocation[3];
+        blkwrite(dotdotlocation[1], BLKBUF);
+    };
+
     return 0;
 
 };
