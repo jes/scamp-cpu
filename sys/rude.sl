@@ -83,6 +83,10 @@ internal = func(str) {
         name = varname(str+6, 0);
         val = kilo(name);
         free(name);
+    } else if (strncmp(str, ".list ", 6) == 0) {
+        name = varname(str+6, 0);
+        val = list(name);
+        free(name);
     } else if (strncmp(str, ".revert ", 8) == 0) {
         name = varname(str+6, 0);
         val = revert(name);
