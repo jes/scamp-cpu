@@ -7,9 +7,9 @@ var check_boot = func() {
     kputs("check boot header...\r\n");
     blkread(0, 0);
 
-    if (BLKBUF[0] != 0x5343) kprintf("boot header: b[0] = %x, expected 0x5343", [BLKBUF[0]]);
-    if (BLKBUF[1] < 0xa000) kprintf("boot header: b[1] = %x, seems unlikely; expected >= 0xa000", [BLKBUF[1]]);
-    if (BLKBUF[1]+BLKBUF[2] < BLKBUF[1]) kprintf("boot header: b[1]+b[2] (%x+%x) overflows address", [BLKBUF[1],BLKBUF[2]]);
+    if (BLKBUF[0] != 0x5343) kprintf("boot header: b[0] = %x, expected 0x5343\r\n", [BLKBUF[0]]);
+    if (BLKBUF[1] < 0xa000) kprintf("boot header: b[1] = %x, seems unlikely; expected >= 0xa000\r\n", [BLKBUF[1]]);
+    if (BLKBUF[1]+BLKBUF[2] < BLKBUF[1]) kprintf("boot header: b[1]+b[2] (%x+%x) overflows address\r\n", [BLKBUF[1],BLKBUF[2]]);
 };
 
 var load_usedmap = func() {
@@ -94,6 +94,7 @@ var strcmp = asm {
 #  - [TODO] directories that lack "." or ".."
 #  - linked blocks not marked as used
 #  - [TODO] blocks marked as used but not linked
+#  - [TODO] blocks used more than once
 var check_file = func(blk) {
     blkread(blk, 0);
 
