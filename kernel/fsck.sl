@@ -114,8 +114,6 @@ var check_file = func(blk) {
                 if (blknum < 80) kprintf("\r\nin dir block %d, %s links to %d\r\n", [dirblknum, name, blknum]);
                 check_file(blknum);
                 blkread(dirblknum, 0); # XXX: restore block for this dirwalk()
-            } else if (blknum) {
-                #kprintf("\r\nin dir block %d, empty filename links to block %d\r\n", [dirblknum,blknum]);
             };
             return 1;
         });
