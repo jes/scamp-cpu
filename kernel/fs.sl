@@ -135,7 +135,7 @@ var fs_write = func(fd, buf, sz) {
         # note: this is subtly different to "if we filled this block", because we might not
         # always be writing at the end of the file, even if we reach the end of a block
         if (nextblknum == nextfreeblk) {
-            blksetused(nextblknum, 1);
+            blksetused(nextblknum, 1); # side-effect: finds a new "nextfreeblk"
 
             if (nextblknum == nextfreeblk) kpanic("write: nextfreeblk is not free");
 
