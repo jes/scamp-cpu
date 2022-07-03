@@ -173,7 +173,7 @@ var asm_cf_blkwrite = asm {
 
     # write header (first 2 words)
     out CFDATAREG, (x++)
-    out CFDATAREG, (x++)
+    out CFDATAREG, (x)
 
     ld x, r3
     jmp asm_cf_blkwrite_begin
