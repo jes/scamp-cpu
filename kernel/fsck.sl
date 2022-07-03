@@ -12,9 +12,12 @@ var check_boot = func() {
     if (BLKBUF[1]+BLKBUF[2] < BLKBUF[1]) kprintf("boot header: b[1]+b[2] (%x+%x) overflows address\r\n", [BLKBUF[1],BLKBUF[2]]);
 };
 
+var usedmap = 0x0100; # length = 0x1000
+var seenmap = 0x1100; # length = 0x1000
+
 var load_usedmap = func() {
     var i = 0;
-    var p = 0x100;
+    var p = usedmap;
 
     while (i < 16) {
         blkread(SKIP_BLOCKS+i, 0);
@@ -24,15 +27,35 @@ var load_usedmap = func() {
     };
 };
 
+var init_seenmap = func() {
+    memset(seenmap, 0, 0x1000);
+};
+
 var blkisfree = func(blk) {
     var bitmapblk = shr12(blk);
     var blkgroup  = byteshr4(blk & 0x0fff);
     var i         = blk & 0x0f;
 
-    var usedmap = 0x100;
-
     var addr = shl(bitmapblk,8) | blkgroup;
     return (usedmap[addr] & powers_of_2[i]) == 0;
+};
+
+var blkisseen = func(blk) {
+    var bitmapblk = shr12(blk);
+    var blkgroup  = byteshr4(blk & 0x0fff);
+    var i         = blk & 0x0f;
+
+    var addr = shl(bitmapblk,8) | blkgroup;
+    return (seenmap[addr] & powers_of_2[i]) != 0;
+};
+
+var blkmarkseen = func(blk) {
+    var bitmapblk = shr12(blk);
+    var blkgroup  = byteshr4(blk & 0x0fff);
+    var i         = blk & 0x0f;
+
+    var addr = shl(bitmapblk,8) | blkgroup;
+    seenmap[addr] = seenmap[addr] | powers_of_2[i];
 };
 
 # walk the blocks in a file
@@ -40,7 +63,9 @@ var blkisfree = func(blk) {
 #  - files with length != 254 and next != 0
 #  - linked blocks not marked as used
 var filewalk = func(blknum) {
-    if (blkisfree(blknum)) kprintf("\r\nblock %d is linked but free\r\n", [blknum]);
+    if (blkisseen(blknum)) kprintf("\r\nblock %d is seen more than once (file)\r\n", [blknum]);
+    blkmarkseen(blknum);
+    if (blkisfree(blknum)) kprintf("\r\nblock %d is linked but free (file)\r\n", [blknum]);
     while (blknum) {
         kputs(".");
         blkread(blknum, 0);
@@ -100,7 +125,9 @@ var check_file = func(blk) {
 
     if (blktype(0) == TYPE_DIR) {
         kputs("D");
-        if (blkisfree(blk)) kprintf("\r\nblock %d is linked but free\r\n", [blk]);
+        if (blkisseen(blk)) kprintf("\r\nblock %d is seen more than once (dir)\r\n", [blk]);
+        blkmarkseen(blk);
+        if (blkisfree(blk)) kprintf("\r\nblock %d is linked but free (dir)\r\n", [blk]);
         dirwalk(blk, func(name, blknum, dirblknum, dirent_offset) {
             if (dirent_offset == 2) kputs(".");
             if (strcmp(name, ".") == 0) {
@@ -130,6 +157,7 @@ var check_file = func(blk) {
 var check_dirs = func() {
     kputs("load free-space bitmap into memory...\r\n");
     load_usedmap();
+    init_seenmap();
 
     kputs("check directories...\r\n");
     check_file(ROOTBLOCK);
