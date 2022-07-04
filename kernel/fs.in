@@ -16,6 +16,7 @@ put ../sys/df.bin /bin/df
 put ../sys/du.bin /bin/du
 put ../sys/echo.bin /bin/echo
 put ../sys/fc.bin /bin/fc
+put ../sys/fsck.bin /bin/fsck
 put ../sys/grep.bin /bin/grep
 put ../sys/hamurabi.bin /bin/hamurabi
 put ../sys/hd.bin /bin/hd
@@ -91,6 +92,7 @@ put -t ../sys/df.sl /src/df.sl
 put -t ../sys/du.sl /src/du.sl
 put -t ../sys/echo.sl /src/echo.sl
 put -t ../sys/fc.sl /src/fc.sl
+put -t ../sys/fsck.sl /src/fsck.sl
 put -t ../sys/grep.sl /src/grep.sl
 put -t ../sys/hamurabi.sl /src/hamurabi.sl
 put -t ../sys/hd.sl /src/hd.sl
