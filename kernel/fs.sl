@@ -82,8 +82,10 @@ var fs_write = func(fd, buf, sz) {
         # read the current block of the file
         if (!isnewblock) {
             if (direct) {
-                cf_blkread_head(blknum, blkbuf); # read header only
-                blkbuf[256] = 0; # invalidate cached contents
+                if (blkbuf[256] != blknum) {
+                    cf_blkread_head(blknum, blkbuf); # read header only
+                    blkbuf[256] = 0; # invalidate cached contents
+                };
             } else {
                 blkread(blknum, blkbuf);
             };
@@ -144,9 +146,9 @@ var fs_write = func(fd, buf, sz) {
             blksetnext(0, blkbuf);
             *(blkbuf+256) = blknum;
 
-            # write block to disk if we're using the shared buffer and we won't
-            # immediately write it on the next loop iteration
-            if (blkbuf == BLKBUF && sz == 0) blkwrite(nextblknum, blkbuf);
+            # write block to disk if we won't immediately write it on the next
+            # loop iteration
+            if (sz == 0) blkwrite(nextblknum, blkbuf);
 
             isnewblock = 1;
         } else {
