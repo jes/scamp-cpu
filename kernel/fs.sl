@@ -145,7 +145,7 @@ var fs_write = func(fd, buf, sz) {
             blksettype(TYPE_FILE, blkbuf);
             blksetlen(0, blkbuf);
             blksetnext(0, blkbuf);
-            *(blkbuf+256) = blknum;
+            blkbuf[256] = nextblknum;
 
             # write block to disk if we won't immediately write it on the next
             # loop iteration
