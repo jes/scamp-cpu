@@ -111,6 +111,7 @@ var fs_write = func(fd, buf, sz) {
         if (direct) {
             # write straight from user buffer
             cf_blkwrite(blknum, blkbuf, buf+writesz);
+            blkbuf[256] = 0; # buffer no longer contains true contents of block on disk
         } else {
             # copy data to block
             memcpy(blkbuf+posinblk+2, buf+writesz, write);
