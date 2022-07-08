@@ -170,6 +170,16 @@ to create any kind of object.
 
 But for lexical scope we need an object.
 
+### IDE
+
+We could make a fork of kilo (or a mode in kilo) that adds a few features to make it work a bit
+like DrRacket:
+
+1. highlighting of matching parens
+2. automatic indentation to the right level
+3. some way to execute the current file in lisp, and drop you to a repl after it's done
+4. make the lisp interpreter check for input periodically, and `trap()` back to the REPL
+
 ## Specifics
 
 ### Type identifiers
