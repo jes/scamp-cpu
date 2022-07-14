@@ -26,20 +26,27 @@ var bigintval;
 var newvector;
 
 var newstring;
+var stringstring;
 
 var newhash;
 
 var newsymbol;
 var symbolname;
+var intern;
+var lookupglobal;
+var lookup;
 
 var newclosure;
 var closureargs;
 var closurebody;
 var closurescope;
 
-var intern;
-var lookupglobal;
-var lookup;
+var newport;
+var portsetchar;
+var portsetbuf;
+var portchar;
+var portbuf;
+var porteof;
 
 var needargs;
 var init;
@@ -50,6 +57,7 @@ var skipread;
 var READ;
 var read_form;
 var read_list;
+var read_string;
 var read_number;
 var issymch;
 var read_symbol;
@@ -67,10 +75,13 @@ var readch;
 
 var _NIL;
 var _T;
+var _EOF;
 var _QUOTE;
 var _LAMBDA;
 var _COND;
 var _DEFINE;
+
+var NOCHAR = -1000;
 
 ### Types ###
 # these all need to be even-valued so as not to confuse the garbage collector
@@ -83,6 +94,7 @@ var STRING = 10;
 var HASH = 12;
 var CLOSURE = 14;
 var BUILTIN = 16;
+var PORT = 18;
 var PAIR = 0x100;
 
 ### Cons cells ###
@@ -126,6 +138,8 @@ gc = func() {
 
 freecell = func(arena, cell) {
     var freelist = arena;
+    # TODO: for certain types of cell we also need to free cdr(cell),
+    # e.g. bigints, vectors, strings, hash tables, etc.
     setcdr(cell, cdr(freelist));
     setcdr(freelist, cell);
 };
@@ -157,6 +171,7 @@ newcell = func() {
 # XXX: we override the "cons" name in malloc.sl, but for the time being this is
 # fine because nothing should be using that one
 cons = func(a, b) {
+    assert((a&1)==0, "cons: car field must be even\n", 0);
     var cell = newcell();
     setcar(cell, a);
     setcdr(cell, b);
@@ -196,6 +211,7 @@ newvector = func() return cons(VECTOR, grnew());
 ### Strings ###
 
 newstring = func(s) return cons(STRING, strdup(s));
+stringstring = func(s) return cdr(s);
 
 ### Hash tables ###
 
@@ -250,6 +266,36 @@ closureargs = func(clos) return car(cdr(clos));
 closurebody = func(clos) return car(cdr(cdr(clos)));
 closurescope = func(clos) return cdr(cdr(cdr(clos)));
 
+### Ports ###
+
+newport = func(buf) {
+    var p = malloc(2);
+    var port = cons(PORT, p);
+    portsetchar(port, NOCHAR);
+    portsetbuf(port, buf);
+    return port;
+};
+
+portsetchar = func(port, ch) {
+    *(cdr(port)+1) = ch;
+};
+
+portsetbuf = func(port, buf) {
+    *(cdr(port)) = buf;
+};
+
+portchar = func(port) {
+    return *(cdr(port)+1);
+};
+
+portbuf = func(port) {
+    return *(cdr(port));
+};
+
+porteof = func(port) {
+    return peekread(port) == EOF; # XXX: SLANG EOF, not Lisp _EOF
+};
+
 ### Initialisation ###
 
 needargs = func(num, args) {
@@ -257,10 +303,12 @@ needargs = func(num, args) {
 };
 
 init = func() {
-    # intern true/false
+    # intern required objects
     _NIL = 0;
     _T = newsymbol("t");
+    _EOF = newsymbol(""); # needs to be distinguishable from anything that can be read in
 
+    htput(GLOBALS, "EOF", _EOF);
     htput(GLOBALS, "else", _T);
 
     # put builtins in GLOBALS
@@ -302,6 +350,10 @@ init = func() {
     b("pair?", func(args) {
         needargs(1, args);
         if (type(car(args)) == PAIR) return _T else return _NIL;
+    });
+    b("eof-object?", func(args) {
+        needargs(1, args);
+        if (car(args) == _EOF) return _T else return _NIL;
     });
     b("cons", func(args) {
         needargs(2, args);
@@ -357,6 +409,30 @@ init = func() {
         };
         return _T;
     });
+    b("read", func(args) {
+        var port = in;
+        if (args) { # optional input port
+            needargs(1, args);
+            port = car(args);
+            assert(type(port)==PORT, "can't read non-port\n", 0);
+        };
+        return READ(port);
+    });
+    b("open-input-file", func(args) {
+        needargs(1, args);
+        var name = car(args);
+        assert(type(name) == STRING, "filename should be string\n", 0);
+        var buf = bopen(stringstring(name), O_READ);
+        if (!buf) return _NIL;
+        return newport(buf);
+    });
+    b("close-input-port", func(args) {
+        needargs(1, args);
+        var port = car(args);
+        assert(type(port) == PORT, "port should be port\n", 0);
+        bclose(portbuf(port));
+        portsetbuf(port, 0);
+    });
 
     # intern symbols for special forms
     _QUOTE = intern("quote");
@@ -366,87 +442,106 @@ init = func() {
 
     # TODO: load default lisp code from /lisp/lib.l ?
 
-    # initialise input stream for stdin
-    in = bfdopen(0, O_READ);
-    readch = 0;
+    # initialise input port for stdin
+    in = newport(bfdopen(0, O_READ));
 };
 
 ### Interpreter ###
 
-peekread = func() {
-    if (readch == 0) {
-        readch = bgetc(in);
-        if (readch == EOF) exit(0);
+peekread = func(port) {
+    if (portbuf(port) == 0) {
+        assert(0, "can't read a closed port\n", 0);
     };
-    return readch;
+    if (portchar(port) == NOCHAR) {
+        portsetchar(port, bgetc(portbuf(port)));
+    };
+    return portchar(port);
 };
 
-nextread = func() {
-    var ch = peekread();
-    readch = 0;
+nextread = func(port) {
+    var ch = peekread(port);
+    portsetchar(port, NOCHAR);
     return ch;
 };
 
-skipread = func() {
-    while (iswhite(peekread())) nextread();
+skipread = func(port) {
+    while (iswhite(peekread(port))) nextread(port);
 };
 
-READ = func() {
-    return read_form();
+READ = func(port) {
+    skipread(port);
+    if (porteof(port)) return _EOF;
+    return read_form(port);
 };
 
-read_form = func() {
-    skipread();
-    if (peekread() == '(') {
-        return read_list();
-    } else if (peekread() == '\'') {
-        nextread();
-        return cons(newsymbol("quote"), cons(read_form(), 0));
-    } else if (isdigit(peekread()) || peekread() == '-') {
-        return read_number();
+read_form = func(port) {
+    skipread(port);
+    if (peekread(port) == '(') {
+        return read_list(port);
+    } else if (peekread(port) == '\'') {
+        nextread(port);
+        return cons(newsymbol("quote"), cons(read_form(port), 0));
+    } else if (peekread(port) == '"') {
+        return read_string(port);
+    } else if (isdigit(peekread(port)) || peekread(port) == '-') {
+        return read_number(port);
     } else {
-        return read_symbol();
+        return read_symbol(port);
     };
 };
 
-read_list = func() {
-    skipread();
-    assert(nextread() == '(', "list must start with open-paren\n", 0);
+read_list = func(port) {
+    skipread(port);
+    assert(nextread(port) == '(', "list must start with open-paren\n", 0);
 
     var list = 0;
     var p = 0;
     var cell;
 
-    skipread();
-    while (peekread() != ')') {
-        if (peekread() == '.') {
+    skipread(port);
+    while (peekread(port) != ')') {
+        if (peekread(port) == '.') {
             assert(0, "we don't handle dotted pairs yet\n", 0);
         };
-        cell = cons(read_form(), 0);
+        cell = cons(read_form(port), 0);
         if (p) setcdr(p, cell);
         if (!list) list = cell;
         p = cell;
 
-        assert(iswhite(peekread()) || peekread() == ')', "list elements should be separated with space\n", 0);
+        assert(iswhite(peekread(port)) || peekread(port) == ')', "list elements should be separated with space\n", 0);
 
-        skipread();
+        skipread(port);
     };
-    nextread();
+    nextread(port);
 
     return list;
 };
 
-read_number = func() {
+read_string = func(port) {
+    assert(nextread(port) == '"', "string must start with double-quote\n", 0);
+    var str = sbnew();
+    var ch;
+    while (1) {
+        ch = nextread(port);
+        if (ch == '"') break;
+        sbputc(str, ch);
+    };
+    var cell = newstring(sbbase(str));
+    sbfree(str);
+    return cell;
+};
+
+read_number = func(port) {
     var num = 0;
     var neg = 0;
-    if (peekread() == '-') {
+    if (peekread(port) == '-') {
         neg = 1;
-        nextread();
+        nextread(port);
     };
 
     # TODO: support hex input, bignums
-    while (isdigit(peekread())) {
-        num = mul(num,10) + (nextread() - '0');
+    while (isdigit(peekread(port))) {
+        num = mul(num,10) + (nextread(port) - '0');
     };
 
     if (neg) num = -num;
@@ -457,10 +552,10 @@ issymch = func(ch) {
     return isalnum(ch) || ch == '_' || ch == '?' || ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '=';
 };
 
-read_symbol = func() {
+read_symbol = func(port) {
     var str = sbnew();
-    while (issymch(peekread())) {
-        sbputc(str, nextread());
+    while (issymch(peekread(port))) {
+        sbputc(str, nextread(port));
     };
 
     var cell = newsymbol(sbbase(str));
@@ -586,6 +681,8 @@ PRINT = func(form) {
         puts("#<procedure>: <builtin>");
     } else if (type(form) == PAIR) {
         print_list(form);
+    } else if (type(form) == PORT) {
+        puts("#<port>");
     } else {
         assert(0, "tried to print unrecognised type: %d\n", [car(form)]);
     }
@@ -610,8 +707,11 @@ print_list = func(form) {
 
 init();
 puts("> ");
+var form;
 while (1) {
-    PRINT(EVAL(READ(), 0));
+    form = READ(in);
+    if (form == _EOF) break;
+    PRINT(EVAL(form, 0));
     putchar('\n');
     puts("> ");
 };
