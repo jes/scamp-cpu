@@ -74,6 +74,10 @@ collection allocate a new `cons` arena whenever it finds that existing memory is
 say, 75% full. Maybe we could make it free them whenever it finds that an entire arena
 is unused?
 
+We'll say that car fields are always even-valued. That means addresses of cons cells, and type
+identifiers, all need to be even. The garbage collector can mark visited cells by ORing 1
+into the car field.
+
 ### Integers
 
 Represented like `123`
