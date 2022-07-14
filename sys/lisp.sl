@@ -82,6 +82,7 @@ var _COND;
 var _DEFINE;
 
 var NOCHAR = -1000;
+var showprompt = 1;
 
 ### Types ###
 # these all need to be even-valued so as not to confuse the garbage collector
@@ -351,6 +352,10 @@ init = func() {
         needargs(1, args);
         if (type(car(args)) == PAIR) return _T else return _NIL;
     });
+    b("port?", func(args) {
+        needargs(1, args);
+        if (type(car(args)) == PORT) return _T else return _NIL;
+    });
     b("eof-object?", func(args) {
         needargs(1, args);
         if (car(args) == _EOF) return _T else return _NIL;
@@ -405,6 +410,46 @@ init = func() {
         args = cdr(args);
         while (args) {
             if (intval(car(args)) != a) return _NIL;
+            args = cdr(args);
+        };
+        return _T;
+    });
+    b(">", func(args) {
+        var a = intval(car(args));
+        args = cdr(args);
+        while (args) {
+            if (a <= intval(car(args))) return _NIL;
+            a = intval(car(args));
+            args = cdr(args);
+        };
+        return _T;
+    });
+    b("<", func(args) {
+        var a = intval(car(args));
+        args = cdr(args);
+        while (args) {
+            if (a >= intval(car(args))) return _NIL;
+            a = intval(car(args));
+            args = cdr(args);
+        };
+        return _T;
+    });
+    b(">=", func(args) {
+        var a = intval(car(args));
+        args = cdr(args);
+        while (args) {
+            if (a < intval(car(args))) return _NIL;
+            a = intval(car(args));
+            args = cdr(args);
+        };
+        return _T;
+    });
+    b("<=", func(args) {
+        var a = intval(car(args));
+        args = cdr(args);
+        while (args) {
+            if (a > intval(car(args))) return _NIL;
+            a = intval(car(args));
             args = cdr(args);
         };
         return _T;
@@ -549,7 +594,7 @@ read_number = func(port) {
 };
 
 issymch = func(ch) {
-    return isalnum(ch) || ch == '_' || ch == '?' || ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '=';
+    return isalnum(ch) || ch == '_' || ch == '?' || ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '=' || ch == '>' || ch == '<';
 };
 
 read_symbol = func(port) {
@@ -706,12 +751,23 @@ print_list = func(form) {
 };
 
 init();
-puts("> ");
+
+var args = cmdargs()+1;
+if (*args) {
+    in = newport(bopen(*args, O_READ));
+    showprompt = 0;
+    if (!portbuf(in)) {
+        fprintf(2, "%s: can't open for reading\n", [*args]);
+        exit(1);
+    };
+};
+
+if (showprompt) puts("> ");
 var form;
 while (1) {
     form = READ(in);
     if (form == _EOF) break;
     PRINT(EVAL(form, 0));
     putchar('\n');
-    puts("> ");
+    if (showprompt) puts("> ");
 };
