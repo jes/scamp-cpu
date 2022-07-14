@@ -63,6 +63,8 @@ var GLOBALS = htnew();
 var in;
 var readch;
 
+var _NIL;
+var _T;
 var _QUOTE;
 var _LAMBDA;
 var _COND;
@@ -205,7 +207,6 @@ intern = func(name) {
 lookupglobal = func(name) {
     var p = htgetkv(GLOBALS,name);
     assert(p, "lookup undefined name: %s\n", [name]);
-    assert(0,"no globals\n",0);
     return p[1];
 };
 
@@ -238,10 +239,21 @@ closurescope = func(clos) return cdr(cdr(cdr(clos)));
 
 ### Initialisation ###
 init = func() {
+    # intern true/false
+    _NIL = 0;
+    _T = newsymbol("t");
+
     # put builtins in GLOBALS
-    var g = func(name, fn) {
+    var b = func(name, fn) {
         htput(GLOBALS, intern(name), cons(BUILTIN, fn));
     };
+    # TODO: make builtins check number of arguments
+    b("null?", func(args) {
+        if (car(args) == _NIL) return _T else return _NIL;
+    });
+    b("pair?", func(args) {
+        if (type(car(args)) == PAIR) return _T else return _NIL;
+    });
 
     # intern symbols for special forms
     _QUOTE = intern("quote");
@@ -283,6 +295,9 @@ read_form = func() {
     skipread();
     if (peekread() == '(') {
         return read_list();
+    } else if (peekread() == '\'') {
+        nextread();
+        return cons(newsymbol("quote"), cons(read_form(), 0));
     } else if (isdigit(peekread()) || peekread() == '-') {
         return read_number();
     } else {
