@@ -275,6 +275,57 @@ init = func() {
     b("pair?", func(args) {
         if (type(car(args)) == PAIR) return _T else return _NIL;
     });
+    b("cons", func(args) {
+        return cons(car(args), car(cdr(args)));
+    });
+    b("car", func(args) {
+        return car(car(args));
+    });
+    b("cdr", func(args) {
+        return cdr(car(args));
+    });
+    b("+", func(args) {
+        var n = 0;
+        while (args) {
+            n = n + intval(car(args));
+            args = cdr(args);
+        };
+        return newint(n);
+    });
+    b("-", func(args) {
+        var n = 0;
+        while (args) {
+            n = n - intval(car(args));
+            args = cdr(args);
+        };
+        return newint(n);
+    });
+    b("*", func(args) {
+        var n = 1;
+        while (args) {
+            n = mul(n,intval(car(args)));
+            args = cdr(args);
+        };
+        return newint(n);
+    });
+    b("/", func(args) {
+        var n = intval(car(args));
+        args = cdr(args);
+        while (args) {
+            n = div(n,intval(car(args)));
+            args = cdr(args);
+        };
+        return newint(n);
+    });
+    b("=", func(args) {
+        var a = intval(car(args));
+        args = cdr(args);
+        while (args) {
+            if (intval(car(args)) != a) return _NIL;
+            args = cdr(args);
+        };
+        return _T;
+    });
 
     # intern symbols for special forms
     _QUOTE = intern("quote");
@@ -371,7 +422,7 @@ read_number = func() {
 };
 
 issymch = func(ch) {
-    return isalpha(ch) || ch == '_' || ch == '?' || ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%';
+    return isalpha(ch) || ch == '_' || ch == '?' || ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '=';
 };
 
 read_symbol = func() {
