@@ -26,7 +26,7 @@ var newvector;
 
 var newstring;
 
-var newhashtable;
+var newhash;
 
 var newsymbol;
 var symbolname;
@@ -73,11 +73,11 @@ var _COND;
 # these all need to be even-valued so as not to confuse the garbage collector
 var NIL = 0;
 var SYMBOL = 2;
-var INTEGER = 4;
+var INT = 4;
 var BIGINT = 6;
 var VECTOR = 8;
 var STRING = 10;
-var HASHTABLE = 12;
+var HASH = 12;
 var CLOSURE = 14;
 var BUILTIN = 16;
 var PAIR = 0x100;
@@ -166,9 +166,9 @@ type = func(cell) {
     return PAIR;
 };
 
-### Integers ###
+### Ints ###
 
-newint = func(v) return cons(INTEGER, v);
+newint = func(v) return cons(INT, v);
 intval = func(cell) return cdr(cell);
 
 ### Bigints ###
@@ -186,7 +186,7 @@ newstring = func(s) return cons(STRING, strdup(s));
 
 ### Hash tables ###
 
-newhashtable = func() return cons(VECTOR, htnew());
+newhash = func() return cons(VECTOR, htnew());
 
 ### Symbols ###
 
@@ -250,6 +250,27 @@ init = func() {
     # TODO: make builtins check number of arguments
     b("null?", func(args) {
         if (car(args) == _NIL) return _T else return _NIL;
+    });
+    b("symbol?", func(args) {
+        if (type(car(args)) == SYMBOL) return _T else return _NIL;
+    });
+    b("int?", func(args) {
+        if (type(car(args)) == INT) return _T else return _NIL;
+    });
+    b("bigint?", func(args) {
+        if (type(car(args)) == BIGINT) return _T else return _NIL;
+    });
+    b("vector?", func(args) {
+        if (type(car(args)) == VECTOR) return _T else return _NIL;
+    });
+    b("string?", func(args) {
+        if (type(car(args)) == STRING) return _T else return _NIL;
+    });
+    b("hash?", func(args) {
+        if (type(car(args)) == HASH) return _T else return _NIL;
+    });
+    b("procedure?", func(args) {
+        if (type(car(args)) == CLOSURE || type(car(args)) == BUILTIN) return _T else return _NIL;
     });
     b("pair?", func(args) {
         if (type(car(args)) == PAIR) return _T else return _NIL;
@@ -441,7 +462,7 @@ PRINT = func(form) {
         puts("()");
     } else if (type(form) == SYMBOL) {
         printf("%s", [symbolname(form)]);
-    } else if (type(form) == INTEGER) {
+    } else if (type(form) == INT) {
         printf("%d", [intval(form)]);
     } else if (type(form) == BIGINT) {
         printf("%b", [bigintval(form)]);
@@ -449,8 +470,8 @@ PRINT = func(form) {
         puts("#<vector>");
     } else if (type(form) == STRING) {
         puts("#<string>");
-    } else if (type(form) == HASHTABLE) {
-        puts("#<hashtable>");
+    } else if (type(form) == HASH) {
+        puts("#<hash>");
     } else if (type(form) == CLOSURE) {
         puts("#<closure>");
     } else if (type(form) == BUILTIN) {
