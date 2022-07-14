@@ -261,6 +261,8 @@ init = func() {
     _NIL = 0;
     _T = newsymbol("t");
 
+    htput(GLOBALS, "else", _T);
+
     # put builtins in GLOBALS
     var b = func(name, fn) {
         htput(GLOBALS, intern(name), cons(BUILTIN, fn));
@@ -489,6 +491,7 @@ EVAL = func(form, scope) {
         } else if (symbolname(fn) == _COND) {
             form = cdr(form);
             while (form) {
+                # TODO: support more than 1 expression in the "body"
                 if (EVAL(car(car(form)), scope)) return EVAL(car(cdr(car(form))), scope);
                 form = cdr(form);
             };
