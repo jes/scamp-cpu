@@ -15,6 +15,7 @@ var freecell;
 var newcellinarena;
 var newcell;
 var type;
+var length;
 
 var newint;
 var intval;
@@ -40,6 +41,7 @@ var intern;
 var lookupglobal;
 var lookup;
 
+var needargs;
 var init;
 
 var peekread;
@@ -167,6 +169,16 @@ type = func(cell) {
     return PAIR;
 };
 
+length = func(pair) {
+    var l = 0;
+    while (pair) {
+        assert(type(pair) == PAIR, "can't take length of non-pair\n", 0);
+        pair = cdr(pair);
+        l++;
+    };
+    return l;
+};
+
 ### Ints ###
 
 newint = func(v) return cons(INT, v);
@@ -239,6 +251,11 @@ closurebody = func(clos) return car(cdr(cdr(clos)));
 closurescope = func(clos) return cdr(cdr(cdr(clos)));
 
 ### Initialisation ###
+
+needargs = func(num, args) {
+    assert(length(args) == num, "arity mismatch\n", 0);
+};
+
 init = func() {
     # intern true/false
     _NIL = 0;
@@ -248,41 +265,52 @@ init = func() {
     var b = func(name, fn) {
         htput(GLOBALS, intern(name), cons(BUILTIN, fn));
     };
-    # TODO: make builtins check number of arguments
     b("null?", func(args) {
+        needargs(1, args);
         if (car(args) == _NIL) return _T else return _NIL;
     });
     b("symbol?", func(args) {
+        needargs(1, args);
         if (type(car(args)) == SYMBOL) return _T else return _NIL;
     });
     b("int?", func(args) {
+        needargs(1, args);
         if (type(car(args)) == INT) return _T else return _NIL;
     });
     b("bigint?", func(args) {
+        needargs(1, args);
         if (type(car(args)) == BIGINT) return _T else return _NIL;
     });
     b("vector?", func(args) {
+        needargs(1, args);
         if (type(car(args)) == VECTOR) return _T else return _NIL;
     });
     b("string?", func(args) {
+        needargs(1, args);
         if (type(car(args)) == STRING) return _T else return _NIL;
     });
     b("hash?", func(args) {
+        needargs(1, args);
         if (type(car(args)) == HASH) return _T else return _NIL;
     });
     b("procedure?", func(args) {
+        needargs(1, args);
         if (type(car(args)) == CLOSURE || type(car(args)) == BUILTIN) return _T else return _NIL;
     });
     b("pair?", func(args) {
+        needargs(1, args);
         if (type(car(args)) == PAIR) return _T else return _NIL;
     });
     b("cons", func(args) {
+        needargs(2, args);
         return cons(car(args), car(cdr(args)));
     });
     b("car", func(args) {
+        needargs(1, args);
         return car(car(args));
     });
     b("cdr", func(args) {
+        needargs(1, args);
         return cdr(car(args));
     });
     b("+", func(args) {
@@ -549,9 +577,10 @@ PRINT = func(form) {
     } else if (type(form) == HASH) {
         puts("#<hash>");
     } else if (type(form) == CLOSURE) {
-        puts("#<closure>");
+        # TODO: if the body has multiple expressions, print each one in turn
+        puts("#<procedure>: (lambda "); PRINT(closureargs(form)); puts(" "); PRINT(car(closurebody(form))); puts(")");
     } else if (type(form) == BUILTIN) {
-        puts("#<builtin>");
+        puts("#<procedure>: <builtin>");
     } else if (type(form) == PAIR) {
         print_list(form);
     } else {
