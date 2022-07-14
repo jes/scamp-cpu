@@ -68,6 +68,7 @@ var _T;
 var _QUOTE;
 var _LAMBDA;
 var _COND;
+var _DEFINE;
 
 ### Types ###
 # these all need to be even-valued so as not to confuse the garbage collector
@@ -331,6 +332,7 @@ init = func() {
     _QUOTE = intern("quote");
     _LAMBDA = intern("lambda");
     _COND = intern("cond");
+    _DEFINE = intern("define");
 
     # TODO: load default lisp code from /lisp/lib.l ?
 
@@ -422,7 +424,7 @@ read_number = func() {
 };
 
 issymch = func(ch) {
-    return isalpha(ch) || ch == '_' || ch == '?' || ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '=';
+    return isalnum(ch) || ch == '_' || ch == '?' || ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '=';
 };
 
 read_symbol = func() {
@@ -448,6 +450,10 @@ EVAL = func(form, scope) {
     if (type(form) != PAIR) return form;
 
     var fn = car(form);
+    var name;
+    var val;
+    var args;
+    var body;
     if (type(fn) == SYMBOL) {
         # TODO: check number and type of arguments to special forms!
         if (symbolname(fn) == _QUOTE) {
@@ -461,6 +467,25 @@ EVAL = func(form, scope) {
             return 0;
         } else if (symbolname(fn) == _LAMBDA) {
             return newclosure(car(cdr(form)), cdr(cdr(form)), scope);
+        } else if (symbolname(fn) == _DEFINE) {
+            if (type(car(cdr(form))) == SYMBOL) {
+                name = symbolname(car(cdr(form)));
+                val = EVAL(car(cdr(cdr(form))), scope);
+            } else if (type(car(cdr(form))) == PAIR) {
+                name = symbolname(car(car(cdr(form))));
+                args = cdr(car(cdr(form)));
+                body = cdr(cdr(form));
+                val = newclosure(args, body, scope);
+            } else {
+                assert(0, "bad define\n", 0);
+            };
+
+            if (scope) {
+                assert(0, "we can't yet handle define outside global scope\n", 0);
+            } else {
+                htput(GLOBALS, name, val);
+            };
+            return 0;
         };
         fn = lookup(symbolname(fn), scope);
     } else {
