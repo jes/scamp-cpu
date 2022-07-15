@@ -63,7 +63,6 @@ var issymch;
 var read_symbol;
 var evlis;
 var EVAL;
-var apply;
 var PRINT;
 var print_list;
 
@@ -626,94 +625,104 @@ evlis = func(list, scope) {
     return cons(EVAL(car(list), scope), evlis(cdr(list), scope));
 };
 
+# TODO: instead of making EVAL recursive, do some magic with continuations, so
+# that the "call stack" is stored in the cons arenas instead of the fixed-size
+# SLANG stack
 EVAL = func(form, scope) {
-    assert(form, "can't eval the empty list\n", 0);
-    if (type(form) == SYMBOL) return lookup(symbolname(form), scope);
-    if (type(form) != PAIR) return form;
-
-    var fn = car(form);
+    var fn;
     var name;
     var val;
     var args;
     var body;
-    if (type(fn) == SYMBOL) {
-        # TODO: check number and type of arguments to special forms!
-        if (symbolname(fn) == _QUOTE) {
-            return car(cdr(form));
-        } else if (symbolname(fn) == _COND) {
-            form = cdr(form);
-            while (form) {
-                # TODO: support more than 1 expression in the "body"
-                if (EVAL(car(car(form)), scope)) return EVAL(car(cdr(car(form))), scope);
+    var arglist;
+    var namelist;
+    while (1) {
+        assert(form, "can't eval the empty list\n", 0);
+        if (type(form) == SYMBOL) return lookup(symbolname(form), scope);
+        if (type(form) != PAIR) return form;
+
+        fn = car(form);
+
+        # Handle special forms:
+        if (type(fn) == SYMBOL) {
+            # TODO: check number and type of arguments to special forms!
+            if (symbolname(fn) == _QUOTE) {
+                return car(cdr(form));
+            } else if (symbolname(fn) == _COND) {
                 form = cdr(form);
-            };
-            return 0;
-        } else if (symbolname(fn) == _LAMBDA) {
-            return newclosure(car(cdr(form)), cdr(cdr(form)), scope);
-        } else if (symbolname(fn) == _DEFINE) {
-            if (type(car(cdr(form))) == SYMBOL) {
-                name = symbolname(car(cdr(form)));
-                val = EVAL(car(cdr(cdr(form))), scope);
-            } else if (type(car(cdr(form))) == PAIR) {
-                name = symbolname(car(car(cdr(form))));
-                args = cdr(car(cdr(form)));
-                body = cdr(cdr(form));
-                val = newclosure(args, body, scope);
-            } else {
-                assert(0, "bad define\n", 0);
-            };
+                while (form) {
+                    # TODO: support more than 1 expression in the "body"
+                    # TODO: tail-call optimisation
+                    if (EVAL(car(car(form)), scope)) return EVAL(car(cdr(car(form))), scope);
+                    form = cdr(form);
+                };
+                return 0;
+            } else if (symbolname(fn) == _LAMBDA) {
+                return newclosure(car(cdr(form)), cdr(cdr(form)), scope);
+            } else if (symbolname(fn) == _DEFINE) {
+                if (type(car(cdr(form))) == SYMBOL) {
+                    name = symbolname(car(cdr(form)));
+                    val = EVAL(car(cdr(cdr(form))), scope);
+                } else if (type(car(cdr(form))) == PAIR) {
+                    name = symbolname(car(car(cdr(form))));
+                    args = cdr(car(cdr(form)));
+                    body = cdr(cdr(form));
+                    val = newclosure(args, body, scope);
+                } else {
+                    assert(0, "bad define\n", 0);
+                };
 
-            if (scope) {
-                assert(0, "we can't yet handle define outside global scope\n", 0);
-            } else {
-                htput(GLOBALS, name, val);
+                if (scope) {
+                    assert(0, "we can't yet handle define outside global scope\n", 0);
+                } else {
+                    htput(GLOBALS, name, val);
+                };
+                return 0;
             };
-            return 0;
         };
-        fn = lookup(symbolname(fn), scope);
-    } else {
+
+        # Evaluate the function, its arguments, and apply the function:
         fn = EVAL(fn, scope);
-    };
+        arglist = evlis(cdr(form), scope);
 
-    var arglist = evlis(cdr(form), scope);
-
-    # TODO: refactor to support tail-call optimisation
-    return apply(fn, arglist);
-};
-
-apply = func(fn, arglist) {
-    if (type(fn) == BUILTIN) {
-        fn = cdr(fn);
-        return fn(arglist);
-    };
-
-    assert(type(fn) == CLOSURE, "don't know how to apply anything other than a builtin or closure (got %d)\n", [car(fn)]);
-
-    var scope = closurescope(fn);
-    var namelist = closureargs(fn);
-    while (namelist && arglist) {
-        if (type(namelist) == PAIR) {
-            assert(type(car(namelist)) == SYMBOL, "name list must have only symbols, got carnamelist=%d\n", [car(namelist)]);
-
-            # normal case: 1 name goes to 1 arg
-            scope = cons(cons(car(namelist), car(arglist)), scope);
-
-            namelist = cdr(namelist);
-            arglist = cdr(arglist);
-        } else if (type(namelist) == SYMBOL) {
-            # otherwise assign the rest of the arg list to 1 name
-            scope = cons(cons(namelist, arglist), scope);
-
-            namelist = 0;
-            arglist = 0;
-        } else {
-            assert(0, "name list must have only symbols\n", 0);
+        if (type(fn) == BUILTIN) {
+            fn = cdr(fn);
+            return fn(arglist);
         };
-    };
-    assert(!namelist && !arglist, "non-matching number of arguments\n", 0);
 
-    # TODO: if the body has multiple expressions, apply each one in turn
-    return EVAL(car(closurebody(fn)), scope);
+        assert(type(fn) == CLOSURE, "don't know how to apply anything other than a builtin or closure (got %d)\n", [car(fn)]);
+
+        # Make a new scope with the argument names bound to their values:
+        scope = closurescope(fn);
+        namelist = closureargs(fn);
+        while (namelist && arglist) {
+            if (type(namelist) == PAIR) {
+                assert(type(car(namelist)) == SYMBOL, "name list must have only symbols, got carnamelist=%d\n", [car(namelist)]);
+
+                # normal case: 1 name goes to 1 arg
+                scope = cons(cons(car(namelist), car(arglist)), scope);
+
+                namelist = cdr(namelist);
+                arglist = cdr(arglist);
+            } else if (type(namelist) == SYMBOL) {
+                # otherwise assign the rest of the arg list to 1 name
+                scope = cons(cons(namelist, arglist), scope);
+
+                namelist = 0;
+                arglist = 0;
+            } else {
+                assert(0, "name list must have only symbols\n", 0);
+            };
+        };
+        assert(!namelist && !arglist, "non-matching number of arguments\n", 0);
+
+        # TODO: if the body has multiple expressions, apply each one in turn
+        # with EVAL(car(closurebody(fn)), scope);
+
+        # tail-call optimisation: Instead of "EVAL(car(closurebody(fn)), scope)",
+        # we just update form and loop again
+        form = car(closurebody(fn));
+    };
 };
 
 PRINT = func(form) {
