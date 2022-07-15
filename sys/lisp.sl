@@ -381,7 +381,9 @@ init = func() {
         return newint(n);
     });
     b("-", func(args) {
-        var n = 0;
+        if (!args) return newint(0);
+        var n = intval(car(args));
+        args = cdr(args);
         while (args) {
             n = n - intval(car(args));
             args = cdr(args);
@@ -397,6 +399,7 @@ init = func() {
         return newint(n);
     });
     b("/", func(args) {
+        if (!args) return newint(0);
         var n = intval(car(args));
         args = cdr(args);
         while (args) {
@@ -406,6 +409,7 @@ init = func() {
         return newint(n);
     });
     b("=", func(args) {
+        if (!args) return _T;
         var a = intval(car(args));
         args = cdr(args);
         while (args) {
@@ -415,6 +419,7 @@ init = func() {
         return _T;
     });
     b(">", func(args) {
+        if (!args) return _T;
         var a = intval(car(args));
         args = cdr(args);
         while (args) {
@@ -425,6 +430,7 @@ init = func() {
         return _T;
     });
     b("<", func(args) {
+        if (!args) return _T;
         var a = intval(car(args));
         args = cdr(args);
         while (args) {
@@ -435,6 +441,7 @@ init = func() {
         return _T;
     });
     b(">=", func(args) {
+        if (!args) return _T;
         var a = intval(car(args));
         args = cdr(args);
         while (args) {
@@ -445,6 +452,7 @@ init = func() {
         return _T;
     });
     b("<=", func(args) {
+        if (!args) return _T;
         var a = intval(car(args));
         args = cdr(args);
         while (args) {
