@@ -103,7 +103,7 @@ var ARENASZ = 2000;
 var arenas = grnew();
 
 newarena = func() {
-    var arena = malloc(ARENASZ);
+    var arena = malloc(ARENASZ+1); # XXX: "+1" to handle the case where we get an odd pointer
     # TODO: we need to keep track of whether it was odd or even so we can free it
     arena = arena + (arena&1);
     initarena(arena);
