@@ -10,8 +10,12 @@ include "strbuf.sl";
 var newarena;
 var freearena;
 var initarena;
+var markcellused;
+var ref;
+var unref;
 var gc;
 var freecell;
+var freeusedcells;
 var newcellinarena;
 var newcell;
 var type;
@@ -68,6 +72,7 @@ var print_list;
 
 var SYMBOLS = htnew();
 var GLOBALS = htnew();
+var REFS = grnew();
 
 var in;
 var readch;
@@ -82,6 +87,7 @@ var _DEFINE;
 
 var NOCHAR = -1000;
 var showprompt = 1;
+var usedcells;
 
 ### Types ###
 # these all need to be even-valued so as not to confuse the garbage collector
@@ -99,7 +105,9 @@ var PAIR = 0x100;
 
 ### Cons cells ###
 var ARENASZ = 2000;
+var ARENATHRESH = 1500; # threshold at 75% full
 var arenas = grnew();
+var freecells = 0;
 
 newarena = func() {
     var arena = malloc(ARENASZ+1); # XXX: "+1" to handle the case where we get an odd pointer
@@ -118,6 +126,8 @@ initarena = func(arena) {
     # we initialise an arena by making the cdr fields into a circularly-linked
     # list of all the cells
 
+    puts("init arena!\n");
+
     # start off with 1 cell linked to itself
     var freelist = arena;
     setcdr(freelist, freelist);
@@ -130,16 +140,97 @@ initarena = func(arena) {
     };
 };
 
+# mark the given cell as used, recursing into any of the cells it references,
+# and return how many new cells are now marked used that weren't already
+markcellused = func(cell) {
+    var count = 0;
+    var typ;
+
+    while (cell) {
+        # already visited?
+        if (car(cell)&1) return count;
+
+        typ = type(cell);
+
+        # mark the cell as "used" by ORing a 1 into its car
+        count++;
+        setcar(cell, car(cell)|1);
+
+        if (typ == PAIR) {
+            count = count + markcellused(car(cell)&~1);
+            cell = cdr(cell);
+        } else if (typ == CLOSURE) {
+            cell = cdr(cell);
+        } else {
+            break;
+        };
+        # TODO: vectors, hashes, more?
+    };
+
+    return count;
+};
+
+# mark cell as referenced so that it won't be garbage collected
+ref = func(cell) {
+    grpush(REFS, cell);
+};
+
+# pop last cell off refs stack
+unref = func() {
+    assert(grlen(REFS)>0, "unref() with no REFS\n", 0);
+    grpop(REFS);
+};
+
 gc = func() {
-    # TODO: need to actually gc the existing arenas, and only make a new one if
-    # we're more than 75% full
-    newarena();
+    usedcells = 0;
+
+    # 1. mark all referenced cells as "used" by ORing a 1 into their car
+    htwalk(GLOBALS, func(key,val) {
+        usedcells = usedcells + markcellused(val);
+    });
+    grwalk(REFS, func(cell) {
+        usedcells = usedcells + markcellused(cell);
+    });
+
+    # 2. walk over all cells, free the ones that aren't marked, remove the markings
+    var i = 0;
+    freecells = 0;
+    while (i < grlen(arenas)) {
+        freeusedcells(grget(arenas, i));
+        i++;
+    };
+
+    # make a new arena if we're more than 75% full?
+    if (usedcells ge mul(grlen(arenas), ARENATHRESH)) {
+        newarena();
+    };
+};
+
+freeusedcells = func(arena) {
+    var freelist = arena;
+
+    var i = 0;
+    while (i < ARENASZ) {
+        if (car(arena+i)&1) {
+            # used: remove the 1 bit
+            setcar(arena+i, car(arena+i)&~1);
+        } else {
+            # not used: free the cell
+            freecell(arena, arena+i);
+        };
+        i = i + 2;
+    };
+    # TODO: free an arena if all of the cells are unused?
 };
 
 freecell = func(arena, cell) {
     var freelist = arena;
     # TODO: for certain types of cell we also need to free cdr(cell),
     # e.g. bigints, vectors, strings, hash tables, etc.
+    # Note we *don't* need to freecell(cdr(cell)) in any case because if
+    # nothing references it then it will be free'd automatically
+    freecells++;
+    setcar(cell, 0);
     setcdr(cell, cdr(freelist));
     setcdr(freelist, cell);
 };
@@ -158,14 +249,13 @@ newcellinarena = func(arena) {
 newcell = func() {
     var i = 0;
     var cell;
+    freecells--;
     while (i < grlen(arenas)) {
         cell = newcellinarena(grget(arenas, i));
         if (cell) return cell;
         i++;
     };
-    # no space in the existing arenas? gc and try again
-    gc();
-    return newcell();
+    assert(0, "ran out of free cells! freecells=%d\n", [freecells]);
 };
 
 # XXX: we override the "cons" name in malloc.sl, but for the time being this is
@@ -180,7 +270,7 @@ cons = func(a, b) {
 
 type = func(cell) {
     if (!cell) return NIL;
-    if (car(cell) != 0 && car(cell) lt 0x100) return car(cell);
+    if (car(cell) != 0 && car(cell) lt 0x100) return car(cell)&~1;
     return PAIR;
 };
 
@@ -259,7 +349,7 @@ lookup = func(name, scope) {
 ### Closures ###
 
 newclosure = func(args, body, scope) {
-    return cons(CLOSURE, cons(args, cons(body, scope)))
+    return cons(CLOSURE, cons(args, cons(body, scope)));
 };
 
 closureargs = func(clos) return car(cdr(clos));
@@ -303,6 +393,8 @@ needargs = func(num, args) {
 };
 
 init = func() {
+    newarena();
+
     # intern required objects
     _NIL = 0;
     _T = newsymbol("t");
@@ -496,6 +588,7 @@ init = func() {
 
     # initialise input port for stdin
     in = newport(bfdopen(0, O_READ));
+    htput(GLOBALS, intern("current-input-port"), in);
 };
 
 ### Interpreter ###
@@ -527,12 +620,15 @@ READ = func(port) {
 };
 
 read_form = func(port) {
+    var a;
+    var r;
+
     skipread(port);
     if (peekread(port) == '(') {
         return read_list(port);
     } else if (peekread(port) == '\'') {
         nextread(port);
-        return cons(newsymbol("quote"), cons(read_form(port), 0));
+        return cons(newsymbol("quote"), cons(read_form(port), _NIL));
     } else if (peekread(port) == '"') {
         return read_string(port);
     } else if (isdigit(peekread(port)) || peekread(port) == '-') {
@@ -622,7 +718,10 @@ read_symbol = func(port) {
 evlis = func(list, scope) {
     if (!list) return 0;
     assert(type(list) == PAIR, "can't evlis of non-pair\n", 0);
-    return cons(EVAL(car(list), scope), evlis(cdr(list), scope));
+    var a = EVAL(car(list), scope); ref(a);
+    var r = cons(a, evlis(cdr(list), scope));
+    unref();
+    return r;
 };
 
 # TODO: instead of making EVAL recursive, do some magic with continuations, so
@@ -637,10 +736,32 @@ EVAL = func(form, scope) {
     var arglist;
     var namelist;
     var tailcall;
+    var ret;
+    var first = 1;
     while (1) {
+        # unref the form+scope that we just tail-called out of
+        if (!first) {
+            unref(); unref();
+        };
+        first = 0;
+
+        # gc now if there are fewer than 20 cells remaining, and assume that that is
+        # enough that we can not run out of cells until we next get back here; only
+        # having 1 place that gc() can be called from during program execution makes
+        # it a lot easier to make sure we don't accidentally garbage-collect parts of
+        # half-constructed objects that just aren't referenced yet
+        ref(form); ref(scope);
+        if (freecells lt 20) gc();
+
         assert(form, "can't eval the empty list\n", 0);
-        if (type(form) == SYMBOL) return lookup(symbolname(form), scope);
-        if (type(form) != PAIR) return form;
+        if (type(form) == SYMBOL) {
+            ret = lookup(symbolname(form), scope);
+            break;
+        };
+        if (type(form) != PAIR) {
+            ret = form;
+            break;
+        };
 
         fn = car(form);
 
@@ -648,7 +769,8 @@ EVAL = func(form, scope) {
         if (type(fn) == SYMBOL) {
             # TODO: check number and type of arguments to special forms!
             if (symbolname(fn) == _QUOTE) {
-                return car(cdr(form));
+                ret = car(cdr(form));
+                break;
             } else if (symbolname(fn) == _COND) {
                 form = cdr(form);
                 tailcall = 0;
@@ -662,10 +784,14 @@ EVAL = func(form, scope) {
                     };
                     form = cdr(form);
                 };
-                if (tailcall) continue;
-                return 0;
+                if (tailcall) {
+                    continue;
+                };
+                ret = 0;
+                break;
             } else if (symbolname(fn) == _LAMBDA) {
-                return newclosure(car(cdr(form)), cdr(cdr(form)), scope);
+                ret = newclosure(car(cdr(form)), cdr(cdr(form)), scope);
+                break;
             } else if (symbolname(fn) == _DEFINE) {
                 if (type(car(cdr(form))) == SYMBOL) {
                     name = symbolname(car(cdr(form)));
@@ -684,7 +810,8 @@ EVAL = func(form, scope) {
                 } else {
                     htput(GLOBALS, name, val);
                 };
-                return 0;
+                ret = 0;
+                break;
             };
         };
 
@@ -694,7 +821,8 @@ EVAL = func(form, scope) {
 
         if (type(fn) == BUILTIN) {
             fn = cdr(fn);
-            return fn(arglist);
+            ret = fn(arglist);
+            break;
         };
 
         assert(type(fn) == CLOSURE, "don't know how to apply anything other than a builtin or closure (got %d)\n", [car(fn)]);
@@ -730,6 +858,10 @@ EVAL = func(form, scope) {
         # we just update form and loop again
         form = car(closurebody(fn));
     };
+
+    # unref the form+scope we're returning from
+    unref(); unref();
+    return ret;
 };
 
 PRINT = func(form) {
@@ -784,6 +916,7 @@ init();
 var args = cmdargs()+1;
 if (*args) {
     in = newport(bopen(*args, O_READ));
+    htput(GLOBALS, intern("current-input-port"), in);
     showprompt = 0;
     if (!portbuf(in)) {
         fprintf(2, "%s: can't open for reading\n", [*args]);
@@ -796,7 +929,14 @@ var form;
 while (1) {
     form = READ(in);
     if (form == _EOF) break;
+
+    ref(form);
+    gc();
     PRINT(EVAL(form, 0));
+    unref();
+
+    assert(grlen(REFS) == 0, "gc stack corrupted! refs=%d\n", [grlen(REFS)]);
+
     putchar('\n');
     if (showprompt) puts("> ");
 };
