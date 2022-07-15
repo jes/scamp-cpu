@@ -575,6 +575,7 @@ read_string = func(port) {
     var str = sbnew();
     var ch;
     while (1) {
+        # TODO: escape characters
         ch = nextread(port);
         if (ch == '"') break;
         sbputc(str, ch);
@@ -590,6 +591,9 @@ read_number = func(port) {
     if (peekread(port) == '-') {
         neg = 1;
         nextread(port);
+
+        # XXX: bodge: allow "-" as a symbol
+        if (!isdigit(peekread(port))) return newsymbol("-");
     };
 
     # TODO: support hex input, bignums
