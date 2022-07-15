@@ -636,6 +636,7 @@ EVAL = func(form, scope) {
     var body;
     var arglist;
     var namelist;
+    var tailcall;
     while (1) {
         assert(form, "can't eval the empty list\n", 0);
         if (type(form) == SYMBOL) return lookup(symbolname(form), scope);
@@ -650,12 +651,18 @@ EVAL = func(form, scope) {
                 return car(cdr(form));
             } else if (symbolname(fn) == _COND) {
                 form = cdr(form);
+                tailcall = 0;
                 while (form) {
-                    # TODO: support more than 1 expression in the "body"
-                    # TODO: tail-call optimisation
-                    if (EVAL(car(car(form)), scope)) return EVAL(car(cdr(car(form))), scope);
+                    if (EVAL(car(car(form)), scope)) {
+                        # TODO: support more than 1 expression in the "body", by calling EVAL(...)
+                        # tail-call, instead of "return EVAL(car(cdr(car(form))), scope)"
+                        form = car(cdr(car(form)));
+                        tailcall = 1;
+                        break;
+                    };
                     form = cdr(form);
                 };
+                if (tailcall) continue;
                 return 0;
             } else if (symbolname(fn) == _LAMBDA) {
                 return newclosure(car(cdr(form)), cdr(cdr(form)), scope);
