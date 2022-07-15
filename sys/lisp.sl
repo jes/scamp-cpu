@@ -728,14 +728,15 @@ PRINT = func(form) {
     } else if (type(form) == VECTOR) {
         puts("#<vector>");
     } else if (type(form) == STRING) {
-        puts("#<string>");
+        # TODO: escape
+        puts("\""); puts(stringstring(form)); puts("\"");
     } else if (type(form) == HASH) {
         puts("#<hash>");
     } else if (type(form) == CLOSURE) {
         # TODO: if the body has multiple expressions, print each one in turn
-        puts("#<procedure>: (lambda "); PRINT(closureargs(form)); puts(" "); PRINT(car(closurebody(form))); puts(")");
+        puts("#<procedure>:(lambda "); PRINT(closureargs(form)); puts(" "); PRINT(car(closurebody(form))); puts(")");
     } else if (type(form) == BUILTIN) {
-        puts("#<procedure>: <builtin>");
+        puts("#<procedure>:<builtin>");
     } else if (type(form) == PAIR) {
         print_list(form);
     } else if (type(form) == PORT) {
