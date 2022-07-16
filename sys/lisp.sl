@@ -161,7 +161,7 @@ markcellused = func(cell) {
     var typ;
 
     while (cell) {
-        assert(cell gt 0x100, "bad cell! %d\n", [cell]);
+        #assert(cell gt 0x100, "bad cell! %d\n", [cell]); # DEBUG
 
         # already visited?
         if (car(cell)&1) return 0;
@@ -260,7 +260,7 @@ newcell = func() {
 # XXX: we override the "cons" name in malloc.sl, but for the time being this is
 # fine because nothing should be using that one
 cons = func(a, b) {
-    assert((a&1)==0, "cons: car field must be even\n", 0);
+    #assert((a&1)==0, "cons: car field must be even\n", 0); # DEBUG
     var cell = newcell();
     setcar(cell, a);
     setcdr(cell, b);
@@ -281,7 +281,7 @@ type = func(cell) {
 length = func(pair) {
     var l = 0;
     while (pair) {
-        assert(type(pair) == PAIR, "can't take length of non-pair\n", 0);
+        #assert(type(pair) == PAIR, "can't take length of non-pair\n", 0); # DEBUG
         pair = cdr(pair);
         l++;
     };
@@ -338,9 +338,9 @@ lookupglobal = func(name) {
 # is consulted instead
 lookup = func(name, scope) {
     while (scope) {
-        assert(type(scope) == PAIR, "scope is not pair\n", 0);
-        assert(type(car(scope)) == PAIR, "car(scope) is not pair\n", 0);
-        assert(type(car(car(scope))) == SYMBOL, "scope key is not symbol\n",0);
+        #assert(type(scope) == PAIR, "scope is not pair\n", 0); # DEBUG
+        #assert(type(car(scope)) == PAIR, "car(scope) is not pair\n", 0); # DEBUG
+        #assert(type(car(car(scope))) == SYMBOL, "scope key is not symbol\n",0); # DEBUG
 
         if (symbolname(car(car(scope))) == name) return cdr(car(scope));
 
