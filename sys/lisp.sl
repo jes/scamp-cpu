@@ -72,7 +72,7 @@ var print_list;
 
 var SYMBOLS = htnew();
 var GLOBALS = htnew();
-var REFS = grnew();
+var REFS = 0;
 
 var in;
 var readch;
@@ -126,8 +126,6 @@ initarena = func(arena) {
     # we initialise an arena by making the cdr fields into a circularly-linked
     # list of all the cells
 
-    puts("init arena!\n");
-
     # start off with 1 cell linked to itself
     var freelist = arena;
     setcdr(freelist, freelist);
@@ -172,13 +170,13 @@ markcellused = func(cell) {
 
 # mark cell as referenced so that it won't be garbage collected
 ref = func(cell) {
-    grpush(REFS, cell);
+    REFS = cons(cell, REFS);
 };
 
 # pop last cell off refs stack
 unref = func() {
-    assert(grlen(REFS)>0, "unref() with no REFS\n", 0);
-    grpop(REFS);
+    assert(REFS, "unref() with no REFS\n", 0);
+    REFS = cdr(REFS);
 };
 
 gc = func() {
@@ -188,9 +186,7 @@ gc = func() {
     htwalk(GLOBALS, func(key,val) {
         usedcells = usedcells + markcellused(val);
     });
-    grwalk(REFS, func(cell) {
-        usedcells = usedcells + markcellused(cell);
-    });
+    markcellused(REFS);
 
     # 2. walk over all cells, free the ones that aren't marked, remove the markings
     var i = 0;
@@ -935,7 +931,7 @@ while (1) {
     PRINT(EVAL(form, 0));
     unref();
 
-    assert(grlen(REFS) == 0, "gc stack corrupted! refs=%d\n", [grlen(REFS)]);
+    assert(!REFS, "gc stack corrupted! refs=%d\n", [length(REFS)]);
 
     putchar('\n');
     if (showprompt) puts("> ");
