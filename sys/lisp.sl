@@ -149,7 +149,7 @@ initarena = func(arena) {
 
     # free all the remaining cells
     var i = 2;
-    while (i < ARENASZ) {
+    while (i != ARENASZ) {
         freecell(freelist, arena+i);
         i = i+2;
     };
@@ -196,7 +196,7 @@ gc = func() {
     # 2. walk over all cells, free the ones that aren't marked, remove the markings
     var i = 0;
     freecells = 0;
-    while (i < grlen(arenas)) {
+    while (i != grlen(arenas)) {
         freeusedcells(grget(arenas, i));
         i++;
     };
@@ -209,7 +209,7 @@ freeusedcells = func(arena) {
     var freelist = arena;
 
     var i = 0;
-    while (i < ARENASZ) {
+    while (i != ARENASZ) {
         if (car(arena+i)&1) {
             # used: remove the 1 bit
             setcar(arena+i, car(arena+i)&~1);
@@ -249,7 +249,7 @@ newcell = func() {
     var i = 0;
     var cell;
     freecells--;
-    while (i < grlen(arenas)) {
+    while (i != grlen(arenas)) {
         cell = newcellinarena(grget(arenas, i));
         if (cell) return cell;
         i++;
