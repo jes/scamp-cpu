@@ -66,6 +66,12 @@ var read_number;
 var issymch;
 var read_symbol;
 var evlis;
+var newcond;
+var condcont;
+var newdefine;
+var definecont;
+var pushcontinuation;
+var applycontinuation;
 var EVAL;
 var PRINT;
 var print_list;
@@ -88,6 +94,7 @@ var _DEFINE;
 var NOCHAR = -1000;
 var showprompt = 1;
 var usedcells;
+var continuations;
 
 ### Types ###
 # these all need to be even-valued so as not to confuse the garbage collector
@@ -720,6 +727,78 @@ evlis = func(list, scope) {
     return r;
 };
 
+# XXX: important to put the form in the car field, because the cdr field is
+# a SLANG function pointer which may not be evenly-aligned
+newcond = func(form, scope) {
+    return cons(cons(form, scope), condcont);
+};
+newdefine = func(form, scope) {
+    return cons(cons(form, scope), definecont);
+};
+
+condcont = func(state, pret, pform, pscope) {
+    var form = car(state);
+    var scope = cdr(state);
+
+    # form is the list of condition clauses: e.g. (((> n 4) 1) (else 2))
+    if (*pret) {
+        puts("cond was true!\n");
+        # condition evaluated true: now we want to run the condition body
+        # TODO: if there are multiple statements, eval them all (need a newblock() continuation maker?)
+        *pform = car(cdr(car(form)));
+        *pscope = scope;
+        return 1;
+    } else {
+        puts("cond was false!\n");
+        # condition evaluated false: run the next test
+        form = cdr(form); # e.g. ((else 2))
+        if (!form) {
+            # no more conditions?
+            *pret = _NIL;
+            return 0;
+        };
+        pushcontinuation(newcond(form, scope));
+        *pform = car(car(form)); # e.g. else, result goes to the continuation
+        *pscope = scope;
+        return 1;
+    };
+};
+
+definecont = func(state, pret, pform, pscope) {
+    var form = car(state);
+    var scope = cdr(state);
+
+    assert(!scope, "can't use define in non-global scope yet!\n", 0);
+
+    # form is the name followed by the expression: e.g. (varname (expr))
+    var name = car(form);
+
+    htput(GLOBALS, symbolname(name), *pret);
+    *pret = _NIL;
+
+    return 0;
+};
+
+pushcontinuation = func(cont) {
+    puts("pushcontinuation!\n");
+    setcdr(continuations, cons(cont, cdr(continuations)));
+};
+
+applycontinuation = func(pret, pform, pscope) {
+    if (!cdr(continuations)) return 0;
+
+    puts("we have a continuation!\n");
+
+    # pop a continuation
+    var cont = cdr(continuations);
+    setcdr(continuations, cdr(cont));
+
+    # apply the continuation
+    var fn = cdr(car(cont));
+    var state = car(car(cont));
+    return fn(state, pret, pform, pscope);
+};
+
 # TODO: instead of making EVAL recursive, do some magic with continuations, so
 # that the "call stack" is stored in the cons arenas instead of the fixed-size
 # SLANG stack
@@ -734,6 +813,7 @@ EVAL = func(form, scope) {
     var tailcall;
     var ret;
     var first = 1;
+
     while (1) {
         # unref the form+scope that we just tail-called out of
         if (!first) {
@@ -752,11 +832,11 @@ EVAL = func(form, scope) {
         assert(form, "can't eval the empty list\n", 0);
         if (type(form) == SYMBOL) {
             ret = lookup(symbolname(form), scope);
-            break;
+            if (applycontinuation(&ret, &form, &scope)) continue else break;
         };
         if (type(form) != PAIR) {
             ret = form;
-            break;
+            if (applycontinuation(&ret, &form, &scope)) continue else break;
         };
 
         fn = car(form);
@@ -766,60 +846,47 @@ EVAL = func(form, scope) {
             # TODO: check number and type of arguments to special forms!
             if (symbolname(fn) == _QUOTE) {
                 ret = car(cdr(form));
-                break;
+                if (applycontinuation(&ret, &form, &scope)) continue else break;
             } else if (symbolname(fn) == _COND) {
-                form = cdr(form);
-                tailcall = 0;
-                while (form) {
-                    if (EVAL(car(car(form)), scope)) {
-                        # TODO: support more than 1 expression in the "body", by calling EVAL(...)
-                        # tail-call, instead of "return EVAL(car(cdr(car(form))), scope)"
-                        form = car(cdr(car(form)));
-                        tailcall = 1;
-                        break;
-                    };
-                    form = cdr(form);
-                };
-                if (tailcall) {
-                    continue;
-                };
-                ret = 0;
-                break;
+                form = cdr(form); # list of condition clauses: e.g. (((> n 4) 1) (else 2))
+                pushcontinuation(newcond(form, scope));
+                form = car(car(form)); # first condition test: e.g. (> n 4), and the result will go to the continuation
+                continue;
             } else if (symbolname(fn) == _LAMBDA) {
                 ret = newclosure(car(cdr(form)), cdr(cdr(form)), scope);
-                break;
+                if (applycontinuation(&ret, &form, &scope)) continue else break;
             } else if (symbolname(fn) == _DEFINE) {
+                assert(!scope, "we can't yet handle define outside global scope\n", 0);
+
                 if (type(car(cdr(form))) == SYMBOL) {
-                    name = symbolname(car(cdr(form)));
-                    val = EVAL(car(cdr(cdr(form))), scope);
+                    form = cdr(form); # e.g. (varname (expr))
+                    pushcontinuation(newdefine(form, scope));
+                    form = car(cdr(form));
+                    continue;
                 } else if (type(car(cdr(form))) == PAIR) {
                     name = symbolname(car(car(cdr(form))));
                     args = cdr(car(cdr(form)));
                     body = cdr(cdr(form));
                     val = newclosure(args, body, scope);
+                    htput(GLOBALS, name, val);
+                    ret = _NIL;
+                    if (applycontinuation(&ret, &form, &scope)) continue else break;
                 } else {
                     assert(0, "bad define\n", 0);
                 };
-
-                if (scope) {
-                    assert(0, "we can't yet handle define outside global scope\n", 0);
-                } else {
-                    htput(GLOBALS, name, val);
-                };
-                ret = 0;
-                break;
             };
         };
 
         # Evaluate the function, its arguments, and apply the function:
         arglist = evlis(form, scope);
+
         fn = car(arglist);
         arglist = cdr(arglist);
 
         if (type(fn) == BUILTIN) {
             fn = cdr(fn);
             ret = fn(arglist);
-            break;
+            if (applycontinuation(&ret, &form, &scope)) continue else break;
         };
 
         assert(type(fn) == CLOSURE, "don't know how to apply anything other than a builtin or closure (got %d)\n", [car(fn)]);
@@ -858,6 +925,7 @@ EVAL = func(form, scope) {
 
     # unref the form+scope we're returning from
     unref(); unref();
+
     return ret;
 };
 
@@ -927,9 +995,14 @@ while (1) {
     form = READ(in);
     if (form == _EOF) break;
 
+    puts("read: "); PRINT(form); puts("\n");
+
+    continuations = cons(_NIL,_NIL);
+    ref(continuations);
     ref(form);
     gc();
     PRINT(EVAL(form, 0));
+    unref();
     unref();
 
     assert(!REFS, "gc stack corrupted! refs=%d\n", [length(REFS)]);
