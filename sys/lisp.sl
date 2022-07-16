@@ -812,8 +812,9 @@ EVAL = func(form, scope) {
         };
 
         # Evaluate the function, its arguments, and apply the function:
-        fn = EVAL(fn, scope);
-        arglist = evlis(cdr(form), scope);
+        arglist = evlis(form, scope);
+        fn = car(arglist);
+        arglist = cdr(arglist);
 
         if (type(fn) == BUILTIN) {
             fn = cdr(fn);
