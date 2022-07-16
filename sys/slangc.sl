@@ -922,7 +922,13 @@ FunctionDeclaration = func(x) {
         addlocal(*p, bp_rel++);
 
     if (!CharSkip(')')) die("func needs close paren",0);
+    var blocklevel = BLOCKLEVEL;
+    var breaklabel = BREAKLABEL;
+    var contlabel = CONTLABEL;
+    BLOCKLEVEL = 0; BREAKLABEL = 0; CONTLABEL = 0;
     Statement(0); # optional
+    BLOCKLEVEL = blocklevel; BREAKLABEL = breaklabel; CONTLABEL = contlabel;
+
     funcreturn();
     endscope();
     LOCALS = oldscope;

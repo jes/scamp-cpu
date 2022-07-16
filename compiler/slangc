@@ -586,7 +586,10 @@ sub FunctionDeclaration {
     }
 
     die "func needs close paren\n" if !parse(\&CharSkip,')');
+    my ($blocklevel, $breaklabel, $contlabel) = ($BLOCKLEVEL, $BREAKLABEL, $CONTLABEL);
+    $BLOCKLEVEL = 0; $BREAKLABEL = undef; $CONTLABEL = undef;
     parse(\&Statement);
+    ($BLOCKLEVEL, $BREAKLABEL, $CONTLABEL) = ($blocklevel, $breaklabel, $contlabel);
     funcreturn();
 
     # endscope()-ish
