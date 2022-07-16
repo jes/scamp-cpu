@@ -269,9 +269,13 @@ cons = func(a, b) {
 
 type = func(cell) {
     if (!cell) return NIL;
-    if (car(cell) ge 100 && car(cell) le 104) return CONTINUATION;
-    if (car(cell) != 0 && car(cell) lt 0x100) return car(cell)&~1;
-    return PAIR;
+    var c = car(cell);
+    if (c == N_condcont) return CONTINUATION;
+    if (c == N_definecont) return CONTINUATION;
+    if (c == N_evliscont) return CONTINUATION;
+    if (c == 0) return PAIR;
+    if (c & 0xff00) return PAIR;
+    return c&~1;
 };
 
 length = func(pair) {
