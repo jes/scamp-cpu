@@ -504,8 +504,18 @@ var outp = asm {
     ret
 };
 
-var car = func(tuple) { return *tuple; };
-var cdr = func(tuple) { return tuple[1]; };
+#var car = func(tuple) { return *tuple; };
+#var cdr = func(tuple) { return tuple[1]; };
+var car = asm {
+    pop x
+    ld r0, (x)
+    ret
+};
+var cdr = asm {
+    pop x
+    ld r0, 1(x)
+    ret
+};
 var setcar = func(tuple,a) { *tuple = a; };
 var setcdr = func(tuple,b) { tuple[1] = b; };
 
