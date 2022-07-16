@@ -874,40 +874,40 @@ dospecial = func(form) {
     var body;
     var val;
 
-    if (type(fn) == SYMBOL) {
-        # TODO: check number and type of arguments to special forms!
-        if (symbolname(fn) == _QUOTE) {
-            RET = car(cdr(FORM));
-            return 1;
-        } else if (symbolname(fn) == _COND) {
-            FORM = cdr(FORM); # list of condition clauses: e.g. (((> n 4) 1) (else 2))
-            pushcontinuation(newcond(FORM, SCOPE));
-            FORM = car(car(FORM)); # first condition test: e.g. (> n 4), and the result will go to the continuation
+    if (type(fn) != SYMBOL) return 0;
+
+    # TODO: check number and type of arguments to special forms!
+    if (symbolname(fn) == _QUOTE) {
+        RET = car(cdr(FORM));
+        return 1;
+    } else if (symbolname(fn) == _COND) {
+        FORM = cdr(FORM); # list of condition clauses: e.g. (((> n 4) 1) (else 2))
+        pushcontinuation(newcond(FORM, SCOPE));
+        FORM = car(car(FORM)); # first condition test: e.g. (> n 4), and the result will go to the continuation
+        NOVALUE = 1;
+        return 1;
+    } else if (symbolname(fn) == _LAMBDA) {
+        RET = newclosure(car(cdr(FORM)), cdr(cdr(FORM)), SCOPE);
+        return 1;
+    } else if (symbolname(fn) == _DEFINE) {
+        assert(!SCOPE, "we can't yet handle define outside global scope\n", 0);
+
+        if (type(car(cdr(FORM))) == SYMBOL) {
+            FORM = cdr(FORM); # e.g. (varname (expr))
+            pushcontinuation(newdefine(FORM, SCOPE));
+            FORM = car(cdr(FORM));
             NOVALUE = 1;
             return 1;
-        } else if (symbolname(fn) == _LAMBDA) {
-            RET = newclosure(car(cdr(FORM)), cdr(cdr(FORM)), SCOPE);
+        } else if (type(car(cdr(FORM))) == PAIR) {
+            name = symbolname(car(car(cdr(FORM))));
+            args = cdr(car(cdr(FORM)));
+            body = cdr(cdr(FORM));
+            val = newclosure(args, body, SCOPE);
+            htput(GLOBALS, name, val);
+            RET = _NIL;
             return 1;
-        } else if (symbolname(fn) == _DEFINE) {
-            assert(!SCOPE, "we can't yet handle define outside global scope\n", 0);
-
-            if (type(car(cdr(FORM))) == SYMBOL) {
-                FORM = cdr(FORM); # e.g. (varname (expr))
-                pushcontinuation(newdefine(FORM, SCOPE));
-                FORM = car(cdr(FORM));
-                NOVALUE = 1;
-                return 1;
-            } else if (type(car(cdr(FORM))) == PAIR) {
-                name = symbolname(car(car(cdr(FORM))));
-                args = cdr(car(cdr(FORM)));
-                body = cdr(cdr(FORM));
-                val = newclosure(args, body, SCOPE);
-                htput(GLOBALS, name, val);
-                RET = _NIL;
-                return 1;
-            } else {
-                assert(0, "bad define\n", 0);
-            };
+        } else {
+            assert(0, "bad define\n", 0);
         };
     };
 
@@ -927,32 +927,29 @@ EVAL = func(form, scope) {
         # half-constructed objects that just aren't referenced yet
         if (freecells lt 20) gc();
 
-        RESTART = 0;
         # yield the value computed by the prior iteration, if any
-        if (!NOVALUE)
-            if (!yield(RET))
-                break;
+        RESTART = 0;
+        if (!NOVALUE) if (!yield(RET)) break;
         if (RESTART) continue;
         NOVALUE = 0;
 
         assert(FORM, "can't eval the empty list\n", 0);
         if (type(FORM) == SYMBOL) {
+            # symbols are looked up by name
             RET = lookup(symbolname(FORM), SCOPE);
-            continue;
-        };
-        if (type(FORM) != PAIR) {
+        } else if (type(FORM) != PAIR) {
+            # non-pair objects evaluate to themselves
             RET = FORM;
-            continue;
+        } else if (dospecial(FORM)) {
+            # (nothing)
+        } else {
+            # otherwise use an evlis continuation to evaluate the elements of
+            # a list like (+ 1 2) to find the builtin "+" procedure and the values of
+            # 1 and 2, and then apply the procedure to the arguments
+            pushcontinuation(newevlis(FORM, SCOPE, cons(_NIL,_NIL)));
+            FORM = car(FORM);
+            NOVALUE = 1;
         };
-
-        if (dospecial(FORM)) continue;
-
-        # otherwise use an evlis continuation to evaluate the elements of
-        # a list like (+ 1 2) to find the builtin "+" procedure and the values of
-        # 1 and 2, and then apply the procedure to the arguments
-        pushcontinuation(newevlis(FORM, SCOPE, cons(_NIL,_NIL)));
-        FORM = car(FORM);
-        NOVALUE = 1;
     };
 
     return RET;
