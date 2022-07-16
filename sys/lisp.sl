@@ -74,13 +74,13 @@ var newevlis;
 var evliscont;
 var pushcontinuation;
 var yield;
+var dospecial;
 var EVAL;
 var PRINT;
 var print_list;
 
 var SYMBOLS = htnew();
 var GLOBALS = htnew();
-var REFS = 0;
 
 var in;
 var readch;
@@ -95,8 +95,12 @@ var _DEFINE;
 
 var NOCHAR = -1000;
 var showprompt = 1;
-var usedcells;
+var RESTART;
+var NOVALUE;
 var CALLSTACK = 0;
+var FORM;
+var SCOPE;
+var RET;
 
 ### Types ###
 # these all need to be even-valued so as not to confuse the garbage collector
@@ -110,11 +114,15 @@ var HASH = 12;
 var CLOSURE = 14;
 var BUILTIN = 16;
 var PORT = 18;
+var CONTINUATION = 20;
+var N_condcont = 100;
+var N_definecont = 102;
+var N_evliscont = 104;
 var PAIR = 0x100;
 
 ### Cons cells ###
 var ARENASZ = 2000;
-var ARENATHRESH = 1500; # threshold at 75% full
+var minfreecells = 500; # threshold for allocating a new arena
 var arenas = grnew();
 var freecells = 0;
 
@@ -150,53 +158,40 @@ initarena = func(arena) {
 # mark the given cell as used, recursing into any of the cells it references,
 # and return how many new cells are now marked used that weren't already
 markcellused = func(cell) {
-    var count = 0;
     var typ;
 
     while (cell) {
+        assert(cell gt 0x100, "bad cell! %d\n", [cell]);
+
         # already visited?
-        if (car(cell)&1) return count;
+        if (car(cell)&1) return 0;
 
         typ = type(cell);
 
         # mark the cell as "used" by ORing a 1 into its car
-        count++;
         setcar(cell, car(cell)|1);
 
         if (typ == PAIR) {
-            count = count + markcellused(car(cell)&~1);
+            markcellused(car(cell)&~1);
             cell = cdr(cell);
-        } else if (typ == CLOSURE) {
+        } else if (typ == CLOSURE || typ == CONTINUATION) {
             cell = cdr(cell);
         } else {
             break;
         };
         # TODO: vectors, hashes, more?
     };
-
-    return count;
-};
-
-# mark cell as referenced so that it won't be garbage collected
-ref = func(cell) {
-    REFS = cons(cell, REFS);
-};
-
-# pop last cell off refs stack
-unref = func() {
-    assert(REFS, "unref() with no REFS\n", 0);
-    REFS = cdr(REFS);
 };
 
 gc = func() {
-    usedcells = 0;
-
     # 1. mark all referenced cells as "used" by ORing a 1 into their car
     htwalk(GLOBALS, func(key,val) {
-        usedcells = usedcells + markcellused(val);
+        markcellused(val);
     });
-    markcellused(REFS);
     markcellused(CALLSTACK);
+    markcellused(FORM);
+    markcellused(SCOPE);
+    markcellused(RET);
 
     # 2. walk over all cells, free the ones that aren't marked, remove the markings
     var i = 0;
@@ -206,10 +201,8 @@ gc = func() {
         i++;
     };
 
-    # make a new arena if we're more than 75% full?
-    if (usedcells ge mul(grlen(arenas), ARENATHRESH)) {
-        newarena();
-    };
+    # make a new arena if we're running low
+    if (freecells lt minfreecells) newarena();
 };
 
 freeusedcells = func(arena) {
@@ -276,6 +269,7 @@ cons = func(a, b) {
 
 type = func(cell) {
     if (!cell) return NIL;
+    if (car(cell) ge 100 && car(cell) le 104) return CONTINUATION;
     if (car(cell) != 0 && car(cell) lt 0x100) return car(cell)&~1;
     return PAIR;
 };
@@ -412,7 +406,8 @@ init = func() {
     # put builtins in GLOBALS
     # TODO: type-check the arguments to builtins
     var b = func(name, fn) {
-        htput(GLOBALS, intern(name), cons(BUILTIN, fn));
+        htput(SYMBOLS, name, name);
+        htput(GLOBALS, name, cons(BUILTIN, fn));
     };
     b("null?", func(args) {
         needargs(1, args);
@@ -724,46 +719,43 @@ read_symbol = func(port) {
     return cell;
 };
 
-# XXX: important to put the form in the car field, because the cdr field is
-# a SLANG function pointer which may not be evenly-aligned
 newcond = func(form, scope) {
-    return cons(cons(form, scope), condcont);
+    return cons(N_condcont, cons(form, scope));
 };
 newdefine = func(form, scope) {
-    return cons(cons(form, scope), definecont);
+    return cons(N_definecont, cons(form, scope));
 };
 newevlis = func(form, scope, arglist) {
-    var x =  cons(cons(cons(form, scope), arglist), evliscont);
-    return x;
+    return cons(N_evliscont, cons(cons(form, scope), arglist));
 };
 
-condcont = func(state, pret, pform, pscope) {
+condcont = func(state) {
     var form = car(state);
     var scope = cdr(state);
 
     # form is the list of condition clauses: e.g. (((> n 4) 1) (else 2))
-    if (*pret) {
+    if (RET) {
         # condition evaluated true: now we want to run the condition body
         # TODO: if there are multiple statements, eval them all (need a newblock() continuation maker?)
-        *pform = car(cdr(car(form)));
-        *pscope = scope;
+        FORM = car(cdr(car(form)));
+        SCOPE = scope;
         return 1;
     } else {
         # condition evaluated false: run the next test
         form = cdr(form); # e.g. ((else 2))
         if (!form) {
             # no more conditions?
-            *pret = _NIL;
+            RET = _NIL;
             return 0;
         };
         pushcontinuation(newcond(form, scope));
-        *pform = car(car(form)); # e.g. else, result goes to the continuation
-        *pscope = scope;
+        FORM = car(car(form)); # e.g. else, result goes to the continuation
+        SCOPE = scope;
         return 1;
     };
 };
 
-definecont = func(state, pret, pform, pscope) {
+definecont = func(state) {
     var form = car(state);
     var scope = cdr(state);
 
@@ -772,13 +764,13 @@ definecont = func(state, pret, pform, pscope) {
     # form is the name followed by the expression: e.g. (varname (expr))
     var name = car(form);
 
-    htput(GLOBALS, symbolname(name), *pret);
-    *pret = _NIL;
+    htput(GLOBALS, symbolname(name), RET);
+    RET = _NIL;
 
-    return 0;
+    return 1;
 };
 
-evliscont = func(state, pret, pform, pscope) {
+evliscont = func(state) {
     var form = car(car(state));
     var scope = cdr(car(state));
     var arglist = cdr(state);
@@ -786,7 +778,7 @@ evliscont = func(state, pret, pform, pscope) {
     # append the new value to the arglist
     var tail = arglist;
     while (cdr(tail)) tail = cdr(tail);
-    setcdr(tail, cons(*pret, _NIL));
+    setcdr(tail, cons(RET, _NIL));
 
     # move to the next form
     form = cdr(form);
@@ -808,27 +800,28 @@ evliscont = func(state, pret, pform, pscope) {
 
         if (type(fn) == BUILTIN) {
             fn = cdr(fn);
-            *pret = fn(arglist);
-            return yield(pret, pform, pscope);
+            RET = fn(arglist);
+            RESTART = 1;
+            return 1;
         };
 
         assert(type(fn) == CLOSURE, "don't know how to apply anything other than a builtin or closure (got %d)\n", [car(fn)]);
 
         # Make a new scope with the argument names bound to their values:
-        *pscope = closurescope(fn);
+        SCOPE = closurescope(fn);
         namelist = closureargs(fn);
         while (namelist && arglist) {
             if (type(namelist) == PAIR) {
                 assert(type(car(namelist)) == SYMBOL, "name list must have only symbols, got carnamelist=%d\n", [car(namelist)]);
 
                 # normal case: 1 name goes to 1 arg
-                *pscope = cons(cons(car(namelist), car(arglist)), *pscope);
+                SCOPE = cons(cons(car(namelist), car(arglist)), SCOPE);
 
                 namelist = cdr(namelist);
                 arglist = cdr(arglist);
             } else if (type(namelist) == SYMBOL) {
                 # otherwise assign the rest of the arg list to 1 name
-                *pscope = cons(cons(namelist, arglist), *pscope);
+                SCOPE = cons(cons(namelist, arglist), SCOPE);
 
                 namelist = 0;
                 arglist = 0;
@@ -839,7 +832,7 @@ evliscont = func(state, pret, pform, pscope) {
         assert(!namelist && !arglist, "non-matching number of arguments\n", 0);
 
         # execute the closure body
-        *pform = car(closurebody(fn));
+        FORM = car(closurebody(fn));
         return 1;
     };
 
@@ -848,8 +841,8 @@ evliscont = func(state, pret, pform, pscope) {
     # push a continuation to consume its value
     pushcontinuation(newevlis(form, scope, arglist));
 
-    *pform = car(form);
-    *pscope = scope;
+    FORM = car(form);
+    SCOPE = scope;
     return 1;
 };
 
@@ -857,7 +850,8 @@ pushcontinuation = func(cont) {
     CALLSTACK = cons(cont, CALLSTACK);
 };
 
-yield = func(pret, pform, pscope) {
+yield = func(value) {
+    RET = value;
     if (!CALLSTACK) return 0;
 
     # pop a continuation
@@ -865,103 +859,103 @@ yield = func(pret, pform, pscope) {
     CALLSTACK = cdr(CALLSTACK);
 
     # apply the continuation
-    var fn = cdr(cont);
-    var state = car(cont);
-    return fn(state, pret, pform, pscope);
+    var fnum = car(cont);
+    var state = cdr(cont);
+
+    var funcs = [condcont, 0, definecont, 0, evliscont];
+    var fn = funcs[fnum - 100];
+    return fn(state);
+};
+
+dospecial = func(form) {
+    var fn = car(form);
+    var name;
+    var args;
+    var body;
+    var val;
+
+    if (type(fn) == SYMBOL) {
+        # TODO: check number and type of arguments to special forms!
+        if (symbolname(fn) == _QUOTE) {
+            RET = car(cdr(FORM));
+            return 1;
+        } else if (symbolname(fn) == _COND) {
+            FORM = cdr(FORM); # list of condition clauses: e.g. (((> n 4) 1) (else 2))
+            pushcontinuation(newcond(FORM, SCOPE));
+            FORM = car(car(FORM)); # first condition test: e.g. (> n 4), and the result will go to the continuation
+            NOVALUE = 1;
+            return 1;
+        } else if (symbolname(fn) == _LAMBDA) {
+            RET = newclosure(car(cdr(FORM)), cdr(cdr(FORM)), SCOPE);
+            return 1;
+        } else if (symbolname(fn) == _DEFINE) {
+            assert(!SCOPE, "we can't yet handle define outside global scope\n", 0);
+
+            if (type(car(cdr(FORM))) == SYMBOL) {
+                FORM = cdr(FORM); # e.g. (varname (expr))
+                pushcontinuation(newdefine(FORM, SCOPE));
+                FORM = car(cdr(FORM));
+                NOVALUE = 1;
+                return 1;
+            } else if (type(car(cdr(FORM))) == PAIR) {
+                name = symbolname(car(car(cdr(FORM))));
+                args = cdr(car(cdr(FORM)));
+                body = cdr(cdr(FORM));
+                val = newclosure(args, body, SCOPE);
+                htput(GLOBALS, name, val);
+                RET = _NIL;
+                return 1;
+            } else {
+                assert(0, "bad define\n", 0);
+            };
+        };
+    };
+
+    return 0;
 };
 
 EVAL = func(form, scope) {
-    var fn;
-    var name;
-    var val;
-    var args;
-    var body;
-    var ret;
-    var first = 1;
-    var novalue = 0;
+    FORM = form;
+    SCOPE = scope;
+    NOVALUE = 1;
 
     while (1) {
-        if (!first) {
-            # yield the value computed by the prior iteration, if any
-            if (!novalue)
-                if (!yield(&ret, &form, &scope))
-                    break;
-            # unref the form+scope that we just tail-called out of
-            unref(); unref();
-        };
-        novalue = 0;
-        first = 0;
-
         # gc now if there are fewer than 20 cells remaining, and assume that that is
         # enough that we can not run out of cells until we next get back here; only
         # having 1 place that gc() can be called from during program execution makes
         # it a lot easier to make sure we don't accidentally garbage-collect parts of
         # half-constructed objects that just aren't referenced yet
-        ref(form); ref(scope);
         if (freecells lt 20) gc();
 
-        assert(form, "can't eval the empty list\n", 0);
-        if (type(form) == SYMBOL) {
-            ret = lookup(symbolname(form), scope);
+        RESTART = 0;
+        # yield the value computed by the prior iteration, if any
+        if (!NOVALUE)
+            if (!yield(RET))
+                break;
+        if (RESTART) continue;
+        NOVALUE = 0;
+
+        assert(FORM, "can't eval the empty list\n", 0);
+        if (type(FORM) == SYMBOL) {
+            RET = lookup(symbolname(FORM), SCOPE);
             continue;
         };
-        if (type(form) != PAIR) {
-            ret = form;
+        if (type(FORM) != PAIR) {
+            RET = FORM;
             continue;
         };
 
-        fn = car(form);
-
-        # Handle special forms:
-        if (type(fn) == SYMBOL) {
-            # TODO: check number and type of arguments to special forms!
-            if (symbolname(fn) == _QUOTE) {
-                ret = car(cdr(form));
-                continue;
-            } else if (symbolname(fn) == _COND) {
-                form = cdr(form); # list of condition clauses: e.g. (((> n 4) 1) (else 2))
-                pushcontinuation(newcond(form, scope));
-                form = car(car(form)); # first condition test: e.g. (> n 4), and the result will go to the continuation
-                novalue = 1;
-                continue;
-            } else if (symbolname(fn) == _LAMBDA) {
-                ret = newclosure(car(cdr(form)), cdr(cdr(form)), scope);
-                continue;
-            } else if (symbolname(fn) == _DEFINE) {
-                assert(!scope, "we can't yet handle define outside global scope\n", 0);
-
-                if (type(car(cdr(form))) == SYMBOL) {
-                    form = cdr(form); # e.g. (varname (expr))
-                    pushcontinuation(newdefine(form, scope));
-                    form = car(cdr(form));
-                    novalue = 1;
-                    continue;
-                } else if (type(car(cdr(form))) == PAIR) {
-                    name = symbolname(car(car(cdr(form))));
-                    args = cdr(car(cdr(form)));
-                    body = cdr(cdr(form));
-                    val = newclosure(args, body, scope);
-                    htput(GLOBALS, name, val);
-                    ret = _NIL;
-                    continue;
-                } else {
-                    assert(0, "bad define\n", 0);
-                };
-            };
-        };
+        if (dospecial(FORM)) continue;
 
         # otherwise use an evlis continuation to evaluate the elements of
         # a list like (+ 1 2) to find the builtin "+" procedure and the values of
         # 1 and 2, and then apply the procedure to the arguments
-        pushcontinuation(newevlis(form, scope, cons(_NIL,_NIL)));
-        form = car(form);
-        novalue = 1;
+        pushcontinuation(newevlis(FORM, SCOPE, cons(_NIL,_NIL)));
+        FORM = car(FORM);
+        NOVALUE = 1;
     };
 
-    # unref the form+scope we're returning from
-    unref(); unref();
-
-    return ret;
+    return RET;
 };
 
 PRINT = func(form) {
@@ -989,6 +983,8 @@ PRINT = func(form) {
         print_list(form);
     } else if (type(form) == PORT) {
         puts("#<port>");
+    } else if (type(form) == CONTINUATION) {
+        puts("#<continuation>");
     } else {
         assert(0, "tried to print unrecognised type: %d\n", [car(form)]);
     }
@@ -1030,12 +1026,10 @@ while (1) {
     form = READ(in);
     if (form == _EOF) break;
 
-    ref(form);
+    FORM = form;
     gc();
     PRINT(EVAL(form, _NIL));
-    unref();
 
-    assert(!REFS, "gc stack corrupted! refs=%d\n", [length(REFS)]);
     assert(!CALLSTACK, "callstack not empty!\n", 0);
 
     putchar('\n');
