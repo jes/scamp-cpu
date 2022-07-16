@@ -291,12 +291,12 @@ length = func(pair) {
 ### Ints ###
 
 newint = func(v) return cons(INT, v);
-intval = func(cell) return cdr(cell);
+intval = cdr;#func(cell) return cdr(cell);
 
 ### Bigints ###
 
 newbigint = func(v) return cons(BIGINT, bignew(v));
-bigintval = func(cell) return cdr(cell);
+bigintval = cdr;#func(cell) return cdr(cell);
 
 ### Vectors ###
 
@@ -305,7 +305,7 @@ newvector = func() return cons(VECTOR, grnew());
 ### Strings ###
 
 newstring = func(s) return cons(STRING, strdup(s));
-stringstring = func(s) return cdr(s);
+stringstring = cdr;#func(s) return cdr(s);
 
 ### Hash tables ###
 
@@ -314,7 +314,7 @@ newhash = func() return cons(VECTOR, htnew());
 ### Symbols ###
 
 newsymbol = func(name) return cons(SYMBOL, intern(name));
-symbolname = func(cell) return cdr(cell);
+symbolname = cdr;#func(cell) return cdr(cell);
 
 # return interned version of name, or allocate a new one if none
 intern = func(name) {
