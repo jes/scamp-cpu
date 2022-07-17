@@ -39,6 +39,7 @@ var symbolname;
 var intern;
 var lookupglobal;
 var lookup;
+var scopeset;
 
 var newclosure;
 var closureargs;
@@ -72,6 +73,8 @@ var newdefine;
 var definecont;
 var newevlis;
 var evliscont;
+var newset;
+var setcont;
 var pushcontinuation;
 var yield;
 var dospecial;
@@ -92,6 +95,7 @@ var _QUOTE;
 var _LAMBDA;
 var _COND;
 var _DEFINE;
+var _SETBANG;
 
 var NOCHAR = -1000;
 var showprompt = 1;
@@ -115,9 +119,14 @@ var CLOSURE = 14;
 var BUILTIN = 16;
 var PORT = 18;
 var CONTINUATION = 20;
+
+var N_mincont = 100;
 var N_condcont = 100;
 var N_definecont = 102;
 var N_evliscont = 104;
+var N_setcont = 106;
+var N_maxcont = 106;
+
 var PAIR = 0x100;
 
 ### Cons cells ###
@@ -270,9 +279,7 @@ cons = func(a, b) {
 type = func(cell) {
     if (!cell) return NIL;
     var c = car(cell);
-    if (c == N_condcont) return CONTINUATION;
-    if (c == N_definecont) return CONTINUATION;
-    if (c == N_evliscont) return CONTINUATION;
+    if (c ge N_mincont && c le N_maxcont) return CONTINUATION;
     if (c == 0) return PAIR;
     if (c & 0xff00) return PAIR;
     return c&~1;
@@ -341,13 +348,20 @@ lookup = func(name, scope) {
         #assert(type(scope) == PAIR, "scope is not pair\n", 0); # DEBUG
         #assert(type(car(scope)) == PAIR, "car(scope) is not pair\n", 0); # DEBUG
         #assert(type(car(car(scope))) == SYMBOL, "scope key is not symbol\n",0); # DEBUG
-
         if (symbolname(car(car(scope))) == name) return cdr(car(scope));
-
         scope = cdr(scope);
     };
-
     return lookupglobal(name);
+};
+
+scopeset = func(name, scope, val) {
+    while (scope) {
+        if (symbolname(car(car(scope))) == name) return setcdr(car(scope), val);
+        scope = cdr(scope);
+    };
+    var p = htgetkv(GLOBALS,name);
+    assert(p, "scopeset undefined name: %s\n", [name]);
+    htputp(GLOBALS, p, name, val);
 };
 
 ### Closures ###
@@ -412,6 +426,7 @@ init = func() {
     _LAMBDA = intern("lambda");
     _COND = intern("cond");
     _DEFINE = intern("define");
+    _SETBANG = intern("set!");
 
     # TODO: load default lisp code from /lisp/lib.l ?
 
@@ -478,7 +493,11 @@ read_list = func(port) {
     skipread(port);
     while (peekread(port) != ')') {
         if (peekread(port) == '.') {
-            assert(0, "we don't handle dotted pairs yet\n", 0);
+            nextread(port);
+            assert(p, "can't have a dotted single\n", 0);
+            setcdr(p, read_form(port));
+            assert(peekread(port) == ')', "dotted pair can't have trailing cruft\n", 0);
+            break;
         };
         cell = cons(read_form(port), 0);
         if (p) setcdr(p, cell);
@@ -530,7 +549,7 @@ read_number = func(port) {
 };
 
 issymch = func(ch) {
-    return isalnum(ch) || ch == '_' || ch == '?' || ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '=' || ch == '>' || ch == '<';
+    return isalnum(ch) || ch == '_' || ch == '?' || ch == '!' || ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '=' || ch == '>' || ch == '<';
 };
 
 read_symbol = func(port) {
@@ -552,6 +571,9 @@ newdefine = func(form, scope) {
 };
 newevlis = func(form, scope, arglist) {
     return cons(N_evliscont, cons(cons(form, scope), arglist));
+};
+newset = func(form, scope) {
+    return cons(N_setcont, cons(form, scope));
 };
 
 condcont = func(state) {
@@ -588,11 +610,12 @@ definecont = func(state) {
 
     # form is the name followed by the expression: e.g. (varname (expr))
     var name = car(form);
+    assert(type(name) == SYMBOL, "can't define non-symbol\n", 0);
 
     htput(GLOBALS, symbolname(name), RET);
     RET = _NIL;
 
-    return 1;
+    return 0;
 };
 
 evliscont = func(state) {
@@ -671,6 +694,19 @@ evliscont = func(state) {
     return 1;
 };
 
+setcont = func(state) {
+    var form = car(state);
+    var scope = cdr(state);
+
+    var name = car(form);
+    assert(type(name) == SYMBOL, "can't set! of non-symbol\n", 0);
+
+    scopeset(symbolname(name), scope, RET);
+
+    RET = _NIL;
+    return 0;
+};
+
 pushcontinuation = func(cont) {
     CALLSTACK = cons(cont, CALLSTACK);
 };
@@ -687,7 +723,7 @@ yield = func(value) {
     var fnum = car(cont);
     var state = cdr(cont);
 
-    var funcs = [condcont, 0, definecont, 0, evliscont];
+    var funcs = [condcont, 0, definecont, 0, evliscont, 0, setcont];
     var fn = funcs[fnum - 100];
     return fn(state);
 };
@@ -703,30 +739,37 @@ dospecial = func(form) {
 
     # TODO: check number and type of arguments to special forms!
     if (symbolname(fn) == _QUOTE) {
-        RET = car(cdr(FORM));
+        # (quote foo)
+        RET = car(cdr(form));
         return 1;
     } else if (symbolname(fn) == _COND) {
-        FORM = cdr(FORM); # list of condition clauses: e.g. (((> n 4) 1) (else 2))
-        pushcontinuation(newcond(FORM, SCOPE));
-        FORM = car(car(FORM)); # first condition test: e.g. (> n 4), and the result will go to the continuation
+        # (cond (pred1 expr1) (pred2 expr2) ...)
+        form = cdr(form); # list of condition clauses: e.g. (((> n 4) 1) (else 2))
+        pushcontinuation(newcond(form, SCOPE));
+        FORM = car(car(form)); # first condition test: e.g. (> n 4), and the result will go to the continuation
         NOVALUE = 1;
         return 1;
     } else if (symbolname(fn) == _LAMBDA) {
-        RET = newclosure(car(cdr(FORM)), cdr(cdr(FORM)), SCOPE);
+        # (lambda (x y z) expr)
+        # (lambda lst expr)
+        # (lambda (x y . lst) expr)
+        RET = newclosure(car(cdr(form)), cdr(cdr(form)), SCOPE);
         return 1;
     } else if (symbolname(fn) == _DEFINE) {
+        # (define (fn args) expr)
+        # (define varname val)
         assert(!SCOPE, "we can't yet handle define outside global scope\n", 0);
 
-        if (type(car(cdr(FORM))) == SYMBOL) {
-            FORM = cdr(FORM); # e.g. (varname (expr))
-            pushcontinuation(newdefine(FORM, SCOPE));
-            FORM = car(cdr(FORM));
+        if (type(car(cdr(form))) == SYMBOL) {
+            form = cdr(form); # e.g. (varname (expr))
+            pushcontinuation(newdefine(form, SCOPE));
+            FORM = car(cdr(form));
             NOVALUE = 1;
             return 1;
-        } else if (type(car(cdr(FORM))) == PAIR) {
-            name = symbolname(car(car(cdr(FORM))));
-            args = cdr(car(cdr(FORM)));
-            body = cdr(cdr(FORM));
+        } else if (type(car(cdr(form))) == PAIR) {
+            name = symbolname(car(car(cdr(form))));
+            args = cdr(car(cdr(form)));
+            body = cdr(cdr(form));
             val = newclosure(args, body, SCOPE);
             htput(GLOBALS, name, val);
             RET = _NIL;
@@ -734,6 +777,13 @@ dospecial = func(form) {
         } else {
             assert(0, "bad define\n", 0);
         };
+    } else if (symbolname(fn) == _SETBANG) {
+        # (set! varname val)
+        form = cdr(form); # (varname val)
+        pushcontinuation(newset(form, SCOPE));
+        FORM = car(cdr(form)); # need to evaluate "val"
+        NOVALUE = 1;
+        return 1;
     };
 
     return 0;
