@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[twocolumn]{article}
 \usepackage{makeidx}
 \usepackage[hidelinks]{hyperref}
 \makeindex
@@ -23,6 +23,30 @@ This document is a reference of the functions available in the SLANG library mod
 \section{Blobs}
 
 \subsection{Overview}
+
+\subsection{List of blobs}
+
+\subsubsection{Default}
+
+The default blob includes the following libraries:
+
+\input{blobs.tex}
+
+\subsubsection{\tt{bigint}}
+
+Compiling with \tt{-lbigint} will use the \tt{bigint} blob, which
+contains the default libraries, plus \tt{bigint.sl}.
+
+\subsubsection{\tt{fixed}}
+
+Compiling with \tt{-lfixed} will use the \tt{fixed} blob, which
+contains the default libraries, plus \tt{fixed.sl}.
+
+\subsubsection{\tt{bigfix}}
+
+Compiling with \tt{-lbigfix} will use the \tt{bigfix} blob, which
+contains the default libraries, plus both \tt{bigint.sl} and \tt{fixed.sl}.
+
 
 \section{Index}
 \printindex

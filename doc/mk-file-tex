@@ -3,6 +3,11 @@
 use strict;
 use warnings;
 
+use FindBin;
+use lib "$FindBin::Bin/lib/";
+
+use SLANG::Tex qw(texescape slurp template);
+
 my $filename = shift or die "usage: mk-file-tex SRCFILE\n";
 
 my $srcfile = slurp($filename);
@@ -20,15 +25,9 @@ print template($file_template, $fields);
 
 for my $func (sort { $a->{name} <=> $b->{name} } funcs($srcfile)) {
     $fields->{__FUNCTION__} = texescape($func->{name});
-    $fields->{__FUNCTION_DEF__} = texescape($func->{definition});
+    $fields->{__FUNCTION_DEF__} = texescape($func->{def});
     $fields->{__FUNCTION_DESCR__} = texescape($func->{descr});
     print template($func_template, $fields);
-}
-
-sub texescape {
-    my ($str) = @_;
-    $str =~ s/([_&])/\\$1/g;
-    return $str;
 }
 
 sub libdescr {
@@ -46,31 +45,21 @@ sub funcs {
     my ($src) = @_;
     my @lines = split /\n/, $src;
     my @funcs;
+    my $comment = '';
     for my $l (@lines) {
         if ($l =~ /^\s*(?:var)?\s*([a-zA-Z0-9_]+)\s*=\s*func/) {
+            my $name = $1;
+            $l =~ s/\).*/)/;
             push @funcs, {
-                name => $1,
+                name => $name,
                 def => $l,
-                descr => 'mysterious',
-            };
+                descr => $comment,
+            } unless $1 =~ /^_/;
+        } elsif ($l =~ s/^#//) {
+            $comment .= "\n" . $l;
+        } else {
+            $comment = '';
         }
     }
     return @funcs;
-}
-
-sub template {
-    my ($tmpl, $fields) = @_;
-    for my $f (keys %$fields) {
-        $tmpl =~ s/$f/$fields->{$f}/g;
-    }
-    return $tmpl;
-}
-
-sub slurp {
-    my ($name) = @_;
-    open(my $fh, '<', $name)
-        or die "can't read $name: $!\n";
-    my $c = join('', <$fh>);
-    close $fh;
-    return $c;
 }

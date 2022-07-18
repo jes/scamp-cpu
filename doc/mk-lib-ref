@@ -1,4 +1,7 @@
-#!/bin/sh
+#!/bin/bash
+
+set -e
+set -o pipefail
 
 date=`date +%Y-%m-%d`
 
@@ -7,6 +10,8 @@ do
     echo $f >&2
     ./mk-file-tex $f
 done > library-functions.tex
+
+./mk-blobs-tex > blobs.tex
 
 cp lib-ref-template.tex slang-lib.tex
 sed -i "s/__DATE__/$date/g" slang-lib.tex
