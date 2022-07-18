@@ -1,0 +1,15 @@
+#!/bin/sh
+
+date=`date +%Y-%m-%d`
+
+for f in ../sys/lib/*.sl
+do
+    echo $f >&2
+    ./mk-file-tex $f
+done > library-functions.tex
+
+cp lib-ref-template.tex slang-lib.tex
+sed -i "s/__DATE__/$date/g" slang-lib.tex
+pdflatex slang-lib.tex
+makeindex slang-lib
+pdflatex slang-lib.tex

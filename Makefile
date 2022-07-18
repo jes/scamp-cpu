@@ -2,7 +2,7 @@ SOURCES = verilog/fpga.v
 
 .PHONY: all test burn clean emulator kernel sys web
 
-all: doc/table.html emulator kernel sys bootrom.hex ucode.hex testrom.hex web
+all: doc/table.html doc/slang-lib.pdf emulator kernel sys bootrom.hex ucode.hex testrom.hex web
 
 ttlcpu.bin: ucode.hex testrom.hex
 	yosys -p "synth_ice40 -top top -json ttlcpu.json" $(SOURCES)
@@ -65,6 +65,9 @@ sys/asmparser.sl: asm/instructions.json
 doc/table.html: asm/instructions.json
 	./asm/mk-table-html > doc/table.html.tmp
 	mv ./doc/table.html.tmp ./doc/table.html
+
+doc/slang-lib.pdf: sys/lib/*.sl
+	(cd doc; ./mk-lib-ref)
 
 emulator:
 	make -C emulator/
