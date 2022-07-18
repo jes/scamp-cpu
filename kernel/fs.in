@@ -134,6 +134,7 @@ put -t ../sys/build.sh /src/build.sh
 
 mkdir src/lib
 put -t ../sys/lib/bigint.sl /src/lib/bigint.sl
+put -t ../sys/lib/bitmap.sl /src/lib/bitmap.sl
 put -t ../sys/lib/bufio.sl /src/lib/bufio.sl
 put -t ../sys/lib/fixed.sl /src/lib/fixed.sl
 put -t ../sys/lib/getopt.sl /src/lib/getopt.sl
