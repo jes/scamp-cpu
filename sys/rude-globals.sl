@@ -134,6 +134,7 @@ addglobal("parse_filename", &parse_filename);
 addglobal("parse_getchar", &parse_getchar);
 addglobal("parse_init", &parse_init);
 addglobal("peekchar", &peekchar);
+addglobal("popcnt", &popcnt);
 addglobal("pos", &pos);
 addglobal("powers_of_2", &powers_of_2);
 addglobal("printf", &printf);

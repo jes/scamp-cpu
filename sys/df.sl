@@ -4,50 +4,6 @@ include "stdio.sl";
 include "sys.sl";
 include "fixed.sl";
 
-# usage: popcnt(val)
-# return number of bits in val set to 1
-# TODO: [nice] should this be in stdlib.sl?
-var popcnt = asm {
-    pop x
-    ld r1, x # val
-    ld r0, 0
-
-    tbsz r1, 0x0001
-    inc r0
-    tbsz r1, 0x0002
-    inc r0
-    tbsz r1, 0x0004
-    inc r0
-    tbsz r1, 0x0008
-    inc r0
-    tbsz r1, 0x0010
-    inc r0
-    tbsz r1, 0x0020
-    inc r0
-    tbsz r1, 0x0040
-    inc r0
-    tbsz r1, 0x0080
-    inc r0
-    tbsz r1, 0x0100
-    inc r0
-    tbsz r1, 0x0200
-    inc r0
-    tbsz r1, 0x0400
-    inc r0
-    tbsz r1, 0x0800
-    inc r0
-    tbsz r1, 0x1000
-    inc r0
-    tbsz r1, 0x2000
-    inc r0
-    tbsz r1, 0x4000
-    inc r0
-    tbsz r1, 0x8000
-    inc r0
-
-    ret
-};
-
 var countbits = func(p, len) {
     var n = 0;
     var i = 0;

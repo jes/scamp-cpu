@@ -9,6 +9,7 @@ include "stdio.sl";
 include "strbuf.sl";
 include "string.sl";
 include "sys.sl";
+include "bitmap.sl";
 
 var sherr;
 
