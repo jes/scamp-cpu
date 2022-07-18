@@ -120,6 +120,8 @@ var BUILTIN = 16;
 var PORT = 18;
 var CONTINUATION = 20;
 
+# XXX: when adding a new continuation type, make sure to add it to the "funcs"
+# array in yield()
 var N_mincont = 100;
 var N_condcont = 100;
 var N_definecont = 102;
