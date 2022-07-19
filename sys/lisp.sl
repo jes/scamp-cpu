@@ -67,13 +67,13 @@ var read_number;
 var issymch;
 var read_symbol;
 var evlis;
-var newcond;
+var newcondcont;
 var condcont;
-var newdefine;
+var newdefinecont;
 var definecont;
-var newevlis;
+var newevliscont;
 var evliscont;
-var newset;
+var newsetcont;
 var setcont;
 var pushcontinuation;
 var yield;
@@ -120,14 +120,14 @@ var BUILTIN = 16;
 var PORT = 18;
 var CONTINUATION = 20;
 
-# XXX: when adding a new continuation type, make sure to add it to the "funcs"
-# array in yield()
+# XXX: when adding a new continuation type, make sure to add it to "contfuncs"
 var N_mincont = 100;
 var N_condcont = 100;
 var N_definecont = 102;
 var N_evliscont = 104;
 var N_setcont = 106;
-var N_maxcont = 106;
+var N_maxcont = 105;
+var contfuncs = [condcont, 0, definecont, 0, evliscont, 0, setcont];
 
 var PAIR = 0x100;
 
@@ -565,16 +565,16 @@ read_symbol = func(port) {
     return cell;
 };
 
-newcond = func(form, scope) {
+newcondcont = func(form, scope) {
     return cons(N_condcont, cons(form, scope));
 };
-newdefine = func(form, scope) {
+newdefinecont = func(form, scope) {
     return cons(N_definecont, cons(form, scope));
 };
-newevlis = func(form, scope, arglist) {
+newevliscont = func(form, scope, arglist) {
     return cons(N_evliscont, cons(cons(form, scope), arglist));
 };
-newset = func(form, scope) {
+newsetcont = func(form, scope) {
     return cons(N_setcont, cons(form, scope));
 };
 
@@ -597,7 +597,7 @@ condcont = func(state) {
             RET = _NIL;
             return 0;
         };
-        pushcontinuation(newcond(form, scope));
+        pushcontinuation(newcondcont(form, scope));
         FORM = car(car(form)); # e.g. else, result goes to the continuation
         SCOPE = scope;
         return 1;
@@ -689,7 +689,7 @@ evliscont = func(state) {
     # otherwise, "form" still has more to eval
 
     # push a continuation to consume its value
-    pushcontinuation(newevlis(form, scope, arglist));
+    pushcontinuation(newevliscont(form, scope, arglist));
 
     FORM = car(form);
     SCOPE = scope;
@@ -725,8 +725,7 @@ yield = func(value) {
     var fnum = car(cont);
     var state = cdr(cont);
 
-    var funcs = [condcont, 0, definecont, 0, evliscont, 0, setcont];
-    var fn = funcs[fnum - 100];
+    var fn = contfuncs[fnum - N_mincont];
     return fn(state);
 };
 
@@ -747,7 +746,7 @@ dospecial = func(form) {
     } else if (symbolname(fn) == _COND) {
         # (cond (pred1 expr1) (pred2 expr2) ...)
         form = cdr(form); # list of condition clauses: e.g. (((> n 4) 1) (else 2))
-        pushcontinuation(newcond(form, SCOPE));
+        pushcontinuation(newcondcont(form, SCOPE));
         FORM = car(car(form)); # first condition test: e.g. (> n 4), and the result will go to the continuation
         NOVALUE = 1;
         return 1;
@@ -764,7 +763,7 @@ dospecial = func(form) {
 
         if (type(car(cdr(form))) == SYMBOL) {
             form = cdr(form); # e.g. (varname (expr))
-            pushcontinuation(newdefine(form, SCOPE));
+            pushcontinuation(newdefinecont(form, SCOPE));
             FORM = car(cdr(form));
             NOVALUE = 1;
             return 1;
@@ -782,7 +781,7 @@ dospecial = func(form) {
     } else if (symbolname(fn) == _SETBANG) {
         # (set! varname val)
         form = cdr(form); # (varname val)
-        pushcontinuation(newset(form, SCOPE));
+        pushcontinuation(newsetcont(form, SCOPE));
         FORM = car(cdr(form)); # need to evaluate "val"
         NOVALUE = 1;
         return 1;
@@ -823,7 +822,7 @@ EVAL = func(form, scope) {
             # otherwise use an evlis continuation to evaluate the elements of
             # a list like (+ 1 2) to find the builtin "+" procedure and the values of
             # 1 and 2, and then apply the procedure to the arguments
-            pushcontinuation(newevlis(FORM, SCOPE, cons(_NIL,_NIL)));
+            pushcontinuation(newevliscont(FORM, SCOPE, cons(_NIL,_NIL)));
             FORM = car(FORM);
             NOVALUE = 1;
         };
