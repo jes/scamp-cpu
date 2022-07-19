@@ -97,6 +97,7 @@ var popcontinuation;
 var yield;
 
 ### Interpreter ###
+var buildscope;
 var quasiquote;
 var applymacro;
 var dospecial;
@@ -686,29 +687,7 @@ evliscont = func(state) {
 
         assert(type(fn) == CLOSURE, "don't know how to apply anything other than a builtin or closure (got %d)\n", [car(fn)]);
 
-        # Make a new scope with the argument names bound to their values:
-        SCOPE = closurescope(fn);
-        namelist = closureargs(fn);
-        while (namelist && arglist) {
-            if (type(namelist) == PAIR) {
-                assert(type(car(namelist)) == SYMBOL, "name list must have only symbols, got carnamelist=%d\n", [car(namelist)]);
-
-                # normal case: 1 name goes to 1 arg
-                SCOPE = cons(cons(car(namelist), car(arglist)), SCOPE);
-
-                namelist = cdr(namelist);
-                arglist = cdr(arglist);
-            } else if (type(namelist) == SYMBOL) {
-                # otherwise assign the rest of the arg list to 1 name
-                SCOPE = cons(cons(namelist, arglist), SCOPE);
-
-                namelist = 0;
-                arglist = 0;
-            } else {
-                assert(0, "name list must have only symbols\n", 0);
-            };
-        };
-        assert(!namelist && !arglist, "non-matching number of arguments\n", 0);
+        SCOPE = buildscope(arglist, namelist, closurescope(fn));
 
         # execute the closure body
         # TODO: support multi-expression bodies
@@ -799,6 +778,31 @@ yield = func(value) {
 
 ### Interpreter ###
 
+buildscope = func(arglist, namelist, parentscope) {
+    var scope = parentscope;
+    while (namelist && arglist) {
+        if (type(namelist) == PAIR) {
+            assert(type(car(namelist)) == SYMBOL, "name list must have only symbols, got carnamelist=%d\n", [car(namelist)]);
+
+            # normal case: 1 name goes to 1 arg
+            scope = cons(cons(car(namelist), car(arglist)), scope);
+
+            namelist = cdr(namelist);
+            arglist = cdr(arglist);
+        } else if (type(namelist) == SYMBOL) {
+            # otherwise assign the rest of the arg list to 1 name
+            scope = cons(cons(namelist, arglist), scope);
+
+            namelist = 0;
+            arglist = 0;
+        } else {
+            assert(0, "name list must have only symbols\n", 0);
+        };
+    };
+    assert(!namelist && !arglist, "non-matching number of arguments\n", 0);
+    return scope;
+};
+
 # return 1 if form is successfully quasiquoted, with the result in RET
 # return 0 if we pushed a continuation to evaluate
 quasiquote = func(form, scope) {
@@ -834,30 +838,8 @@ applymacro = func(macro, form, scope) {
 
     var namelist = macroargs(macro);
     var arglist = cdr(form);
-    SCOPE = macroscope(macro);
+    SCOPE = buildscope(arglist, namelist, macroscope(macro));
     
-    # TODO: factor this out, it's the same as used in evlis
-    while (namelist && arglist) {
-        if (type(namelist) == PAIR) {
-            assert(type(car(namelist)) == SYMBOL, "name list must have only symbols, got carnamelist=%d\n", [car(namelist)]);
-
-            # normal case: 1 name goes to 1 arg
-            SCOPE = cons(cons(car(namelist), car(arglist)), SCOPE);
-
-            namelist = cdr(namelist);
-            arglist = cdr(arglist);
-        } else if (type(namelist) == SYMBOL) {
-            # otherwise assign the rest of the arg list to 1 name
-            SCOPE = cons(cons(namelist, arglist), SCOPE);
-
-            namelist = 0;
-            arglist = 0;
-        } else {
-            assert(0, "name list must have only symbols\n", 0);
-        };
-    };
-    assert(!namelist && !arglist, "non-matching number of arguments\n", 0);
-
     pushcontinuation(newmacrocont(scope));
     # TODO: support multi-expression bodies
     FORM = car(macrobody(macro));
