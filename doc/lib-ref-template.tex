@@ -1,7 +1,7 @@
 \documentclass[twocolumn]{article}
-\usepackage{makeidx}
+\usepackage{imakeidx}
+\makeindex[intoc]
 \usepackage[hidelinks]{hyperref}
-\makeindex
 \setcounter{tocdepth}{2}
 
 \title{SLANG Library Reference}
@@ -16,13 +16,21 @@
 
 This document is a reference of the functions available in the SLANG library modules.
 
-\section{Library}
+\section{Libraries}
 
 \input{library-functions.tex}
 
 \section{Blobs}
 
 \subsection{Overview}
+
+Most of the source code in a typical small program is library functions. To save
+wasting time recompiling the library functions every time the program is
+compiled, the library
+functions are built in ``blobs'' which can be directly included in the output binaries.
+
+Note that blobs are only used when compiling on SCAMP itself. When cross-compiling, all
+included library code is re-compiled for every program that uses it.
 
 \subsection{List of blobs}
 
@@ -32,23 +40,23 @@ The default blob includes the following libraries:
 
 \input{blobs.tex}
 
-\subsubsection{\tt{bigint}}
+Other libraries will be re-compiled every time they are used.
 
-Compiling with \tt{-lbigint} will use the \tt{bigint} blob, which
-contains the default libraries, plus \tt{bigint.sl}.
+\subsubsection{\texttt{bigint}}
 
-\subsubsection{\tt{fixed}}
+Compiling with \texttt{-lbigint} will use the \texttt{bigint} blob, which
+contains the default libraries, plus \texttt{bigint.sl}.
 
-Compiling with \tt{-lfixed} will use the \tt{fixed} blob, which
-contains the default libraries, plus \tt{fixed.sl}.
+\subsubsection{\texttt{fixed}}
 
-\subsubsection{\tt{bigfix}}
+Compiling with \texttt{-lfixed} will use the \texttt{fixed} blob, which
+contains the default libraries, plus \texttt{fixed.sl}.
 
-Compiling with \tt{-lbigfix} will use the \tt{bigfix} blob, which
-contains the default libraries, plus both \tt{bigint.sl} and \tt{fixed.sl}.
+\subsubsection{\texttt{bigfix}}
 
+Compiling with \texttt{-lbigfix} will use the \texttt{bigfix} blob, which
+contains the default libraries, plus both \texttt{bigint.sl} and \texttt{fixed.sl}.
 
-\section{Index}
 \printindex
 
 \end{document}

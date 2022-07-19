@@ -5,7 +5,7 @@ our @EXPORT_OK = qw(texescape template slurp);
 
 sub texescape {
     my ($str) = @_;
-    $str =~ s/([_&#^])/\\$1/g;
+    $str =~ s/([_&#^{}])/\\$1/g;
     return $str;
 }
 

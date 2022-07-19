@@ -14,4 +14,4 @@ die "can't understand ../sys/make-lib"
     unless $src =~ /LIBS="(.*)"/;
 
 my @libs = split / /, $1;
-print "\\tt{$_}\n" for sort @libs;
+print "\\texttt{$_}\n\n" for sort @libs;

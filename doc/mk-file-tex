@@ -23,7 +23,7 @@ my $fields = {
 
 print template($file_template, $fields);
 
-for my $func (sort { $a->{name} <=> $b->{name} } funcs($srcfile)) {
+for my $func (sort { $a->{name} cmp $b->{name} } funcs($srcfile)) {
     $fields->{__FUNCTION__} = texescape($func->{name});
     $fields->{__FUNCTION_DEF__} = texescape($func->{def});
     $fields->{__FUNCTION_DESCR__} = texescape($func->{descr});
@@ -36,7 +36,7 @@ sub libdescr {
     my $descr = '';
     while (my $l = shift @lines){
         last unless $l =~ s/^\s*#\s*//;
-        $descr .= $l . "\n";
+        $descr .= $l . "\n\n";
     }
     return $descr;
 }
@@ -50,13 +50,14 @@ sub funcs {
         if ($l =~ /^\s*(?:var)?\s*([a-zA-Z0-9_]+)\s*=\s*func/) {
             my $name = $1;
             $l =~ s/\).*/)/;
+            $comment =~ s/^\s*//;
             push @funcs, {
                 name => $name,
                 def => $l,
                 descr => $comment,
-            } unless $1 =~ /^_/;
+            } unless $name =~ /^_/;
         } elsif ($l =~ s/^#//) {
-            $comment .= "\n" . $l;
+            $comment .= "\n\n" . $l;
         } else {
             $comment = '';
         }
