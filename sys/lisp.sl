@@ -75,8 +75,12 @@ var newevliscont;
 var evliscont;
 var newsetcont;
 var setcont;
+var newqqcont;
+var qqcont;
 var pushcontinuation;
+var popcontinuation;
 var yield;
+var quasiquote;
 var dospecial;
 var EVAL;
 var PRINT;
@@ -96,6 +100,8 @@ var _LAMBDA;
 var _COND;
 var _DEFINE;
 var _SETBANG;
+var _QUASIQUOTE;
+var _UNQUOTE;
 
 var NOCHAR = -1000;
 var showprompt = 1;
@@ -126,8 +132,9 @@ var N_condcont = 100;
 var N_definecont = 102;
 var N_evliscont = 104;
 var N_setcont = 106;
-var N_maxcont = 105;
-var contfuncs = [condcont, 0, definecont, 0, evliscont, 0, setcont];
+var N_qqcont = 108;
+var N_maxcont = 108;
+var contfuncs = [&condcont, 0, &definecont, 0, &evliscont, 0, &setcont, 0, &qqcont];
 
 var PAIR = 0x100;
 
@@ -429,6 +436,8 @@ init = func() {
     _COND = intern("cond");
     _DEFINE = intern("define");
     _SETBANG = intern("set!");
+    _QUASIQUOTE = intern("quasiquote");
+    _UNQUOTE = intern("unquote");
 
     # TODO: load default lisp code from /lisp/lib.l ?
 
@@ -475,6 +484,12 @@ read_form = func(port) {
     } else if (peekread(port) == '\'') {
         nextread(port);
         return cons(newsymbol("quote"), cons(read_form(port), _NIL));
+    } else if (peekread(port) == '`') {
+        nextread(port);
+        return cons(newsymbol("quasiquote"), cons(read_form(port), _NIL));
+    } else if (peekread(port) == ',') {
+        nextread(port);
+        return cons(newsymbol("unquote"), cons(read_form(port), _NIL));
     } else if (peekread(port) == '"') {
         return read_string(port);
     } else if (isdigit(peekread(port)) || peekread(port) == '-') {
@@ -576,6 +591,9 @@ newevliscont = func(form, scope, arglist) {
 };
 newsetcont = func(form, scope) {
     return cons(N_setcont, cons(form, scope));
+};
+newqqcont = func(got, rest, scope) {
+    return cons(N_qqcont, cons(got, cons(rest, scope)));
 };
 
 condcont = func(state) {
@@ -709,8 +727,40 @@ setcont = func(state) {
     return 0;
 };
 
+qqcont = func(state) {
+    var got = car(state);
+    var rest = car(cdr(state));
+    var scope = cdr(cdr(state));
+
+    if (got == _NIL) {
+        got = cons(RET, _NIL)
+    } else {
+        RET = cons(car(got), RET);
+        RESTART = 1;
+        return 1;
+    };
+
+    # we need to push a continuation before calling quasiquote(), even though
+    # we don't yet know whether or not we'll need it, so that
+    # the continuations end up on CALLSTACK in the correct order
+    pushcontinuation(newqqcont(got, _NIL, scope));
+    if (quasiquote(rest, scope)) {
+        popcontinuation(); # discard the continuation: we don't need it
+        RET = cons(car(got), RET);
+        RESTART = 1;
+    };
+
+    return 1;
+};
+
 pushcontinuation = func(cont) {
     CALLSTACK = cons(cont, CALLSTACK);
+};
+popcontinuation = func() {
+    assert(CALLSTACK, "can't pop from empty CALLSTACK\n", 0);
+    var top = car(CALLSTACK);
+    CALLSTACK = cdr(CALLSTACK);
+    return top;
 };
 
 yield = func(value) {
@@ -718,15 +768,41 @@ yield = func(value) {
     if (!CALLSTACK) return 0;
 
     # pop a continuation
-    var cont = car(CALLSTACK);
-    CALLSTACK = cdr(CALLSTACK);
+    var cont = popcontinuation();
 
     # apply the continuation
     var fnum = car(cont);
     var state = cdr(cont);
 
-    var fn = contfuncs[fnum - N_mincont];
+    var fn = *(contfuncs[fnum - N_mincont]);
     return fn(state);
+};
+
+# return 1 if form is successfully quasiquoted, with the result in RET
+# return 0 if we pushed a continuation to evaluate
+quasiquote = func(form, scope) {
+    # non-pairs stay unchanged
+    if (type(form) != PAIR) {
+        RET = form;
+        return 1;
+    };
+
+    # if it's an unquote, we need to eval it
+    if (type(car(form)) == SYMBOL && symbolname(car(form)) == _UNQUOTE) {
+        FORM = car(cdr(form));
+        SCOPE = scope;
+        NOVALUE = 1;
+        return 0;
+    };
+
+    # otherwise, it's a pair, which get quasiquoted recursively
+
+    pushcontinuation(newqqcont(_NIL, cdr(form), scope));
+    if (quasiquote(car(form), scope)) {
+        return !yield(RET);
+    } else {
+        return 0;
+    };
 };
 
 dospecial = func(form) {
@@ -785,6 +861,13 @@ dospecial = func(form) {
         FORM = car(cdr(form)); # need to evaluate "val"
         NOVALUE = 1;
         return 1;
+    } else if (symbolname(fn) == _QUASIQUOTE) {
+        # (quasiquote (foo bar (unquote x)))
+        # x = 5
+        # ==> (foo bar 5)
+        form = car(cdr(form)); # (foo bar (unquote x))
+        quasiquote(form, SCOPE);
+        return 1;
     };
 
     return 0;
@@ -801,6 +884,7 @@ EVAL = func(form, scope) {
         # having 1 place that gc() can be called from during program execution makes
         # it a lot easier to make sure we don't accidentally garbage-collect parts of
         # half-constructed objects that just aren't referenced yet
+        # TODO: measure the maximum number of free cells we might need
         if (freecells lt 20) gc();
 
         # yield the value computed by the prior iteration, if any
