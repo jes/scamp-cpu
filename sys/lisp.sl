@@ -6,7 +6,7 @@ include "grarr.sl";
 include "hash.sl";
 include "strbuf.sl";
 
-### Forward declarations ###
+### Cons cells ###
 var newarena;
 var freearena;
 var initarena;
@@ -21,19 +21,25 @@ var newcell;
 var type;
 var length;
 
+### Ints ###
 var newint;
 var intval;
 
+### Bigints ###
 var newbigint;
 var bigintval;
 
+### Vectors ###
 var newvector;
 
+### Strings ###
 var newstring;
 var stringstring;
 
+### Hash tables ###
 var newhash;
 
+### Symbols ###
 var newsymbol;
 var symbolname;
 var intern;
@@ -41,16 +47,19 @@ var lookupglobal;
 var lookup;
 var scopeset;
 
+### Closures ###
 var newclosure;
 var closureargs;
 var closurebody;
 var closurescope;
 
+### Macros ###
 var newmacro;
 var macroargs;
 var macrobody;
 var macroscope;
 
+### Ports ###
 var newport;
 var portsetchar;
 var portsetbuf;
@@ -58,9 +67,7 @@ var portchar;
 var portbuf;
 var porteof;
 
-var needargs;
-var init;
-
+### Reader ###
 var peekread;
 var nextread;
 var skipread;
@@ -71,7 +78,8 @@ var read_string;
 var read_number;
 var issymch;
 var read_symbol;
-var evlis;
+
+### Continuations ###
 var newcondcont;
 var condcont;
 var newdefinecont;
@@ -87,12 +95,20 @@ var macrocont;
 var pushcontinuation;
 var popcontinuation;
 var yield;
+
+### Interpreter ###
 var quasiquote;
 var applymacro;
 var dospecial;
 var EVAL;
+
+### Printer ###
 var PRINT;
 var print_list;
+
+### Initialisation ###
+var needargs;
+var init;
 
 var SYMBOLS = htnew();
 var GLOBALS = htnew();
@@ -100,6 +116,7 @@ var GLOBALS = htnew();
 var in;
 var readch;
 
+### Constants ###
 var _NIL;
 var _T;
 var _EOF;
@@ -136,6 +153,7 @@ var PORT = 18;
 var CONTINUATION = 20;
 var MACRO = 22;
 
+### Continuation types ###
 # XXX: when adding a new continuation type, make sure to add it to "contfuncs"
 var N_mincont = 100;
 var N_condcont = 100;
@@ -434,41 +452,7 @@ porteof = func(port) {
     return peekread(port) == EOF; # XXX: SLANG EOF, not Lisp _EOF
 };
 
-### Initialisation ###
-
-needargs = func(num, args) {
-    assert(length(args) == num, "arity mismatch\n", 0);
-};
-
-init = func() {
-    newarena();
-
-    # intern required objects
-    _NIL = 0;
-    _T = newsymbol("t");
-    _EOF = newsymbol(""); # needs to be distinguishable from anything that can be read in
-
-    htput(GLOBALS, "EOF", _EOF);
-    htput(GLOBALS, "else", _T);
-
-    # intern symbols for special forms
-    _QUOTE = intern("quote");
-    _LAMBDA = intern("lambda");
-    _COND = intern("cond");
-    _DEFINE = intern("define");
-    _SETBANG = intern("set!");
-    _QUASIQUOTE = intern("quasiquote");
-    _UNQUOTE = intern("unquote");
-    _DEFMACRO = intern("defmacro");
-
-    # TODO: load default lisp code from /lisp/lib.l ?
-
-    # initialise input port for stdin
-    in = newport(bfdopen(0, O_READ));
-    htput(GLOBALS, intern("current-input-port"), in);
-};
-
-### Interpreter ###
+### Reader ###
 
 peekread = func(port) {
     if (portbuf(port) == 0) {
@@ -601,6 +585,8 @@ read_symbol = func(port) {
     sbfree(str);
     return cell;
 };
+
+### Continuations ###
 
 newcondcont = func(form, scope) {
     return cons(N_condcont, cons(form, scope));
@@ -811,6 +797,8 @@ yield = func(value) {
     return fn(state);
 };
 
+### Interpreter ###
+
 # return 1 if form is successfully quasiquoted, with the result in RET
 # return 0 if we pushed a continuation to evaluate
 quasiquote = func(form, scope) {
@@ -1006,6 +994,8 @@ EVAL = func(form, scope) {
     return RET;
 };
 
+### Printer ###
+
 PRINT = func(form) {
     if (!form) {
         puts("()");
@@ -1055,6 +1045,40 @@ print_list = func(form) {
         if (form) puts(" ");
     };
     puts(")");
+};
+
+### Initialisation ###
+
+needargs = func(num, args) {
+    assert(length(args) == num, "arity mismatch\n", 0);
+};
+
+init = func() {
+    newarena();
+
+    # intern required objects
+    _NIL = 0;
+    _T = newsymbol("t");
+    _EOF = newsymbol(""); # needs to be distinguishable from anything that can be read in
+
+    htput(GLOBALS, "EOF", _EOF);
+    htput(GLOBALS, "else", _T);
+
+    # intern symbols for special forms
+    _QUOTE = intern("quote");
+    _LAMBDA = intern("lambda");
+    _COND = intern("cond");
+    _DEFINE = intern("define");
+    _SETBANG = intern("set!");
+    _QUASIQUOTE = intern("quasiquote");
+    _UNQUOTE = intern("unquote");
+    _DEFMACRO = intern("defmacro");
+
+    # TODO: load default lisp code from /lisp/lib.l ?
+
+    # initialise input port for stdin
+    in = newport(bfdopen(0, O_READ));
+    htput(GLOBALS, intern("current-input-port"), in);
 };
 
 init();
