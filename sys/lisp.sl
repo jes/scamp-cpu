@@ -46,6 +46,11 @@ var closureargs;
 var closurebody;
 var closurescope;
 
+var newmacro;
+var macroargs;
+var macrobody;
+var macroscope;
+
 var newport;
 var portsetchar;
 var portsetbuf;
@@ -77,10 +82,13 @@ var newsetcont;
 var setcont;
 var newqqcont;
 var qqcont;
+var newmacrocont;
+var macrocont;
 var pushcontinuation;
 var popcontinuation;
 var yield;
 var quasiquote;
+var applymacro;
 var dospecial;
 var EVAL;
 var PRINT;
@@ -102,6 +110,7 @@ var _DEFINE;
 var _SETBANG;
 var _QUASIQUOTE;
 var _UNQUOTE;
+var _DEFMACRO;
 
 var NOCHAR = -1000;
 var showprompt = 1;
@@ -125,6 +134,7 @@ var CLOSURE = 14;
 var BUILTIN = 16;
 var PORT = 18;
 var CONTINUATION = 20;
+var MACRO = 22;
 
 # XXX: when adding a new continuation type, make sure to add it to "contfuncs"
 var N_mincont = 100;
@@ -133,8 +143,9 @@ var N_definecont = 102;
 var N_evliscont = 104;
 var N_setcont = 106;
 var N_qqcont = 108;
-var N_maxcont = 108;
-var contfuncs = [&condcont, 0, &definecont, 0, &evliscont, 0, &setcont, 0, &qqcont];
+var N_macrocont = 110;
+var N_maxcont = 110;
+var contfuncs = [&condcont, 0, &definecont, 0, &evliscont, 0, &setcont, 0, &qqcont, 0, &macrocont];
 
 var PAIR = 0x100;
 
@@ -192,7 +203,7 @@ markcellused = func(cell) {
         if (typ == PAIR) {
             markcellused(car(cell)&~1);
             cell = cdr(cell);
-        } else if (typ == CLOSURE || typ == CONTINUATION) {
+        } else if (typ == CLOSURE || typ == CONTINUATION || typ == MACRO) {
             cell = cdr(cell);
         } else {
             break;
@@ -383,6 +394,16 @@ closureargs = func(clos) return car(cdr(clos));
 closurebody = func(clos) return car(cdr(cdr(clos)));
 closurescope = func(clos) return cdr(cdr(cdr(clos)));
 
+### Macros ###
+
+newmacro = func(args, body, scope) {
+    return cons(MACRO, cons(args, cons(body, scope)));
+};
+
+macroargs = func(macro) return car(cdr(macro));
+macrobody = func(macro) return car(cdr(cdr(macro)));
+macroscope = func(macro) return cdr(cdr(cdr(macro)));
+
 ### Ports ###
 
 newport = func(buf) {
@@ -438,6 +459,7 @@ init = func() {
     _SETBANG = intern("set!");
     _QUASIQUOTE = intern("quasiquote");
     _UNQUOTE = intern("unquote");
+    _DEFMACRO = intern("defmacro");
 
     # TODO: load default lisp code from /lisp/lib.l ?
 
@@ -595,6 +617,9 @@ newsetcont = func(form, scope) {
 newqqcont = func(got, rest, scope) {
     return cons(N_qqcont, cons(got, cons(rest, scope)));
 };
+newmacrocont = func(scope) {
+    return cons(N_macrocont, scope);
+};
 
 condcont = func(state) {
     var form = car(state);
@@ -700,6 +725,7 @@ evliscont = func(state) {
         assert(!namelist && !arglist, "non-matching number of arguments\n", 0);
 
         # execute the closure body
+        # TODO: support multi-expression bodies
         FORM = car(closurebody(fn));
         return 1;
     };
@@ -750,6 +776,13 @@ qqcont = func(state) {
         RESTART = 1;
     };
 
+    return 1;
+};
+
+macrocont = func(scope) {
+    FORM = RET;
+    SCOPE = scope;
+    NOVALUE = 1;
     return 1;
 };
 
@@ -805,6 +838,45 @@ quasiquote = func(form, scope) {
     };
 };
 
+applymacro = func(macro, form, scope) {
+    # the macro has a list of argument names, a body, and a scope;
+    # we need to substitute the positional args from "form" into named arguments
+    # in a new scope derived from the macro's scope, evaluate the macro in the
+    # new scope, and then evaluate the result in the calling scope
+
+    var namelist = macroargs(macro);
+    var arglist = cdr(form);
+    SCOPE = macroscope(macro);
+    
+    # TODO: factor this out, it's the same as used in evlis
+    while (namelist && arglist) {
+        if (type(namelist) == PAIR) {
+            assert(type(car(namelist)) == SYMBOL, "name list must have only symbols, got carnamelist=%d\n", [car(namelist)]);
+
+            # normal case: 1 name goes to 1 arg
+            SCOPE = cons(cons(car(namelist), car(arglist)), SCOPE);
+
+            namelist = cdr(namelist);
+            arglist = cdr(arglist);
+        } else if (type(namelist) == SYMBOL) {
+            # otherwise assign the rest of the arg list to 1 name
+            SCOPE = cons(cons(namelist, arglist), SCOPE);
+
+            namelist = 0;
+            arglist = 0;
+        } else {
+            assert(0, "name list must have only symbols\n", 0);
+        };
+    };
+    assert(!namelist && !arglist, "non-matching number of arguments\n", 0);
+
+    pushcontinuation(newmacrocont(scope));
+    # TODO: support multi-expression bodies
+    FORM = car(macrobody(macro));
+    NOVALUE = 1;
+    return 1;
+};
+
 dospecial = func(form) {
     var fn = car(form);
     var name;
@@ -844,9 +916,10 @@ dospecial = func(form) {
             NOVALUE = 1;
             return 1;
         } else if (type(car(cdr(form))) == PAIR) {
-            name = symbolname(car(car(cdr(form))));
-            args = cdr(car(cdr(form)));
-            body = cdr(cdr(form));
+            form = cdr(form); # ((fn args) expr)
+            name = symbolname(car(car(form)));
+            args = cdr(car(form));
+            body = cdr(form);
             val = newclosure(args, body, SCOPE);
             htput(GLOBALS, name, val);
             RET = _NIL;
@@ -868,6 +941,22 @@ dospecial = func(form) {
         form = car(cdr(form)); # (foo bar (unquote x))
         quasiquote(form, SCOPE);
         return 1;
+    } else if (symbolname(fn) == _DEFMACRO) {
+        # (defmacro (foo args) expr)
+        assert(!SCOPE, "we can't yet handle defmacro outside global scope\n", 0);
+
+        form = cdr(form); # ((foo args) expr)
+        name = symbolname(car(car(form))); # foo
+        args = cdr(car(form)); # (args)
+        body = cdr(form); # (expr)
+        form = newmacro(args,body,SCOPE);
+        htput(GLOBALS, name, form);
+        RET = _NIL;
+        return 1;
+    } else if (type(lookup(symbolname(fn), SCOPE)) == MACRO) {
+        # macro application: evaluate the macro & then evaluate its result
+        applymacro(lookup(symbolname(fn), SCOPE), form, SCOPE);
+        return 1;
     };
 
     return 0;
@@ -888,9 +977,11 @@ EVAL = func(form, scope) {
         if (freecells lt 20) gc();
 
         # yield the value computed by the prior iteration, if any
-        RESTART = 0;
-        if (!NOVALUE) if (!yield(RET)) break;
-        if (RESTART) continue;
+        if (!NOVALUE) {
+            RESTART = 0;
+            if (!yield(RET)) break;
+            if (RESTART) continue;
+        };
         NOVALUE = 0;
 
         assert(FORM, "can't eval the empty list\n", 0);
@@ -942,6 +1033,8 @@ PRINT = func(form) {
         puts("#<port>");
     } else if (type(form) == CONTINUATION) {
         puts("#<continuation>");
+    } else if (type(form) == MACRO) {
+        puts("#<macro>:(make-macro "); PRINT(macroargs(form)); puts(" "); PRINT(car(macrobody(form))); puts(")");
     } else {
         assert(0, "tried to print unrecognised type: %d\n", [car(form)]);
     }
