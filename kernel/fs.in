@@ -80,6 +80,9 @@ put -t /dev/null /lib/bigint.sl
 put -t /dev/null /lib/hash.sl
 put -t /dev/null /lib/fixed.sl
 
+mkdir lisp
+put -t ../sys/lisp/lib.l /lisp/lib.l
+
 mkdir src
 put -t ../sys/aoc.sl /src/aoc.sl
 put -t ../sys/asm.sl /src/asm.sl
