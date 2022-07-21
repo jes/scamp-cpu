@@ -129,6 +129,7 @@ var _SETBANG;
 var _QUASIQUOTE;
 var _UNQUOTE;
 var _DEFMACRO;
+var _EVAL;
 
 var NOCHAR = -1000;
 var showprompt = 1;
@@ -779,6 +780,13 @@ yield = func(value) {
 
 buildscope = func(arglist, namelist, parentscope) {
     var scope = parentscope;
+
+    # XXX: special-case for empty arglist into list-consuming name
+    if (type(namelist) == SYMBOL && !arglist) {
+        scope = cons(cons(namelist, arglist), scope);
+        return scope;
+    };
+
     while (namelist && arglist) {
         if (type(namelist) == PAIR) {
             assert(type(car(namelist)) == SYMBOL, "name list must have only symbols, got carnamelist=%d\n", [car(namelist)]);
@@ -922,6 +930,11 @@ dospecial = func(form) {
         htput(GLOBALS, name, form);
         RET = _NIL;
         return 1;
+    } else if (symbolname(fn) == _EVAL) {
+        # (eval expr)
+        FORM = car(cdr(form)); # expr
+        NOVALUE = 1;
+        return 1;
     } else if (type(lookup(symbolname(fn), SCOPE)) == MACRO) {
         # macro application: evaluate the macro & then evaluate its result
         applymacro(lookup(symbolname(fn), SCOPE), form, SCOPE);
@@ -1054,6 +1067,7 @@ init = func() {
     _QUASIQUOTE = intern("quasiquote");
     _UNQUOTE = intern("unquote");
     _DEFMACRO = intern("defmacro");
+    _EVAL = intern("eval");
 
     # TODO: load default lisp code from /lisp/lib.l ?
 
