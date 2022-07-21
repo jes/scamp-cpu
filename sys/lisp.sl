@@ -670,7 +670,6 @@ evliscont = func(state) {
     # if "form" is the empty list then we've finished evaluating the arguments
     # and we now need to apply the function to its arguments
     var fn;
-    var namelist;
     if (!form) {
         # skip past the leading _NIL
         arglist = cdr(arglist);
@@ -687,7 +686,7 @@ evliscont = func(state) {
 
         assert(type(fn) == CLOSURE, "don't know how to apply anything other than a builtin or closure (got %d)\n", [car(fn)]);
 
-        SCOPE = buildscope(arglist, namelist, closurescope(fn));
+        SCOPE = buildscope(arglist, closureargs(fn), closurescope(fn));
 
         # execute the closure body
         # TODO: support multi-expression bodies
