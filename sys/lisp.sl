@@ -92,6 +92,8 @@ var newqqcont;
 var qqcont;
 var newmacrocont;
 var macrocont;
+var newbegincont;
+var begincont;
 var pushcontinuation;
 var popcontinuation;
 var yield;
@@ -100,6 +102,7 @@ var yield;
 var buildscope;
 var quasiquote;
 var applymacro;
+var begin;
 var dospecial;
 var EVAL;
 
@@ -130,6 +133,7 @@ var _QUASIQUOTE;
 var _UNQUOTE;
 var _DEFMACRO;
 var _EVAL;
+var _BEGIN;
 
 var NOCHAR = -1000;
 var showprompt = 1;
@@ -164,8 +168,9 @@ var N_evliscont = 104;
 var N_setcont = 106;
 var N_qqcont = 108;
 var N_macrocont = 110;
-var N_maxcont = 110;
-var contfuncs = [&condcont, 0, &definecont, 0, &evliscont, 0, &setcont, 0, &qqcont, 0, &macrocont];
+var N_begincont = 112;
+var N_maxcont = 112;
+var contfuncs = [&condcont, 0, &definecont, 0, &evliscont, 0, &setcont, 0, &qqcont, 0, &macrocont, 0, &begincont];
 
 var PAIR = 0x100;
 
@@ -608,6 +613,9 @@ newqqcont = func(got, rest, scope) {
 newmacrocont = func(scope) {
     return cons(N_macrocont, scope);
 };
+newbegincont = func(form, scope) {
+    return cons(N_begincont, cons(form, scope));
+};
 
 condcont = func(state) {
     var form = car(state);
@@ -616,9 +624,7 @@ condcont = func(state) {
     # form is the list of condition clauses: e.g. (((> n 4) 1) (else 2))
     if (RET) {
         # condition evaluated true: now we want to run the condition body
-        # TODO: if there are multiple statements, eval them all (need a newblock() continuation maker?)
-        FORM = car(cdr(car(form)));
-        SCOPE = scope;
+        begin(cdr(car(form)), scope);
         return 1;
     } else {
         # condition evaluated false: run the next test
@@ -626,7 +632,7 @@ condcont = func(state) {
         if (!form) {
             # no more conditions?
             RET = _NIL;
-            return 0;
+            return 1;
         };
         pushcontinuation(newcondcont(form, scope));
         FORM = car(car(form)); # e.g. else, result goes to the continuation
@@ -690,8 +696,7 @@ evliscont = func(state) {
         SCOPE = buildscope(arglist, closureargs(fn), closurescope(fn));
 
         # execute the closure body
-        # TODO: support multi-expression bodies
-        FORM = car(closurebody(fn));
+        begin(closurebody(fn), SCOPE);
         return 1;
     };
 
@@ -748,6 +753,20 @@ macrocont = func(scope) {
     FORM = RET;
     SCOPE = scope;
     NOVALUE = 1;
+    return 1;
+};
+
+begincont = func(state) {
+    var form = car(state);
+    var scope = cdr(state);
+
+    if (cdr(form))
+        pushcontinuation(newbegincont(cdr(form), scope));
+
+    FORM = car(form);
+    SCOPE = scope;
+    NOVALUE = 1;
+
     return 1;
 };
 
@@ -848,10 +867,11 @@ applymacro = func(macro, form, scope) {
     SCOPE = buildscope(arglist, namelist, macroscope(macro));
     
     pushcontinuation(newmacrocont(scope));
-    # TODO: support multi-expression bodies
-    FORM = car(macrobody(macro));
-    NOVALUE = 1;
-    return 1;
+    return begin(macrobody(macro), SCOPE);
+};
+
+begin = func(form, scope) {
+    return begincont(cdr(newbegincont(form, scope)));
 };
 
 dospecial = func(form) {
@@ -934,6 +954,11 @@ dospecial = func(form) {
         # (eval expr)
         FORM = car(cdr(form)); # expr
         NOVALUE = 1;
+        return 1;
+    } else if (symbolname(fn) == _BEGIN) {
+        # (begin expr1 expr2 expr3)
+        form = cdr(form); # (expr1 expr2 expr3)
+        begin(form, SCOPE);
         return 1;
     } else if (type(lookup(symbolname(fn), SCOPE)) == MACRO) {
         # macro application: evaluate the macro & then evaluate its result
@@ -1068,6 +1093,7 @@ init = func() {
     _UNQUOTE = intern("unquote");
     _DEFMACRO = intern("defmacro");
     _EVAL = intern("eval");
+    _BEGIN = intern("begin");
 
     # TODO: load default lisp code from /lisp/lib.l ?
 
