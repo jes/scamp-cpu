@@ -516,8 +516,23 @@ var cdr = asm {
     ld r0, 1(x)
     ret
 };
-var setcar = func(tuple,a) { *tuple = a; };
-var setcdr = func(tuple,b) { tuple[1] = b; };
+#var setcar = func(tuple,a) { *tuple = a; };
+#var setcdr = func(tuple,b) { tuple[1] = b; };
+var setcar = asm {
+    pop x
+    ld r1, x # a
+    pop x
+    ld (x), r1
+    ret
+};
+var setcdr = asm {
+    pop x
+    ld r1, x # a
+    pop x
+    inc x
+    ld (x), r1
+    ret
+};
 
 # internal, used for quicksort;
 # return the index of the pivot element
