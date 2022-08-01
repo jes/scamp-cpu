@@ -325,10 +325,50 @@ var bread = func(bio, buf, sz) {
     return n;
 };
 
-var bwrite = func(bio, buf, sz) {
-    var n = sz;
-    while (n--) bputc(bio, *(buf++));
-    return sz; # TODO: [bug] what if there's an error?
+#var bwrite = func(bio, buf, sz) {
+#    var n = sz;
+#    while (n--) bputc(bio, *(buf++));
+#    return sz; # TODO: [bug] what if there's an error?
+#};
+var bwrite = asm {
+    pop x
+    ld (bwrite_sz), x
+    ld (bwrite_n), x
+    pop x
+    ld (bwrite_buf), x
+    pop x
+    ld (bwrite_bio), x # bio
+
+    # stash return address
+    ld x, r254
+    push x
+
+    # do nothing if sz == 0
+    test (bwrite_sz)
+    jz bwrite_ret
+
+    bwrite_loop:
+        ld x, (bwrite_bio)
+        push x
+
+        ld x, ((bwrite_buf))
+        push x
+
+        call (_bputc)
+
+        inc (bwrite_buf)
+        dec (bwrite_n)
+        jnz bwrite_loop
+
+    bwrite_ret:
+        ld r0, (bwrite_sz)
+        pop x
+        jmp x
+
+    bwrite_n: .word 0
+    bwrite_sz: .word 0
+    bwrite_buf: .word 0
+    bwrite_bio: .word 0
 };
 
 var bprintf_bio;
