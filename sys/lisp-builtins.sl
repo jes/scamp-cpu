@@ -193,3 +193,13 @@ b("close-input-port", func(args) {
     portsetbuf(port, 0);
     return _NIL;
 });
+b("display", func(args) {
+    needargs(1, args);
+    PRINT(car(args));
+    return _NIL;
+});
+b("newline", func(args) {
+    needargs(0, args);
+    puts("\n");
+    return _NIL;
+});
