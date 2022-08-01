@@ -203,3 +203,10 @@ b("newline", func(args) {
     puts("\n");
     return _NIL;
 });
+b("load", func(args) {
+    needargs(1, args);
+    var name = car(args);
+    assert(type(name) == STRING, "filename should be string\n", 0);
+    load(stringstring(name));
+    return RET;
+});

@@ -113,6 +113,8 @@ var print_list;
 ### Initialisation ###
 var needargs;
 var init;
+var load;
+var process;
 
 var SYMBOLS = htnew();
 var GLOBALS = htnew();
@@ -1096,11 +1098,48 @@ init = func() {
     _EVAL = intern("eval");
     _BEGIN = intern("begin");
 
-    # TODO: load default lisp code from /lisp/lib.l ?
+    # load default library code
+    load("/lisp/lib.l");
+};
 
-    # initialise input port for stdin
-    in = newport(bfdopen(0, O_READ));
-    htput(GLOBALS, intern("current-input-port"), in);
+load = func(filename) {
+    var port = newport(bopen(filename, O_READ));
+    if (!portbuf(port)) {
+        fprintf(2, "%s: can't open for reading\n", [filename]);
+        exit(1);
+    };
+    var oldprompt = showprompt;
+    var oldanswers = PRINTANSWERS;
+    showprompt = 0; PRINTANSWERS = 0;
+    process(port);
+    showprompt = oldprompt;
+    PRINTANSWERS = oldanswers;
+};
+
+process = func(port) {
+    var old_in = in;
+    in = port;
+    htput(GLOBALS, intern("current-input-port", in));
+
+    if (showprompt) puts("> ");
+    var form;
+    while (1) {
+        form = READ(in);
+        if (form == _EOF) break;
+
+        form = EVAL(form, _NIL);
+        if (PRINTANSWERS) {
+            PRINT(form);
+            putchar('\n');
+        };
+
+        assert(!CALLSTACK, "callstack not empty!\n", 0);
+
+        if (showprompt) puts("> ");
+    };
+
+    in = old_in;
+    htput(GLOBALS, intern("current-input-port", old_in));
 };
 
 init();
@@ -1108,29 +1147,11 @@ init();
 include "lisp-builtins.sl";
 
 var args = cmdargs()+1;
+var port;
 if (*args) {
-    in = newport(bopen(*args, O_READ));
-    htput(GLOBALS, intern("current-input-port"), in);
-    showprompt = 0; PRINTANSWERS = 0;
-    if (!portbuf(in)) {
-        fprintf(2, "%s: can't open for reading\n", [*args]);
-        exit(1);
-    };
-};
-
-if (showprompt) puts("> ");
-var form;
-while (1) {
-    form = READ(in);
-    if (form == _EOF) break;
-
-    form = EVAL(form, _NIL);
-    if (PRINTANSWERS) {
-        PRINT(form);
-        putchar('\n');
-    };
-
-    assert(!CALLSTACK, "callstack not empty!\n", 0);
-
-    if (showprompt) puts("> ");
+    load(*args);
+} else {
+    port = newport(bfdopen(0, O_READ));
+    showprompt = 1; PRINTANSWERS = 1;
+    process(port);
 };
