@@ -324,6 +324,10 @@ var emitblob = func(name) {
     var fd = open(name, O_READ);
     if (fd < 0) die("open %s: %s", [name, strerror(fd)]);
 
+    # flush the code buffer now so that we can safely write directly to the fd
+    # without corrupting the stream
+    bflush(code_bio);
+
     # TODO: [perf] instead of emitting the blob to code_bio now, just remember
     #       how long it is and what address we need to put it at, and output
     #       it during resolve_unbounds()
@@ -335,7 +339,7 @@ var emitblob = func(name) {
         n = read(fd, buf, bufsz);
         if (n == 0) break;
         if (n < 0) die("read %s: %s", [name, strerror(fd)]);
-        if (bwrite(code_bio, buf, n) != n) die("write() didn't write enough",0);
+        if (write(code_fd, buf, n) != n) die("write() didn't write enough",0);
         if ((asm_pc + n) lt asm_pc) die(".blob %s: overflows address space", [name]);
         asm_pc = asm_pc + n;
     };
