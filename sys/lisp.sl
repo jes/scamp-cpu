@@ -143,6 +143,7 @@ var CALLSTACK = 0;
 var FORM;
 var SCOPE;
 var RET;
+var PRINTANSWERS = 1;
 
 ### Types ###
 # these all need to be even-valued so as not to confuse the garbage collector
@@ -1110,7 +1111,7 @@ var args = cmdargs()+1;
 if (*args) {
     in = newport(bopen(*args, O_READ));
     htput(GLOBALS, intern("current-input-port"), in);
-    showprompt = 0;
+    showprompt = 0; PRINTANSWERS = 0;
     if (!portbuf(in)) {
         fprintf(2, "%s: can't open for reading\n", [*args]);
         exit(1);
@@ -1123,12 +1124,13 @@ while (1) {
     form = READ(in);
     if (form == _EOF) break;
 
-    FORM = form;
-    gc();
-    PRINT(EVAL(form, _NIL));
+    form = EVAL(form, _NIL);
+    if (PRINTANSWERS) {
+        PRINT(form);
+        putchar('\n');
+    };
 
     assert(!CALLSTACK, "callstack not empty!\n", 0);
 
-    putchar('\n');
     if (showprompt) puts("> ");
 };
