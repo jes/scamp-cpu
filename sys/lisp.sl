@@ -978,13 +978,13 @@ EVAL = func(form, scope) {
     NOVALUE = 1;
 
     while (1) {
-        # gc now if there are fewer than 20 cells remaining, and assume that that is
+        # gc now if there are fewer than N cells remaining, and assume that that is
         # enough that we can not run out of cells until we next get back here; only
         # having 1 place that gc() can be called from during program execution makes
         # it a lot easier to make sure we don't accidentally garbage-collect parts of
         # half-constructed objects that just aren't referenced yet
         # TODO: measure the maximum number of free cells we might need
-        if (freecells lt 20) gc();
+        if (freecells lt 100) gc();
 
         # yield the value computed by the prior iteration, if any
         if (!NOVALUE) {
