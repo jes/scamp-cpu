@@ -93,7 +93,6 @@ I suspect the computer will never be "finished", but some things I still want to
  - [ ] make library blob self-hosting (compile within SCAMP/os)
  - [ ] write an strace-like debugging tool
  - [ ] write a DDT-like debugging tool
- - [ ] move fsck to "userspace"
  - [ ] better facility for memory profiling (mainly to stop kilo and asm from running out of memory on large inputs)
  - [ ] atexit()
  - [ ] static initialisation of globals from constants (e.g. `var x = 5` at global scope should not take any code to initialise)
@@ -104,7 +103,6 @@ I suspect the computer will never be "finished", but some things I still want to
  - [ ] write a big-fixed-point arithmetic library
  - [ ] fixed-point mathematics: pow,tan,asin,acos,atan,atan2
  - [ ] write a FORTH implementation (should it run on bare metal or under SCAMP/os?)
- - [ ] write a LISP implementation
  - [ ] write a Z-machine interpreter and port some text adventures
  - [ ] write some games (pong? breakout? tetris?)
  - [ ] serial protocol: make it use xmodem-style block transfer for speed & error-checking
