@@ -45,6 +45,7 @@ put ../sys/rx.bin /bin/rx
 put ../sys/ser.bin /bin/ser
 put ../sys/sh.bin /bin/sh
 put ../sys/slangc.bin /bin/slangc
+put ../sys/slangi.bin /bin/slangi
 put ../sys/slc.bin /bin/slc
 put ../sys/snake.bin /bin/snake
 put ../sys/sort.bin /bin/sort
@@ -125,6 +126,7 @@ put -t ../sys/rx.sl /src/rx.sl
 put -t ../sys/ser.sl /src/ser.sl
 put -t ../sys/sh.sl /src/sh.sl
 put -t ../sys/slangc.sl /src/slangc.sl
+put -t ../sys/slangi.sl /src/slangi.sl
 put -t ../sys/slc.sl /src/slc.sl
 put -t ../sys/snake.sl /src/snake.sl
 put -t ../sys/sort.sl /src/sort.sl

@@ -1,22 +1,4 @@
-# SLANG Compiler by jes
-#
-# Reads SLANG source from stdin, produces SCAMP assembly code on stdout. In the
-# event of a compile error, there'll be a message on stderr and a non-zero exit
-# status, and the code on stdout should be ignored.
-#
-# Recursive descent parser based on https://www.youtube.com/watch?v=Ytq0GQdnChg
-# Each Foo() parses a rule from the grammar; if the rule matches it returns 1,
-# else it returns 0.
-#
-# Rather than turning the source code into an abstract syntax tree and then
-# turning the AST into code, we treat the compiler's call graph as an implicit
-# AST and generate code as we "walk the call graph", i.e. as the compiler parses
-# the source.
-#
-# TODO: optionally annotate generated assembly code with the source code that
-#       generated it
-# TODO: fix &/| precedence
-# TODO: search paths for "include"
+# SLANG Interpreter
 
 include "bufio.sl";
 include "getopt.sl";
@@ -27,6 +9,41 @@ include "stdio.sl";
 include "stdlib.sl";
 include "string.sl";
 
+# AST
+var SeqNode;
+var SeqAdd;
+var EvalSeqNode;
+var NopNode;
+var EvalNopNode;
+var ConstNode;
+var EvalConstNode;
+var ArrayIndexNode;
+var EvalArrayIndexNode;
+var OperatorNode;
+var EvalAddNode;
+var EvalSubNode;
+var EvalAndNode;
+var EvalOrNode;
+var EvalXorNode;
+var EvalLogicalAndNode;
+var EvalLogicalOrNode;
+var EvalEqNode;
+var EvalNeNode;
+var EvalLtNode;
+var EvalGtNode;
+var EvalLeNode;
+var EvalGeNode;
+var EvalUnsignedLtNode;
+var EvalUnsignedGtNode;
+var EvalUnsignedLeNode;
+var EvalUnsignedGeNode;
+var UnaryOpNode;
+var EvalNotNode;
+var EvalComplementNode;
+var EvalValueOfNode;
+var EvalNegateNode;
+
+# Parser
 var Program;
 var Statements;
 var Statement;
@@ -64,6 +81,9 @@ var UnaryExpression;
 var ParenExpression;
 var Identifier;
 
+### Evaluator ###
+var eval;
+
 # space to store numeric and stirng literals
 var maxliteral = 512;
 var literal_buf = malloc(maxliteral);
@@ -83,49 +103,22 @@ var BP_REL;
 var SP_OFF;
 var NPARAMS;
 var BLOCKLEVEL = 0;
-var BREAKLABEL;
-var CONTLABEL;
-var LABELNUM = 1;
-var OUT;
 
-var quiet;
-var gullible; # are all unrecognised symbols assumed to be extern?
-
-var pending_push = 0;
-var pushx = func() {
-    pending_push++;
-    SP_OFF--;
-};
-var popx = func() {
-    if (pending_push > 0) pending_push--
-    else bputs(OUT, "pop x\n");
-    SP_OFF++;
-};
-var flushpush = func() {
-    while (pending_push) {
-        bputs(OUT, "push x\n");
-        pending_push--;
-    };
-};
-var myputs = func(s) {
-    flushpush();
-    bputs(OUT, s);
-};
-var myputc = func(c) {
-    flushpush();
-    bputc(OUT, c);
-};
-
-var label = func() { return LABELNUM++; };
-var plabel = func(l) { myputs("L"); myputs(itoa(l)); };
-
-var magnitude_op   = [">",     "<",     ">=",    "<=",    "gt",    "lt",    "ge",    "le"];
-var magnitude_func = [label(), label(), label(), label(), label(), label(), label(), label()];
-var magnitude_used = [0,       0,       0,       0,       0,       0,       0,       0];
+var label = func(){die("don't make labels!\n", 0)};
+var myputs = func(str){die("don't myputs!\n", 0)};
+var myputc = func(c){die("don't myputc!\n", 0)};
+var pushx = func(){die("don't push x!\n", 0)};
+var popx = func(){die("don't pop x!\n", 0)};
+var magnitude_op=0;
+var magnitude_func=0;
+var magnitude_used=0;
+var plabel = func(x){die("don't plabel!\n",0)};
+var OUT=0;
+var BREAKLABEL = 0;
+var CONTLABEL = 0;
 
 # return 1 if "name" is a global or extern, 0 otherwise
 var findglobal = func(name) {
-    if (gullible) return 1;
     # TODO: [perf] would these be better the other way around?
     #              would we be better off with only one table?
     if (htgetkv(GLOBALS, name)) return 1;
@@ -134,11 +127,11 @@ var findglobal = func(name) {
 };
 
 var addextern = func(name) {
-    if (!gullible && findglobal(name)) die("duplicate global: %s",[name]);
+    if (findglobal(name)) die("duplicate global: %s",[name]);
     htput(EXTERNS, name, name);
 };
 var addglobal = func(name) {
-    if (!gullible && findglobal(name)) die("duplicate global: %s",[name]);
+    if (findglobal(name)) die("duplicate global: %s",[name]);
     htput(GLOBALS, name, name);
 };
 
@@ -392,45 +385,132 @@ var funcreturn = func() {
     myputs("jmp "); myputs(itoa(-BP_REL)); myputs("(x)\n");
 };
 
+### AST ###
+
+SeqNode = func() {
+    return cons(EvalSeqNode, grnew());
+};
+
+SeqAdd = func(seq, n) {
+    grpush(seq[1], n);
+};
+
+EvalSeqNode = func(n) {
+    var gr = n[1];
+    var i = 0;
+    var r;
+    while (i != grlen(gr)) {
+        r = eval(grget(gr, i));
+        i++;
+    };
+    return 0;
+};
+
+NopNode = func() {
+    return [EvalNopNode];
+};
+EvalNopNode = func(n) {
+    return 0;
+};
+
+ConstNode = func(val) {
+    printf("ConstNode(%d)\n", [val]);
+    return cons(EvalConstNode, val);
+};
+EvalConstNode = func(n) {
+    return n[1];
+};
+
+ArrayIndexNode = func(ptr, index) {
+    var n = malloc(3);
+    n[0] = EvalArrayIndexNode;
+    n[1] = ptr;
+    n[2] = index;
+    return n;
+};
+EvalArrayIndexNode = func(n) {
+    var ptr = eval(n[1]);
+    var idx = eval(n[2]);
+    return ptr[idx];
+};
+
+OperatorNode = func(op, arg1, arg2) {
+    printf("operatornode: %d op %d; op = 0x%04x; add=0x%04x\n", [arg1, arg2, op, EvalAddNode]);
+    var n = malloc(3);
+    n[0] = op;
+    n[1] = arg1;
+    n[2] = arg2;
+    return n;
+};
+
+EvalAddNode = func(n) { printf("%d+%d\n", [n[1], n[2]]); return eval(n[1]) + eval(n[2]); };
+EvalSubNode = func(n) { return eval(n[1]) - eval(n[2]); };
+EvalAndNode = func(n) { return eval(n[1]) & eval(n[2]); };
+EvalOrNode = func(n) { return eval(n[1]) | eval(n[2]); };
+EvalLogicalAndNode = func(n) { return eval(n[1]) && eval(n[2]); };
+EvalLogicalOrNode = func(n) { return eval(n[1]) || eval(n[2]); };
+EvalEqNode = func(n) { return eval(n[1]) == eval(n[2]); };
+EvalNeNode = func(n) { return eval(n[1]) != eval(n[2]); };
+EvalLtNode = func(n) { return eval(n[1]) < eval(n[2]); };
+EvalGtNode = func(n) { return eval(n[1]) > eval(n[2]); };
+EvalLeNode = func(n) { return eval(n[1]) <= eval(n[2]); };
+EvalGeNode = func(n) { return eval(n[1]) >= eval(n[2]); };
+EvalUnsignedLtNode = func(n) { return eval(n[1]) lt eval(n[2]); };
+EvalUnsignedGtNode = func(n) { return eval(n[1]) gt eval(n[2]); };
+EvalUnsignedLeNode = func(n) { return eval(n[1]) le eval(n[2]); };
+EvalUnsignedGeNode = func(n) { return eval(n[1]) ge eval(n[2]); };
+
+UnaryOpNode = func(op, arg1) {
+    return cons(op, arg1);
+};
+EvalNotNode = func(n) { return !eval(n[1]); };
+EvalComplementNode = func(n) { return ~eval(n[1]); };
+EvalValueOfNode = func(n) { return *(eval(n[1])); };
+EvalNegateNode = func(n) { return -eval(n[1]); };
+
+### Parser ###
+
 Program = func(x) {
     skip();
-    Statements(0);
-    return 1;
+    return Statements(0);
 };
 
 Statements = func(x) {
+    var seq = SeqNode();
+    var r;
     while (1) {
-        if (!parse(Statement,0)) return 1;
-        if (!parse(CharSkip,';')) return 1;
+        r = parse(Statement, 0);
+        if (!r) return seq;
+        SeqAdd(seq, r);
+        if (!parse(CharSkip,';')) return seq;
     };
 };
 
 Statement = func(x) {
     var ch = peekchar();
+    var r;
     if (ch == 'i') {
-        if (parse(Include,0)) return 1;
-        if (parse(Conditional,0)) return 1;
+        r = parse(Include,0); if (r) return r;
+        r = parse(Conditional,0); if (r) return r;
     } else if (ch == '{') {
-        if (!Block(0)) die("curly brace has to start block",0);
-        return 1;
+        r = Block(0);
+        if (r) return r
+        else die("curly brace has to start block",0);
     } else if (ch == 'e') {
-        if (parse(Extern,0)) return 1;
+        r = parse(Extern,0); if (r) return r;
     } else if (ch == 'v') {
-        if (parse(Declaration,0)) return 1;
+        r = parse(Declaration,0); if (r) return r;
     } else if (ch == 'w') {
-        if (parse(Loop,0)) return 1;
+        r = parse(Loop,0); if (r) return r;
     } else if (ch == 'b') {
-        if (parse(Break,0)) return 1;
+        r = parse(Break,0); if (r) return r;
     } else if (ch == 'c') {
-        if (parse(Continue,0)) return 1;
+        r = parse(Continue,0); if (r) return r;
     } else if (ch == 'r') {
-        if (parse(Return,0)) return 1;
+        r = parse(Return,0); if (r) return r;
     };
-    if (parse(Assignment,0)) return 1;
-    if (Expression(0)) {
-        popx();
-        return 1;
-    };
+    r = parse(Assignment,0); if (r) return r;
+    r = Expression(0); if (r) return r;
     return 0;
 };
 
@@ -446,16 +526,11 @@ var open_include = func(file, path) {
     return fd;
 };
 
-var charcount = 0;
-var parsedchar = func() {
-    charcount++;
-    if (!quiet) if ((charcount & 0x3ff) == 0) fputc(2, '.');
-};
-
 var include_fd;
 var include_inbuf;
 Include = func(x) {
     if (!Keyword("include")) return 0;
+    die("include not implemented!\n",0);
     if (!Char('"')) return 0;
     var file = StringLiteralText();
 
@@ -481,7 +556,6 @@ Include = func(x) {
 
     include_inbuf = bfdopen(include_fd, O_READ);
     parse_init(func() {
-        parsedchar();
         return bgetc(include_inbuf);
     });
     parse_filename = strdup(file);
@@ -508,13 +582,14 @@ Include = func(x) {
 
 Block = func(x) {
     if (!CharSkip('{')) return 0;
-    Statements(0);
+    var r = Statements(0);
     if (!CharSkip('}')) die("block needs closing brace",0);
-    return 1;
+    return r;
 };
 
 Extern = func(x) {
     if (!Keyword("extern")) return 0;
+    die("extern not implemented!\n", 0);
     if (!Identifier(0)) die("extern needs identifier",0);
     addextern(strdup(IDENTIFIER));
     return 1;
@@ -522,6 +597,7 @@ Extern = func(x) {
 
 Declaration = func(x) {
     if (!Keyword("var")) return 0;
+    die("declarations not implemented!\n", 0);
     if (BLOCKLEVEL != 0) die("var not allowed here",0);
     if (!Identifier(0)) die("var needs identifier",0);
     var name = strdup(IDENTIFIER);
@@ -552,6 +628,7 @@ Declaration = func(x) {
 
 Conditional = func(x) {
     if (!Keyword("if")) return 0;
+    die("conditionals not implemented!\n", 0);
     BLOCKLEVEL++;
     if (!CharSkip('(')) die("if condition needs open paren",0);
     if (!Expression(0)) die("if condition needs expression",0);
@@ -581,6 +658,7 @@ Conditional = func(x) {
 
 Loop = func(x) {
     if (!Keyword("while")) return 0;
+    die("loops not implemented!\n", 0);
     BLOCKLEVEL++;
     if (!CharSkip('(')) die("while condition needs open paren",0);
 
@@ -615,6 +693,7 @@ Loop = func(x) {
 
 Break = func(x) {
     if (!Keyword("break")) return 0;
+    die("break not implemented!\n", 0);
     if (!BREAKLABEL) die("can't break here",0);
     myputs("jmp "); plabel(BREAKLABEL); myputs("\n");
     return 1;
@@ -622,6 +701,7 @@ Break = func(x) {
 
 Continue = func(x) {
     if (!Keyword("continue")) return 0;
+    die("continue not implemented!\n",0);
     if (!CONTLABEL) die("can't continue here",0);
     myputs("jmp "); plabel(CONTLABEL); myputs("\n");
     return 1;
@@ -629,6 +709,7 @@ Continue = func(x) {
 
 Return = func(x) {
     if (!Keyword("return")) return 0;
+    die("return not implemented!\n",0);
     if (!Expression(0)) die("return needs expression",0);
     popx();
     myputs("ld r0, x\n");
@@ -675,6 +756,7 @@ Assignment = func(x) {
         if (!Term(0)) die("can't dereference non-expression",0);
     };
     if (!CharSkip('=')) return 0;
+    die("assignment not implemented!\n",0);
     if (!Expression(0)) die("assignment needs rvalue",0);
 
     if (id) {
@@ -697,76 +779,90 @@ var operators = [
     ["==", "!=", ">=", "<=", ">", "<", "lt", "gt", "le", "ge"],
     ["+", "-"],
 ];
+var operatorevals = [
+    [EvalAndNode, EvalOrNode, EvalXorNode],
+    [EvalLogicalAndNode, EvalLogicalOrNode],
+    [EvalEqNode, EvalNeNode, EvalGeNode, EvalLeNode, EvalGtNode, EvalLtNode, EvalUnsignedLtNode, EvalUnsignedGtNode, EvalUnsignedLeNode, EvalUnsignedGeNode],
+    [EvalAddNode, EvalSubNode],
+];
 ExpressionLevel = func(lvl) {
     if (!operators[lvl]) return Term(0);
 
     var apply_op = 0;
+    var apply_op_eval = 0;
     var p;
-    var match;
+    var e;
+    var r;
+    var node;
     while (1) {
-        match = parse(ExpressionLevel, lvl+1);
+        r = parse(ExpressionLevel, lvl+1);
         if (apply_op) {
-            if (!match) die("operator %s needs a second operand",[apply_op]);
-            genop(apply_op);
+            if (!r) die("operator %s needs a second operand",[apply_op]);
+            node = OperatorNode(apply_op_eval, node, r);
         } else {
-            if (!match) return 0;
+            if (!r) return 0;
+            node = r;
         };
 
         p = operators[lvl]; # p points to an array of pointers to strings
+        e = operatorevals[lvl]; # e points to an array of pointers to eval'ers
         while (*p) {
             if (parse(String,*p)) break;
-            p++;
+            p++; e++;
         };
-        if (!*p) return 1;
+        if (!*p) return node;
         apply_op = *p;
+        apply_op_eval = *e;
         skip();
     };
 };
 
 Term = func(x) {
-    if (!AnyTerm(0)) return 0;
+    var r;
+    r = AnyTerm(0); if (!r) return 0;
+    var ind;
     while (1) { # index into array
         if (!parse(CharSkip,'[')) break;
-        if (!Expression(0)) die("array index needs expression",0);
+        die("array indexing not implemented!\n",0);
+        ind = Expression(0);
+        if (!ind) die("array index needs expression",0);
+        r = ArrayIndexNode(r, ind);
         if (!CharSkip(']')) die("array index needs close bracket",0);
-
-        # stack now has array and index on it: pop, add together, dereference, push
-        popx();
-        myputs("ld r0, x\n");
-        popx();
-        myputs("add x, r0\n");
-        myputs("ld x, (x)\n");
-        pushx();
     };
-    return 1;
+    return r;
 };
 
 AnyTerm = func(x) {
-    if (parse(Constant,0)) return 1;
-    if (parse(FunctionCall,0)) return 1;
-    if (parse(AddressOf,0)) return 1;
-    if (parse(PreOp,0)) return 1;
-    if (parse(PostOp,0)) return 1;
-    if (parse(UnaryExpression,0)) return 1;
-    if (parse(ParenExpression,0)) return 1;
-    if (!Identifier(0)) return 0;
+    var r;
+    r = parse(Constant,0); if (r) return r;
+    r = parse(FunctionCall,0); if (r) return r;
+    r = parse(AddressOf,0); if (r) return r;
+    r = parse(PreOp,0); if (r) return r;
+    r = parse(PostOp,0); if (r) return r;
+    r = parse(UnaryExpression,0); if (r) return r;
+    r = parse(ParenExpression,0); if (r) return r;
+    r = Identifier(0);
+    if (!r) return 0;
+    die("identifiers not implemented!\n", 0);
     pushvar(IDENTIFIER);
     return 1;
 };
 
 Constant = func(x) {
-    if (parse(NumericLiteral,0)) return 1;
-    if (parse(StringLiteral,0)) return 1;
-    if (parse(ArrayLiteral,0)) return 1;
-    if (parse(FunctionDeclaration,0)) return 1;
-    if (InlineAsm(0)) return 1;
+    var r;
+    r = parse(NumericLiteral,0); if (r) return r;
+    r = parse(StringLiteral,0); if (r) return r;
+    r = parse(ArrayLiteral,0); if (r) return r;
+    r = parse(FunctionDeclaration,0); if (r) return r;
+    r = InlineAsm(0); if (r) return r;
     return 0;
 };
 
 NumericLiteral = func(x) {
-    if (parse(HexLiteral,0)) return 1;
-    if (parse(CharacterLiteral,0)) return 1;
-    if (DecimalLiteral(0)) return 1;
+    var r;
+    r = parse(HexLiteral,0); if (r) return r;
+    r = parse(CharacterLiteral,0); if (r) return r;
+    r = DecimalLiteral(0); if (r) return r;
     return 0;
 };
 
@@ -774,14 +870,14 @@ var NumLiteral = func(alphabet,base,neg) {
     *literal_buf = peekchar();
     if (!AnyChar(alphabet)) return 0;
     var i = 1;
+    var val;
     while (i < maxliteral) {
         *(literal_buf+i) = peekchar();
         if (!parse(AnyChar,alphabet)) {
             *(literal_buf+i) = 0;
-            if (neg) genliteral(-atoibase(literal_buf,base))
-            else     genliteral( atoibase(literal_buf,base));
             skip();
-            return 1;
+            if (neg) return ConstNode(-atoibase(literal_buf,base))
+            else     return ConstNode( atoibase(literal_buf,base));
         };
         i++;
     };
@@ -812,11 +908,9 @@ CharacterLiteral = func(x) {
     if (!Char('\'')) return 0;
     var ch = nextchar();
     if (ch == '\\') {
-        genliteral(escapedchar(nextchar()));
-    } else {
-        genliteral(ch);
+        ch = escapedchar(nextchar());
     };
-    if (CharSkip('\'')) return 1;
+    if (CharSkip('\'')) return ConstNode(ch);
     die("illegal character literal",0);
 };
 
@@ -1009,6 +1103,7 @@ PreOp = func(x) {
     } else {
         return 0;
     };
+    die("preop not implemented!\n", 0);
     skip();
     if (!Identifier(0)) return 0;
     skip();
@@ -1032,6 +1127,7 @@ PostOp = func(x) {
     } else {
         return 0;
     };
+    die("postop not implemented!\n", 0);
     skip();
     pushvar(IDENTIFIER);
     popx();
@@ -1074,37 +1170,29 @@ UnaryExpression = func(x) {
     var op = peekchar();
     if (!AnyChar("!~*+-")) return 0;
     skip();
-    if (!Term(0)) die("unary operator %c needs operand",[op]);
+    var r = Term(0);
+    if (!r) die("unary operator %c needs operand",[op]);
 
-    var end;
-
-    popx();
     if (op == '~') {
-        myputs("not x\n");
+        return UnaryOpNode(EvalComplementNode, r);
     } else if (op == '-') {
-        myputs("neg x\n");
+        return UnaryOpNode(EvalNegateNode, r);
     } else if (op == '!') {
-        end = label();
-        myputs("test x\n");
-        myputs("ld x, 0\n"); # doesn't clobber flags
-        myputs("jnz "); plabel(end); myputs("\n");
-        myputs("ld x, 1\n");
-        plabel(end); myputs(":\n");
+        return UnaryOpNode(EvalNotNode, r);
     } else if (op == '+') {
-        # no-op
+        return r;
     } else if (op == '*') {
-        myputs("ld x, (x)\n");
+        return UnaryOpNode(EvalValueOfNode, r);
     } else {
         die("unrecognised unary operator %c (probably a compiler bug)",[op]);
     };
-
-    pushx();
-    return 1;
+    die("wut",0);
 };
 
 ParenExpression = func(x) {
     if (!CharSkip('(')) return 0;
-    if (Expression(0)) return CharSkip(')');
+    var r = Expression(0);
+    if (CharSkip(')')) return r;
     return 0;
 };
 
@@ -1124,17 +1212,15 @@ Identifier = func(x) {
     die("identifier too long",0);
 };
 
-var help = func(rc) {
-    fprintf(2, "usage: slangc [options] < SOURCE > ASM
+### Evaluator ###
 
-options:
-    -e FILE   filename containing list of extern names
-    -f FOOT   asm string to append to output
-    -g        assume all unrecognised symbols are extern
-    -h        show this help
-    -q        quiet
-", 0);
-    exit(rc);
+eval = func(node) {
+    printf("eval 0x%04x\n", [node]);
+    if (node lt 256) die("tried to eval %d\n", [node]);
+    var f = node[0];
+    var r = f(node);
+    printf(" = %d\n", [r]);
+    return r;
 };
 
 INCLUDED = grnew();
@@ -1143,88 +1229,18 @@ STRINGS = grnew();
 EXTERNS = htnew();
 GLOBALS = htnew();
 
-var foot_str = "";
-
-var more = getopt(cmdargs()+1, "ef", func(ch,arg) {
-    if (ch == 'h') help(0)
-    else if (ch == 'e') {
-        addexterns(arg);
-    } else if (ch == 'f') {
-        foot_str = arg;
-    } else if (ch == 'g') {
-        gullible = 1;
-    } else if (ch == 'q') {
-        quiet = 1;
-    } else {
-        fprintf(2, "error: unrecognised option -%c\n", [ch]);
-        help(1);
-    };
-});
-if (*more) {
-    fprintf(2, "error: unrecognised options\n", 0);
-    help(1);
-};
-
-OUT = bfdopen(1, O_WRITE);
-
 # input buffering
 var inbuf = bfdopen(0, O_READ);
 
 parse_init(func() {
-    parsedchar();
     return bgetc(inbuf);
 });
-parse(Program,0);
+var program = parse(Program,0);
 
 if (nextchar() != EOF) die("garbage after end of program",0);
 if (LOCALS) die("expected to be left in global scope after program",0);
 if (BLOCKLEVEL != 0) die("expected to be left at block level 0 after program (probably a compiler bug)",0);
 if (SP_OFF != 0) die("expected to be left at SP_OFF==0 after program, found %d (probably a compiler bug)",[SP_OFF]);
+if (!program) die("parsed AST is null pointer",0);
 
-# jump over the globals
-var end = label();
-myputs("jmp "); plabel(end); myputs("\n");
-
-make_magnitude_functions();
-
-htwalk(GLOBALS, func(name, val) {
-    myputc('_'); myputs(name); myputs(": .w 0\n");
-    #free(name);
-});
-
-grwalk(STRINGS, func(tuple) {
-    var str = car(tuple);
-    var l = cdr(tuple);
-    plabel(l); myputs(":\n");
-    var p = str;
-    while (*p) {
-        myputs(".w "); myputs(itoa(*p)); myputs("\n");
-        p++;
-    };
-    myputs(".w 0\n");
-    #free(str);
-    #free(tuple);
-});
-
-grwalk(ARRAYS, func(tuple) {
-    var l = car(tuple);
-    var length = cdr(tuple);
-    plabel(l); myputs(":\n");
-    myputs(".g "); myputs(itoa(length+1)); myputs("\n");
-    #free(tuple);
-});
-
-#grwalk(INCLUDED, free);
-
-#grfree(INCLUDED);
-#grfree(ARRAYS);
-#grfree(STRINGS);
-#htfree(EXTERNS);
-#htfree(GLOBALS);
-
-plabel(end); myputs(":\n");
-flushpush();
-myputs(foot_str);
-bclose(OUT);
-
-if (!quiet) fputc(2, '\n');
+printf("%d\n", [eval(program)]);
