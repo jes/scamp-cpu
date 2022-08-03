@@ -56,6 +56,10 @@ var AddressOfNode;
 var EvalAddressOfNode;
 var AssignmentNode;
 var EvalAssignmentNode;
+var PreOpNode;
+var EvalPreOpNode;
+var PostOpNode;
+var EvalPostOpNode;
 
 # Parser
 var Program;
@@ -108,11 +112,8 @@ var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 var INCLUDED;
 var STRINGS;
 var ARRAYS;
-# EXTERNS and GLOBALS are hashes of pointers to variable names
-var EXTERNS;
-var GLOBALS;
-# LOCALS is a grarr of pointers to tuples of (name,bp_rel)
-var LOCALS;
+var GLOBALS; # hash of string => address
+var LOCALS; # grarr of (name, address)
 var BP_REL;
 var SP_OFF;
 var NPARAMS;
@@ -131,14 +132,19 @@ var OUT=0;
 var BREAKLABEL = 0;
 var CONTLABEL = 0;
 
+# TODO: [perf] should this use a hash table?
+var intern = func(str) {
+    var v = grfind(STRINGS, str, func(find,s) { return strcmp(find,s)==0 });
+    if (v) return v;
+    str = strdup(str);
+    grpush(STRINGS, str);
+    return str;
+};
+
 var findglobal = func(name) {
     return htget(GLOBALS, name);
 };
 
-var addextern = func(name) {
-    if (findglobal(name)) die("duplicate global: %s",[name]);
-    htput(EXTERNS, name, name);
-};
 var addglobal = func(name) {
     if (findglobal(name)) die("duplicate global: %s",[name]);
     htput(GLOBALS, name, name);
@@ -149,12 +155,12 @@ var addexterns = func(filename) {
     if (!b) die("can't open %s for reading\n", [filename]);
 
     var name;
-    var addr = bgetc(b); # skip the address
+    var addr = bgetc(b); # address
     while (bgets(b, literal_buf, maxliteral)) {
         literal_buf[strlen(literal_buf)-1] = 0; # no '\n'
-        name = strdup(literal_buf);
-        htput(EXTERNS, name, name);
-        addr = bgetc(b); # skip the address
+        name = intern(literal_buf);
+        htput(GLOBALS, name, addr);
+        addr = bgetc(b); # address
     };
     bclose(b);
 };
@@ -172,15 +178,6 @@ var addlocal = func(name, bp_rel) {
     var tuple = cons(name,bp_rel);
     grpush(LOCALS, tuple);
     return tuple;
-};
-
-var addstring = func(str) {
-    var v = grfind(STRINGS, str, func(find,tuple) { return strcmp(find,car(tuple))==0 });
-    if (v) return cdr(v);
-
-    var l = label();
-    grpush(STRINGS, cons(str,l));
-    return l;
 };
 
 var newscope = func() {
@@ -410,6 +407,31 @@ EvalAssignmentNode = func(n) {
     return 0;
 };
 
+PreOpNode = func(inc, name) {
+    return cons3(EvalPreOpNode, inc, AddressOfNode(name));
+};
+EvalPreOpNode = func(n) {
+    var inc = n[1];
+    var addr = eval(n[2]);
+    var val = *addr;
+    if (inc) val++
+    else val--;
+    *addr = val;
+    return val;
+};
+
+PostOpNode = func(inc, name) {
+    return cons3(EvalPostOpNode, inc, AddressOfNode(name));
+};
+EvalPostOpNode = func(n) {
+    var inc = n[1];
+    var addr = eval(n[2]);
+    var val = *addr;
+    if (inc) *addr = val + 1
+    else *addr = val - 1;
+    return val;
+};
+
 ### Parser ###
 
 Program = func(x) {
@@ -478,7 +500,7 @@ Include = func(x) {
 
     # don't include the same file twice
     if (grfind(INCLUDED, file, func(a,b) { return strcmp(a,b)==0 })) return 1;
-    grpush(INCLUDED, strdup(file));
+    grpush(INCLUDED, intern(file));
 
     # save parser state
     var pos0 = pos;
@@ -533,7 +555,7 @@ Extern = func(x) {
     if (!Keyword("extern")) return 0;
     die("extern not implemented!\n", 0);
     if (!Identifier(0)) die("extern needs identifier",0);
-    addextern(strdup(IDENTIFIER));
+    #addextern(intern(IDENTIFIER));
     return 1;
 };
 
@@ -541,7 +563,7 @@ Declaration = func(x) {
     if (!Keyword("var")) return 0;
     if (BLOCKLEVEL != 0) die("var not allowed here",0);
     if (!Identifier(0)) die("var needs identifier",0);
-    var name = strdup(IDENTIFIER);
+    var name = intern(IDENTIFIER);
 
     if (!parse(CharSkip,'=')) return DeclarationNode(name, 0);
 
@@ -620,7 +642,7 @@ Assignment = func(x) {
     var lvalue_addr;
     var rvalue;
     if (parse(Identifier,0)) {
-        id = strdup(IDENTIFIER);
+        id = intern(IDENTIFIER);
         lvalue_addr = AddressOfNode(id);
 
         if (parse(CharSkip,'[')) {
@@ -718,7 +740,6 @@ Term = func(x) {
     var ind;
     while (1) { # index into array
         if (!parse(CharSkip,'[')) break;
-        die("array indexing not implemented!\n",0);
         ind = Expression(0);
         if (!ind) die("array index needs expression",0);
         r = ArrayIndexNode(r, ind);
@@ -736,10 +757,8 @@ AnyTerm = func(x) {
     r = parse(PostOp,0); if (r) return r;
     r = parse(UnaryExpression,0); if (r) return r;
     r = parse(ParenExpression,0); if (r) return r;
-    r = Identifier(0);
-    if (!r) return 0;
-    # TODO: intern identifiers
-    return VariableNode(strdup(IDENTIFIER));
+    if (!Identifier(0)) return 0;
+    return VariableNode(intern(IDENTIFIER));
 };
 
 Constant = func(x) {
@@ -811,7 +830,7 @@ CharacterLiteral = func(x) {
 StringLiteral = func(x) {
     if (!Char('"')) return 0;
     var str = StringLiteralText();
-    var strlabel = addstring(str);
+    var strlabel = intern(str);
     myputs("ld x, "); plabel(strlabel); myputs("\n");
     pushx();
     return 1;
@@ -824,7 +843,7 @@ StringLiteralText = func() {
         if (parse(Char,'"')) {
             *(literal_buf+i) = 0;
             skip();
-            return strdup(literal_buf);
+            return intern(literal_buf);
         };
         if (parse(Char,'\\')) {
             *(literal_buf+i) = escapedchar(nextchar());
@@ -872,7 +891,7 @@ Parameters = func(x) {
     var p = PARAMS;
     while (1) {
         if (!parse(Identifier,0)) break;
-        *(p++) = strdup(IDENTIFIER);
+        *(p++) = intern(IDENTIFIER);
         if (p == PARAMS+maxparams) die("too many params for function",0);
         if (!parse(CharSkip,',')) break;
     };
@@ -960,13 +979,12 @@ FunctionCall = func(x) {
     if (!Identifier(0)) return 0;
     if (!CharSkip('(')) return 0;
 
-    var name = strdup(IDENTIFIER);
+    var name = intern(IDENTIFIER);
 
     var nargs = Arguments();
     if (!CharSkip(')')) die("argument list needs closing paren",0);
 
     pushvar(name);
-    free(name);
     # call function
     popx();
     myputs("call x\n");
@@ -989,47 +1007,33 @@ Arguments = func() {
 };
 
 PreOp = func(x) {
-    var op;
+    var inc;
     if (parse(String,"++")) {
-        op = "inc";
+        inc = 1;
     } else if (parse(String,"--")) {
-        op = "dec";
+        inc = 0;
     } else {
         return 0;
     };
-    die("preop not implemented!\n", 0);
     skip();
     if (!Identifier(0)) return 0;
     skip();
-    pushvar(IDENTIFIER);
-    popx();
-    myputs(op); myputs(" x\n");
-    pushx();
-    poptovar(IDENTIFIER);
-    pushx();
-    return 1;
+    return PreOpNode(inc, intern(IDENTIFIER));
 };
 
 PostOp = func(x) {
     if (!Identifier(0)) return 0;
     skip();
-    var op;
+    var inc;
     if (parse(String,"++")) {
-        op = "inc";
+        inc = 1;
     } else if (parse(String,"--")) {
-        op = "dec";
+        inc = 0;
     } else {
         return 0;
     };
-    die("postop not implemented!\n", 0);
     skip();
-    pushvar(IDENTIFIER);
-    popx();
-    pushx();
-    myputs(op); myputs(" x\n");
-    pushx();
-    poptovar(IDENTIFIER);
-    return 1;
+    return PostOpNode(inc, intern(IDENTIFIER));
 };
 
 AddressOf = func(x) {
@@ -1121,7 +1125,6 @@ eval = func(node) {
 INCLUDED = grnew();
 ARRAYS = grnew();
 STRINGS = grnew();
-EXTERNS = htnew();
 GLOBALS = htnew();
 
 # input buffering
