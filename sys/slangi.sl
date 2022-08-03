@@ -10,6 +10,8 @@ include "stdlib.sl";
 include "string.sl";
 
 # AST
+var cons3;
+var cons4;
 var SeqNode;
 var SeqAdd;
 var EvalSeqNode;
@@ -42,6 +44,18 @@ var EvalNotNode;
 var EvalComplementNode;
 var EvalValueOfNode;
 var EvalNegateNode;
+var DeclarationNode;
+var EvalDeclarationNode;
+var ConditionalNode;
+var EvalConditionalNode;
+var LoopNode;
+var EvalLoopNode;
+var VariableNode;
+var EvalVariableNode;
+var AddressOfNode;
+var EvalAddressOfNode;
+var AssignmentNode;
+var EvalAssignmentNode;
 
 # Parser
 var Program;
@@ -117,13 +131,8 @@ var OUT=0;
 var BREAKLABEL = 0;
 var CONTLABEL = 0;
 
-# return 1 if "name" is a global or extern, 0 otherwise
 var findglobal = func(name) {
-    # TODO: [perf] would these be better the other way around?
-    #              would we be better off with only one table?
-    if (htgetkv(GLOBALS, name)) return 1;
-    if (htgetkv(EXTERNS, name)) return 1;
-    return 0;
+    return htget(GLOBALS, name);
 };
 
 var addextern = func(name) {
@@ -233,145 +242,6 @@ var poptovar = func(name) {
     die("unrecognised identifier: %s",[name]);
 };
 
-var genliteral = func(v) {
-    if ((v&0xff00)==0 || (v&0xff00)==0xff00) {
-        myputs("push "); myputs(itoa(v)); myputs("\n");
-        SP_OFF--;
-    } else {
-        myputs("ld x, "); myputs(itoa(v)); myputs("\n");
-        pushx();
-    };
-};
-
-var genop = func(op) {
-    var i;
-    if ((*op == '>') || (*op == '<') || (*op == 'g') || (*op == 'l')) {
-        i = 0;
-        while (i != 8) {
-            if (strcmp(magnitude_op[i], op) == 0) {
-                myputs("call "); plabel(magnitude_func[i]); myputs("\n");
-                SP_OFF++; # 2 args consumed, 1 result pushed
-                magnitude_used[i] = 1;
-                return 0;
-            };
-            i++;
-        };
-    };
-
-    popx();
-    myputs("ld r0, x\n");
-    popx();
-
-    var end;
-
-    if (strcmp(op,"+") == 0) {
-        myputs("add x, r0\n");
-    } else if (strcmp(op,"-") == 0) {
-        myputs("sub x, r0\n");
-    } else if (strcmp(op,"&") == 0) {
-        myputs("and x, r0\n");
-    } else if (strcmp(op,"|") == 0) {
-        myputs("or x, r0\n");
-    } else if (strcmp(op,"^") == 0) {
-        myputs("ld r1, r254\n"); # xor clobbers r254
-        myputs("ld y, r0\n");
-        myputs("xor x, y\n");
-        myputs("ld r254, r1\n");
-    } else if (strcmp(op,"!=") == 0) {
-        end = label();
-        myputs("sub x, r0 #peepopt:test\n");
-        myputs("jz "); plabel(end); myputs("\n");
-        myputs("ld x, 1\n");
-        plabel(end); myputs(":\n");
-    } else if (strcmp(op,"==") == 0) {
-        end = label();
-        myputs("sub x, r0 #peepopt:test\n");
-        myputs("ld x, 0\n"); # doesn't clobber flags
-        myputs("jnz "); plabel(end); myputs("\n");
-        myputs("ld x, 1\n");
-        plabel(end); myputs(":\n");
-    } else if (strcmp(op,"&&") == 0) {
-        end = label();
-        myputs("test x\n");
-        myputs("ld x, 0\n"); # doesn't clobber flags
-        myputs("jz "); plabel(end); myputs("\n");
-        myputs("test r0\n");
-        myputs("jz "); plabel(end); myputs("\n");
-        myputs("ld x, 1\n"); # both args true: x=1
-        plabel(end); myputs(":\n");
-    } else if (strcmp(op,"||") == 0) {
-        end = label();
-        myputs("test x\n");
-        myputs("ld x, 1\n"); # doesn't clobber flags
-        myputs("jnz "); plabel(end); myputs("\n");
-        myputs("test r0\n");
-        myputs("jnz "); plabel(end); myputs("\n");
-        myputs("ld x, 0\n"); # both args false: x=0
-        plabel(end); myputs(":\n");
-    } else {
-        myputs("bad op: "); myputs(op); myputs("\n");
-        die("unrecognised binary operator %s (probably a compiler bug)",[op]);
-    };
-
-    pushx();
-};
-
-var make_magnitude_functions = func() {
-    var signcmp = func(subxr0, match, wantlt) {
-        var wantgt = !wantlt;
-        var nomatch = !match;
-
-        myputs("pop x\n");
-        myputs("ld r0, x\n");
-        myputs("and x, 32768 #peepopt:test\n");
-        myputs("ld r1, x\n");
-
-        myputs("pop x\n");
-        myputs("and x, 32768 #peepopt:test\n");
-
-        # subtract 2nd argument from first, if result is less than zero, then 2nd
-        # argument is bigger than first
-        var lt = label();
-        var docmp = label();
-
-        myputs("sub r1, x #peepopt:test\n");
-        myputs("jz "); plabel(docmp); myputs("\n"); # only directly compare x and r0 if they're both negative or both positive
-
-        # just compare signs
-        myputs("test x\n");
-        bprintf(OUT, "ld x, %d\n", [wantlt]); # doesn't clobber flags
-        myputs("jnz "); plabel(lt); myputs("\n");
-        bprintf(OUT, "ld x, %d\n", [wantgt]); # doesn't clobber flags
-        myputs("jmp "); plabel(lt); myputs("\n");
-
-        # do the actual magnitude comparison
-        plabel(docmp); myputs(":\n");
-        myputs("ld x, (sp)\n");
-        if (subxr0) myputs("sub x, r0 #peepopt:test\n")
-        else        myputs("sub r0, x #peepopt:test\n");
-        bprintf(OUT, "ld x, %d\n", [match]); # doesn't clobber flags
-        myputs("jlt "); plabel(lt); myputs("\n");
-        bprintf(OUT, "ld x, %d\n", [nomatch]);
-        plabel(lt); myputs(":\n");
-
-        myputs("push x\n");
-        myputs("ret\n");
-    };
-
-    # >, <, >=, <=, gt, lt, ge, le
-    var subxr0 = [0,1,1,0,0,1,1,0];
-    var match = [1,1,0,0,1,1,0,0];
-    var wantlt = [0,1,0,1,1,0,1,0];
-    var i = 0;
-    while (i < 8) {
-        if (magnitude_used[i]) {
-            plabel(magnitude_func[i]); myputs(":\n");
-            signcmp(subxr0[i], match[i], wantlt[i]);
-        };
-        i++;
-    };
-};
-
 var funcreturn = func() {
     if (!LOCALS) die("can't return from global scope",0);
 
@@ -386,6 +256,18 @@ var funcreturn = func() {
 };
 
 ### AST ###
+
+cons3 = func(a,b,c) {
+    var p = malloc(3);
+    p[0] = a; p[1] = b; p[2] = c;
+    return p;
+};
+
+cons4 = func(a,b,c,d) {
+    var p = malloc(4);
+    p[0] = a; p[1] = b; p[2] = c; p[3] = d;
+    return p;
+};
 
 SeqNode = func() {
     return cons(EvalSeqNode, grnew());
@@ -422,11 +304,7 @@ EvalConstNode = func(n) {
 };
 
 ArrayIndexNode = func(ptr, index) {
-    var n = malloc(3);
-    n[0] = EvalArrayIndexNode;
-    n[1] = ptr;
-    n[2] = index;
-    return n;
+    return cons3(EvalArrayIndexNode, ptr, index);
 };
 EvalArrayIndexNode = func(n) {
     var ptr = eval(n[1]);
@@ -436,11 +314,7 @@ EvalArrayIndexNode = func(n) {
 
 OperatorNode = func(op, arg1, arg2) {
     printf("operatornode: %d op %d; op = 0x%04x; add=0x%04x\n", [arg1, arg2, op, EvalAddNode]);
-    var n = malloc(3);
-    n[0] = op;
-    n[1] = arg1;
-    n[2] = arg2;
-    return n;
+    return cons3(op, arg1, arg2);
 };
 
 EvalAddNode = func(n) { printf("%d+%d\n", [n[1], n[2]]); return eval(n[1]) + eval(n[2]); };
@@ -467,6 +341,74 @@ EvalNotNode = func(n) { return !eval(n[1]); };
 EvalComplementNode = func(n) { return ~eval(n[1]); };
 EvalValueOfNode = func(n) { return *(eval(n[1])); };
 EvalNegateNode = func(n) { return -eval(n[1]); };
+
+DeclarationNode = func(name, expr) {
+    return cons3(EvalDeclarationNode, name, expr);
+};
+EvalDeclarationNode = func(n) {
+    var name = n[1];
+    var val = eval(n[2]);
+    var p = malloc(1);
+    *p = val;
+    if (LOCALS) {
+        grpush(LOCALS, cons(name, p));
+    } else {
+        htput(GLOBALS, name, p);
+    };
+};
+
+ConditionalNode = func(cond, thenexpr, elseexpr) {
+    return cons4(EvalConditionalNode, cond, thenexpr, elseexpr);
+};
+EvalConditionalNode = func(n) {
+    var cond = n[1];
+    var thenexpr = n[2];
+    var elseexpr = n[3];
+    if (eval(cond)) return eval(thenexpr)
+    else if (elseexpr) return eval(elseexpr)
+    else return 0;
+};
+
+LoopNode = func(cond, body) {
+    return cons3(EvalLoopNode, cond, body);
+};
+EvalLoopNode = func(n) {
+    var cond = n[1];
+    var body = n[2];
+    while (eval(cond)) if (body) eval(body);
+    return 0;
+};
+
+VariableNode = func(name) {
+    return cons(EvalVariableNode, name);
+};
+EvalVariableNode = func(n) {
+    return *(EvalAddressOfNode(n));
+};
+AddressOfNode = func(name) {
+    return cons(EvalAddressOfNode, name);
+};
+EvalAddressOfNode = func(n) {
+    var v;
+    var name = n[1];
+    if (LOCALS) {
+        v = findlocal(name);
+        if (v) return cdr(v);
+    };
+    v = findglobal(name);
+    if (v) return v;
+    die("use of undefined name: %s\n", [name]);
+};
+
+AssignmentNode = func(addr, value) {
+    return cons3(EvalAssignmentNode, addr, value);
+};
+EvalAssignmentNode = func(n) {
+    var addr = n[1];
+    var value = n[2];
+    *(eval(addr)) = eval(value);
+    return 0;
+};
 
 ### Parser ###
 
@@ -597,98 +539,54 @@ Extern = func(x) {
 
 Declaration = func(x) {
     if (!Keyword("var")) return 0;
-    die("declarations not implemented!\n", 0);
     if (BLOCKLEVEL != 0) die("var not allowed here",0);
     if (!Identifier(0)) die("var needs identifier",0);
     var name = strdup(IDENTIFIER);
-    if (!LOCALS) {
-        addglobal(name);
-    } else {
-        addlocal(name, BP_REL--);
-    };
-    # for locals, if there's no initialiser, just decrement sp
-    if (!parse(CharSkip,'=')) {
-        if (LOCALS) {
-            myputs("dec sp\n");
-            SP_OFF--;
-        };
-        return 1;
-    };
-    # otherwise, we implicitly allocate space for $id by *not* popping
-    # the result of evaluating the expression:
 
-    if (!Expression(0)) die("initialisation needs expression",0);
-    if (!LOCALS) poptovar(name);
-    # TODO: [perf] if 'name' is a global, and the expression was a constant
-    #       (e.g. it's a function, inline asm, string, array literal, etc.) then
-    #       we should try to initialise it at compile-time instead of by
-    #       generating runtime code with poptovar()
-    return 1;
+    if (!parse(CharSkip,'=')) return DeclarationNode(name, 0);
+
+    var r = Expression(0);
+    if (!r) die("initialisation needs expression",0);
+
+    return DeclarationNode(name, r);
 };
 
 Conditional = func(x) {
     if (!Keyword("if")) return 0;
-    die("conditionals not implemented!\n", 0);
     BLOCKLEVEL++;
     if (!CharSkip('(')) die("if condition needs open paren",0);
-    if (!Expression(0)) die("if condition needs expression",0);
-
-    # if top of stack is 0, jmp falselabel
-    var falselabel = label();
-    popx();
-    myputs("test x\n");
-    myputs("jz "); plabel(falselabel); myputs("\n");
+    var cond = Expression(0);
+    if (!cond) die("if condition needs expression",0);
 
     if (!CharSkip(')')) die("if condition needs close paren",0);
-    if (!Statement(0)) die("if needs body",0);
+    var thenexpr = Statement(0);
+    if (!thenexpr) die("if needs body",0);
 
     var endiflabel;
+    var elseexpr = 0;
     if (parse(Keyword,"else")) {
-        endiflabel = label();
-        myputs("jmp L"); myputs(itoa(endiflabel)); myputs("\n");
-        plabel(falselabel); myputs(":\n");
-        if (!Statement(0)) die("else needs body",0);
-        plabel(endiflabel); myputs(":\n");
-    } else {
-        plabel(falselabel); myputs(":\n");
+        elseexpr = Statement(0);
+        if (!elseexpr) die("else needs body",0);
     };
     BLOCKLEVEL--;
-    return 1;
+
+    return ConditionalNode(cond, thenexpr, elseexpr);
 };
 
 Loop = func(x) {
     if (!Keyword("while")) return 0;
-    die("loops not implemented!\n", 0);
     BLOCKLEVEL++;
     if (!CharSkip('(')) die("while condition needs open paren",0);
 
-    var oldbreaklabel = BREAKLABEL;
-    var oldcontlabel = CONTLABEL;
-    var loop = label();
-    var endloop = label();
-
-    BREAKLABEL = endloop;
-    CONTLABEL = loop;
-
-    plabel(loop); myputs(":\n");
-
-    if (!Expression(0)) die("while condition needs expression",0);
-
-    # if top of stack is 0, jmp endloop
-    popx();
-    myputs("test x\n");
-    myputs("jz "); plabel(endloop); myputs("\n");
+    var cond = Expression(0);
+    if (!cond) die("while condition needs expression",0);
 
     if (!CharSkip(')')) die("while condition needs close paren",0);
 
-    Statement(0); # optional
-    myputs("jmp "); plabel(loop); myputs("\n");
-    plabel(endloop); myputs(":\n");
+    var body = Statement(0); # optional
 
-    BREAKLABEL = oldbreaklabel;
-    CONTLABEL = oldcontlabel;
     BLOCKLEVEL--;
-    return 1;
+    return LoopNode(cond, body);
 };
 
 Break = func(x) {
@@ -719,10 +617,14 @@ Return = func(x) {
 
 Assignment = func(x) {
     var id = 0;
+    var lvalue_addr;
+    var rvalue;
     if (parse(Identifier,0)) {
         id = strdup(IDENTIFIER);
+        lvalue_addr = AddressOfNode(id);
 
         if (parse(CharSkip,'[')) {
+            die("assignment to array index not supported!\n",0);
             # array assignment: "a[x] = ..."; we need to put a+x on the stack and
             # unset "id" so that we get pointer assignment code
 
@@ -753,22 +655,15 @@ Assignment = func(x) {
         };
     } else {
         if (!CharSkip('*')) return 0;
-        if (!Term(0)) die("can't dereference non-expression",0);
+        lvalue_addr = Term(0);
+        if (!lvalue_addr) die("can't dereference non-expression",0);
     };
-    if (!CharSkip('=')) return 0;
-    die("assignment not implemented!\n",0);
-    if (!Expression(0)) die("assignment needs rvalue",0);
 
-    if (id) {
-        poptovar(id);
-        free(id);
-    } else {
-        popx();
-        myputs("ld r0, x\n");
-        popx();
-        myputs("ld (x), r0\n");
-    };
-    return 1;
+    if (!CharSkip('=')) return 0;
+    rvalue = Expression(0);
+    if (!rvalue) die("assignment needs rvalue",0);
+
+    return AssignmentNode(lvalue_addr, rvalue);
 };
 
 Expression = func(x) { return ExpressionLevel(0); };
@@ -843,9 +738,8 @@ AnyTerm = func(x) {
     r = parse(ParenExpression,0); if (r) return r;
     r = Identifier(0);
     if (!r) return 0;
-    die("identifiers not implemented!\n", 0);
-    pushvar(IDENTIFIER);
-    return 1;
+    # TODO: intern identifiers
+    return VariableNode(strdup(IDENTIFIER));
 };
 
 Constant = func(x) {
@@ -1140,6 +1034,7 @@ PostOp = func(x) {
 
 AddressOf = func(x) {
     if (!CharSkip('&')) return 0;
+    die("addressof not implemented!\n",0);
     if (!Identifier(0)) die("address-of (&) needs identifier",0);
 
     var v;
