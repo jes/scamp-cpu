@@ -168,6 +168,12 @@ b("<=", func(args) {
     };
     return _T;
 });
+b("remainder", func(args) {
+    needargs(2, args);
+    var a = intval(car(args));
+    var b = intval(car(cdr(args)));
+    return newint(mod(a,b));
+});
 b("read", func(args) {
     var port = in;
     if (args) { # optional input port
