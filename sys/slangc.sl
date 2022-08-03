@@ -1165,10 +1165,6 @@ if (*more) {
     help(1);
 };
 
-# use dedicated input/output buffers, for performance
-setbuf(0, malloc(257));
-setbuf(1, malloc(257));
-
 OUT = bfdopen(1, O_WRITE);
 
 # input buffering
