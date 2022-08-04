@@ -721,5 +721,3 @@ var longjmp = asm {
     ld 1(sp), r2
     ret
 };
-
-

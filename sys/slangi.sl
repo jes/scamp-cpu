@@ -69,6 +69,10 @@ var ReturnNode;
 var EvalReturnNode;
 var ArrayLiteralNode;
 var EvalArrayLiteralNode;
+var BreakNode;
+var EvalBreakNode;
+var ContinueNode;
+var EvalContinueNode;
 
 # Parser
 var Program;
@@ -128,10 +132,15 @@ var OLDLOCALS; # stack of scopes
 var RETURNS; # grarr of jmpbufs
 var RETURN_jmpbuf;
 var RETURN_val;
+var BREAKS; # grarr of jmpbufs
+var BREAK_jmpbuf;
+var CONTINUES; # grarr of jmpbufs
+var CONTINUE_jmpbuf;
 var BP_REL;
 var SP_OFF;
 var NPARAMS;
 var BLOCKLEVEL = 0;
+var LOOPLEVEL = 0;
 
 var label = func(){die("don't make labels!\n", 0)};
 var myputs = func(str){die("don't myputs!\n", 0)};
@@ -362,7 +371,24 @@ LoopNode = func(cond, body) {
 EvalLoopNode = func(n) {
     var cond = n[1];
     var body = n[2];
-    while (eval(cond)) if (body) eval(body);
+    var r;
+
+    grpush(CONTINUES, CONTINUE_jmpbuf);
+    CONTINUE_jmpbuf = malloc(3);
+    setjmp(CONTINUE_jmpbuf);
+
+    grpush(BREAKS, BREAK_jmpbuf);
+    BREAK_jmpbuf = malloc(3);
+    if (!setjmp(BREAK_jmpbuf)) {
+        while (eval(cond))
+            if (body) eval(body);
+    };
+
+    free(BREAK_jmpbuf);
+    BREAK_jmpbuf = grpop(BREAKS);
+    free(CONTINUE_jmpbuf);
+    CONTINUE_jmpbuf = grpop(CONTINUES);
+
     return 0;
 };
 
@@ -497,6 +523,19 @@ EvalArrayLiteralNode = func(n) {
         i++;
     };
     return base;
+};
+
+BreakNode = func() {
+    return [EvalBreakNode];
+};
+EvalBreakNode = func(n) {
+    longjmp(BREAK_jmpbuf, 1);
+};
+ContinueNode = func() {
+    return [EvalContinueNode];
+};
+EvalContinueNode = func(n) {
+    longjmp(CONTINUE_jmpbuf, 1);
 };
 
 ### Parser ###
@@ -665,6 +704,7 @@ Conditional = func(x) {
 Loop = func(x) {
     if (!Keyword("while")) return 0;
     BLOCKLEVEL++;
+    LOOPLEVEL++;
     if (!CharSkip('(')) die("while condition needs open paren",0);
 
     var cond = Expression(0);
@@ -674,24 +714,21 @@ Loop = func(x) {
 
     var body = Statement(0); # optional
 
+    LOOPLEVEL--;
     BLOCKLEVEL--;
     return LoopNode(cond, body);
 };
 
 Break = func(x) {
     if (!Keyword("break")) return 0;
-    die("break not implemented!\n", 0);
-    if (!BREAKLABEL) die("can't break here",0);
-    myputs("jmp "); plabel(BREAKLABEL); myputs("\n");
-    return 1;
+    if (!LOOPLEVEL) die("can't break here", 0);
+    return BreakNode();
 };
 
 Continue = func(x) {
     if (!Keyword("continue")) return 0;
-    die("continue not implemented!\n",0);
-    if (!CONTLABEL) die("can't continue here",0);
-    myputs("jmp "); plabel(CONTLABEL); myputs("\n");
-    return 1;
+    if (!LOOPLEVEL) die("can't continue here",0);
+    return ContinueNode();
 };
 
 Return = func(x) {
@@ -1096,8 +1133,8 @@ eval_function = func(argbase, params, body) {
     };
 
     var r = 0;
-    RETURN_jmpbuf = malloc(3);
     grpush(RETURNS, RETURN_jmpbuf);
+    RETURN_jmpbuf = malloc(3);
     if (setjmp(RETURN_jmpbuf)) {
         r = RETURN_val;
     } else {
@@ -1123,9 +1160,6 @@ GLOBALS = htnew();
 OLDLOCALS = grnew();
 
 include "rude-globals.sl";
-
-var printnum = func(x) { printf("*** %d\n", [x]); };
-addglobal("printnum", &printnum);
 
 # input buffering
 var inbuf = bfdopen(0, O_READ);
