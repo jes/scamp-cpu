@@ -524,7 +524,6 @@ var include_fd;
 var include_inbuf;
 Include = func(x) {
     if (!Keyword("include")) return 0;
-    die("include not implemented!\n",0);
     if (!Char('"')) return 0;
     var file = StringLiteralText();
 
@@ -555,7 +554,8 @@ Include = func(x) {
     parse_filename = strdup(file);
 
     # parse the included file
-    if (!Program(0)) die("expected statements",0);
+    var r = Program(0);
+    if (!r) die("expected statements",0);
 
     bclose(include_inbuf);
 
@@ -571,7 +571,7 @@ Include = func(x) {
     free(ringbuf0);
     include_inbuf = include_inbuf0;
 
-    return 1;
+    return r;
 };
 
 Block = func(x) {
@@ -584,9 +584,6 @@ Block = func(x) {
 Extern = func(x) {
     if (!Keyword("extern")) return 0;
     die("extern not implemented!\n", 0);
-    if (!Identifier(0)) die("extern needs identifier",0);
-    #addextern(intern(IDENTIFIER));
-    return 1;
 };
 
 Declaration = func(x) {
