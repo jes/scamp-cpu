@@ -331,7 +331,8 @@ DeclarationNode = func(name, expr) {
 };
 EvalDeclarationNode = func(n) {
     var name = n[1];
-    var val = eval(n[2]);
+    var val = 0;
+    if (n[2]) val = eval(n[2]);
     var p = malloc(1);
     *p = val;
     if (LOCALS) {
