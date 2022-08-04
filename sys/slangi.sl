@@ -128,12 +128,9 @@ var STRINGS;
 var GLOBALS; # hash of string => address
 var LOCALS; # grarr of (name, address)
 var OLDLOCALS; # stack of scopes
-var RETURNS; # grarr of jmpbufs
 var RETURN_jmpbuf;
 var RETURN_val;
-var BREAKS; # grarr of jmpbufs
 var BREAK_jmpbuf;
-var CONTINUES; # grarr of jmpbufs
 var CONTINUE_jmpbuf;
 var BLOCKLEVEL = 0;
 var LOOPLEVEL = 0;
@@ -297,11 +294,11 @@ EvalLoopNode = func(n) {
     var body = n[2];
     var r;
 
-    grpush(CONTINUES, CONTINUE_jmpbuf);
+    var old_CONTINUE_jmpbuf = CONTINUE_jmpbuf;
     CONTINUE_jmpbuf = malloc(3);
     setjmp(CONTINUE_jmpbuf);
 
-    grpush(BREAKS, BREAK_jmpbuf);
+    var old_BREAK_jmpbuf = BREAK_jmpbuf;
     BREAK_jmpbuf = malloc(3);
     if (!setjmp(BREAK_jmpbuf)) {
         while (eval(cond))
@@ -309,9 +306,9 @@ EvalLoopNode = func(n) {
     };
 
     free(BREAK_jmpbuf);
-    BREAK_jmpbuf = grpop(BREAKS);
+    BREAK_jmpbuf = old_BREAK_jmpbuf;
     free(CONTINUE_jmpbuf);
-    CONTINUE_jmpbuf = grpop(CONTINUES);
+    CONTINUE_jmpbuf = old_CONTINUE_jmpbuf;
 
     return 0;
 };
@@ -1012,7 +1009,6 @@ UnaryExpression = func(x) {
     } else {
         die("unrecognised unary operator %c (probably a compiler bug)",[op]);
     };
-    die("wut",0);
 };
 
 ParenExpression = func(x) {
@@ -1051,7 +1047,9 @@ eval_function = func(argbase, params, body) {
     };
 
     var r = 0;
-    grpush(RETURNS, RETURN_jmpbuf);
+    var old_RETURN_jmpbuf = RETURN_jmpbuf;
+    var old_BREAK_jmpbuf = BREAK_jmpbuf;
+    var old_CONTINUE_jmpbuf = CONTINUE_jmpbuf;
     RETURN_jmpbuf = malloc(3);
     if (setjmp(RETURN_jmpbuf)) {
         r = RETURN_val;
@@ -1059,7 +1057,9 @@ eval_function = func(argbase, params, body) {
         eval(body);
     };
     free(RETURN_jmpbuf);
-    RETURN_jmpbuf = grpop(RETURNS);
+    RETURN_jmpbuf = old_RETURN_jmpbuf;
+    BREAK_jmpbuf = old_BREAK_jmpbuf;
+    CONTINUE_jmpbuf = old_CONTINUE_jmpbuf;
 
     endscope();
     return r;
@@ -1075,9 +1075,6 @@ INCLUDED = grnew();
 STRINGS = grnew();
 GLOBALS = htnew();
 OLDLOCALS = grnew();
-RETURNS = grnew();
-BREAKS = grnew();
-CONTINUES = grnew();
 
 include "rude-globals.sl";
 
