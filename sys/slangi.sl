@@ -7,6 +7,7 @@ include "hash.sl";
 include "parse.sl";
 include "stdio.sl";
 include "stdlib.sl";
+include "strbuf.sl";
 include "string.sl";
 
 # AST
@@ -149,9 +150,9 @@ var findglobal = func(name) {
     return htget(GLOBALS, name);
 };
 
-var addglobal = func(name) {
+var addglobal = func(name, addr) {
     if (findglobal(name)) die("duplicate global: %s",[name]);
-    htput(GLOBALS, name, name);
+    htput(GLOBALS, name, addr);
 };
 
 var addexterns = func(filename) {
@@ -163,7 +164,7 @@ var addexterns = func(filename) {
     while (bgets(b, literal_buf, maxliteral)) {
         literal_buf[strlen(literal_buf)-1] = 0; # no '\n'
         name = intern(literal_buf);
-        htput(GLOBALS, name, addr);
+        addglobal(name, addr);
         addr = bgetc(b); # address
     };
     bclose(b);
@@ -330,7 +331,7 @@ EvalDeclarationNode = func(n) {
     if (LOCALS) {
         grpush(LOCALS, cons(name, p));
     } else {
-        htput(GLOBALS, name, p);
+        addglobal(name, p);
     };
 };
 
@@ -851,9 +852,7 @@ StringLiteral = func(x) {
     if (!Char('"')) return 0;
     var str = StringLiteralText();
     var strlabel = intern(str);
-    myputs("ld x, "); plabel(strlabel); myputs("\n");
-    pushx();
-    return 1;
+    return ConstNode(strlabel);
 };
 
 # expects you to have already parsed the opening quote; consumes the closing quote
@@ -1094,9 +1093,7 @@ STRINGS = grnew();
 GLOBALS = htnew();
 OLDLOCALS = grnew();
 
-var printnum = func(x) { printf("*** %d\n", [x]); };
-
-htput(GLOBALS, "printnum", &printnum);
+include "rude-globals.sl";
 
 # input buffering
 var inbuf = bfdopen(0, O_READ);
