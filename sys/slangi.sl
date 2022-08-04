@@ -60,6 +60,8 @@ var PreOpNode;
 var EvalPreOpNode;
 var PostOpNode;
 var EvalPostOpNode;
+var FunctionCallNode;
+var EvalFunctionCallNode;
 
 # Parser
 var Program;
@@ -293,7 +295,6 @@ EvalNopNode = func(n) {
 };
 
 ConstNode = func(val) {
-    printf("ConstNode(%d)\n", [val]);
     return cons(EvalConstNode, val);
 };
 EvalConstNode = func(n) {
@@ -430,6 +431,45 @@ EvalPostOpNode = func(n) {
     if (inc) *addr = val + 1
     else *addr = val - 1;
     return val;
+};
+
+FunctionCallNode = func(name, args) {
+    return cons3(EvalFunctionCallNode, VariableNode(name), args);
+};
+var do_EvalFunctionCallNode = asm {
+    pop x
+    ld r1, x # num args
+    pop x
+    ld r2, x # args pointer
+    pop x
+    ld r3, x # function pointer
+
+    callnode_loop:
+        test r1
+        jz callnode_call
+
+        ld x, (r2)
+        push x
+
+        dec r1
+        inc r2
+
+    callnode_call:
+    jmp r3
+};
+# TODO: [perf] do this in asm without allocating grarrs
+EvalFunctionCallNode = func(n) {
+    var fn = eval(n[1]);
+    var argnodes = n[2];
+    var argvals = grnew();
+    var i = 0;
+    while (i != grlen(argnodes)) {
+        grpush(argvals, eval(grget(argnodes, i)));
+        i++;
+    };
+    var r = do_EvalFunctionCallNode(fn, grbase(argvals), grlen(argvals));
+    grfree(argvals);
+    return r;
 };
 
 ### Parser ###
@@ -981,28 +1021,20 @@ FunctionCall = func(x) {
 
     var name = intern(IDENTIFIER);
 
-    var nargs = Arguments();
+    var args = Arguments();
     if (!CharSkip(')')) die("argument list needs closing paren",0);
 
-    pushvar(name);
-    # call function
-    popx();
-    myputs("call x\n");
-    # arguments have been consumed
-    SP_OFF = SP_OFF + nargs;
-    # push return value
-    myputs("ld x, r0\n");
-    pushx();
-
-    return 1;
+    return FunctionCallNode(name, args);
 };
 
 Arguments = func() {
-    var n = 0;
+    var args = grnew();
+    var r;
     while (1) {
-        if (!parse(Expression,0)) return n;
-        n++;
-        if (!parse(CharSkip,',')) return n;
+        r = parse(Expression,0);
+        if (!r) return args;
+        grpush(args, r);
+        if (!parse(CharSkip,',')) return args;
     }
 };
 
@@ -1038,31 +1070,8 @@ PostOp = func(x) {
 
 AddressOf = func(x) {
     if (!CharSkip('&')) return 0;
-    die("addressof not implemented!\n",0);
     if (!Identifier(0)) die("address-of (&) needs identifier",0);
-
-    var v;
-    var bp_rel;
-    if (LOCALS) {
-        v = findlocal(IDENTIFIER);
-        if (v) {
-            bp_rel = cdr(v);
-            myputs("ld x, sp\n");
-            myputs("add x, "); myputs(itoa(bp_rel-SP_OFF)); myputs("\n");
-            pushx();
-            return 1;
-        };
-    };
-
-    if (findglobal(IDENTIFIER)) {
-        myputs("ld x, _"); myputs(IDENTIFIER); myputs("\n");
-        pushx();
-        return 1;
-    };
-
-    die("unrecognised identifier: %s",[IDENTIFIER]);
-
-    return 1;
+    return AddressOfNode(intern(IDENTIFIER));
 };
 
 UnaryExpression = func(x) {
@@ -1114,18 +1123,19 @@ Identifier = func(x) {
 ### Evaluator ###
 
 eval = func(node) {
-    printf("eval 0x%04x\n", [node]);
     if (node lt 256) die("tried to eval %d\n", [node]);
     var f = node[0];
-    var r = f(node);
-    printf(" = %d\n", [r]);
-    return r;
+    return f(node);
 };
 
 INCLUDED = grnew();
 ARRAYS = grnew();
 STRINGS = grnew();
 GLOBALS = htnew();
+
+var printnum = func(x) { printf("*** %d\n", [x]); };
+
+htput(GLOBALS, "printnum", &printnum);
 
 # input buffering
 var inbuf = bfdopen(0, O_READ);
