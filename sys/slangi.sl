@@ -528,7 +528,7 @@ Include = func(x) {
     var file = StringLiteralText();
 
     # don't include the same file twice
-    if (grfind(INCLUDED, file, func(a,b) { return strcmp(a,b)==0 })) return 1;
+    if (grfind(INCLUDED, file, func(a,b) { return strcmp(a,b)==0 })) return NopNode();
     grpush(INCLUDED, intern(file));
 
     # save parser state
