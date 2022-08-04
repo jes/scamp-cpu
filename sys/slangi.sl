@@ -125,7 +125,6 @@ var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 
 var INCLUDED;
 var STRINGS;
-var ARRAYS;
 var GLOBALS; # hash of string => address
 var LOCALS; # grarr of (name, address)
 var OLDLOCALS; # stack of scopes
@@ -136,24 +135,8 @@ var BREAKS; # grarr of jmpbufs
 var BREAK_jmpbuf;
 var CONTINUES; # grarr of jmpbufs
 var CONTINUE_jmpbuf;
-var BP_REL;
-var SP_OFF;
-var NPARAMS;
 var BLOCKLEVEL = 0;
 var LOOPLEVEL = 0;
-
-var label = func(){die("don't make labels!\n", 0)};
-var myputs = func(str){die("don't myputs!\n", 0)};
-var myputc = func(c){die("don't myputc!\n", 0)};
-var pushx = func(){die("don't push x!\n", 0)};
-var popx = func(){die("don't pop x!\n", 0)};
-var magnitude_op=0;
-var magnitude_func=0;
-var magnitude_used=0;
-var plabel = func(x){die("don't plabel!\n",0)};
-var OUT=0;
-var BREAKLABEL = 0;
-var CONTLABEL = 0;
 
 # TODO: [perf] should this use a hash table?
 var intern = func(str) {
@@ -173,34 +156,10 @@ var addglobal = func(name, addr) {
     htput(GLOBALS, name, addr);
 };
 
-var addexterns = func(filename) {
-    var b = bopen(filename, O_READ);
-    if (!b) die("can't open %s for reading\n", [filename]);
-
-    var name;
-    var addr = bgetc(b); # address
-    while (bgets(b, literal_buf, maxliteral)) {
-        literal_buf[strlen(literal_buf)-1] = 0; # no '\n'
-        name = intern(literal_buf);
-        addglobal(name, addr);
-        addr = bgetc(b); # address
-    };
-    bclose(b);
-};
-
-# return pointer to (name,bp_rel) if "name" is a local, 0 otherwise
+# return pointer to (name,addr) if "name" is a local, 0 otherwise
 var findlocal = func(name) {
     if (!LOCALS) die("can't find local in global scope: %s",[name]);
     return grfind(LOCALS, name, func(findname,tuple) { return strcmp(findname,car(tuple))==0 });
-};
-var addlocal = func(name, bp_rel) {
-    if (!LOCALS) die("can't add local in global scope: %s",[name]);
-
-    if (findlocal(name)) die("duplicate local: %s",[name]);
-
-    var tuple = cons(name,bp_rel);
-    grpush(LOCALS, tuple);
-    return tuple;
 };
 
 var newscope = func() {
@@ -215,41 +174,6 @@ var endscope = func() {
     });
     grfree(LOCALS);
     LOCALS = grpop(OLDLOCALS);
-};
-
-var pushvar = func(name) {
-    var v;
-    var bp_rel;
-    if (LOCALS) {
-        v = findlocal(name);
-        if (v) {
-            bp_rel = cdr(v);
-            myputs("ld x, "); myputs(itoa(bp_rel-SP_OFF)); myputs("(sp)\n");
-            pushx();
-            return 0;
-        };
-    };
-
-    if (findglobal(name)) {
-        myputs("ld x, (_"); myputs(name); myputs(")\n");
-        pushx();
-        return 0;
-    };
-
-    die("unrecognised identifier: %s",[name]);
-};
-
-var funcreturn = func() {
-    if (!LOCALS) die("can't return from global scope",0);
-
-    # here we make use of the "add" instruction's clobber of the X register;
-    # "add sp, N" can be fulfilled with either "add (i16), i8l" or "add r, i16";
-    # in both cases, the X register is left containing the value of sp *prior*
-    # to the addition, so we then use "jmp i8l(x)" to jump to an address grabbed
-    # from the stack, at a point relative to where the *previous* stack pointer
-    # pointed
-    myputs("add sp, "); myputs(itoa(NPARAMS-BP_REL)); myputs(" #peepopt:xclobber\n");
-    myputs("jmp "); myputs(itoa(-BP_REL)); myputs("(x)\n");
 };
 
 ### AST ###
@@ -690,7 +614,6 @@ Conditional = func(x) {
     var thenexpr = Statement(0);
     if (!thenexpr) die("if needs body",0);
 
-    var endiflabel;
     var elseexpr = 0;
     if (parse(Keyword,"else")) {
         elseexpr = Statement(0);
@@ -917,9 +840,7 @@ CharacterLiteral = func(x) {
 
 StringLiteral = func(x) {
     if (!Char('"')) return 0;
-    var str = StringLiteralText();
-    var strlabel = intern(str);
-    return ConstNode(strlabel);
+    return ConstNode(intern(StringLiteralText()));
 };
 
 # expects you to have already parsed the opening quote; consumes the closing quote
@@ -1154,10 +1075,12 @@ eval = func(node) {
 };
 
 INCLUDED = grnew();
-ARRAYS = grnew();
 STRINGS = grnew();
 GLOBALS = htnew();
 OLDLOCALS = grnew();
+RETURNS = grnew();
+BREAKS = grnew();
+CONTINUES = grnew();
 
 include "rude-globals.sl";
 
@@ -1172,7 +1095,6 @@ var program = parse(Program,0);
 if (nextchar() != EOF) die("garbage after end of program",0);
 if (LOCALS) die("expected to be left in global scope after program",0);
 if (BLOCKLEVEL != 0) die("expected to be left at block level 0 after program (probably a compiler bug)",0);
-if (SP_OFF != 0) die("expected to be left at SP_OFF==0 after program, found %d (probably a compiler bug)",[SP_OFF]);
 if (!program) die("parsed AST is null pointer",0);
 
 eval(program);

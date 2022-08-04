@@ -201,3 +201,5 @@ put -t ../doc/UCODE.md /doc/ucode
 mkdir proc
 mkdir tmp
 mkdir home
+
+put prime.sl home/prime.sl
