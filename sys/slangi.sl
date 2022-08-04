@@ -132,6 +132,7 @@ var RETURN_jmpbuf;
 var RETURN_val;
 var BREAK_jmpbuf;
 var CONTINUE_jmpbuf;
+var JMPBUFS;
 var BLOCKLEVEL = 0;
 var LOOPLEVEL = 0;
 
@@ -294,16 +295,25 @@ EvalLoopNode = func(n) {
     var body = n[2];
     var r;
 
+    if (!JMPBUFS) JMPBUFS = grnew();
+
     var old_CONTINUE_jmpbuf = CONTINUE_jmpbuf;
     CONTINUE_jmpbuf = malloc(3);
     setjmp(CONTINUE_jmpbuf);
 
     var old_BREAK_jmpbuf = BREAK_jmpbuf;
     BREAK_jmpbuf = malloc(3);
+
+    grpush(JMPBUFS, BREAK_jmpbuf);
+    grpush(JMPBUFS, CONTINUE_jmpbuf);
+
     if (!setjmp(BREAK_jmpbuf)) {
         while (eval(cond))
             if (body) eval(body);
     };
+
+    grpop(JMPBUFS);
+    grpop(JMPBUFS);
 
     free(BREAK_jmpbuf);
     BREAK_jmpbuf = old_BREAK_jmpbuf;
@@ -1050,7 +1060,11 @@ eval_function = func(argbase, params, body) {
     var old_RETURN_jmpbuf = RETURN_jmpbuf;
     var old_BREAK_jmpbuf = BREAK_jmpbuf;
     var old_CONTINUE_jmpbuf = CONTINUE_jmpbuf;
+    var old_JMPBUFS = JMPBUFS;
     RETURN_jmpbuf = malloc(3);
+    BREAK_jmpbuf = 0;
+    CONTINUE_jmpbuf = 0;
+    JMPBUFS = 0;
     if (setjmp(RETURN_jmpbuf)) {
         r = RETURN_val;
     } else {
@@ -1060,6 +1074,11 @@ eval_function = func(argbase, params, body) {
     RETURN_jmpbuf = old_RETURN_jmpbuf;
     BREAK_jmpbuf = old_BREAK_jmpbuf;
     CONTINUE_jmpbuf = old_CONTINUE_jmpbuf;
+    if (JMPBUFS) {
+        grwalk(JMPBUFS, free);
+        grfree(JMPBUFS);
+    };
+    JMPBUFS = old_JMPBUFS;
 
     endscope();
     return r;
