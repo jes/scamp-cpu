@@ -55,6 +55,8 @@ var VariableNode;
 var EvalVariableNode;
 var AddressOfNode;
 var EvalAddressOfNode;
+var IndexAddressOfNode;
+var EvalIndexAddressOfNode;
 var AssignmentNode;
 var EvalAssignmentNode;
 var PreOpNode;
@@ -384,6 +386,20 @@ EvalAddressOfNode = func(n) {
     if (v) return v;
     die("use of undefined name: %s\n", [name]);
 };
+IndexAddressOfNode = func(exprs) {
+    if (grlen(exprs)<1) die("index address-of must have at least 1 expr\n",0);
+    return cons(EvalIndexAddressOfNode, exprs);
+};
+EvalIndexAddressOfNode = func(n) {
+    var exprs = n[1];
+    var addr = eval(grget(exprs,0));
+    var i = 1;
+    while (i != grlen(exprs)) {
+        addr = *addr + eval(grget(exprs,i));
+        i++;
+    };
+    return addr;
+};
 
 AssignmentNode = func(addr, value) {
     return cons3(EvalAssignmentNode, addr, value);
@@ -689,39 +705,26 @@ Assignment = func(x) {
     var id = 0;
     var lvalue_addr;
     var rvalue;
+    var r;
+    var v;
     if (parse(Identifier,0)) {
         id = intern(IDENTIFIER);
         lvalue_addr = AddressOfNode(id);
 
         if (parse(CharSkip,'[')) {
-            die("assignment to array index not supported!\n",0);
-            # array assignment: "a[x] = ..."; we need to put a+x on the stack and
-            # unset "id" so that we get pointer assignment code
-
-            # first put a on the stack
-            pushvar(id);
-            id = 0;
+            r = grnew();
+            grpush(r, lvalue_addr);
 
             while (1) {
-                # now put the index on the stack
-                if (!Expression(0)) die("array index needs expression",0);
+                v = Expression(0);
+                if (!v) die("array index needs expression",0);
+                grpush(r, v);
                 if (!CharSkip(']')) die("array index needs close bracket",0);
 
-                # and add them together
-                popx();
-                myputs("ld r0, x\n");
-                popx();
-                myputs("add x, r0\n");
-
-                if (!parse(CharSkip,'[')) {
-                    pushx();
-                    break;
-                };
-
-                # looping around for another level: dereference this pointer
-                myputs("ld x, (x)\n");
-                pushx();
+                if (!parse(CharSkip,'[')) break;
             };
+
+            lvalue_addr = IndexAddressOfNode(r);
         };
     } else {
         if (!CharSkip('*')) return 0;
