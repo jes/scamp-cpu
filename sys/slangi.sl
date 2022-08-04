@@ -904,7 +904,13 @@ FunctionDeclaration = func(x) {
 
     if (!CharSkip(')')) die("func needs close paren",0);
 
+    var blocklevel = BLOCKLEVEL;
+    var looplevel = LOOPLEVEL;
+    BLOCKLEVEL = 0;
+    LOOPLEVEL = 0;
     var body = Statement(0); # optional
+    BLOCKLEVEL = blocklevel;
+    LOOPLEVEL = looplevel;
 
     var codesz = 16;
     var code_addr = malloc(codesz);
