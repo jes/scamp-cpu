@@ -104,6 +104,7 @@ addglobal("htputp", &htputp);
 addglobal("htsize", &htsize);
 addglobal("htused", &htused);
 addglobal("htwalk", &htwalk);
+addglobal("init_sp", &init_sp);
 addglobal("inp", &inp);
 addglobal("isalnum", &isalnum);
 addglobal("isalpha", &isalpha);

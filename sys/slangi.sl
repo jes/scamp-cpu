@@ -132,7 +132,7 @@ var RETURN_jmpbuf;
 var RETURN_val;
 var BREAK_jmpbuf;
 var CONTINUE_jmpbuf;
-var JMPBUFS;
+var JMPBUFS = 0;
 var BLOCKLEVEL = 0;
 var LOOPLEVEL = 0;
 
@@ -300,14 +300,16 @@ EvalLoopNode = func(n) {
 
     var old_CONTINUE_jmpbuf = CONTINUE_jmpbuf;
     CONTINUE_jmpbuf = malloc(3);
-    setjmp(CONTINUE_jmpbuf);
 
     var old_BREAK_jmpbuf = BREAK_jmpbuf;
     BREAK_jmpbuf = malloc(3);
 
+    # we need to keep track of all the nested break and continue jmpbufs so that
+    # they can be free'd by an early return from the function
     grpush(JMPBUFS, BREAK_jmpbuf);
     grpush(JMPBUFS, CONTINUE_jmpbuf);
 
+    setjmp(CONTINUE_jmpbuf);
     if (!setjmp(BREAK_jmpbuf)) {
         while (eval(cond))
             if (body) eval(body);
@@ -1056,10 +1058,17 @@ Identifier = func(x) {
 eval_function = func(argbase, params, body) {
     newscope();
 
+    # note we get args in reverse order
     var i = 0;
+    var p;
     while (i != grlen(params)) {
-        # note we get args in reverse order
-        grpush(LOCALS, cons(grget(params,grlen(params)-i-1), argbase+i));
+        # in principle we could simply put the address argbase+i in LOCALS and
+        # not have to malloc anywhere to store it, but we would need a reliable
+        # way to identify which locals need to be free()'d and which don't
+        # in endscope()
+        p = malloc(1);
+        *p = argbase[i];
+        grpush(LOCALS, cons(grget(params,grlen(params)-i-1), p));
         i++;
     };
 
