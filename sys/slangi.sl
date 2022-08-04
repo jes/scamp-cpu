@@ -1082,7 +1082,17 @@ CONTINUES = grnew();
 include "rude-globals.sl";
 
 # input buffering
-var inbuf = bfdopen(0, O_READ);
+var inbuf;
+
+var args = cmdargs()+1;
+if (*args) {
+    inbuf = bopen(*args, O_READ);
+    if (!inbuf) die("can't open %s for reading\n", [*args]);
+    # now override cmdargs() so that it works for the interpreted program
+    cmdargs = func() { return args; };
+} else {
+    inbuf = bfdopen(0, O_READ);
+};
 
 parse_init(func() {
     return bgetc(inbuf);
