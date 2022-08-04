@@ -168,6 +168,7 @@ var newscope = func() {
 var endscope = func() {
     if (!LOCALS) die("can't end the global scope",0);
     grwalk(LOCALS, func(tuple) {
+        free(cdr(tuple));
         free(tuple);
     });
     grfree(LOCALS);
