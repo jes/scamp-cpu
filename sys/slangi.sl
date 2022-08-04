@@ -63,6 +63,10 @@ var PostOpNode;
 var EvalPostOpNode;
 var FunctionCallNode;
 var EvalFunctionCallNode;
+var ReturnNode;
+var EvalReturnNode;
+var ArrayLiteralNode;
+var EvalArrayLiteralNode;
 
 # Parser
 var Program;
@@ -119,6 +123,9 @@ var ARRAYS;
 var GLOBALS; # hash of string => address
 var LOCALS; # grarr of (name, address)
 var OLDLOCALS; # stack of scopes
+var RETURNS; # grarr of jmpbufs
+var RETURN_jmpbuf;
+var RETURN_val;
 var BP_REL;
 var SP_OFF;
 var NPARAMS;
@@ -291,11 +298,10 @@ EvalArrayIndexNode = func(n) {
 };
 
 OperatorNode = func(op, arg1, arg2) {
-    printf("operatornode: %d op %d; op = 0x%04x; add=0x%04x\n", [arg1, arg2, op, EvalAddNode]);
     return cons3(op, arg1, arg2);
 };
 
-EvalAddNode = func(n) { printf("%d+%d\n", [n[1], n[2]]); return eval(n[1]) + eval(n[2]); };
+EvalAddNode = func(n) { return eval(n[1]) + eval(n[2]); };
 EvalSubNode = func(n) { return eval(n[1]) - eval(n[2]); };
 EvalAndNode = func(n) { return eval(n[1]) & eval(n[2]); };
 EvalOrNode = func(n) { return eval(n[1]) | eval(n[2]); };
@@ -451,6 +457,29 @@ EvalFunctionCallNode = func(n) {
     var r = do_EvalFunctionCallNode(fn, grbase(argvals), grlen(argvals));
     grfree(argvals);
     return r;
+};
+
+ReturnNode = func(expr) {
+    return cons(EvalReturnNode, expr);
+};
+EvalReturnNode = func(n) {
+    RETURN_val = eval(n[1]);
+    longjmp(RETURN_jmpbuf, 1);
+};
+
+ArrayLiteralNode = func(exprs) {
+    var base = malloc(grlen(exprs));
+    return cons3(EvalArrayLiteralNode, exprs, base);
+};
+EvalArrayLiteralNode = func(n) {
+    var exprs = n[1];
+    var base = n[2];
+    var i = 0;
+    while (i != grlen(exprs)) {
+        base[i] = eval(grget(exprs,i));
+        i++;
+    };
+    return base;
 };
 
 ### Parser ###
@@ -650,12 +679,9 @@ Continue = func(x) {
 
 Return = func(x) {
     if (!Keyword("return")) return 0;
-    die("return not implemented!\n",0);
-    if (!Expression(0)) die("return needs expression",0);
-    popx();
-    myputs("ld r0, x\n");
-    funcreturn();
-    return 1;
+    var r = Expression(0);
+    if (!r) die("return needs expression",0);
+    return ReturnNode(r);
 };
 
 Assignment = func(x) {
@@ -877,31 +903,20 @@ StringLiteralText = func() {
 ArrayLiteral = func(x) {
     if (!CharSkip('[')) return 0;
 
-    var l = label();
-    var length = 0;
-
+    var exprs = grnew();
+    var r;
     while (1) {
-        if (!parse(Expression,0)) break;
+        r = parse(Expression, 0);
+        if (!r) break;
 
-        # TODO: [perf] this loads to a constant address, we should make the assembler
-        # allow us to calculate it at assembly time like:
-        #   ld (l+length), x
-        myputs("ld r0, "); plabel(l); myputs("\n");
-        myputs("add r0, "); myputs(itoa(length)); myputs("\n");
-        popx();
-        myputs("ld (r0), x\n");
+        grpush(exprs, r);
 
-        length++;
         if (!parse(CharSkip,',')) break;
     };
 
     if (!CharSkip(']')) die("array literal needs close bracket",0);
 
-    myputs("ld x, "); plabel(l); myputs("\n");
-    pushx();
-
-    grpush(ARRAYS, cons(l,length));
-    return 1;
+    return ArrayLiteralNode(exprs);
 };
 
 Parameters = func(x) {
@@ -1075,7 +1090,17 @@ eval_function = func(argbase, params, body) {
         grpush(LOCALS, cons(grget(params,grlen(params)-i-1), argbase+i));
         i++;
     };
-    var r = eval(body);
+
+    var r = 0;
+    RETURN_jmpbuf = malloc(3);
+    grpush(RETURNS, RETURN_jmpbuf);
+    if (setjmp(RETURN_jmpbuf)) {
+        r = RETURN_val;
+    } else {
+        eval(body);
+    };
+    free(RETURN_jmpbuf);
+    RETURN_jmpbuf = grpop(RETURNS);
 
     endscope();
     return r;
@@ -1095,6 +1120,9 @@ OLDLOCALS = grnew();
 
 include "rude-globals.sl";
 
+var printnum = func(x) { printf("*** %d\n", [x]); };
+addglobal("printnum", &printnum);
+
 # input buffering
 var inbuf = bfdopen(0, O_READ);
 
@@ -1109,4 +1137,4 @@ if (BLOCKLEVEL != 0) die("expected to be left at block level 0 after program (pr
 if (SP_OFF != 0) die("expected to be left at SP_OFF==0 after program, found %d (probably a compiler bug)",[SP_OFF]);
 if (!program) die("parsed AST is null pointer",0);
 
-printf("%d\n", [eval(program)]);
+eval(program);

@@ -677,3 +677,49 @@ var popcnt = asm {
 
     ret
 };
+
+# store current return address, stack pointer, and caller's stashed return
+# address in jmpbuf[0,1,2];
+# it is only acceptable to jump "up" the call stack, never down;
+# return 0 on the initial call
+# return the "val" passed to longjmp when the long jump occurs
+# example:
+#   var jmpbuf = [0,0,0];
+#   if (setjmp(jmpbuf)) {
+#       ... long jump occurred ...
+#   };
+var setjmp = asm {
+    pop x
+    ld r1, x # r1 = jmpbuf
+    ld r2, 1(sp) # r2 = caller's stashed return address
+    ld x, r1 # x = jmpbuf
+
+do_setjmp: # x = jmpbuf pointer, r2 = stashed return
+
+    ld (x), r254 # return address
+    inc x
+    ld (x), sp # stack pointer
+    inc x
+    ld (x), r2 # stashed return
+    ld r0, 0 # return 0 this time
+    ret
+};
+
+# restore control and stack pointer to the addresses in jmpbuf,
+# as if setjmp() had returned "val"
+# example:
+#   longjmp(jmpbuf, val);
+var longjmp = asm {
+    pop x
+    ld r0, x # return val
+    pop x # x = jmpbuf
+    ld r254, (x) # return address
+    inc x
+    ld sp, (x) # stack pointer
+    inc x
+    ld r2, (x) # stashed return address
+    ld 1(sp), r2
+    ret
+};
+
+
