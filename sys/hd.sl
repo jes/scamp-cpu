@@ -9,7 +9,7 @@ var bufsz = 256;
 var buf = malloc(bufsz);
 
 var linebuf = malloc(8);
-var pos = 0;
+var linepos = 0;
 var first = 1;
 
 var out = bfdopen(1, O_WRITE);
@@ -18,10 +18,10 @@ var show_text_line = func() {
     var end = 8;
 
     var n;
-    if ((pos & 7) != 0) {
-        n = 8 - (pos&7);
+    if ((linepos & 7) != 0) {
+        n = 8 - (linepos&7);
         while (n--) bputs(out, "     ");
-        end = pos & 7;
+        end = linepos & 7;
     };
 
     bputs(out, "  |");
@@ -36,14 +36,14 @@ var show_text_line = func() {
 };
 
 var output = func(ch) {
-    if ((pos & 7) == 0) {
+    if ((linepos & 7) == 0) {
         if (!first) show_text_line()
         else first = 0;
 
-        bprintf(out, "%04x: ", [pos]);
+        bprintf(out, "%04x: ", [linepos]);
     };
 
-    *(linebuf+(pos&7)) = ch;
+    *(linebuf+(linepos&7)) = ch;
 
     bprintf(out, " %04x", [ch]);
 };
@@ -72,12 +72,12 @@ var hd = func(name) {
         i = 0;
         while (i < n) {
             output(buf[i++]);
-            pos++;
+            linepos++;
         };
     };
     bclose(in);
 
-    if ((pos & 7) != 0) show_text_line();
+    if ((linepos & 7) != 0) show_text_line();
 };
 
 var args = cmdargs()+1;
