@@ -102,6 +102,7 @@ var ParenExpression;
 var Identifier;
 
 ### Evaluator ###
+var eval_function;
 var eval;
 
 # space to store numeric and stirng literals
@@ -116,6 +117,7 @@ var STRINGS;
 var ARRAYS;
 var GLOBALS; # hash of string => address
 var LOCALS; # grarr of (name, address)
+var OLDLOCALS; # stack of scopes
 var BP_REL;
 var SP_OFF;
 var NPARAMS;
@@ -183,18 +185,17 @@ var addlocal = func(name, bp_rel) {
 };
 
 var newscope = func() {
+    grpush(OLDLOCALS, LOCALS);
     LOCALS = grnew();
-    BP_REL = -1;
 };
 
 var endscope = func() {
     if (!LOCALS) die("can't end the global scope",0);
     grwalk(LOCALS, func(tuple) {
-        var name = car(tuple);
-        free(name);
         free(tuple);
     });
     grfree(LOCALS);
+    LOCALS = grpop(OLDLOCALS);
 };
 
 var pushvar = func(name) {
@@ -213,28 +214,6 @@ var pushvar = func(name) {
     if (findglobal(name)) {
         myputs("ld x, (_"); myputs(name); myputs(")\n");
         pushx();
-        return 0;
-    };
-
-    die("unrecognised identifier: %s",[name]);
-};
-var poptovar = func(name) {
-    var v;
-    var bp_rel;
-    if (LOCALS) {
-        v = findlocal(name);
-        if (v) {
-            bp_rel = cdr(v);
-            myputs("ld y, "); myputs(itoa(bp_rel-SP_OFF)); myputs("+sp\n");
-            popx();
-            myputs("ld (y), x\n");
-            return 0;
-        };
-    };
-
-    if (findglobal(name)) {
-        popx();
-        myputs("ld (_"); myputs(name); myputs("), x\n");
         return 0;
     };
 
@@ -453,6 +432,7 @@ var do_EvalFunctionCallNode = asm {
 
         dec r1
         inc r2
+        jmp callnode_loop
 
     callnode_call:
     jmp r3
@@ -925,18 +905,14 @@ ArrayLiteral = func(x) {
     return 1;
 };
 
-var maxparams = 32;
-var PARAMS = malloc(maxparams);
 Parameters = func(x) {
-    var p = PARAMS;
+    var params = grnew();
     while (1) {
         if (!parse(Identifier,0)) break;
-        *(p++) = intern(IDENTIFIER);
-        if (p == PARAMS+maxparams) die("too many params for function",0);
+        grpush(params, intern(IDENTIFIER));
         if (!parse(CharSkip,',')) break;
     };
-    *p = 0;
-    return PARAMS;
+    return params;
 };
 
 FunctionDeclaration = func(x) {
@@ -944,75 +920,44 @@ FunctionDeclaration = func(x) {
     if (!CharSkip('(')) die("func needs open paren",0);
 
     var params = Parameters(0);
-    var functionlabel = label();
-    var functionend = label();
-    myputs("jmp "); plabel(functionend); myputs("\n");
-    plabel(functionlabel); myputs(":\n");
-
-    var old_sp_off = SP_OFF;
-    SP_OFF = 0;
-
-    myputs("ld x, r254\n");
-    pushx();
-
-    var oldscope = LOCALS;
-    var old_bp_rel = BP_REL;
-    var oldnparams = NPARAMS;
-    newscope();
-
-    var bp_rel = 1; # parameters (grows up)
-    var p = params;
-    while (*p) p++;
-    # p now points past the last param
-    NPARAMS = p - params;
-    while (p-- > params)
-        addlocal(*p, bp_rel++);
 
     if (!CharSkip(')')) die("func needs close paren",0);
-    var blocklevel = BLOCKLEVEL;
-    var breaklabel = BREAKLABEL;
-    var contlabel = CONTLABEL;
-    BLOCKLEVEL = 0; BREAKLABEL = 0; CONTLABEL = 0;
-    Statement(0); # optional
-    BLOCKLEVEL = blocklevel; BREAKLABEL = breaklabel; CONTLABEL = contlabel;
 
-    funcreturn();
-    endscope();
-    LOCALS = oldscope;
-    BP_REL = old_bp_rel;
-    NPARAMS = oldnparams;
-    SP_OFF = old_sp_off;
+    var body = Statement(0); # optional
 
-    plabel(functionend); myputs(":\n");
-    myputs("ld x, "); plabel(functionlabel); myputs("\n");
-    pushx();
-    return 1;
+    var codesz = 16;
+    var code_addr = malloc(codesz);
+
+    # now we create a stub to allow normal SLANG calling convention to
+    # call into the interpreter; this way interpreted functions and
+    # compiled functions get called the same way, which means either one
+    # can safely call the other without having to keep track of what's
+    # compiled and what's interpreted.
+    #
+    # we need to call eval_function(argbase, params, body)
+    var p = code_addr;
+    *(p++) = 0x61fe; # ld x, r254
+    *(p++) = 0x5a00; # push x # stash return
+    *(p++) = 0x61ff; # ld x, sp
+    *(p++) = 0x0602; # add x, 2
+    *(p++) = 0x5a00; # push x # argbase
+    *(p++) = 0x6200; *(p++) = params; # ld x, params
+    *(p++) = 0x5a00; # push x # params
+    *(p++) = 0x6200; *(p++) = body; # ld x, body
+    *(p++) = 0x5a00; # push x # body
+    *(p++) = 0x4f00; *(p++) = eval_function; # call eval_function
+    *(p++) = 0x5d00; # pop x
+    *(p++) = 0x69fe; # ld r254, x
+    *(p++) = 0x9400 + grlen(params); # return
+
+    if (p != code_addr+codesz) die("function body is wrong size (%d)!\n",[code_addr-p]);
+
+    return ConstNode(code_addr);
 };
 
 InlineAsm = func(x) {
     if (!Keyword("asm")) return 0;
-    if (!CharSkip('{')) return 0;
-
-    var end = label();
-    var asm = label();
-    myputs("jmp "); plabel(end); myputs("\n");
-    plabel(asm); myputs(":\n");
-
-    myputs("#peepopt:off\n");
-    var ch;
-    while (1) {
-        ch = nextchar();
-        if (ch == EOF) die("eof inside asm block",0);
-        if (ch == '}') break;
-        myputc(ch);
-    };
-    myputs("\n");
-    myputs("#peepopt:on\n");
-
-    plabel(end); myputs(":\n");
-    myputs("ld x, "); plabel(asm); myputs("\n");
-    pushx();
-    return 1;
+    die("inline asm not supported!\n",0);
 };
 
 FunctionCall = func(x) {
@@ -1122,6 +1067,21 @@ Identifier = func(x) {
 
 ### Evaluator ###
 
+eval_function = func(argbase, params, body) {
+    newscope();
+
+    var i = 0;
+    while (i != grlen(params)) {
+        # note we get args in reverse order
+        grpush(LOCALS, cons(grget(params,grlen(params)-i-1), argbase+i));
+        i++;
+    };
+    var r = eval(body);
+
+    endscope();
+    return r;
+};
+
 eval = func(node) {
     if (node lt 256) die("tried to eval %d\n", [node]);
     var f = node[0];
@@ -1132,6 +1092,7 @@ INCLUDED = grnew();
 ARRAYS = grnew();
 STRINGS = grnew();
 GLOBALS = htnew();
+OLDLOCALS = grnew();
 
 var printnum = func(x) { printf("*** %d\n", [x]); };
 
