@@ -30,11 +30,12 @@ var sbrk = func(sz) {
 var freep = [0, 0];
 *freep = freep;
 
+var init_sp = *0xffff;
+
 free = func(ap) {
     if (ap == 0) return 0;
 
-    # TODO: [bug] this test is ~broken now that _TOP is in head.s instead of foot.s
-    if (ap lt &TOP) {
+    if (ap lt init_sp) {
         fprintf(2, "free'd static pointer: 0x%x\n", [ap]);
         exit(1);
     };
@@ -140,37 +141,12 @@ realloc = func(p, sz) {
         return p;
     };
 
-    # TODO: [bug] I think the following is totally bogus; *bp only needs to point
-    # to the next block for free blocks, it is meaningless for allocated blocks (e.g.
-    # imagine we allocated the last available block, so *bp wraps back to the start,
-    # but then new allocations are done so morecore() is called, and now the next block
-    # is no longer back at the start, but *bp still points there), also it doesn't
-    # actually validate that the next block is free at all???
-    # instead we should linear search the free list to see if there's a block starting
-    # just after the end of the block we're trying to grow
-
-    # if we can grow in-place, do so
-    var bpnext = *bp;
-    var sznext;
-    if (bpnext == p+oldsz) {
-        sznext = bp[1]; # TODO: [bug] shouldn't this be bpnext[1]? how does this ever work?
-        if ((sz gt oldsz) && (oldsz+sznext le sz)) {
-            bpnext = p+sz;
-            bpnext[1] = sznext-(sz-oldsz);
-
-            *bp = bpnext;
-            bp[1] = sz;
-            return p;
-        };
-    };
-
+    # otherwise: malloc, memcpy, free
     var newp = malloc(sz);
     var copysz = oldsz;
     if (sz < oldsz) copysz = sz;
 
-    var dest = newp;
-    var src = p;
-    while (copysz--) *(dest++) = *(src++);
+    memcpy(newp, p, copysz);
 
     free(p);
 
