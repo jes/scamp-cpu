@@ -55,6 +55,7 @@ var AddressOfNode;
 var LocalNode;
 var EvalLocalNode;
 var GlobalNode;
+var EvalGlobalNode;
 var AddressOfLocalNode;
 var EvalAddressOfLocalNode;
 var AddressOfGlobalNode;
@@ -355,13 +356,21 @@ AddressOfNode = func(name) {
 };
 
 LocalNode = func(name) {
-    return cons(EvalValueOfNode, AddressOfLocalNode(name));
+    var v = findlocal(name);
+    if (v) return cons(EvalLocalNode, cdr(v));
+    die("use of undefined local: %s\n", [name]);
 };
 EvalLocalNode = func(n) {
-    return *(EvalAddressOfLocalNode(n));
+    var bp_rel = n[1];
+    return *(BP + bp_rel);
 };
 GlobalNode = func(name) {
-    return cons(EvalValueOfNode, AddressOfGlobalNode(name));
+    var addr = findglobal(name);
+    if (addr) return cons(EvalGlobalNode, addr);
+    die("use of undefined global: %s\n", [name]);
+};
+EvalGlobalNode = func(n) {
+    return *(n[1]);
 };
 AddressOfLocalNode = func(name) {
     var v = findlocal(name);
