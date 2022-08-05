@@ -199,12 +199,11 @@ SeqAdd = func(seq, n) {
 
 EvalSeqNode = func(n) {
     var gr = n[1];
+    var nodes = grbase(gr);
+    var len = grlen(gr);
     var i = 0;
-    var r;
-    while (i != grlen(gr)) {
-        r = eval(grget(gr, i));
-        i++;
-    };
+    while (i != len)
+        eval(nodes[i++]);
     return 0;
 };
 
