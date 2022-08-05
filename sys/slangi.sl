@@ -425,14 +425,16 @@ var do_EvalFunctionCallNode = asm {
 EvalFunctionCallNode = func(n) {
     var fn = eval(n[1]);
     var argnodes = n[2];
-    var argvals = grnew();
     var i = 0;
-    while (i != grlen(argnodes)) {
-        grpush(argvals, eval(grget(argnodes, i)));
+    var len = grlen(argnodes);
+    var argbase = grbase(argnodes);
+    var argvals = malloc(len);
+    while (i != len) {
+        argvals[i] = eval(argbase[i]);
         i++;
     };
-    var r = do_EvalFunctionCallNode(fn, grbase(argvals), grlen(argvals));
-    grfree(argvals);
+    var r = do_EvalFunctionCallNode(fn, argvals, len);
+    free(argvals);
     return r;
 };
 
