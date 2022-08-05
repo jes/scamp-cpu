@@ -226,8 +226,9 @@ SeqNode = func() {
 };
 
 SeqAdd = func(seq, n) {
-    # TODO: [perf] if n is a NopNode, don't add it
-    grpush(seq[1], n);
+    # only push non-nop nodes
+    if (n[0] != EvalNopNode)
+        grpush(seq[1], n);
 };
 
 EvalSeqNode = func(n) {
