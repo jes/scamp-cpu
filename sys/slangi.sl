@@ -1101,10 +1101,15 @@ eval_function = func(argbase, params, body) {
     return r;
 };
 
-eval = func(node) {
-    if (node lt 256) die("tried to eval %d\n", [node]);
-    var f = node[0];
-    return f(node);
+#eval = func(node) {
+#    if (node lt 256) die("tried to eval %d\n", [node]);
+#    var f = node[0];
+#    return f(node);
+#};
+eval = asm {
+    ld x, 1(sp)
+    ld x, (x)
+    jmp x
 };
 
 INCLUDED = grnew();
