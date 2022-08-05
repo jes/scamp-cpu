@@ -46,15 +46,18 @@ var EvalComplementNode;
 var EvalValueOfNode;
 var EvalNegateNode;
 var DeclarationNode;
-var EvalDeclarationNode;
 var ConditionalNode;
 var EvalConditionalNode;
 var LoopNode;
 var EvalLoopNode;
 var VariableNode;
-var EvalVariableNode;
 var AddressOfNode;
-var EvalAddressOfNode;
+var LocalNode;
+var EvalLocalNode;
+var GlobalNode;
+var AddressOfLocalNode;
+var EvalAddressOfLocalNode;
+var AddressOfGlobalNode;
 var IndexAddressOfNode;
 var EvalIndexAddressOfNode;
 var AssignmentNode;
@@ -126,8 +129,11 @@ var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 var INCLUDED;
 var STRINGS;
 var GLOBALS; # hash of string => address
-var LOCALS; # grarr of (name, address)
+var LOCALSTACK = malloc(2048);
+var LOCALS; # grarr of (name, address) (compile-time only)
 var OLDLOCALS; # stack of scopes
+var BP; # current stack base pointer
+var BPS; # grarr of base pointers
 var RETURN_jmpbuf;
 var RETURN_val;
 var BREAK_jmpbuf;
@@ -154,23 +160,34 @@ var addglobal = func(name, addr) {
     htput(GLOBALS, name, addr);
 };
 
-# return pointer to (name,addr) if "name" is a local, 0 otherwise
+# return pointer to (name,bp_reg) if "name" is a local, 0 otherwise
 var findlocal = func(name) {
-    if (!LOCALS) die("can't find local in global scope: %s",[name]);
+    if (!LOCALS) return 0;
     return grfind(LOCALS, name, func(findname,tuple) { return strcmp(findname,car(tuple))==0 });
 };
 
-var newscope = func() {
+var addlocal = func(name) {
+    grpush(LOCALS, cons(name, grlen(LOCALS)));
+};
+
+# TODO: should stuff like the jmpbufs be stored in LOCALSTACK too? (simplifying
+# eval_function)
+var newscope_runtime = func(sz) {
+    *(LOCALSTACK++) = BP;
+    BP = LOCALSTACK;
+    LOCALSTACK = LOCALSTACK + sz;
+};
+var endscope_runtime = func(sz) {
+    LOCALSTACK = LOCALSTACK - sz;
+    BP = *(--LOCALSTACK);
+};
+
+var newscope_parsetime = func() {
     grpush(OLDLOCALS, LOCALS);
     LOCALS = grnew();
 };
-
-var endscope = func() {
+var endscope_parsetime = func() {
     if (!LOCALS) die("can't end the global scope",0);
-    grwalk(LOCALS, func(tuple) {
-        free(cdr(tuple));
-        free(tuple);
-    });
     grfree(LOCALS);
     LOCALS = grpop(OLDLOCALS);
 };
@@ -194,6 +211,7 @@ SeqNode = func() {
 };
 
 SeqAdd = func(seq, n) {
+    # TODO: [perf] if n is a NopNode, don't add it
     grpush(seq[1], n);
 };
 
@@ -260,19 +278,14 @@ EvalValueOfNode = func(n) { return *(eval(n[1])); };
 EvalNegateNode = func(n) { return -eval(n[1]); };
 
 DeclarationNode = func(name, expr) {
-    return cons3(EvalDeclarationNode, name, expr);
-};
-EvalDeclarationNode = func(n) {
-    var name = n[1];
-    var val = 0;
-    if (n[2]) val = eval(n[2]);
-    var p = malloc(1);
-    *p = val;
     if (LOCALS) {
-        grpush(LOCALS, cons(name, p));
+        addlocal(name);
     } else {
-        addglobal(name, p);
+        addglobal(name, malloc(1));
     };
+
+    if (expr) return AssignmentNode(AddressOfNode(name), expr)
+    else return NopNode();
 };
 
 ConditionalNode = func(cond, thenexpr, elseexpr) {
@@ -326,25 +339,38 @@ EvalLoopNode = func(n) {
 };
 
 VariableNode = func(name) {
-    return cons(EvalVariableNode, name);
-};
-EvalVariableNode = func(n) {
-    return *(EvalAddressOfNode(n));
+    if (findlocal(name)) return LocalNode(name)
+    else return GlobalNode(name);
 };
 AddressOfNode = func(name) {
-    return cons(EvalAddressOfNode, name);
+    if (findlocal(name)) return AddressOfLocalNode(name)
+    else return AddressOfGlobalNode(name);
 };
-EvalAddressOfNode = func(n) {
-    var v;
-    var name = n[1];
-    if (LOCALS) {
-        v = findlocal(name);
-        if (v) return cdr(v);
-    };
-    v = findglobal(name);
-    if (v) return v;
-    die("use of undefined name: %s\n", [name]);
+
+LocalNode = func(name) {
+    return cons(EvalValueOfNode, AddressOfLocalNode(name));
 };
+EvalLocalNode = func(n) {
+    return *(EvalAddressOfLocalNode(n));
+};
+GlobalNode = func(name) {
+    return cons(EvalValueOfNode, AddressOfGlobalNode(name));
+};
+AddressOfLocalNode = func(name) {
+    var v = findlocal(name);
+    if (v) return cons(EvalAddressOfLocalNode, cdr(v));
+    die("use of undefined local: %s\n", [name]);
+};
+EvalAddressOfLocalNode = func(n) {
+    var bp_rel = n[1];
+    return BP + bp_rel;
+};
+AddressOfGlobalNode = func(name) {
+    var addr = findglobal(name);
+    if (addr) return ConstNode(addr);
+    die("use of undefined global: %s\n", [name]);
+};
+
 IndexAddressOfNode = func(exprs) {
     if (grlen(exprs)<1) die("index address-of must have at least 1 expr\n",0);
     return cons(EvalIndexAddressOfNode, exprs);
@@ -894,7 +920,7 @@ Parameters = func(x) {
     var params = grnew();
     while (1) {
         if (!parse(Identifier,0)) break;
-        grpush(params, intern(IDENTIFIER));
+        addlocal(intern(IDENTIFIER));
         if (!parse(CharSkip,',')) break;
     };
     return params;
@@ -904,7 +930,10 @@ FunctionDeclaration = func(x) {
     if (!Keyword("func")) return 0;
     if (!CharSkip('(')) die("func needs open paren",0);
 
-    var params = Parameters(0);
+    newscope_parsetime();
+
+    Parameters(0);
+    var nparams = grlen(LOCALS);
 
     if (!CharSkip(')')) die("func needs close paren",0);
 
@@ -916,7 +945,7 @@ FunctionDeclaration = func(x) {
     BLOCKLEVEL = blocklevel;
     LOOPLEVEL = looplevel;
 
-    var codesz = 16;
+    var codesz = 15;
     var code_addr = malloc(codesz);
 
     # now we create a stub to allow normal SLANG calling convention to
@@ -932,16 +961,18 @@ FunctionDeclaration = func(x) {
     *(p++) = 0x61ff; # ld x, sp
     *(p++) = 0x0602; # add x, 2
     *(p++) = 0x5a00; # push x # argbase
-    *(p++) = 0x6200; *(p++) = params; # ld x, params
-    *(p++) = 0x5a00; # push x # params
+    *(p++) = 0x5b00 + nparams; # push x # nparams
     *(p++) = 0x6200; *(p++) = body; # ld x, body
     *(p++) = 0x5a00; # push x # body
+    *(p++) = 0x5b00 + grlen(LOCALS); # push framesz
     *(p++) = 0x4f00; *(p++) = eval_function; # call eval_function
     *(p++) = 0x5d00; # pop x
     *(p++) = 0x69fe; # ld r254, x
-    *(p++) = 0x9400 + grlen(params); # return
+    *(p++) = 0x9400 + nparams; # return
 
-    if (p != code_addr+codesz) die("function body is wrong size (%d)!\n",[code_addr-p]);
+    if (p != code_addr+codesz) die("function body is wrong size (%d)!\n",[p-code_addr]);
+
+    endscope_parsetime();
 
     return ConstNode(code_addr);
 };
@@ -1057,22 +1088,14 @@ Identifier = func(x) {
 
 ### Evaluator ###
 
-eval_function = func(argbase, params, body) {
-    newscope();
+eval_function = func(argbase, nparams, body, framesz) {
+    newscope_runtime(framesz);
 
     # note we get args in reverse order
     var i = 0;
-    var p;
-    while (i != grlen(params)) {
-        # in principle we could simply put the address argbase+i in LOCALS and
-        # not have to malloc anywhere to store it, but we would need a reliable
-        # way to identify which locals need to be free()'d and which don't
-        # in endscope()
-        p = malloc(1);
-        *p = argbase[i];
-        grpush(LOCALS, cons(grget(params,grlen(params)-i-1), p));
-        i++;
-    };
+    var p = BP;
+    while (i != nparams)
+        *(p++) = argbase[nparams - (i++) - 1];
 
     var r = 0;
     var old_RETURN_jmpbuf = RETURN_jmpbuf;
@@ -1098,7 +1121,7 @@ eval_function = func(argbase, params, body) {
     };
     JMPBUFS = old_JMPBUFS;
 
-    endscope();
+    endscope_runtime(framesz);
     return r;
 };
 
@@ -1117,6 +1140,7 @@ INCLUDED = grnew();
 STRINGS = grnew();
 GLOBALS = htnew();
 OLDLOCALS = grnew();
+BPS = grnew();
 
 include "rude-globals.sl";
 
