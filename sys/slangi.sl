@@ -138,7 +138,6 @@ var RETURN_jmpbuf;
 var RETURN_val;
 var BREAK_jmpbuf;
 var CONTINUE_jmpbuf;
-var JMPBUFS = 0;
 var BLOCKLEVEL = 0;
 var LOOPLEVEL = 0;
 
@@ -170,31 +169,33 @@ var addlocal = func(name) {
     grpush(LOCALS, cons(name, grlen(LOCALS)));
 };
 
+var lsalloc = func(sz) {
+    var p = LOCALSTACK;
+    LOCALSTACK = LOCALSTACK + sz;
+    return p;
+};
+var lsfree = func(sz) {
+    LOCALSTACK = LOCALSTACK - sz;
+};
+
 var newscope_runtime = func(sz) {
-    *(LOCALSTACK++) = JMPBUFS;
     *(LOCALSTACK++) = CONTINUE_jmpbuf;
     *(LOCALSTACK++) = BREAK_jmpbuf;
     *(LOCALSTACK++) = RETURN_jmpbuf;
     *(LOCALSTACK++) = BP;
-    BP = LOCALSTACK;
-    LOCALSTACK = LOCALSTACK + sz;
+    BP = lsalloc(sz);
 
     BREAK_jmpbuf = 0;
     CONTINUE_jmpbuf = 0;
-    JMPBUFS = 0;
-};
-var endscope_runtime = func(sz) {
-    if (JMPBUFS) {
-        grwalk(JMPBUFS, free);
-        grfree(JMPBUFS);
-    };
 
-    LOCALSTACK = LOCALSTACK - sz;
+    return BP;
+};
+var endscope_runtime = func(bp) {
+    LOCALSTACK = bp;
     BP = *(--LOCALSTACK);
     RETURN_jmpbuf = *(--LOCALSTACK);
     BREAK_jmpbuf = *(--LOCALSTACK);
     CONTINUE_jmpbuf = *(--LOCALSTACK);
-    JMPBUFS = *(--LOCALSTACK);
 };
 
 var newscope_parsetime = func() {
@@ -324,18 +325,11 @@ EvalLoopNode = func(n) {
     var body = n[2];
     var r;
 
-    if (!JMPBUFS) JMPBUFS = grnew();
-
     var old_CONTINUE_jmpbuf = CONTINUE_jmpbuf;
-    CONTINUE_jmpbuf = malloc(3);
+    CONTINUE_jmpbuf = lsalloc(3);
 
     var old_BREAK_jmpbuf = BREAK_jmpbuf;
-    BREAK_jmpbuf = malloc(3);
-
-    # we need to keep track of all the nested break and continue jmpbufs so that
-    # they can be free'd by an early return from the function
-    grpush(JMPBUFS, BREAK_jmpbuf);
-    grpush(JMPBUFS, CONTINUE_jmpbuf);
+    BREAK_jmpbuf = lsalloc(3);
 
     setjmp(CONTINUE_jmpbuf);
     if (!setjmp(BREAK_jmpbuf)) {
@@ -343,12 +337,9 @@ EvalLoopNode = func(n) {
             if (body) eval(body);
     };
 
-    grpop(JMPBUFS);
-    grpop(JMPBUFS);
+    lsfree(6); # CONTINUE_jmpbuf, BREAK_jmpbuf
 
-    free(BREAK_jmpbuf);
     BREAK_jmpbuf = old_BREAK_jmpbuf;
-    free(CONTINUE_jmpbuf);
     CONTINUE_jmpbuf = old_CONTINUE_jmpbuf;
 
     return 0;
@@ -469,13 +460,13 @@ EvalFunctionCallNode = func(n) {
     var i = 0;
     var len = grlen(argnodes);
     var argbase = grbase(argnodes);
-    var argvals = malloc(len);
+    var argvals = lsalloc(len);
     while (i != len) {
         argvals[i] = eval(argbase[i]);
         i++;
     };
     var r = do_EvalFunctionCallNode(fn, argvals, len);
-    free(argvals);
+    lsfree(len);
     return r;
 };
 
@@ -1105,14 +1096,14 @@ Identifier = func(x) {
 ### Evaluator ###
 
 eval_function = func(argbase, nparams, body, framesz) {
-    newscope_runtime(framesz);
+    var bp = newscope_runtime(framesz);
 
     # note we get args in reverse order
     var p = BP;
     while (nparams--)
         *(p++) = argbase[nparams];
 
-    RETURN_jmpbuf = LOCALSTACK; LOCALSTACK = LOCALSTACK + 3; # RETURN_jmpbuf = alloca(3)
+    RETURN_jmpbuf = lsalloc(3);
 
     var r = 0;
     if (setjmp(RETURN_jmpbuf)) {
@@ -1120,9 +1111,10 @@ eval_function = func(argbase, nparams, body, framesz) {
     } else {
         eval(body);
     };
-    LOCALSTACK = LOCALSTACK - 3; # free(RETURN_jmpbuf);
 
-    endscope_runtime(framesz);
+    lsfree(3); # RETURN_jmpbuf
+
+    endscope_runtime(bp);
     return r;
 };
 
