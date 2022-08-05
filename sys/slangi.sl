@@ -170,13 +170,25 @@ var addlocal = func(name) {
     grpush(LOCALS, cons(name, grlen(LOCALS)));
 };
 
-var lsalloc = func(sz) {
-    var p = LOCALSTACK;
-    LOCALSTACK = LOCALSTACK + sz;
-    return p;
+#var lsalloc = func(sz) {
+#    var p = LOCALSTACK;
+#    LOCALSTACK = LOCALSTACK + sz;
+#    return p;
+#};
+#var lsfree = func(sz) {
+#    LOCALSTACK = LOCALSTACK - sz;
+#};
+var lsalloc = asm {
+    ld r0, (_LOCALSTACK)
+    pop x
+    add x, r0
+    ld (_LOCALSTACK), x
+    ret
 };
-var lsfree = func(sz) {
-    LOCALSTACK = LOCALSTACK - sz;
+var lsfree = asm {
+    pop x
+    sub (_LOCALSTACK), x
+    ret
 };
 
 var newscope_runtime = func(sz) {
