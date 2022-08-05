@@ -445,7 +445,7 @@ EvalReturnNode = func(n) {
 };
 
 ArrayLiteralNode = func(exprs) {
-    var base = malloc(grlen(exprs));
+    var base = malloc(grlen(exprs)+1);
     return cons3(EvalArrayLiteralNode, exprs, base);
 };
 EvalArrayLiteralNode = func(n) {
@@ -456,6 +456,7 @@ EvalArrayLiteralNode = func(n) {
         base[i] = eval(grget(exprs,i));
         i++;
     };
+    base[i] = 0;
     return base;
 };
 
