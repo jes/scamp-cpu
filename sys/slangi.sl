@@ -170,16 +170,31 @@ var addlocal = func(name) {
     grpush(LOCALS, cons(name, grlen(LOCALS)));
 };
 
-# TODO: should stuff like the jmpbufs be stored in LOCALSTACK too? (simplifying
-# eval_function)
 var newscope_runtime = func(sz) {
+    *(LOCALSTACK++) = JMPBUFS;
+    *(LOCALSTACK++) = CONTINUE_jmpbuf;
+    *(LOCALSTACK++) = BREAK_jmpbuf;
+    *(LOCALSTACK++) = RETURN_jmpbuf;
     *(LOCALSTACK++) = BP;
     BP = LOCALSTACK;
     LOCALSTACK = LOCALSTACK + sz;
+
+    BREAK_jmpbuf = 0;
+    CONTINUE_jmpbuf = 0;
+    JMPBUFS = 0;
 };
 var endscope_runtime = func(sz) {
+    if (JMPBUFS) {
+        grwalk(JMPBUFS, free);
+        grfree(JMPBUFS);
+    };
+
     LOCALSTACK = LOCALSTACK - sz;
     BP = *(--LOCALSTACK);
+    RETURN_jmpbuf = *(--LOCALSTACK);
+    BREAK_jmpbuf = *(--LOCALSTACK);
+    CONTINUE_jmpbuf = *(--LOCALSTACK);
+    JMPBUFS = *(--LOCALSTACK);
 };
 
 var newscope_parsetime = func() {
@@ -1092,34 +1107,19 @@ eval_function = func(argbase, nparams, body, framesz) {
     newscope_runtime(framesz);
 
     # note we get args in reverse order
-    var i = 0;
     var p = BP;
-    while (i != nparams)
-        *(p++) = argbase[nparams - (i++) - 1];
+    while (nparams--)
+        *(p++) = argbase[nparams];
+
+    RETURN_jmpbuf = LOCALSTACK; LOCALSTACK = LOCALSTACK + 3; # RETURN_jmpbuf = alloca(3)
 
     var r = 0;
-    var old_RETURN_jmpbuf = RETURN_jmpbuf;
-    var old_BREAK_jmpbuf = BREAK_jmpbuf;
-    var old_CONTINUE_jmpbuf = CONTINUE_jmpbuf;
-    var old_JMPBUFS = JMPBUFS;
-    RETURN_jmpbuf = malloc(3);
-    BREAK_jmpbuf = 0;
-    CONTINUE_jmpbuf = 0;
-    JMPBUFS = 0;
     if (setjmp(RETURN_jmpbuf)) {
         r = RETURN_val;
     } else {
         eval(body);
     };
-    free(RETURN_jmpbuf);
-    RETURN_jmpbuf = old_RETURN_jmpbuf;
-    BREAK_jmpbuf = old_BREAK_jmpbuf;
-    CONTINUE_jmpbuf = old_CONTINUE_jmpbuf;
-    if (JMPBUFS) {
-        grwalk(JMPBUFS, free);
-        grfree(JMPBUFS);
-    };
-    JMPBUFS = old_JMPBUFS;
+    LOCALSTACK = LOCALSTACK - 3; # free(RETURN_jmpbuf);
 
     endscope_runtime(framesz);
     return r;
