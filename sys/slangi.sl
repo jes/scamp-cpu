@@ -1156,6 +1156,9 @@ GLOBALS = htnew();
 OLDLOCALS = grnew();
 BPS = grnew();
 
+htgrow(GLOBALS);
+htgrow(GLOBALS);
+htgrow(GLOBALS);
 include "rude-globals.sl";
 
 # input buffering
