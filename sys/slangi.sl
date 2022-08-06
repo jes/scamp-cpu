@@ -306,7 +306,7 @@ EvalUnsignedGeNode = func(n) { return eval(n[1]) ge eval(n[2]); };
 
 UnaryOpNode = func(op, arg1) {
     var node = cons(op, arg1);
-    if (arg1[0] == EvalConstNode) {
+    if (arg1[0] == EvalConstNode && op != EvalValueOfNode) {
         return ConstNode(eval(node));
     } else {
         return node;
