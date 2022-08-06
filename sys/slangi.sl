@@ -450,7 +450,7 @@ EvalPostOpNode = func(n) {
 };
 
 FunctionCallNode = func(name, args) {
-    return cons3(EvalFunctionCallNode, VariableNode(name), args);
+    return cons4(EvalFunctionCallNode, VariableNode(name), grbase(args), grlen(args));
 };
 var do_EvalFunctionCallNode = asm {
     pop x
@@ -477,15 +477,12 @@ var do_EvalFunctionCallNode = asm {
 # TODO: [perf] do this in asm without allocating grarrs
 EvalFunctionCallNode = func(n) {
     var fn = eval(n[1]);
-    var argnodes = n[2];
-    var i = 0;
-    var len = grlen(argnodes);
-    var argbase = grbase(argnodes);
+    var argbase = n[2];
+    var len = n[3];
+    var i = len;
     var argvals = lsalloc(len);
-    while (i != len) {
+    while (i--)
         argvals[i] = eval(argbase[i]);
-        i++;
-    };
     var r = do_EvalFunctionCallNode(fn, argvals, len);
     lsfree(len);
     return r;
