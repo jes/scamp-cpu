@@ -279,7 +279,12 @@ EvalArrayIndexNode = func(n) {
 };
 
 OperatorNode = func(op, arg1, arg2) {
-    return cons3(op, arg1, arg2);
+    var node = cons3(op, arg1, arg2);
+    if (arg1[0] == EvalConstNode && arg2[0] == EvalConstNode) {
+        return ConstNode(eval(node))
+    } else {
+        return node;
+    };
 };
 
 EvalAddNode = func(n) { return eval(n[1]) + eval(n[2]); };
@@ -300,7 +305,12 @@ EvalUnsignedLeNode = func(n) { return eval(n[1]) le eval(n[2]); };
 EvalUnsignedGeNode = func(n) { return eval(n[1]) ge eval(n[2]); };
 
 UnaryOpNode = func(op, arg1) {
-    return cons(op, arg1);
+    var node = cons(op, arg1);
+    if (arg1[0] == EvalConstNode) {
+        return ConstNode(eval(node));
+    } else {
+        return node;
+    };
 };
 EvalNotNode = func(n) { return !eval(n[1]); };
 EvalComplementNode = func(n) { return ~eval(n[1]); };
@@ -474,7 +484,7 @@ var do_EvalFunctionCallNode = asm {
     callnode_call:
     jmp r3
 };
-# TODO: [perf] do this in asm without allocating grarrs
+# TODO: [perf] do this in asm?
 EvalFunctionCallNode = func(n) {
     var fn = eval(n[1]);
     var argbase = n[2];
