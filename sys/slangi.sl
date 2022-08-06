@@ -489,10 +489,12 @@ EvalFunctionCallNode = func(n) {
     var fn = eval(n[1]);
     var argbase = n[2];
     var len = n[3];
-    var i = len;
+    var i = 0;
     var argvals = lsalloc(len);
-    while (i--)
+    while (i != len) {
         argvals[i] = eval(argbase[i]);
+        i++;
+    };
     var r = do_EvalFunctionCallNode(fn, argvals, len);
     lsfree(len);
     return r;
