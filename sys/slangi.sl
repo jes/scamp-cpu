@@ -484,11 +484,12 @@ IndexAddressOfNode = func(exprs) {
     return cons(EvalIndexAddressOfNode, exprs);
 };
 EvalIndexAddressOfNode = func(n) {
-    var exprs = n[1];
-    var addr = eval(grget(exprs,0));
+    var exprs = grbase(n[1]);
+    var len = grlen(n[1]);
+    var addr = eval(exprs[0]);
     var i = 1;
-    while (i != grlen(exprs)) {
-        addr = *addr + eval(grget(exprs,i));
+    while (i != len) {
+        addr = *addr + eval(exprs[i]);
         i++;
     };
     return addr;
