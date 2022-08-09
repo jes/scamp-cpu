@@ -43,7 +43,6 @@ var EvalNotNode;
 var EvalComplementNode;
 var EvalValueOfNode;
 var EvalNegateNode;
-var DeclarationNode;
 var ConditionalNode;
 var EvalConditionalNode;
 var EvalConditionalNodeWithElse;
@@ -334,17 +333,6 @@ EvalNotNode = func(n) { return !eval(n[1]); };
 EvalComplementNode = func(n) { return ~eval(n[1]); };
 EvalValueOfNode = func(n) { return *(eval(n[1])); };
 EvalNegateNode = func(n) { return -eval(n[1]); };
-
-DeclarationNode = func(name, expr) {
-    if (LOCALS) {
-        addlocal(name);
-    } else {
-        addglobal(name, malloc(1));
-    };
-
-    if (expr) return AssignmentNode(AddressOfNode(name), expr)
-    else return NopNode();
-};
 
 ConditionalNode = func(cond, thenexpr, elseexpr) {
     if (elseexpr) return cons4(EvalConditionalNodeWithElse, cond, thenexpr, elseexpr)
@@ -765,12 +753,18 @@ Declaration = func(x) {
     if (!Identifier(0)) die("var needs identifier",0);
     var name = intern(IDENTIFIER);
 
-    if (!parse(CharSkip,'=')) return DeclarationNode(name, 0);
+    if (LOCALS) {
+        addlocal(name);
+    } else {
+        addglobal(name, malloc(1));
+    };
+
+    if (!parse(CharSkip,'=')) return NopNode();
 
     var r = Expression(0);
     if (!r) die("initialisation needs expression",0);
 
-    return DeclarationNode(name, r);
+    return AssignmentNode(AddressOfNode(name), r);
 };
 
 Conditional = func(x) {
