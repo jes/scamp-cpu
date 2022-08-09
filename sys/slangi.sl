@@ -290,9 +290,9 @@ ArrayIndexNode = func(ptr, index) {
     return cons3(EvalArrayIndexNode, ptr, index);
 };
 EvalArrayIndexNode = func(n) {
-    var ptr = eval(n[1]);
-    var idx = eval(n[2]);
-    return ptr[idx];
+    #var ptr = eval(n[1]);
+    #var idx = eval(n[2]);
+    return *(eval(n[1]) + eval(n[2]));
 };
 
 OperatorNode = func(op, arg1, arg2) {
