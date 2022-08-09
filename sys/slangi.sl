@@ -46,6 +46,7 @@ var EvalNegateNode;
 var DeclarationNode;
 var ConditionalNode;
 var EvalConditionalNode;
+var EvalConditionalNodeWithElse;
 var LoopNode;
 var EvalLoopNode;
 var VariableNode;
@@ -346,15 +347,71 @@ DeclarationNode = func(name, expr) {
 };
 
 ConditionalNode = func(cond, thenexpr, elseexpr) {
-    return cons4(EvalConditionalNode, cond, thenexpr, elseexpr);
+    if (elseexpr) return cons4(EvalConditionalNodeWithElse, cond, thenexpr, elseexpr)
+    else return cons3(EvalConditionalNode, cond, thenexpr);
 };
-EvalConditionalNode = func(n) {
-    var cond = n[1];
-    var thenexpr = n[2];
-    var elseexpr = n[3];
-    if (eval(cond)) return eval(thenexpr)
-    else if (elseexpr) return eval(elseexpr)
-    else return 0;
+EvalConditionalNode = asm {
+    # stash return
+    ld x, r254
+    push x
+
+    # evaluate condition
+    ld x, 2(sp) # n
+    inc x
+    ld x, (x)
+    push x # n[1]
+    call (_eval)
+    test r0
+    jz EvalConditionalNode_ret
+
+    # evaluate body
+    ld x, 2(sp) # n
+    add x, 2
+    ld x, (x)
+    push x # n[2]
+    call (_eval)
+
+    EvalConditionalNode_ret:
+    pop x
+    ld r254, x
+    pop x
+    ret
+};
+EvalConditionalNodeWithElse = asm {
+    # stash return
+    ld x, r254
+    push x
+
+    # evaluate condition
+    ld x, 2(sp) # n
+    inc x
+    ld x, (x)
+    push x # n[1]
+    call (_eval)
+    test r0
+    jz EvalConditionalNodeWithElse_else
+
+    # evaluate body
+    ld x, 2(sp) # n
+    add x, 2
+    ld x, (x)
+    push x # n[2]
+    call (_eval)
+    jmp EvalConditionalNodeWithElse_ret
+
+    # evaluate else
+    EvalConditionalNodeWithElse_else:
+    ld x, 2(sp) # n
+    add x, 3
+    ld x, (x)
+    push x # n[3]
+    call (_eval)
+
+    EvalConditionalNodeWithElse_ret:
+    pop x
+    ld r254, x
+    pop x
+    ret
 };
 
 LoopNode = func(cond, body) {
