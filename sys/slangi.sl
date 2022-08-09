@@ -66,7 +66,6 @@ var EvalPreOpNode;
 var PostOpNode;
 var EvalPostOpNode;
 var FunctionCallNode;
-var EvalFunctionCallNode;
 var ReturnNode;
 var EvalReturnNode;
 var ArrayLiteralNode;
@@ -268,7 +267,7 @@ SeqNode = func(nodes) {
     *(p++) = 0xa900; # jmp x
 
     var len = p-code;
-    if (len gt codesz) die("seqnode evaluator is wrong size (%d, should be %d)!\n", [len, codesz]);
+    if (len gt codesz) die("seqnode evaluator is too large (%d, should be %d)!\n", [len, codesz]);
 
     return arr;
 };
@@ -478,44 +477,56 @@ EvalPostOpNode = func(n) {
 };
 
 FunctionCallNode = func(name, args) {
-    return cons4(EvalFunctionCallNode, VariableNode(name), grbase(args), grlen(args));
-};
-var do_EvalFunctionCallNode = asm {
-    pop x
-    ld r1, x # num args
-    pop x
-    ld r2, x # args pointer
-    pop x
-    ld r3, x # function pointer
+    var codesz = 3 + mul(6, grlen(args)) + 8;
+    var arr = malloc(codesz+1);
+    var code = arr+1;
 
-    callnode_loop:
-        test r1
-        jz callnode_call
+    # first element is a pointer to the evaluator function (the function we're
+    # making)
+    arr[0] = code;
 
-        ld x, (r2)
-        push x
+    # stash return address
+    var p = code;
+    *(p++) = 0x5d00; # pop x (ignore our argument)
+    *(p++) = 0x61fe; # ld x, r254
+    *(p++) = 0x5a00; # push x
 
-        dec r1
-        inc r2
-        jmp callnode_loop
-
-    callnode_call:
-    jmp r3
-};
-# TODO: [perf] do this in asm?
-EvalFunctionCallNode = func(n) {
-    var fn = eval(n[1]);
-    var argbase = n[2];
-    var len = n[3];
+    # evaluate each argument in turn and push it
     var i = 0;
-    var argvals = lsalloc(len);
-    while (i != len) {
-        argvals[i] = eval(argbase[i]);
+    var n;
+    while (i != grlen(args)) {
+        n = grget(args,i);
+        if (n[0] == EvalConstNode) {
+            # TODO: for small values, use "push i8h" or "push i8l"
+            *(p++) = 0x6200; *(p++) = eval(n); # ld x, val
+            *(p++) = 0x5a00; # push x
+        } else {
+            *(p++) = 0x6200; *(p++) = n; # ld x, node
+            *(p++) = 0x5a00; # push x
+            *(p++) = 0x3f00; # call (x)
+            *(p++) = 0x6100; # ld x, r0
+            *(p++) = 0x5a00; # push x
+        };
         i++;
     };
-    var r = do_EvalFunctionCallNode(fn, argvals, len);
-    lsfree(len);
-    return r;
+
+    # get function location
+    var varnode = VariableNode(name);
+    *(p++) = 0x6200; *(p++) = varnode; # ld x, node
+    *(p++) = 0x5a00; # push x
+    *(p++) = 0x3f00; # call (x)
+
+    # call function
+    *(p++) = 0x1f00; *(p++) = 0xff00; # call r0
+
+    # return
+    *(p++) = 0x5d00; # pop x
+    *(p++) = 0xa900; # jmp x
+
+    var len = p-code;
+    if (len gt codesz) die("functioncallnode evaluator is too large (%d, should be %d)!\n", [len, codesz]);
+
+    return arr;
 };
 
 ReturnNode = func(expr) {
@@ -1009,8 +1020,8 @@ FunctionDeclaration = func(x) {
 
     # now we create a stub to allow normal SLANG calling convention to
     # call into the interpreter; this way interpreted functions and
-    # compiled functions get called the same way, which means either one
-    # can safely call the other without having to keep track of what's
+    # compiled functions get called the same way, which means both types
+    # can safely call each other without having to keep track of what's
     # compiled and what's interpreted.
     #
     # we need to call eval_function(argbase, params, body)
@@ -1050,7 +1061,9 @@ FunctionCall = func(x) {
     var args = Arguments();
     if (!CharSkip(')')) die("argument list needs closing paren",0);
 
-    return FunctionCallNode(name, args);
+    var n = FunctionCallNode(name, args);
+    grfree(args);
+    return n;
 };
 
 Arguments = func() {
