@@ -14,8 +14,6 @@ include "string.sl";
 var cons3;
 var cons4;
 var SeqNode;
-var SeqAdd;
-var EvalSeqNode;
 var NopNode;
 var EvalNopNode;
 var ConstNode;
@@ -235,24 +233,44 @@ cons4 = func(a,b,c,d) {
     return p;
 };
 
-SeqNode = func() {
-    return cons(EvalSeqNode, grnew());
-};
+SeqNode = func(nodes) {
+    if (grlen(nodes) == 0) return NopNode()
+    else if (grlen(nodes) == 1) return grget(nodes, 0);
 
-SeqAdd = func(seq, n) {
-    # only push non-nop nodes
-    if (n[0] != EvalNopNode)
-        grpush(seq[1], n);
-};
+    var codesz = 3 + mul(4, grlen(nodes)) + 2;
+    var arr = malloc(codesz+1);
+    var code = arr+1;
 
-EvalSeqNode = func(n) {
-    var gr = n[1];
-    var nodes = grbase(gr);
-    var len = grlen(gr);
+    # first element is a pointer to the evaluator function (the function we're
+    # making)
+    arr[0] = code;
+
+    # stash return address
+    var p = code;
+    *(p++) = 0x5d00; # pop x (ignore our argument)
+    *(p++) = 0x61fe; # ld x, r254
+    *(p++) = 0x5a00; # push x
+
+    # call each node in turn
     var i = 0;
-    while (i != len)
-        eval(nodes[i++]);
-    return 0;
+    while (i != grlen(nodes)) {
+        if (*(grget(nodes,i)) != EvalNopNode) {
+            *(p++) = 0x6200; *(p++) = grget(nodes, i); # ld x, node
+            *(p++) = 0x5a00; # push x
+            *(p++) = 0x3f00; # call (x)
+        };
+
+        i++;
+    };
+
+    # return
+    *(p++) = 0x5d00; # pop x
+    *(p++) = 0xa900; # jmp x
+
+    var len = p-code;
+    if (len gt codesz) die("seqnode evaluator is wrong size (%d, should be %d)!\n", [len, codesz]);
+
+    return arr;
 };
 
 NopNode = func() {
@@ -546,14 +564,17 @@ Program = func(x) {
 };
 
 Statements = func(x) {
-    var seq = SeqNode();
+    var nodes = grnew();
     var r;
     while (1) {
         r = parse(Statement, 0);
-        if (!r) return seq;
-        SeqAdd(seq, r);
-        if (!parse(CharSkip,';')) return seq;
+        if (!r) break;
+        grpush(nodes, r);
+        if (!parse(CharSkip,';')) break;
     };
+    r = SeqNode(nodes);
+    grfree(nodes);
+    return r;
 };
 
 Statement = func(x) {
@@ -1008,7 +1029,7 @@ FunctionDeclaration = func(x) {
     *(p++) = 0x69fe; # ld r254, x
     *(p++) = 0x9400 + nparams; # return
 
-    if (p != code_addr+codesz) die("function body is wrong size (%d)!\n",[p-code_addr]);
+    if (p != code_addr+codesz) die("function body is wrong size (%d, should be %d)!\n",[p-code_addr, code_addr+codesz]);
 
     endscope_parsetime();
 
