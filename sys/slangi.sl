@@ -399,9 +399,17 @@ LocalNode = func(name) {
     if (v) return cons(EvalLocalNode, cdr(v));
     die("use of undefined local: %s\n", [name]);
 };
-EvalLocalNode = func(n) {
-    var bp_rel = n[1];
-    return *(BP + bp_rel);
+#EvalLocalNode = func(n) {
+#    var bp_rel = n[1];
+#    return *(BP + bp_rel);
+#};
+EvalLocalNode = asm {
+    pop x
+    inc x
+    ld x, (x)
+    add x, (_BP)
+    ld r0, (x)
+    ret
 };
 GlobalNode = func(name) {
     var addr = findglobal(name);
