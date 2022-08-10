@@ -1,5 +1,6 @@
 # RUDE Ultimate Development Environment for SLANG
 
+include "bigint.sl";
 include "bufio.sl";
 include "hash.sl";
 include "stdio.sl";

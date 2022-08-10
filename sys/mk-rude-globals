@@ -3,8 +3,8 @@
 use strict;
 use warnings;
 
-open(my $fh, '<', 'lib.h')
-    or die "can't read lib.h: $!\n";
+open(my $fh, '<', 'libbigint.h')
+    or die "can't read libbigint.h: $!\n";
 while (<$fh>) {
     chomp;
     if (/^extern ([a-zA-Z0-9_]+);$/) {
