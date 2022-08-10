@@ -64,6 +64,9 @@ var strings = grnew();
 while (bgets(in, buf, bufsz))
     grpush(strings, strdup(buf));
 
-sort(grbase(strings), grlen(strings), cmp);
+grsort(strings, cmp);
 
-grwalk(strings, puts);
+grwalk(strings, func(s) {
+    bputs(out, s);
+});
+bflush(out);
