@@ -281,9 +281,13 @@ sys_rename = func(oldname, newname) {
     # clear up the containing directory block if it's now empty
     dirgc(dir_parent, dirblk, 0);
 
+    # if it's not a directory, we're finished
+    blkread(blknum, 0);
+    if (blktype(0) != TYPE_DIR) return 0;
+
     # if it's a directory, update its ".." pointer
     var dotdotlocation = dirfindname(blknum, "..");
-    if (!dotdotlocation) return 0; # probably a normal file
+    if (!dotdotlocation) return NOTFOUND; # XXX: how could a directory not have a ".."?
 
     # read the block, rewrite the target pointer for "..", and write it back out
     blkread(dotdotlocation[1], BLKBUF);
