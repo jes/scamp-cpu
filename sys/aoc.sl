@@ -79,8 +79,8 @@ if (strcmp(args[0], "get") == 0) {
 *strp = 0;
 
 if (ok && show_size) {
-    fprintf(2, "%d characters\n", [strlen(str)]);
-    fprintf(2, "%d lines\n", [linecount(str)]);
+    fprintf(2, "%u characters\n", [strlen(str)]);
+    fprintf(2, "%u lines\n", [linecount(str)]);
 };
 
 if (to_stdout) {
