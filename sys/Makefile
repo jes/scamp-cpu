@@ -6,7 +6,7 @@ BINS = cat.bin init.bin ls.bin mkdir.bin sh.bin pwd.bin echo.bin stat.bin rm.bin
 all: $(BINS) lib.o rude-globals.sl
 
 .PRECIOUS: %.bin
-%.bin: %.hex
+%.bin: %.hex lib.o
 	../util/hex2bin $*.hex > $*.bin.tmp
 	mv $*.bin.tmp $*.bin
 
