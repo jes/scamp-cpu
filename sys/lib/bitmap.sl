@@ -13,8 +13,10 @@ var bmclear;
 var bmcount;
 var bmwalk;
 
+var _bmdiv16;
+
 bmnew = func(w, h) {
-    w = div(w+15, 16);
+    w = _bmdiv16(w+15);
     var bm = malloc(mul(w,h) + 2);
     bm[0] = w;
     bm[1] = h;
@@ -27,8 +29,7 @@ bmfree = free;
 bmindex = func(bm, x, y) {
     var w = bm[0];
     var h = bm[1];
-    # TODO: how do we make the division more optimal?
-    var xcell = div(x,16);
+    var xcell = _bmdiv16(x);
     return 2 + mul(y,w) + xcell;
 };
 
@@ -89,4 +90,53 @@ bmwalk = func(bm, cb) {
         base = base + w;
         y++;
     };
+};
+
+# for x <= 32767:
+# _bmdiv16 = func(x) return div(x, 16);
+# for x > 32767 this function performs an unsigned division, whereas div() performs signed division
+_bmdiv16 = asm {
+    pop x
+    ld r0, x
+
+    ld r1, r254 # return address
+    ld r254, 0
+
+    # set the lower 8 bits using tbsz/sb the simple way
+    tbsz r0, 0x0010
+    sb r254, 0x01
+    tbsz r0, 0x0020
+    sb r254, 0x02
+    tbsz r0, 0x0040
+    sb r254, 0x04
+    tbsz r0, 0x0080
+    sb r254, 0x08
+    tbsz r0, 0x0100
+    sb r254, 0x10
+    tbsz r0, 0x0200
+    sb r254, 0x20
+    tbsz r0, 0x0400
+    sb r254, 0x40
+    tbsz r0, 0x0800
+    sb r254, 0x80
+
+    # set the next 4 bits by switching them all on and then conditionally jumping
+    # over the instruction that switches them off (tbsz can only skip 1-word instructions)
+    or r254, 0x0f00
+
+    tbsz r0, 0x1000
+    jr+ 2
+    and r254, 0xfeff
+    tbsz r0, 0x2000
+    jr+ 2
+    and r254, 0xfdff
+    tbsz r0, 0x4000
+    jr+ 2
+    and r254, 0xfbff
+    tbsz r0, 0x8000
+    jr+ 2
+    and r254, 0xf7ff
+
+    ld r0, r254
+    jmp r1
 };
