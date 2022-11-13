@@ -67,19 +67,20 @@ put ../sys/libbigfix.list /lib/libbigfix.list
 
 put -t ../sys/lib/head.s /lib/head.s
 put -t ../sys/lib/foot.s /lib/foot.s
+put -t /dev/null /lib/bigint.sl
+put -t /dev/null /lib/bufio.sl
+put -t /dev/null /lib/fixed.sl
 put -t /dev/null /lib/grarr.sl
+put -t /dev/null /lib/hash.sl
 put -t /dev/null /lib/malloc.sl
 put -t /dev/null /lib/parse.sl
 put -t /dev/null /lib/stdio.sl
 put -t /dev/null /lib/stdlib.sl
+put -t /dev/null /lib/strbuf.sl
 put -t /dev/null /lib/string.sl
 put -t /dev/null /lib/sys.sl
 put -t /dev/null /lib/xprintf.sl
-put -t /dev/null /lib/strbuf.sl
-put -t /dev/null /lib/bufio.sl
-put -t /dev/null /lib/bigint.sl
-put -t /dev/null /lib/hash.sl
-put -t /dev/null /lib/fixed.sl
+put -t /dev/null /lib/xscanf.sl
 
 mkdir lisp
 put -t ../sys/lisp/lib.l /lisp/lib.l

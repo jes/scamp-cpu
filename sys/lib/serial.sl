@@ -101,7 +101,7 @@ ser_request = func(method, endpoint, path, content) {
 #             how do we sync then? should there be an escape character that always syncs up?
 ser_sync = func() {
     # give a few blank lines so that the other side knows to reset
-    #fputs(ser_writefd, "\n\n\n\n\n");
+    fputs(ser_writefd, "\n\n\n\n\n");
 
     # wait until the other side isn't trying to send anything
     #var i;
