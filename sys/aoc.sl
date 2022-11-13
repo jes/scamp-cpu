@@ -4,15 +4,6 @@ include "bufio.sl";
 include "serial.sl";
 include "strbuf.sl";
 
-var linecount = func(s) {
-    var c = 0;
-    while (*s) {
-        if (*s == '\n') c++;
-        s++;
-    };
-    return c;
-};
-
 var args = cmdargs()+1;
 
 var usage_get = "aoc get YEAR DAY";
@@ -31,9 +22,16 @@ var ok;
 var to_stdout = 1;
 var out = bfdopen(1, O_WRITE);
 
+var nlines = 0;
+var nchars = 0;
+
 var cb = func(ok, buf, len) {
     if (to_stdout) bwrite(out, buf, len);
     write(2, buf, len);
+
+    nchars = nchars + len;
+    while (len--)
+        if (buf[len] == '\n') nlines++;
 };
 
 ser_sync();
@@ -76,8 +74,8 @@ if (strcmp(args[0], "get") == 0) {
 };
 
 if (ok && show_size) {
-    fprintf(2, "%u characters\n", [strlen("")]); # TODO
-    fprintf(2, "%u lines\n", [linecount("")]); # TODO
+    fprintf(2, "%u characters\n", [nchars]);
+    fprintf(2, "%u lines\n", [nlines]);
 };
 
 if (to_stdout && !ok) bputc(out, '\n');

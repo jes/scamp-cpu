@@ -96,7 +96,7 @@ ser_request = func(method, endpoint, path, content) {
     return [ok, str];
 };
 
-# sync the serial connection by waiting until nothing is waiting
+# sync the serial connection by stopping the other side from waiting for the prompt
 # TODO: [bug] this doesn't work; what if we're stuck inside the body of a contentful request?
 #             how do we sync then? should there be an escape character that always syncs up?
 ser_sync = func() {
