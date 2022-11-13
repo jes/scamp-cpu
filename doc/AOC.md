@@ -54,3 +54,8 @@ This request has no body (`SIZE == 0`).
     12345
 
 This request has a body of length 5.
+
+### Response
+
+The responses are chunked into blocks of 256 characters. The client side (on SCAMP) sends a "!\n"
+to prompt the server side (on Linux) to send each chunk.
