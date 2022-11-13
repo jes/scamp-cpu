@@ -1,5 +1,6 @@
 # Advent of Code client
 
+include "bufio.sl";
 include "serial.sl";
 include "strbuf.sl";
 
@@ -27,18 +28,16 @@ if (!*args) {
 var path;
 var ok;
 
-var str = malloc(16384);
-*str = 0;
-var strp = str;
-# TODO: [bug] buffer overflow
-var cb = func(ok, ch) {
-    fputc(2, ch);
-    *(strp++) = ch;
+var to_stdout = 1;
+var out = bfdopen(1, O_WRITE);
+
+var cb = func(ok, buf, len) {
+    if (to_stdout) bwrite(out, buf, len);
+    write(2, buf, len);
 };
 
 ser_sync();
 
-var to_stdout = 1;
 var show_size = 0;
 
 if (strcmp(args[0], "get") == 0) {
@@ -69,21 +68,18 @@ if (strcmp(args[0], "get") == 0) {
         exit(1);
     };
     path = sprintf("/%s/%s/%s", [args[1], args[2], args[3]]);
-    ok = ser_put_p("aoc", path, args[4], cb);
     to_stdout = 0;
+    ok = ser_put_p("aoc", path, args[4], cb);
 } else {
     fprintf(2, "usage: %s\n       %s\n", [usage_get, usage_submit]);
     exit(1);
 };
 
-*strp = 0;
-
 if (ok && show_size) {
-    fprintf(2, "%u characters\n", [strlen(str)]);
-    fprintf(2, "%u lines\n", [linecount(str)]);
+    fprintf(2, "%u characters\n", [strlen("")]); # TODO
+    fprintf(2, "%u lines\n", [linecount("")]); # TODO
 };
 
-if (to_stdout) {
-    puts(str);
-    if (!ok) putchar('\n');
-};
+if (to_stdout && !ok) bputc(out, '\n');
+
+bflush(out);

@@ -12,16 +12,12 @@ use IO::Handle;
 use Time::HiRes qw(usleep);
 use Try::Tiny;
 
-my $SLEEP_US = 9000;
+my $SLEEP_US = 1000;
 
 sub new {
     my ($pkg, $readfile, $writefile) = @_;
 
     my $self = bless {}, $pkg;
-    #open ($self->{readfh}, '<', $readfile)
-    #    or die "can't read $readfile: $!\n";
-    #open ($self->{writefh}, '>', $writefile)
-    #    or die "can't write $writefile: $!\n";
     $self->{readfh} = $readfile;
     $self->{writefh} = $writefile;
 
@@ -69,10 +65,22 @@ sub write {
     my ($self, $data) = @_;
 
     my $fh = $self->{writefh};
-
     for my $c (split //, $data) {
         usleep($SLEEP_US);
         print $fh $c;
+    }
+}
+
+sub chunked_write {
+    my ($self, $data) = @_;
+
+    while (length($data)) {
+        # we expect a "!" to prompt each chunk
+        my $prompt = $self->read(1);
+        return if $prompt ne "!";
+
+        my $chunk = substr($data, 0, 256, '');
+        $self->write($chunk);
     }
 }
 
@@ -96,7 +104,8 @@ sub run {
                 my $response = $self->{handlers}{$method}{$type}->($path, $content);
                 my $size = length($response);
                 print STDERR "ok $size\n";
-                $self->write("ok $size\n$response\n");
+                $self->write("ok $size\n");
+                $self->chunked_write("$response\n");
             } else {
                 die "no handler for '$method $type'\n";
             }
@@ -104,7 +113,12 @@ sub run {
             $_ =~ s/\n/ /g;
             my $size = length($_);
             print STDERR "error $size: $_\n";
-            $self->write("error $size\n$_\n");
+            try {
+                $self->write("error $size\n");
+                $self->chunked_write("$_\n");
+            } catch {
+                print STDERR "error while writing error: $_";
+            };
         };
 
         print STDERR "> ";

@@ -31,13 +31,12 @@ var filebuf = malloc(16384);
 *filebuf = 0;
 var filep = filebuf;
 var filelen = 0;
-var cb = func(ok, ch) {
+var cb = func(ok, buf, len) {
     if (ok) {
-        filelen++;
-        *(filep++) = ch;
+        if (localfile) bwrite(localfile, buf, len);
     } else {
         rc = 1;
-        fputc(2, ch);
+        write(2, buf, len);
     };
 };
 
@@ -51,10 +50,7 @@ if (strcmp(args[0], "get") == 0) {
         fprintf(2, "error: can't open %s\n", [args[2]]);
         exit(1);
     };
-    if (ser_get_p("file", args[1], 0, cb)) {
-        bwrite(localfile, filebuf, filelen);
-    };
-    bclose(localfile);
+    ser_get_p("file", args[1], 0, cb);
 } else if (strcmp(args[0], "put") == 0) {
     r = ser_put("file", args[2], slurp(args[1]));
     if (!r[0]) {
@@ -67,5 +63,7 @@ if (strcmp(args[0], "get") == 0) {
 };
 
 if (rc != 0) fputc(2, '\n');
+
+if (localfile) bclose(localfile);
 
 exit(rc);
