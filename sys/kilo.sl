@@ -279,29 +279,12 @@ readkey = func() {
 rowlen = grlen;
 row2chars = grbase;
 
-cx2rx = func(row, cx) {
-    var s = row2chars(row);
-    var x = 0;
-    var i = 0;
-    while (i - cx) {
-        if (s[i] == '\t') x = x + TABSTOP-1 - (x & (TABSTOP-1));
-        x++;
-        i++;
-    };
-    return x;
-};
-
-rx2cx = func(row, rx) {
-    var s = row2chars(row);
-    var x = 0;
-    var i = 0;
-    while (x - rx) {
-        if (s[i] == '\t') x = x + TABSTOP-1 - (x & (TABSTOP-1));
-        x++;
-        i++;
-    };
-    return i;
-};
+# these 2 functions convert between character-space and screen-space,
+# which used to be different because of tab characters and control
+# characters, but in the interest of performance, tab characters are
+# now turned into spaces, and control characters are ignored
+cx2rx = func(row, cx) return cx;
+rx2cx = func(row, rx) return rx;
 
 appendrow = func(gr) {
     insertrow(grlen(rows), gr);
@@ -537,7 +520,14 @@ insertnewline = func() {
     var len = rowlen(row);
     var at = cx;
     while (at != len) {
-        grpush(gr, chars[at]);
+        if (chars[at] == '\t') {
+            # tab: pad with spaces up to next tabstop
+            grpush(gr, ' ');
+            while (grlen(gr)&3)
+                grpush(gr, ' ');
+        } else {
+            grpush(gr, chars[at]);
+        };
         at++;
     };
     insertrow(cy+1, gr);
@@ -1240,7 +1230,14 @@ processkey = func() {
                 navchar(c);
             };
         } else if (mode == INSERT_MODE) {
-            insertchar(c);
+            if (c == '\t') {
+                # tab: add spaces up to next tabstop
+                insertchar(' ');
+                while (cx & 3)
+                    insertchar(' ');
+            } else {
+                insertchar(c);
+            };
         };
     };
 
