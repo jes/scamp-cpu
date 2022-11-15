@@ -819,34 +819,12 @@ refresh = func() {
     full_redraw = 0;
 };
 
-var rowbuf_col;
 drawrow = func(row) {
-    rowbuf_col = 0;
-    var addchar = func(ch) {
-        if (rowbuf_col >= coloff && rowbuf_col < coloff+COLS)
-            raw_writech(ch);
-        rowbuf_col++;
-    };
-
-    # turn the chars into something renderable:
-    #  - turn tabs into 4 spaces
-    #  - turn control characters into "^A" type stuff?
-    var i = 0;
-    var ch;
+    var i = coloff;
     var rowstr = grbase(row);
     var len = rowlen(row);
-    while (i != len) {
-        ch = rowstr[i++];
-        if (ch == '\t') {
-            addchar(' ');
-            while (rowbuf_col & (TABSTOP-1))
-                addchar(' ');
-        } else if (iscntrl(ch)) {
-            addchar('^');
-            addchar(ch+'A'-1);
-        } else {
-            addchar(ch);
-        };
+    while (i != len && i < coloff+COLS) {
+        raw_writech(rowstr[i++]);
     };
 
     writeesc("[K"); # clear to end of line
@@ -932,7 +910,11 @@ drawstatusmsg = func() {
 
 setstatusmsg = func(fmt, args) {
     if (statusmsg) free(statusmsg);
-    statusmsg = sprintf(fmt, args);
+    if (args) {
+        statusmsg = sprintf(fmt, args);
+    } else {
+        statusmsg = strdup(fmt);
+    };
 };
 
 setdefaultstatus = func() {
@@ -1235,7 +1217,7 @@ processkey = func() {
                 insertchar(' ');
                 while (cx & 3)
                     insertchar(' ');
-            } else {
+            } else if (!iscntrl(c)) {
                 insertchar(c);
             };
         };
