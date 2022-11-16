@@ -520,14 +520,7 @@ insertnewline = func() {
     var len = rowlen(row);
     var at = cx;
     while (at != len) {
-        if (chars[at] == '\t') {
-            # tab: pad with spaces up to next tabstop
-            grpush(gr, ' ');
-            while (grlen(gr)&3)
-                grpush(gr, ' ');
-        } else {
-            grpush(gr, chars[at]);
-        };
+        grpush(gr, chars[at]);
         at++;
     };
     insertrow(cy+1, gr);
@@ -637,7 +630,13 @@ openfile = func(filename) {
                 appendrow(row);
                 row = grnew();
             } else {
-                grpush(row, ch);
+                if (ch == '\t') {
+                    grpush(row, ' ');
+                    while (grlen(row) & 3)
+                        grpush(row, ' ');
+                } else {
+                    grpush(row, ch);
+                };
             };
         };
     };
@@ -823,7 +822,7 @@ drawrow = func(row) {
     var i = coloff;
     var rowstr = grbase(row);
     var len = rowlen(row);
-    while (i != len && i < coloff+COLS) {
+    while (i < len && i < coloff+COLS) {
         raw_writech(rowstr[i++]);
     };
 
