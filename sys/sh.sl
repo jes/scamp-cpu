@@ -368,7 +368,11 @@ die = func(fmt, args){
 };
 
 while (1) {
-    if (in_fd == 0) fputs(2, "$ "); # TODO: [nice] not if stderr is not a terminal
+    if (in_fd == 0) {
+        if (getcwd(buf, 256) == 0)
+            fputs(2, buf);
+        fputs(2, " $ ");
+    };
     if (fgets(in_fd, buf, 256) == 0) break;
     execute(buf);
 };
