@@ -72,6 +72,7 @@ var fs_write = func(fd, buf, sz) {
     var write;
     var isnewblock = 0;
     var direct;
+    var already_written = 0;
 
     if (!blkbuf) blkbuf = BLKBUF;
 
@@ -108,16 +109,21 @@ var fs_write = func(fd, buf, sz) {
             nextblknum = blknext(blkbuf);
         };
 
+        already_written = 0;
         if (direct) {
             # write straight from user buffer
             cf_blkwrite(blknum, blkbuf, buf+writesz);
+            already_written = 1;
             blkbuf[256] = 0; # buffer no longer contains true contents of block on disk
         } else {
             # copy data to block
             memcpy(blkbuf+posinblk+2, buf+writesz, write);
 
             # write block to disk immediately if we're using the shared buffer
-            if (blkbuf == BLKBUF) blkwrite(blknum, blkbuf);
+            if (blkbuf == BLKBUF) {
+                blkwrite(blknum, blkbuf);
+                already_written = 1;
+            };
         };
 
         if (sz gt write && nextblknum == blknum) kpanic("write: nextblknum == blknum");
@@ -126,9 +132,10 @@ var fs_write = func(fd, buf, sz) {
         sz = sz - write;
         posinblk = posinblk + write;
 
-        # if we filled this block, sync it to disk
+        # if we filled this block, sync it to disk and move to the next block
         if (posinblk == BLKSZ-2) {
-            fs_sync(fd);
+            if (!already_written)
+                fs_sync(fd);
             blknum = nextblknum;
             *(fdbase+FDDATA) = blknum;
             posinblk = 0;
