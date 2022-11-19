@@ -1,9 +1,5 @@
 # read /proc/*.kernel and report the state of the process stack
 #
-# TODO: [bug] without knowing our real pid, we can only use the contents of /proc
-#       to try to work it out, which means, for example, if the computer is reset
-#       while the process stack is deep, then we can report processes as still
-#       "running" even though they're not
 # TODO: [nice] what other stuff should we display? size of *.user? number of open
 #       files? return address? whether a trap function is in use?
 
