@@ -194,7 +194,7 @@ sub encode {
     warn "line $.: busin with no busout probably makes no sense (will get PC on bus, please specify 'PO'): $uinstr\n" if ($have_busin && !$have_busout && !$have_alu);
 
     # the "EO" bit is active-low, so needs toggling:
-    $num ^= 0x8000;
+    $num ^= $ucode{EO};
 
     return $num;
 }
