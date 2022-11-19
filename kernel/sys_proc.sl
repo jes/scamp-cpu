@@ -127,6 +127,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
     #  - cmdargs
     #  - trapfunc
     #  - fdtable (has to come last because it'll overwrite our fd)
+    sys_setbuf(kfd, 0x100); # use TPA space for buffer
     sys_write(kfd, &sp, 1);
     sys_write(kfd, &ret, 1);
     sys_write(kfd, &CWDBLK, 1);
@@ -322,7 +323,7 @@ sys_savetpa = func(filename, top) {
     var writesz;
     while (p != top) {
         writesz = top-p;
-        if (writesz gt 16384) writesz = 16384;
+        if (writesz gt 16256) writesz = 16256;
         n = sys_write(fd, p, writesz);
         if (n < 0) throw(n);
         if (n != writesz) kpanic("savetpa: write too small");
