@@ -87,11 +87,7 @@ var fdalloc = func() {
 
 # make the given fd available for use again
 var fdfree = func(fd) {
-    var i = 0;
-    while (i != 8) {
-        *(fdbaseptr(fd)+i) = 0;
-        i++;
-    };
+    memset(fdbaseptr(fd), 0, 8);
 };
 
 var fd_init = func() {
