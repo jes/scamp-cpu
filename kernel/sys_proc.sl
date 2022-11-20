@@ -126,8 +126,7 @@ var sys_system_impl  = func(top, args, sp, ret) {
     #  - CWDBLK
     #  - cmdargs
     #  - trapfunc
-    #  - fdtable (has to come last because it'll overwrite our fd)
-    sys_setbuf(kfd, 0x100); # use TPA space for buffer
+    #  - fdtable (has to come last because reading it will overwrite our fd)
     sys_write(kfd, &sp, 1);
     sys_write(kfd, &ret, 1);
     sys_write(kfd, &CWDBLK, 1);
