@@ -592,11 +592,19 @@ curchar = func() {
 joinline = func(y) {
     if (cy >= grlen(rows)-1) return 0;
 
-    # TODO: [nice] insert a space at the end of the line, trim the whitespace
-    #       from the start of the next line
+    # move to start of next line
     cy++;
     cx = 0;
+
+    # delete leading whitespace
+    while (grget(grget(rows, cy), 0) == ' ')
+        delchars(1);
+
+    # delete the newline character separating the lines
     delchar();
+
+    # insert a space separator
+    insertchar(' ');
 };
 
 ### FILE I/O
