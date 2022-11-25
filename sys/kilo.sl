@@ -389,12 +389,12 @@ indentrows = func(nrows, levels) {
     while (nrows--) {
         cx = 0;
         if (levels > 0) {
-            i = levels;
+            i = levels+levels+levels+levels;
             while (i--)
-                insertchar('\t');
+                insertchar(' ');
         } else {
-            i = -levels;
-            while (i-- && charat(0, cy) == '\t')
+            i = -(levels+levels+levels+levels);
+            while (i-- && charat(0, cy) == ' ')
                 rowdelchar(grget(rows, cy), 0);
         };
         markrowdirty(cy);
