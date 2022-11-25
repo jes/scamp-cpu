@@ -696,15 +696,15 @@ Include = func(x) {
     grpush(INCLUDED, intern(file));
 
     # save parser state
-    var pos0 = pos;
-    var readpos0 = readpos;
-    var line0 = line;
+    var pos0 = parse_pos;
+    var readpos0 = parse_readpos;
+    var line0 = parse_line;
     var parse_getchar0 = parse_getchar;
     var parse_filename0 = parse_filename;
     var include_fd0 = include_fd;
-    var ringbuf0 = malloc(ringbufsz);
+    var ringbuf0 = malloc(parse_ringbufsz);
     var include_inbuf0 = include_inbuf;
-    memcpy(ringbuf0, ringbuf, ringbufsz);
+    memcpy(ringbuf0, parse_ringbuf, parse_ringbufsz);
 
     include_fd = open(file, O_READ);
     if (include_fd < 0) include_fd = open_include(file, "/lib/");
@@ -724,14 +724,14 @@ Include = func(x) {
     bclose(include_inbuf);
 
     # restore parser state
-    pos = pos0;
-    readpos = readpos0;
-    line = line0;
+    parse_pos = pos0;
+    parse_readpos = readpos0;
+    parse_line = line0;
     parse_getchar = parse_getchar0;
     free(parse_filename);
     parse_filename = parse_filename0;
     include_fd = include_fd0;
-    memcpy(ringbuf, ringbuf0, ringbufsz);
+    memcpy(parse_ringbuf, ringbuf0, parse_ringbufsz);
     free(ringbuf0);
     include_inbuf = include_inbuf0;
 

@@ -4,20 +4,20 @@
 
 include "malloc.sl";
 
-var pos;
-var readpos;
-var line;
+var parse_pos;
+var parse_readpos;
+var parse_line;
 var parse_getchar;
 var parse_filename;
 
-var ringbufsz = 256; # check the "too much backtrack" test, and peekchar(), before changing this
-var ringbuf = malloc(ringbufsz);
+var parse_ringbufsz = 256; # check the "too much backtrack" test, and peekchar(), before changing this
+var parse_ringbuf = malloc(parse_ringbufsz);
 
 var die = func(fmt, args) {
     fprintf(2, "error: ", 0);
     if (parse_filename)
         fprintf(2, "%s: ", [parse_filename]);
-    fprintf(2, "line %d: ", [line]);
+    fprintf(2, "line %d: ", [parse_line]);
     fprintf(2, fmt, args);
     fputc(2, '\n');
     exit(1);
@@ -27,16 +27,16 @@ var warn = func(fmt, args) {
     fprintf(2, "warning: ", 0);
     if (parse_filename)
         fprintf(2, "%s: ", [parse_filename]);
-    fprintf(2, "line %d: ", [line]);
+    fprintf(2, "line %d: ", [parse_line]);
     fprintf(2, fmt, args);
     fputc(2, '\n');
 };
 
 # setup parser state ready to parse the given string
 var parse_init = func(getchar_func) {
-    pos = 0;
-    readpos = 0;
-    line = 1;
+    parse_pos = 0;
+    parse_readpos = 0;
+    parse_line = 1;
     parse_getchar = getchar_func;
     parse_filename = 0;
 };
@@ -65,9 +65,9 @@ var asm_parse = asm {
     pop x
     ld r1, x # r1 = f
 
-    ld x, (_pos) # pos0
+    ld x, (_parse_pos) # pos0
     push x
-    ld x, (_line) # line0
+    ld x, (_parse_line) # line0
     push x
 
     ld x, r254
@@ -85,11 +85,11 @@ var asm_parse = asm {
 
     parsereset:
     pop x
-    ld (_line), x # line0
+    ld (_parse_line), x # line0
     pop x
     ld r4, x # pos0
 
-    ld r1, (_pos)
+    ld r1, (_parse_pos)
     sub r1, x
     and r1, 0xff00
     jz parsereturn
@@ -101,7 +101,7 @@ var asm_parse = asm {
     call x
 
     parsereturn:
-    ld (_pos), r4
+    ld (_parse_pos), r4
     ret
 
     tmb_s: .str "too much backtrack\0"
@@ -119,10 +119,10 @@ var parse = asm_parse;
 #    return ringbuf[lookpos];
 #};
 var asm_peekchar = asm {
-    ld r0, (_pos)
+    ld r0, (_parse_pos)
     and r0, 0xff # 0xff == ringbufsz-1
     ld (peekchar_lookpos), r0
-    sub r0, (_readpos)
+    sub r0, (_parse_readpos)
     jnz peekchar_good
 
     ld x, r254
@@ -130,14 +130,14 @@ var asm_peekchar = asm {
     call (_parse_getchar)
     pop x
     ld r254, x
-    ld x, (_ringbuf)
-    add x, (_readpos)
+    ld x, (_parse_ringbuf)
+    add x, (_parse_readpos)
     ld (x), r0
-    inc (_readpos)
-    and (_readpos), 0xff # 0xff == ringbufsz-1
+    inc (_parse_readpos)
+    and (_parse_readpos), 0xff # 0xff == ringbufsz-1
 
     peekchar_good:
-    ld x, (_ringbuf)
+    ld x, (_parse_ringbuf)
     add x, (peekchar_lookpos)
     ld r0, (x)
     ret
@@ -162,15 +162,15 @@ var asm_nextchar = asm {
 
     cmp r0, 10 # '\n'
     jnz nextchar_notnl
-    inc (_line)
-    inc (_pos)
+    inc (_parse_line)
+    inc (_parse_pos)
     ret
     nextchar_notnl:
 
     ld x, r0
     not x
     jz nextchar_eof
-    inc (_pos)
+    inc (_parse_pos)
 
     nextchar_eof:
     ret
