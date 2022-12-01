@@ -46,7 +46,7 @@ sub read_session {
 sub get {
     my ($self, $year, $day, $break) = @_;
 
-    my $dom = $self->{ua}->get("$self->{host}/$year/day/$day")->res->dom;
+    my $dom = $self->{ua}->get("$self->{host}/$year/day/$day" => {'User-Agent' => 'github.com/jes/scamp-cpu by james@incoherency.co.uk'})->res->dom;
 
     my $html = $dom->find('.day-desc')->join("\n");
     $html =~ s/<\/h2>/\n/g;
