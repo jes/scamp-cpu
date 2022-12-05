@@ -10,9 +10,10 @@ var usage_get = "aoc get YEAR DAY";
 var usage_part2 = "aoc part2 YEAR DAY";
 var usage_input = "aoc input YEAR DAY";
 var usage_submit = "aoc submit YEAR DAY PART ANSWER";
+var usage_rank = "aoc rank YEAR";
 
 var usage = func() {
-    fprintf(2, "usage: %s\n       %s\n       %s\n       %s\n", [usage_get, usage_part2, usage_input, usage_submit]);
+    fprintf(2, "usage: %s\n       %s\n       %s\n       %s\n       %s\n", [usage_get, usage_part2, usage_input, usage_submit, usage_rank]);
     exit(1);
 };
 
@@ -70,6 +71,14 @@ if (strcmp(args[0], "get") == 0) {
     path = sprintf("/%s/%s/%s", [args[1], args[2], args[3]]);
     to_stdout = 0;
     ok = ser_put_p("aoc", path, args[4], cb);
+} else if (strcmp(args[0], "rank") == 0) {
+    if (!args[1] || args[2]) {
+        fprintf(2, "usage: %s\n", [usage_rank]);
+        exit(1);
+    };
+    path = sprintf("/%s", [args[1]]);
+    to_stdout = 0;
+    ok = ser_get_p("aocrank", path, 0, cb);
 } else {
     usage();
 };
