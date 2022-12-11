@@ -184,6 +184,7 @@ mkdir doc
 put -t ../doc/ALU.md /doc/alu
 put -t ../doc/AOC.md /doc/aoc
 put -t ../doc/ASSEMBLER.md /doc/assembler
+put -t ../doc/BIGINT.md /doc/bigint
 put -t ../doc/BOOT.md /doc/boot
 put -t ../doc/CARDS.md /doc/cards
 put -t ../doc/COMPILER.md /doc/compiler
