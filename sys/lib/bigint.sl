@@ -195,24 +195,25 @@ bigcmpw = func(big, w) {
     var equal_high = 0;
     var unequal_high_result = 1;
 
+    var i = bigint_prec;
+
     if (w & 0x8000) { # w < 0
         # if "big" is not negative, then big > w
         if (!(big[bigint_prec-1] & 0x8000)) return 1;
 
         # if "big" and "w" are equal, the high words of "big" will be -1; if
         # this is not the case, then "big" is smaller than "w"
-        equal_high = -1;
-        unequal_high_result = -1;
+        while (i-- - 1) # while (i-- > 1)
+            if (big[i] + 1) # if (big[i] != -1)
+                return -1;
     } else { # w >= 0
         # if "big" is negative, then big < w
         if (big[bigint_prec-1] & 0x8000) return -1;
-    };
 
-    # check for inequality in high words
-    var i = bigint_prec;
-    while (i-- > 1)
-        if (big[i] != equal_high)
-            return unequal_high_result;
+        while (i-- - 1) # while (i-- > 1)
+            if (big[i]) # if (big[i] != 0)
+                return 1;
+    };
 
     if (big[0] gt w) return 1;
     if (big[0] lt w) return -1;
