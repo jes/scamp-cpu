@@ -83,21 +83,103 @@ bigfree = free;
 
 # return a value less than, equal to, or greater than 0 depending on whether big1
 # is judged to be less than, equal to, or greater than big2
-bigcmp = func(big1, big2) {
-    var big1neg = big1[bigint_prec-1] & 0x8000;
-    var big2neg = big2[bigint_prec-1] & 0x8000;
-    if (big1neg != big2neg) {
-        if (big1neg) return -1
-        else         return 1;
-    };
+#bigcmp = func(big1, big2) {
+#    var big1neg = big1[bigint_prec-1] & 0x8000;
+#    var big2neg = big2[bigint_prec-1] & 0x8000;
+#    if (big1neg != big2neg) {
+#        if (big1neg) return -1
+#        else         return 1;
+#    };
+#
+#    var i = bigint_prec;
+#    while (i--) {
+#        if (big1[i] == big2[i]) continue
+#        else if (big1[i] gt big2[i]) return 1
+#        else return -1;
+#    };
+#    return 0;
+#};
+bigcmp = asm {
+    pop x
+    ld r2, x # big2
+    pop x
+    ld r1, x # big1
 
-    var i = bigint_prec;
-    while (i--) {
-        if (big1[i] == big2[i]) continue
-        else if (big1[i] gt big2[i]) return 1
-        else return -1;
-    };
-    return 0;
+    # r3 = big1[bigint_prec-1] & 0x8000 # big1neg
+    ld x, r1
+    add x, (_bigint_prec)
+    dec x
+    ld r3, (x)
+    and r3, 0x8000
+
+    # r4 = big2[bigint_prec-1] & 0x8000 # big2neg
+    ld x, r2
+    add x, (_bigint_prec)
+    dec x
+    ld r4, (x)
+    and r4, 0x8000
+
+    # if (big1neg != big2neg)
+    cmp r3, r4
+    jz bigcmp_samesign
+    #   if (big1neg)
+    test r3
+    jz bigcmp_greaterthan
+    #       return -1
+    bigcmp_lessthan:
+    ld r0, 0xffff
+    ret
+    # else return 1
+    bigcmp_greaterthan:
+    ld r0, 1
+    ret
+
+    bigcmp_samesign:
+
+    ld r5, (_bigint_prec) # i = bigint_prec
+    # while (i--)
+    bigcmp_loop:
+        dec r5
+
+        # r3 = big1[i]
+        ld x, r1
+        add x, r5
+        ld r3, (x)
+
+        # r4 = big2[i]
+        ld x, r2
+        add x, r5
+        ld r4, (x)
+
+        # if (big1[i] == big2[i]) continue
+        cmp r3, r4
+        jz bigcmp_continue
+
+        # if (big1[i] gt big2[i]) return 1
+        # else return -1
+        # (this asm code derived from the signcmp() function in slangc)
+        ld x, r4
+        and x, 32768
+        ld r6, x
+        ld x, r3
+        and x, 32768
+        cmp r6, x
+        jz bigcmp_docmp # sign bits equal: do ordinary comparison
+        test x
+        jz bigcmp_lessthan # first argument upper bit not set: big1[i] lt big2[i]
+        jmp bigcmp_greaterthan # first argument upper bit set: big1[i] gt big2[i]
+        bigcmp_docmp:
+        cmp r3, r4
+        jgt bigcmp_greaterthan
+        jmp bigcmp_lessthan
+
+        bigcmp_continue:
+        test r5
+        jnz bigcmp_loop
+
+    # completed loop without finding a difference: values are equal
+    ld r0, 0
+    ret
 };
 
 # return a value less than, equal to, or greater than 0 depending on whether big
