@@ -402,7 +402,7 @@ bigadd = asm {
 
         value_cmp:
         # signs are equal: compare the values
-        cmp r4, r5 # prev -= big1[i]
+        cmp r4, r5
         jlt bigadd_loop
 
         do_carry:
