@@ -13,9 +13,9 @@ var bigint_bits;
 var bigint_itoaspace = 0;
 var bigint_itoaspace_end;
 
-var bigminusone; # constant -1
-var bigzero; # constant 0
-var bigone; # constant 1
+var bigminusone = 0; # constant -1
+var bigzero = 0; # constant 0
+var bigone = 0; # constant 1
 
 # forward declarations
 var biginit;
@@ -46,6 +46,9 @@ var bigdivw;
 var bigmod;
 var bigmodw;
 
+var bigaddwtmp = 0;
+var bigmulwtmp = 0;
+
 # if you use biginit, you must call it before creating
 # any bigints
 biginit = func(prec) {
@@ -62,6 +65,10 @@ biginit = func(prec) {
     bigminusone = bignew(-1);
     bigzero = bignew(0);
     bigone = bignew(1);
+
+    bigfree(bigaddwtmp); bigfree(bigmulwtmp);
+    bigaddwtmp = bignew(0);
+    bigmulwtmp = bignew(0);
 };
 
 # create a new bigint with the given (word) value
@@ -407,10 +414,8 @@ bigadd = asm {
 
 # big = big + w
 bigaddw = func(big, w) {
-    var bigw = bignew(w);
-    bigadd(big, bigw);
-    bigfree(bigw);
-
+    bigsetw(bigaddwtmp, w);
+    bigadd(big, bigaddwtmp);
     return big;
 };
 
@@ -432,10 +437,8 @@ bigsub = func(big1, big2) {
 
 # big = big - w
 bigsubw = func(big, w) {
-    var bigw = bignew(-w);
-    bigadd(big, bigw);
-    bigfree(bigw);
-
+    bigsetw(bigaddwtmp, -w);
+    bigadd(big, bigaddwtmp);
     return big;
 };
 
@@ -458,10 +461,8 @@ bigmul = func(big1, big2) {
 
 # big = big * w
 bigmulw = func(big, w) {
-    var bigw = bignew(w);
-    bigmul(big, bigw);
-    bigfree(bigw);
-
+    bigsetw(bigmulwtmp, w);
+    bigmul(big, bigmulwtmp);
     return big;
 };
 
