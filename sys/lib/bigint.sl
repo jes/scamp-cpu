@@ -113,7 +113,7 @@ bigcmp = asm {
     ld r1, x # big1
 
     # r3 = big1[bigint_prec-1] & 0x8000 # big1neg
-    ld x, r1
+    # ld x, r1 # (but x is already r1)
     add x, (_bigint_prec)
     dec x
     ld r3, (x)
