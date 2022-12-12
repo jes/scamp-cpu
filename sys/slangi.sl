@@ -1,6 +1,7 @@
 # SLANG Interpreter
 
 include "bigint.sl";
+include "bitmap.sl";
 include "bufio.sl";
 include "getopt.sl";
 include "grarr.sl";

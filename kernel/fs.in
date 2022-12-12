@@ -68,6 +68,7 @@ put ../sys/libbigfix.list /lib/libbigfix.list
 put -t ../sys/lib/head.s /lib/head.s
 put -t ../sys/lib/foot.s /lib/foot.s
 put -t /dev/null /lib/bigint.sl
+put -t /dev/null /lib/bitmap.sl
 put -t /dev/null /lib/bufio.sl
 put -t /dev/null /lib/fixed.sl
 put -t /dev/null /lib/grarr.sl
