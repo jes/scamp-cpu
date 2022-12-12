@@ -799,3 +799,32 @@ var memcpy = asm {
     .word memcpy6
     .word memcpy7
 };
+
+var abs = asm {
+    pop x
+    ld r0, x
+    and x, 0x8000
+    jz abs_pos
+    neg r0
+    ret
+    abs_pos:
+    ret
+};
+
+var sign = asm {
+    pop x
+    test x
+    jz sign_zero
+    and x, 0x8000
+    jz sign_pos
+    ld r0, 0xffff
+    ret
+
+    sign_zero:
+    ld r0, 0
+    ret
+
+    sign_pos:
+    ld r0, 1
+    ret
+};
