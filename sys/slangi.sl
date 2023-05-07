@@ -464,8 +464,15 @@ GlobalNode = func(name) {
     if (addr) return cons(EvalGlobalNode, addr);
     die("use of undefined global: %s\n", [name]);
 };
-EvalGlobalNode = func(n) {
-    return *(n[1]);
+#EvalGlobalNode = func(n) {
+#    return *(n[1]);
+#};
+EvalGlobalNode = asm {
+    pop x
+    inc x
+    ld x, (x)
+    ld r0, (x)
+    ret
 };
 AddressOfLocalNode = func(name) {
     var v = findlocal(name);
