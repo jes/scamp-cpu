@@ -514,9 +514,7 @@ PreOpNode = func(inc, name) {
 EvalPreOpNode = func(n) {
     var inc = n[1];
     var addr = eval(n[2]);
-    var val = *addr;
-    if (inc) val++
-    else val--;
+    var val = *addr + inc;
     *addr = val;
     return val;
 };
@@ -528,8 +526,7 @@ EvalPostOpNode = func(n) {
     var inc = n[1];
     var addr = eval(n[2]);
     var val = *addr;
-    if (inc) *addr = val + 1
-    else *addr = val - 1;
+    *addr = val + inc;
     return val;
 };
 
@@ -1145,7 +1142,7 @@ PreOp = func(x) {
     if (parse(String,"++")) {
         inc = 1;
     } else if (parse(String,"--")) {
-        inc = 0;
+        inc = -1;
     } else {
         return 0;
     };
@@ -1162,7 +1159,7 @@ PostOp = func(x) {
     if (parse(String,"++")) {
         inc = 1;
     } else if (parse(String,"--")) {
-        inc = 0;
+        inc = -1;
     } else {
         return 0;
     };
