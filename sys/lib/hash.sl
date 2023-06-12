@@ -247,7 +247,7 @@ var htmaybegrow = asm {
     jgt needgrow
 
     # else return 0
-    ld r0, 0
+    zero r0
     ret
 
     needgrow:

@@ -219,10 +219,10 @@ var asm_AnyChar = asm {
         jmp AnyChar_loop
 
     AnyChar_ret0:
-    ld r0, 0
+    zero r0
     ret
     AnyChar_ret1:
-    ld r0, 1
+    one r0
     ret
 };
 var AnyChar = asm_AnyChar;

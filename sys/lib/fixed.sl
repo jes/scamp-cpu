@@ -155,7 +155,7 @@ fixmul = asm {
     jlt fixmul_neg_a
     # else a == 0, so result is 0
     pop x # discard b
-    ld r0, 0
+    zero r0
     ret
     fixmul_neg_a:
     neg r1
@@ -185,9 +185,9 @@ fixmul = asm {
     pop x
     ld r2, x # r2 = b
 
-    ld r0, 0 # r0 = result
+    zero r0 # r0 = result
     ld r6, 16 # r6 = i
-    ld r7, 1 # r7 = bit
+    one r7 # r7 = bit
     ld r8, (_fix_prec) # r8 = f
     ld r9, (_powers_of_2)
     add r9, r8 # r9 = powers_of_2+f

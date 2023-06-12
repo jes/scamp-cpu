@@ -138,7 +138,7 @@ bigcmp = asm {
     ret
     # else return 1
     bigcmp_greaterthan:
-    ld r0, 1
+    one r0
     ret
 
     bigcmp_samesign:
@@ -185,7 +185,7 @@ bigcmp = asm {
         jnz bigcmp_loop
 
     # completed loop without finding a difference: values are equal
-    ld r0, 0
+    zero r0
     ret
 };
 
@@ -341,10 +341,10 @@ bigadd = asm {
     pop x
     ld r1, x # big2
     pop x
-    ld r0, x # big1
+    ld r0, x # big1 (return value)
     ld r10, x # big1
 
-    ld r2, 0 # carry
+    zero r2 # carry
     ld r3, (_bigint_prec) # i = bigint_prec+1
     inc r3
     # r4 == prev
@@ -384,7 +384,7 @@ bigadd = asm {
         prev_ne_big1i:
 
         # carry = 0
-        ld r2, 0
+        zero r2
 
         # now we need to see if big1[i] is less than prev
         # first compare the signs:
@@ -522,7 +522,7 @@ bigbit = asm {
     ld x, (x) # x = big[word]
 
     and x, (r1)
-    ld r0, 0
+    zero r0
     jz r3 # ret
     inc r0
     jmp r3 # ret

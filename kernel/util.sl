@@ -159,7 +159,7 @@ var shr8 = asm {
     ld r0, x
     ld r1, r254 # stash return address
 shr8_entry:
-    ld r254, 0
+    zero r254
     tbsz r0, 0x8000
     sb r254, 0x80
     tbsz r0, 0x4000
@@ -185,7 +185,7 @@ var shr12 = asm {
     pop x
     ld r0, x
     ld r1, r254 # stash return address
-    ld r254, 0
+    zero r254
     tbsz r0, 0x8000
     sb r254, 0x8
     tbsz r0, 0x4000
@@ -204,7 +204,7 @@ var byteshr4 = asm {
     pop x
     ld r0, x
     ld r1, r254 # stash return address
-    ld r254, 0
+    zero r254
     tbsz r0, 0x800
     sb r254, 0x80
     tbsz r0, 0x400
@@ -297,7 +297,7 @@ do_setjmp: # x = jmpbuf pointer, r2 = stashed return
     ld (x), sp # stack pointer
     inc x
     ld (x), r2 # stashed return
-    ld r0, 0 # return 0 this time
+    zero r0 # return 0 this time
     ret
 };
 
@@ -315,7 +315,7 @@ var catch = asm {
     # first check if catch() is allowed, and no-op if not
     test (_catch_allowed)
     jnz catch_ok
-    ld r0, 0
+    zero r0
     ret
 
     catch_ok:

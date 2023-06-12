@@ -374,5 +374,7 @@ while (1) {
         fputs(2, " $ ");
     };
     if (fgets(in_fd, buf, 256) == 0) break;
+    outp(2,1);
     execute(buf);
+    outp(1,1);
 };

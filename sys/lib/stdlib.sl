@@ -27,8 +27,8 @@ var mul = asm {
     ld r2, x # r2 = arg1
     pop x
     ld r1, x # r1 = arg2
-    ld r0, 0 # result
-    ld r3, 1 # (1 << i)
+    zero r0 # result
+    one r3 # (1 << i)
 
     mul_loop:
         ld x, r2 # x = arg1
@@ -76,8 +76,8 @@ var divmod = asm {
     ld r9, 3(x) # r9 = denom
     ld r10, 4(x) # r10 = num
 
-    ld r13, 0 # numerator negative?
-    ld r14, 0 # denominator negative?
+    zero r13 # numerator negative?
+    zero r14 # denominator negative?
 
     # is numerator negative? Set r13 and make it positive
     test r10
@@ -95,8 +95,8 @@ var divmod = asm {
 
     divmod_real:
 
-    ld r4, 0 # r4 = Q
-    ld r5, 0 # r5 = R
+    zero r4 # r4 = Q
+    zero r5 # r5 = R
     ld r6, 15 # r6 = i
 
     # while (i >= 0)
@@ -161,8 +161,8 @@ var udivmod = asm {
     ld r9, 3(x) # r9 = denom
     ld r10, 4(x) # r10 = num
 
-    ld r13, 0 # numerator negative?
-    ld r14, 0 # denominator negative?
+    zero r13 # numerator negative?
+    zero r14 # denominator negative?
 
     jmp divmod_real
 };
@@ -196,7 +196,7 @@ var shr8 = asm {
     pop x
     ld r0, x
     ld r1, r254 # stash return address
-    ld r254, 0
+    zero r254
     tbsz r0, 0x8000
     sb r254, 0x80
     tbsz r0, 0x4000
@@ -269,9 +269,9 @@ var shr = asm {
     pop x
     ld r2, x # r2 = i
 
-    ld r3, 1 # r3 = bit
-    ld r0, 0 # r0 = r
-    ld r5, 0 # r5 = j
+    one r3 # r3 = bit
+    zero r0 # r0 = r
+    zero r5 # r5 = j
 
     ld r6, powers_of_2
     add r6, r1 # r6 = powers_of_2+n
@@ -359,7 +359,7 @@ var isalpha = func(ch) return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z
 var isdigit = asm {
     pop x
     sub x, 0x30 # '0'
-    ld r0, 0
+    zero r0
     jlt r254
     sub x, 9
     jgt r254
@@ -417,7 +417,7 @@ var stridx = asm {
     ret
 
     stridx_notfound:
-        ld r0, 0
+        zero r0
         ret
 };
 
@@ -445,10 +445,10 @@ var atoibase = func(s, base) {
 atoi = asm {
     pop x
     ld r1, x # str
-    ld r0, 0 # result
+    zero r0 # result
 
     # is it negative?
-    ld r2, 0 # negative
+    zero r2 # negative
     cmp (r1), 0x2d # '-'
     jnz atoi_loop
     inc r2
@@ -631,7 +631,7 @@ var popcnt = asm {
     # faster for common cases 0x0000 and 0xffff
     cmp x, 0
     jnz popcnt_nonzero
-    ld r0, 0
+    zero r0
     ret
     popcnt_nonzero:
     cmp x, 0xffff
@@ -640,7 +640,7 @@ var popcnt = asm {
     ret
     popcnt_nonffff:
 
-    ld r0, 0
+    zero r0
 
     tbsz r1, 0x0001
     inc r0
@@ -701,7 +701,7 @@ do_setjmp: # x = jmpbuf pointer, r2 = stashed return
     ld (x), sp # stack pointer
     inc x
     ld (x), r2 # stashed return
-    ld r0, 0 # return 0 this time
+    zero r0 # return 0 this time
     ret
 };
 
@@ -821,10 +821,10 @@ var sign = asm {
     ret
 
     sign_zero:
-    ld r0, 0
+    zero r0
     ret
 
     sign_pos:
-    ld r0, 1
+    one r0
     ret
 };

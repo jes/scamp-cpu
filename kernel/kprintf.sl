@@ -16,8 +16,8 @@ var divmod = asm {
     ld r9, 3(x) # r9 = denom
     ld r10, 4(x) # r10 = num
 
-    ld r4, 0 # r4 = Q
-    ld r5, 0 # r5 = R
+    zero r4 # r4 = Q
+    zero r5 # r5 = R
     ld r6, 15 # r6 = i
 
     # while (i >= 0)

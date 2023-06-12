@@ -4,7 +4,7 @@ var shr9 = asm {
     pop x
     ld r0, x
     ld r1, r254 # stash return address
-    ld r254, 0
+    zero r254
     tbsz r0, 0x8000
     sb r254, 0x40
     tbsz r0, 0x4000

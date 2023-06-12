@@ -923,8 +923,14 @@ ret i8l: # Increase <tt>sp</tt> by <tt>i8l</tt>. Jump to <tt>r254</tt>.
     -2 AI
     MO JMP
 
-nop:
-nop:
+zero (i8h): # Set <tt>r</tt> to 0.
+	IOH AI
+	0 MI
+
+one (i8h): # Set <tt>r</tt> to 1.
+	IOH AI
+	1 MI
+
 nop:
 nop:
 nop:

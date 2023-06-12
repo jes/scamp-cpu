@@ -167,7 +167,7 @@ var bgets = asm {
     pop x
     ld (bgets_bio), x
 
-    ld r0, 0 # ch
+    zero r0 # ch
     ld (bgets_len), 0
 
     # stash return address
@@ -209,7 +209,7 @@ var bgets = asm {
     test (bgets_len)
     jnz bgets_ret_s
     #   return 0;
-    ld r0, 0
+    zero r0
     pop x
     jmp x
 

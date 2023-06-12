@@ -100,7 +100,7 @@ _bmdiv16 = asm {
     ld r0, x
 
     ld r1, r254 # return address
-    ld r254, 0
+    zero r254
 
     # set the lower 8 bits using tbsz/sb the simple way
     tbsz r0, 0x0010
