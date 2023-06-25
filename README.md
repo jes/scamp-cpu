@@ -105,7 +105,6 @@ I suspect the computer will never be "finished", but some things I still want to
  - [ ] write a FORTH implementation (should it run on bare metal or under SCAMP/os?)
  - [ ] write a Z-machine interpreter and port some text adventures
  - [ ] write some games (pong? breakout? tetris?)
- - [ ] serial protocol: make it use xmodem-style block transfer for speed & error-checking
 
 If you happen to want to work on any of the above, I'd be happy to help you!
 
