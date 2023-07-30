@@ -256,7 +256,9 @@ var genop = func(op) {
         i = 0;
         while (i != 8) {
             if (strcmp(magnitude_op[i], op) == 0) {
+                popx();
                 myputs("call "); plabel(magnitude_func[i]); myputs("\n");
+                pushx();
                 SP_OFF++; # 2 args consumed, 1 result pushed
                 magnitude_used[i] = 1;
                 return 0;
@@ -328,7 +330,7 @@ var make_magnitude_functions = func() {
         var wantgt = !wantlt;
         var nomatch = !match;
 
-        myputs("pop x\n");
+        #myputs("pop x\n"); # the pop is before the functional call so that it can cancel out a push
         myputs("ld r0, x\n");
         myputs("and x, 32768 #peepopt:test\n");
         myputs("ld r1, x\n");
@@ -361,7 +363,7 @@ var make_magnitude_functions = func() {
         bprintf(OUT, "ld x, %d\n", [nomatch]);
         plabel(lt); myputs(":\n");
 
-        myputs("push x\n");
+        #myputs("push x\n"); # the push is after the function returns so that it can be cancelled by a pop
         myputs("ret\n");
     };
 
