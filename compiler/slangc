@@ -962,8 +962,10 @@ sub genop {
     # magnitude operators are implemented as "functions" because they're large
     if ($op =~ />|<|g|l/) {
         $used_magnitude_func{$op} = 1;
+        print "pop x\n";
         print "call $magnitude_func{$op}\n";
-        $SP_OFF++; # 2 args consumed, 1 result pushed
+        print "push x\n";
+        $SP_OFF++; # 1 arg consumed, 0 results pushed
         return;
     }
 
@@ -1022,7 +1024,7 @@ sub make_magnitude_functions {
         my $nomatch = $match ? 0 : 1;
         my $wantgt = $wantlt ? 0 : 1;
 
-        print "pop x\n";
+        # print "pop x\n"; # "pop x" is before the function is called so that peepopt can eliminate it
         print "ld r0, x\n";
         print "and x, 32768 #peepopt:test\n"; # r1 = r0 & 0x8000
         print "ld r1, x\n";
@@ -1052,7 +1054,7 @@ sub make_magnitude_functions {
         print "ld x, $nomatch\n";
         print "$lt:\n";
 
-        print "push x\n";
+        #print "push x\n"; # "push x" is after the function returns so that peepopt can eliminate it
         print "ret\n";
     };
     for my $op (">", "<", ">=", "<=", "gt", "lt", "ge", "le") {
