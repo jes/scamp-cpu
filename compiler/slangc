@@ -1043,7 +1043,7 @@ sub make_magnitude_functions {
         print "ld x, $wantlt\n"; # doesn't clobber flags
         print "jnz $lt\n";
         print "ld x, $wantgt\n";
-        print "jmp $lt\n";
+        print "ret\n";
 
         # do the actual magnitude comparison
         print "$docmp:\n";

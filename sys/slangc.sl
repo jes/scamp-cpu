@@ -351,7 +351,7 @@ var make_magnitude_functions = func() {
         bprintf(OUT, "ld x, %d\n", [wantlt]); # doesn't clobber flags
         myputs("jnz "); plabel(lt); myputs("\n");
         bprintf(OUT, "ld x, %d\n", [wantgt]); # doesn't clobber flags
-        myputs("jmp "); plabel(lt); myputs("\n");
+        myputs("ret\n");
 
         # do the actual magnitude comparison
         plabel(docmp); myputs(":\n");
