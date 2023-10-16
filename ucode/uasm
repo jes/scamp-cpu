@@ -158,6 +158,7 @@ sub encode {
     my @alu_bits;
     for my $b (@bits) {
         if (exists $alu{$b}) {
+            $have_alu = 1;
             push @alu_bits, "EO", split / /, $alu{$b};
         }
     }
