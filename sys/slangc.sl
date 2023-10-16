@@ -1218,7 +1218,6 @@ make_magnitude_functions();
 
 htwalk(GLOBALS, func(name, val) {
     myputc('_'); myputs(name); myputs(": .w 0\n");
-    #free(name);
 });
 
 grwalk(STRINGS, func(tuple) {
@@ -1231,8 +1230,6 @@ grwalk(STRINGS, func(tuple) {
         p++;
     };
     myputs(".w 0\n");
-    #free(str);
-    #free(tuple);
 });
 
 grwalk(ARRAYS, func(tuple) {
@@ -1240,16 +1237,7 @@ grwalk(ARRAYS, func(tuple) {
     var length = cdr(tuple);
     plabel(l); myputs(":\n");
     myputs(".g "); myputs(itoa(length+1)); myputs("\n");
-    #free(tuple);
 });
-
-#grwalk(INCLUDED, free);
-
-#grfree(INCLUDED);
-#grfree(ARRAYS);
-#grfree(STRINGS);
-#htfree(EXTERNS);
-#htfree(GLOBALS);
 
 plabel(end); myputs(":\n");
 flushpush();
