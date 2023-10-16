@@ -117,7 +117,8 @@ var bgetc = asm {
     test r2
     jnz bgetc_not_eof
     ld (_buf_EOF), 1
-    ld r0, (_EOF)
+    ld x, 0xffff # _EOF
+    ld r0, x
     ret
 
     bgetc_not_eof:

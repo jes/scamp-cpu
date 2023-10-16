@@ -37,11 +37,13 @@ my $scope = {
     parent => undef,
 };
 my %STRINGS;
+my %CONSTS;
 my @ARRAYS;
 my @GLOBALS_ORDER;
 my %INCLUDED;
 my $globalscope = $scope;
 my $IDENTIFIER;
+my $NUMBER;
 my $BLOCKLEVEL = 0;
 my $BREAKLABEL;
 my $CONTLABEL;
@@ -126,7 +128,7 @@ sub Statements {
 }
 
 sub Statement {
-    return 1 if parse(\&Include) || parse(\&Block) || parse(\&Extern) || parse(\&Declaration) || parse(\&Conditional) || parse(\&Loop) || parse(\&Break) || parse(\&Continue) || parse(\&Return) || parse(\&Assignment);
+    return 1 if parse(\&Include) || parse(\&Block) || parse(\&Extern) || parse(\&Declaration) || parse(\&ConstDeclaration) || parse(\&Conditional) || parse(\&Loop) || parse(\&Break) || parse(\&Continue) || parse(\&Return) || parse(\&Assignment);
     if (parse(\&Expression)) {
         print "# discard expression value\n";
         popx();
@@ -190,16 +192,9 @@ sub Extern {
 }
 
 sub Declaration {
-    my $var;
-    if (parse(\&Keyword,'var')) {
-        $var = 'var';
-    } elsif (parse(\&Keyword,'const')) {
-        $var = 'const';
-    } else {
-        return 0;
-    }
-    die "$var not allowed here\n" if $BLOCKLEVEL != 0;
-    die "$var needs identifier\n" if !parse(\&Identifier);
+    return 0 if !parse(\&Keyword,'var');
+    die "var not allowed here\n" if $BLOCKLEVEL != 0;
+    die "var needs identifier\n" if !parse(\&Identifier);
     my $id = $IDENTIFIER;
     die "duplicate declaration in scope: $id\n" if $scope->{symbols}{$id};
 
@@ -229,6 +224,18 @@ sub Declaration {
 
     poptovar($id) if $scope->{global};
 
+    return 1;
+}
+
+sub ConstDeclaration {
+    return 0 if !parse(\&Keyword,'const');
+    die "const not allowed here\n" if $BLOCKLEVEL != 0 || $scope != $globalscope;
+    die "const needs identifier\n" if !parse(\&Identifier);
+    my $id = $IDENTIFIER;
+    die "duplicate declaration: const $id\n" if symlookup($id);
+    die "const needs assignment\n" if !parse(\&CharSkip,'=');
+    die "const assignment needs numeric value\n" if !parse(\&NumericLiteral);
+    $CONSTS{$id} = $NUMBER;
     return 1;
 }
 
@@ -450,7 +457,13 @@ sub AnyTerm {
     return 1;
 }
 
-sub Constant { return parse(\&NumericLiteral) || parse(\&StringLiteral) || parse(\&ArrayLiteral) || parse(\&FunctionDeclaration) || parse(\&InlineAsm); }
+sub Constant {
+    if (parse(\&NumericLiteral)) {
+        genliteral($NUMBER);
+        return 1;
+    }
+    return parse(\&StringLiteral) || parse(\&ArrayLiteral) || parse(\&FunctionDeclaration) || parse(\&InlineAsm);
+}
 sub NumericLiteral { return parse(\&HexLiteral) || parse(\&CharacterLiteral) || parse(\&DecimalLiteral); }
 
 sub HexLiteral {
@@ -460,7 +473,7 @@ sub HexLiteral {
     while (matchChar(qr/[0-9a-fA-F]/)) { }
 
     my $val = substr($s, $pos0, $pos-$pos0);
-    genliteral(hex($val));
+    $NUMBER = hex($val);
     skip();
     return 1;
 }
@@ -472,7 +485,7 @@ sub DecimalLiteral {
     while (matchChar(qr/\d/)) {}
 
     my $val = substr($s, $pos0, $pos-$pos0);
-    genliteral($val);
+    $NUMBER = $val;
     skip();
     return 1;
 }
@@ -481,9 +494,9 @@ sub CharacterLiteral {
     return 0 if !parse(\&Char,"'");
     my $c = nextchar();
     if ($c eq '\\') {
-        genliteral(ord(escapedchar(nextchar())));
+        $NUMBER = ord(escapedchar(nextchar()));
     } else {
-        genliteral(ord($c));
+        $NUMBER = ord($c);
     }
     
     return 1 if parse(\&CharSkip,"'");
@@ -907,6 +920,11 @@ sub poptovar {
 
 sub pushvar {
     my ($name) = @_;
+    if (exists $CONSTS{$name}) {
+        print "# (const $name)\n";
+        genliteral($CONSTS{$name});
+        return;
+    }
     my $sym = symlookup($name);
     die "unrecognised identifier: $name\n" if !$sym;
     if ($sym->{type} eq 'global') {

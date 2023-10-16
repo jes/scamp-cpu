@@ -34,6 +34,7 @@ var Include;
 var Block;
 var Extern;
 var Declaration;
+var ConstDeclaration;
 var Conditional;
 var Loop;
 var Break;
@@ -70,9 +71,11 @@ var literal_buf = malloc(maxliteral);
 # space to store identifier value parsed by Identifier()
 const maxidentifier = 512; # maxliteral;
 var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
+var NUMBER;
 
 var INCLUDED;
 var STRINGS;
+var CONSTS;
 var ARRAYS;
 # EXTERNS and GLOBALS are hashes of pointers to variable names
 var EXTERNS;
@@ -196,7 +199,13 @@ var endscope = func() {
     grfree(LOCALS);
 };
 
+var genliteral;
 var pushvar = func(name) {
+    var p = htgetkv(CONSTS, name);
+    if (p) {
+        genliteral(p[1]);
+        return 0;
+    };
     var v;
     var bp_rel;
     if (LOCALS) {
@@ -240,7 +249,7 @@ var poptovar = func(name) {
     die("unrecognised identifier: %s",[name]);
 };
 
-var genliteral = func(v) {
+genliteral = func(v) {
     if ((v&0xff00)==0 || (v&0xff00)==0xff00) {
         myputs("push "); myputs(itoa(v)); myputs("\n");
         SP_OFF--;
@@ -417,8 +426,10 @@ Statement = func(x) {
         return 1;
     } else if (ch == 'e') {
         if (parse(Extern,0)) return 1;
-    } else if (ch == 'v' || ch == 'c') {
+    } else if (ch == 'v') {
         if (parse(Declaration,0)) return 1;
+    } else if (ch == 'c') {
+        if (parse(ConstDeclaration,0)) return 1;
     } else if (ch == 'w') {
         if (parse(Loop,0)) return 1;
     } else if (ch == 'b') {
@@ -523,12 +534,9 @@ Extern = func(x) {
 };
 
 Declaration = func(x) {
-    var vartype;
-    if (Keyword("var")) vartype = "var"
-    else if (Keyword("const")) vartype = "const"
-    else return 0;
-    if (BLOCKLEVEL != 0) die("%s not allowed here", [vartype]);
-    if (!Identifier(0)) die("%s needs identifier", [vartype]);
+    if (!Keyword("var")) return 0;
+    if (BLOCKLEVEL != 0) die("var not allowed here", 0);
+    if (!Identifier(0)) die("var needs identifier", 0);
     var name = strdup(IDENTIFIER);
     if (!LOCALS) {
         addglobal(name);
@@ -552,6 +560,18 @@ Declaration = func(x) {
     #       (e.g. it's a function, inline asm, string, array literal, etc.) then
     #       we should try to initialise it at compile-time instead of by
     #       generating runtime code with poptovar()
+    return 1;
+};
+
+ConstDeclaration = func(x) {
+    if (!Keyword("const")) return 0;
+    if ((BLOCKLEVEL != 0) || LOCALS) die("const not allowed here",0);
+    if (!Identifier(0)) die("const needs identifier",0);
+    var name = strdup(IDENTIFIER);
+    if (findglobal(name)) die("duplicate declaration: const %s", [name]);
+    if (!parse(CharSkip,'=')) die("const needs assignment",0);
+    if (!parse(NumericLiteral,0)) die("const assignment needs numeric value",0);
+    htput(CONSTS, name, NUMBER);
     return 1;
 };
 
@@ -760,7 +780,10 @@ AnyTerm = func(x) {
 };
 
 Constant = func(x) {
-    if (parse(NumericLiteral,0)) return 1;
+    if (parse(NumericLiteral,0)) {
+        genliteral(NUMBER);
+        return 1;
+    };
     if (parse(StringLiteral,0)) return 1;
     if (parse(ArrayLiteral,0)) return 1;
     if (parse(FunctionDeclaration,0)) return 1;
@@ -783,8 +806,8 @@ var NumLiteral = func(alphabet,base,neg) {
         *(literal_buf+i) = peekchar();
         if (!parse(AnyChar,alphabet)) {
             *(literal_buf+i) = 0;
-            if (neg) genliteral(-atoibase(literal_buf,base))
-            else     genliteral( atoibase(literal_buf,base));
+            if (neg) NUMBER = -atoibase(literal_buf,base)
+            else     NUMBER =  atoibase(literal_buf,base);
             skip();
             return 1;
         };
@@ -817,9 +840,9 @@ CharacterLiteral = func(x) {
     if (!Char('\'')) return 0;
     var ch = nextchar();
     if (ch == '\\') {
-        genliteral(escapedchar(nextchar()));
+        NUMBER = escapedchar(nextchar());
     } else {
-        genliteral(ch);
+        NUMBER = ch;
     };
     if (CharSkip('\'')) return 1;
     die("illegal character literal",0);
@@ -1145,6 +1168,7 @@ options:
 INCLUDED = grnew();
 ARRAYS = grnew();
 STRINGS = grnew();
+CONSTS = htnew();
 EXTERNS = htnew();
 GLOBALS = htnew();
 

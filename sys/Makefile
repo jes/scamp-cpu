@@ -30,4 +30,4 @@ rude-globals.sl: lib.list mk-rude-globals
 	./mk-rude-globals > rude-globals.sl
 
 clean:
-	rm -f *.bin *.hex *.anhex *.s *.tmp lib*.o lib*.s.build lib*.h
+	rm -f *.bin *.hex *.anhex *.s *.tmp lib*.o lib*.s.build lib*.h rude-globals.sl
