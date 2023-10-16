@@ -190,9 +190,16 @@ sub Extern {
 }
 
 sub Declaration {
-    return 0 if !parse(\&Keyword,'var');
-    die "var not allowed here\n" if $BLOCKLEVEL != 0;
-    die "var needs identifier\n" if !parse(\&Identifier);
+    my $var;
+    if (parse(\&Keyword,'var')) {
+        $var = 'var';
+    } elsif (parse(\&Keyword,'const')) {
+        $var = 'const';
+    } else {
+        return 0;
+    }
+    die "$var not allowed here\n" if $BLOCKLEVEL != 0;
+    die "$var needs identifier\n" if !parse(\&Identifier);
     my $id = $IDENTIFIER;
     die "duplicate declaration in scope: $id\n" if $scope->{symbols}{$id};
 

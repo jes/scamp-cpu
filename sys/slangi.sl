@@ -661,7 +661,7 @@ Statement = func(x) {
         else die("curly brace has to start block",0);
     } else if (ch == 'e') {
         r = parse(Extern,0); if (r) return r;
-    } else if (ch == 'v') {
+    } else if (ch == 'v' || ch == 'c') {
         r = parse(Declaration,0); if (r) return r;
     } else if (ch == 'w') {
         r = parse(Loop,0); if (r) return r;
@@ -756,9 +756,12 @@ Extern = func(x) {
 };
 
 Declaration = func(x) {
-    if (!Keyword("var")) return 0;
-    if (BLOCKLEVEL != 0) die("var not allowed here",0);
-    if (!Identifier(0)) die("var needs identifier",0);
+    var vartype;
+    if (Keyword("var")) vartype = "var"
+    else if (Keyword("const")) vartype = "const"
+    else return 0;
+    if (BLOCKLEVEL != 0) die("%s not allowed here", [vartype]);
+    if (!Identifier(0)) die("%s needs identifier", [vartype]);
     var name = intern(IDENTIFIER);
 
     if (LOCALS) {

@@ -417,7 +417,7 @@ Statement = func(x) {
         return 1;
     } else if (ch == 'e') {
         if (parse(Extern,0)) return 1;
-    } else if (ch == 'v') {
+    } else if (ch == 'v' || ch == 'c') {
         if (parse(Declaration,0)) return 1;
     } else if (ch == 'w') {
         if (parse(Loop,0)) return 1;
@@ -523,9 +523,12 @@ Extern = func(x) {
 };
 
 Declaration = func(x) {
-    if (!Keyword("var")) return 0;
-    if (BLOCKLEVEL != 0) die("var not allowed here",0);
-    if (!Identifier(0)) die("var needs identifier",0);
+    var vartype;
+    if (Keyword("var")) vartype = "var"
+    else if (Keyword("const")) vartype = "const"
+    else return 0;
+    if (BLOCKLEVEL != 0) die("%s not allowed here", [vartype]);
+    if (!Identifier(0)) die("%s needs identifier", [vartype]);
     var name = strdup(IDENTIFIER);
     if (!LOCALS) {
         addglobal(name);
