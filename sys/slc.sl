@@ -41,7 +41,7 @@ var unredirect = func(fd, prev) {
     close(prev);
 };
 
-var bufsz = 1024;
+const bufsz = 1024;
 var buf = malloc(bufsz);
 
 # save shelling out to cat

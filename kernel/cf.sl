@@ -19,16 +19,16 @@ var CFHEADREG   = CFBASE+6;
 var CFSTATUSREG = CFBASE+7;
 var CFCMDREG    = CFBASE+7;
 
-var CFREADCMD  = 0x20;
-var CFWRITECMD = 0x30;
+const CFREADCMD  = 0x20;
+const CFWRITECMD = 0x30;
 
-var CFERR  = 0x01;
-var CFCORR = 0x04;
-var CFDRQ  = 0x08;
-var CFDSC  = 0x10;
-var CFDWF  = 0x20;
-var CFRDY  = 0x40;
-var CFBUSY = 0x80;
+const CFERR  = 0x01;
+const CFCORR = 0x04;
+const CFDRQ  = 0x08;
+const CFDSC  = 0x10;
+const CFDWF  = 0x20;
+const CFRDY  = 0x40;
+const CFBUSY = 0x80;
 
 # wait until CF status matches "mask"
 # usage: cf_wait(mask)

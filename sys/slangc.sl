@@ -65,10 +65,10 @@ var ParenExpression;
 var Identifier;
 
 # space to store numeric and stirng literals
-var maxliteral = 512;
+const maxliteral = 512;
 var literal_buf = malloc(maxliteral);
 # space to store identifier value parsed by Identifier()
-var maxidentifier = maxliteral;
+const maxidentifier = 512; # maxliteral;
 var IDENTIFIER = literal_buf; # reuse literal_buf for identifiers
 
 var INCLUDED;

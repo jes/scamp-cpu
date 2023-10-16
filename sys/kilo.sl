@@ -12,33 +12,33 @@ include "string.sl";
 include "sys.sl";
 
 # definitions
-var ESC = 0x1b;
-var ROWS = 23; # rows of file content - should be 2 rows short of total screen rows
-var PAGE_ROWS = 12; # number of rows to page on page up/page down
+const ESC = 0x1b;
+const ROWS = 23; # rows of file content - should be 2 rows short of total screen rows
+const PAGE_ROWS = 12; # number of rows to page on page up/page down
 var HALFROWS = div(ROWS, 2);
-var COLS = 80;
+const COLS = 80;
 var CTRL_KEY = func(k) return k&0x1f;
 var WELCOME = "~     Kilo editor -- SCAMP edition";
-var TABSTOP = 4; # must be a power of 2 !
-var QUIT_TIMES = 3;
-var INSERT_MODE = 0;
-var NAV_MODE = 1;
-var SCROLL_STEP = 16;
+const TABSTOP = 4; # must be a power of 2 !
+const QUIT_TIMES = 3;
+const INSERT_MODE = 0;
+const NAV_MODE = 1;
+const SCROLL_STEP = 16;
 
 # key constants
-var BACKSPACE = 127;
-var BACKSPACE2 = 8;
-var ARROW_LEFT = 1000;
-var ARROW_RIGHT = 1001;
-var ARROW_UP = 1002;
-var ARROW_DOWN = 1003;
-var PAGE_UP = 1004;
-var PAGE_DOWN = 1005;
-var HOME_KEY = 1006;
-var END_KEY = 1007;
-var DEL_KEY = 1008;
-var MOVE_WORD = 1009;
-var MOVE_BACK = 1010;
+const BACKSPACE = 127;
+const BACKSPACE2 = 8;
+const ARROW_LEFT = 1000;
+const ARROW_RIGHT = 1001;
+const ARROW_UP = 1002;
+const ARROW_DOWN = 1003;
+const PAGE_UP = 1004;
+const PAGE_DOWN = 1005;
+const HOME_KEY = 1006;
+const END_KEY = 1007;
+const DEL_KEY = 1008;
+const MOVE_WORD = 1009;
+const MOVE_BACK = 1010;
 
 # data
 var cx = 0;
@@ -169,8 +169,8 @@ unrawmode = func() {
 # escape sequences don't work
 
 # usage: readable() - return 1 if there is at least 1 byte waiting
-var SERIALDEV = 136;
-var SERIALDEVLSR = 141;
+const SERIALDEV = 136;
+const SERIALDEVLSR = 141;
 readable = func() {
     return inp(SERIALDEVLSR)&1;
 };

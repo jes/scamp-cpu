@@ -14,7 +14,7 @@ include "stdio.sl";
 include "xprintf.sl";
 include "xscanf.sl";
 
-var BIO_BUFSZ = 254; # align with block size on disk
+const BIO_BUFSZ = 254; # align with block size on disk
 var buf_EOF = 0;
 
 # "mode" should be O_READ or O_WRITE

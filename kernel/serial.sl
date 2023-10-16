@@ -4,8 +4,8 @@ include "util.sl";
 include "data.sl";
 include "sys.sl";
 
-var ser_bufsz = 140;
-var ser_buflen = ser_bufsz - 3;
+const ser_bufsz = 140;
+const ser_buflen = 137; # ser_bufsz - 3;
 var ser_buf_area = asm {
     # BUFSPACE needs to be bufsz multiplied by no. of devices
     .def CONSOLE_BUFSPACE 280
