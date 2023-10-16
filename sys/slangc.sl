@@ -160,6 +160,21 @@ var addexterns = func(filename) {
     bclose(b);
 };
 
+var addconsts = func(filename) {
+    var b = bopen(filename, O_READ);
+    if (!b) die("can't open %s for reading\n", [filename]);
+
+    var name;
+    var val = bgetc(b); # grab the value
+    while (bgets(b, literal_buf, maxliteral)) {
+        literal_buf[strlen(literal_buf)-1] = 0; # no '\n'
+        name = strdup(literal_buf);
+        htput(CONSTS, name, val);
+        val = bgetc(b); # grab the value
+    };
+    bclose(b);
+};
+
 # return pointer to (name,bp_rel) if "name" is a local, 0 otherwise
 var findlocal = func(name) {
     if (!LOCALS) die("can't find local in global scope: %s",[name]);
@@ -1174,9 +1189,11 @@ GLOBALS = htnew();
 
 var foot_str = "";
 
-var more = getopt(cmdargs()+1, "ef", func(ch,arg) {
+var more = getopt(cmdargs()+1, "cef", func(ch,arg) {
     if (ch == 'h') help(0)
-    else if (ch == 'e') {
+    else if (ch == 'c') {
+        addconsts(arg);
+    } else if (ch == 'e') {
         addexterns(arg);
     } else if (ch == 'f') {
         foot_str = arg;

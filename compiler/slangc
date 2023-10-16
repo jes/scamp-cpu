@@ -24,6 +24,13 @@ use strict;
 use warnings;
 no warnings 'recursion';
 
+use Getopt::Long;
+
+my $consts_list;
+GetOptions(
+    'consts-list=s' => \$consts_list,
+);
+
 my $s = join('',<>);
 my @s = split //, $s;
 my $filename = 'stdin';
@@ -86,6 +93,19 @@ for my $arr (@ARRAYS) {
     print ".gap " . ($arr->{length}+1) . "\n";
 }
 print "$end:\n";
+
+if ($consts_list) {
+    open(my $fh, '>', $consts_list)
+        or die "can't write $consts_list: $!\n";
+    for my $const (sort keys %CONSTS) {
+        print $fh pack('s>', $CONSTS{$const});
+        for my $c (split //, $const) {
+            printf $fh "\0$c";
+        }
+        print $fh "\0\n";
+    }
+    close $fh;
+}
 
 # parse() is a wrapper around the parser functions:
 # call $f->(@args) and return whether it matched; if it did not match, then

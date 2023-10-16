@@ -102,12 +102,13 @@ if (args[0]) {
 
 var rc;
 
+var constsfile = sprintf("/lib/lib%s.const", [libname]);
 var externsfile = sprintf("/lib/lib%s.list", [libname]);
 
 # direct stdout to "/tmp/1.s" and run slangc
 fprintf(2, "slangc...\n", 0);
 var prev_out = redirect(1, "/tmp/1.s", O_WRITE|O_CREAT);
-rc = system(["/bin/slangc", "-e", externsfile]);
+rc = system(["/bin/slangc", "-c", constsfile, "-e", externsfile]);
 if (rc != 0) exit(rc);
 unredirect(1, prev_out);
 

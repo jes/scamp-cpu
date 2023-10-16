@@ -3,13 +3,31 @@
 use strict;
 use warnings;
 
-open(my $fh, '<', 'libbigint.h')
-    or die "can't read libbigint.h: $!\n";
-while (<$fh>) {
-    chomp;
-    if (/^extern ([a-zA-Z0-9_]+);$/) {
-        print "addglobal(\"$1\", &$1);\n";
-    } else {
-        print STDERR "unrecognised: $_\n";
-    }
+for my $extern (read_list('libbigint.list')) {
+    my ($name, $addr) = @$extern;
+    print "addglobal(\"$name\", &$name);\n";
+}
+
+for my $const (read_list('libbigint.const')) {
+    my ($name, $val) = @$const;
+    print "var const_$name = $val;\n";
+    print "addglobal(\"$name\", &const_$name);\n";
+}
+
+sub read_list {
+    my ($name) = @_;
+    my @results;
+    open (my $fh, '<', $name)
+        or die "can't read $name: $!\n";
+    my $val = ord(getc($fh))*256+ord(getc($fh));
+    while (<$fh>) {
+        chomp;
+        my ($name) = unpack("a*", $_);
+        $name =~ s/\0//g;
+        push @results, [$name,$val];
+        my $c1 = getc($fh) // last;
+        my $c2 = getc($fh) // last;
+        $val = ord($c1)*256+ord($c2);
+    };
+    return @results;
 }
