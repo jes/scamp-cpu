@@ -142,7 +142,7 @@ var addextern = func(name) {
 };
 var addglobal = func(name) {
     if (!gullible && findglobal(name)) die("duplicate global: %s",[name]);
-    htput(GLOBALS, name, name);
+    htput(GLOBALS, name, 0);
 };
 
 var addexterns = func(filename) {
@@ -553,28 +553,34 @@ Declaration = func(x) {
     if (BLOCKLEVEL != 0) die("var not allowed here", 0);
     if (!Identifier(0)) die("var needs identifier", 0);
     var name = strdup(IDENTIFIER);
+
     if (!LOCALS) {
         addglobal(name);
+
+        # for globals, we're done if there's no initialiser
+        if (!parse(CharSkip,'=')) return 1;
+
+        if (parse(NumericLiteral,0)) {
+            # optimise initialisation of globals from constants
+            htput(GLOBALS, name, NUMBER);
+        } else {
+            if (!Expression(0)) die("initialisation needs expression",0);
+            poptovar(name);
+        }
     } else {
         addlocal(name, BP_REL--);
-    };
-    # for locals, if there's no initialiser, just decrement sp
-    if (!parse(CharSkip,'=')) {
-        if (LOCALS) {
+
+        # for locals, if there's no initialiser, just decrement sp
+        if (!parse(CharSkip,'=')) {
             myputs("dec sp\n");
             SP_OFF--;
+            return 1;
         };
-        return 1;
-    };
-    # otherwise, we implicitly allocate space for $id by *not* popping
-    # the result of evaluating the expression:
+        # otherwise, we implicitly allocate space for $id by *not* popping
+        # the result of evaluating the expression:
 
-    if (!Expression(0)) die("initialisation needs expression",0);
-    if (!LOCALS) poptovar(name);
-    # TODO: [perf] if 'name' is a global, and the expression was a constant
-    #       (e.g. it's a function, inline asm, string, array literal, etc.) then
-    #       we should try to initialise it at compile-time instead of by
-    #       generating runtime code with poptovar()
+        if (!Expression(0)) die("initialisation needs expression",0);
+    };
     return 1;
 };
 
@@ -1234,7 +1240,7 @@ myputs("jmp "); plabel(end); myputs("\n");
 make_magnitude_functions();
 
 htwalk(GLOBALS, func(name, val) {
-    myputc('_'); myputs(name); myputs(": .w 0\n");
+    myputc('_'); myputs(name); myputs(": .w "); myputs(itoa(val)); myputc('\n');
 });
 
 grwalk(STRINGS, func(tuple) {
@@ -1243,7 +1249,7 @@ grwalk(STRINGS, func(tuple) {
     plabel(l); myputs(":\n");
     var p = str;
     while (*p) {
-        myputs(".w "); myputs(itoa(*p)); myputs("\n");
+        myputs(".w "); myputs(itoa(*p)); myputc('\n');
         p++;
     };
     myputs(".w 0\n");
@@ -1253,7 +1259,7 @@ grwalk(ARRAYS, func(tuple) {
     var l = car(tuple);
     var length = cdr(tuple);
     plabel(l); myputs(":\n");
-    myputs(".g "); myputs(itoa(length+1)); myputs("\n");
+    myputs(".g "); myputs(itoa(length+1)); myputc('\n');
 });
 
 plabel(end); myputs(":\n");
