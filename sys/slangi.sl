@@ -453,8 +453,7 @@ LocalNode = func(name) {
 #};
 EvalLocalNode = asm {
     pop x
-    inc x
-    ld x, (x)
+    ld x, 1(x)
     add x, (_BP)
     ld r0, (x)
     ret
