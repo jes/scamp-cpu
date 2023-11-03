@@ -468,8 +468,7 @@ GlobalNode = func(name) {
 #};
 EvalGlobalNode = asm {
     pop x
-    inc x
-    ld x, (x)
+    ld x, 1(x)
     ld r0, (x)
     ret
 };
