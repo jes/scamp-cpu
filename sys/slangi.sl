@@ -1260,8 +1260,7 @@ eval_function = func(argbase, nparams, body, framesz) {
 #};
 eval = asm {
     ld x, 1(sp)
-    ld x, (x)
-    jmp x
+    jmp (x)
 };
 
 INCLUDED = grnew();

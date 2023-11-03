@@ -982,7 +982,9 @@ jr+ (i8h): # Jump forwards relative to the address of the next instruction. <tt>
     MO XI
     JMP X+Y
 
-nop:
+jmp (x): # Jump to the address in <tt>(x)</tt>.
+	XO AI
+	MO JMP
 
 jmp x: # Jump to <tt>x</tt>.
     XO JMP
