@@ -23,6 +23,9 @@ all: $(BINS) lib.o rude-globals.sl
 	../compiler/slangc $*.sl > $*.s.tmp
 	mv $*.s.tmp $*.s
 
+lib.list: make-lib
+	./make-lib
+
 lib.o: $(LIBS) make-lib
 	./make-lib
 
