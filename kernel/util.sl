@@ -1,13 +1,13 @@
 # "Kernel" utilities
 
 # Error codes
-var EOF = -1;
-var NOTFOUND = -2;
-var NOTFILE = -3;
-var NOTDIR = -4;
-var BADFD = -5;
-var TOOLONG = -6;
-var EXISTS = -7;
+const EOF = -1;
+const NOTFOUND = -2;
+const NOTFILE = -3;
+const NOTDIR = -4;
+const BADFD = -5;
+const TOOLONG = -6;
+const EXISTS = -7;
 
 # usage: inp(addr)
 var inp = asm {
