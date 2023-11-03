@@ -138,7 +138,6 @@ const O_READ     = 0x01;
 const O_WRITE    = 0x02;
 const O_CREAT    = 0x04;
 const O_NOTRUNC  = 0x08;
-const O_APPEND   = 0x10;
 const O_KERNELFD = 0x20;
 
 # "process id"

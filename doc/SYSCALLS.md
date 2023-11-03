@@ -113,7 +113,6 @@ Mode flags are:
     0x02: O_WRITE   - support write()
     0x04: O_CREAT   - create the file if it doesn't exist
     0x08: O_NOTRUNC - with O_WRITE: don't truncate the file if it already exists
-    0x10: O_APPEND  - start at the end of the file instead of the start
 
 ### 0xfef7: close(fd)
 

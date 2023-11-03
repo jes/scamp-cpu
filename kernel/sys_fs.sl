@@ -57,11 +57,8 @@ sys_open = func(name, mode) {
     *(fdbase+FDDATA) = location[0]; # block number
     *(fdbase+FDDATA+1) = 0; # position within block
 
-    # seek to end if O_APPEND
-    if (mode & O_APPEND) kpanic("unimpl: O_APPEND");
-
-    # truncate the file if O_WRITE && !O_APPEND && !O_NOTRUNC
-    if ((mode & O_WRITE) && !(mode & O_APPEND) && !(mode & O_NOTRUNC))
+    # truncate the file if O_WRITE && !O_NOTRUNC
+    if ((mode & O_WRITE) && !(mode & O_NOTRUNC))
         fs_trunc(fd);
 
     return fd;

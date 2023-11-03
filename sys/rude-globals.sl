@@ -262,8 +262,6 @@ var const_NOTFILE = 65533;
 addglobal("NOTFILE", &const_NOTFILE);
 var const_NOTFOUND = 65534;
 addglobal("NOTFOUND", &const_NOTFOUND);
-var const_O_APPEND = 16;
-addglobal("O_APPEND", &const_O_APPEND);
 var const_O_CREAT = 4;
 addglobal("O_CREAT", &const_O_CREAT);
 var const_O_NOTRUNC = 8;
