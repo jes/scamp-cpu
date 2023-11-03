@@ -15,7 +15,7 @@ var grbase;
 include "malloc.sl";
 include "stdlib.sl";
 
-var grarr_maxgrow = 1024;
+const grarr_maxgrow = 1024;
 
 grnew = func() {
     var gr = malloc(3);

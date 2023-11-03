@@ -10,10 +10,10 @@ include "malloc.sl";
 include "strbuf.sl";
 include "xscanf.sl";
 
-var SERIALDEV = 144;
-var SERIALDEVLSR = 149;
-var ser_writefd = 4;
-var ser_textbuf_sz = 256;
+const SERIALDEV = 144;
+const SERIALDEVLSR = 149;
+const ser_writefd = 4;
+const ser_textbuf_sz = 256;
 var ser_textbuf = malloc(ser_textbuf_sz);
 
 # forward declarations

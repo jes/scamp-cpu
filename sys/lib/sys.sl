@@ -61,25 +61,25 @@ var system = func(args) sys_system(TOP, args);
 var savetpa = func(filename) sys_savetpa(filename, TOP);
 
 # file modes
-var O_READ    = 0x01;
-var O_WRITE   = 0x02;
-var O_CREAT   = 0x04;
-var O_NOTRUNC = 0x08;
-var O_APPEND  = 0x10;
+const O_READ    = 0x01;
+const O_WRITE   = 0x02;
+const O_CREAT   = 0x04;
+const O_NOTRUNC = 0x08;
+const O_APPEND  = 0x10;
 
 # error codes
-var EOF = -1;
-var NOTFOUND = -2;
-var NOTFILE = -3;
-var NOTDIR = -4;
-var BADFD = -5;
-var TOOLONG = -6;
-var EXISTS = -7;
+const EOF = -1;
+const NOTFOUND = -2;
+const NOTFILE = -3;
+const NOTDIR = -4;
+const BADFD = -5;
+const TOOLONG = -6;
+const EXISTS = -7;
 
 # serial flags
-var SER_COOKED  = 1;
-var SER_DISABLE = 2;
-var SER_LONGREAD = 4;
+const SER_COOKED  = 1;
+const SER_DISABLE = 2;
+const SER_LONGREAD = 4;
 
 var strerror = func(err) {
     if (err == 0) return "success";

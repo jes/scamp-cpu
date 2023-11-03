@@ -1,4 +1,4 @@
-kernel kernel.hex 0xd200
+kernel kernel.hex 0xd400
 limit 62270
 
 mkdir etc
@@ -64,6 +64,10 @@ put ../sys/lib.list /lib/lib.list
 put ../sys/libfixed.list /lib/libfixed.list
 put ../sys/libbigint.list /lib/libbigint.list
 put ../sys/libbigfix.list /lib/libbigfix.list
+put ../sys/lib.const /lib/lib.const
+put ../sys/libfixed.const /lib/libfixed.const
+put ../sys/libbigint.const /lib/libbigint.const
+put ../sys/libbigfix.const /lib/libbigfix.const
 
 put -t ../sys/lib/head.s /lib/head.s
 put -t ../sys/lib/foot.s /lib/foot.s

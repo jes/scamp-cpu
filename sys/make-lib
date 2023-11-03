@@ -15,10 +15,9 @@ makelib() {
         echo "include \"$f\";"
     done > lib$name.sl
 
-    ../compiler/slangc lib$name.sl | ../compiler/peepopt | ../compiler/peepopt > lib$name.s.build
+    ../compiler/slangc --consts-list lib$name.const lib$name.sl | ../compiler/peepopt | ../compiler/peepopt > lib$name.s.build
 
-    # XXX: we're still using lib$name.h to parse names of globals in mk-rude-globals
-    cat lib/libhead.s lib$name.s.build | ../asm/asm --slang-header lib$name.h --externs-list lib$name.list > lib$name.hex.tmp
+    cat lib/libhead.s lib$name.s.build | ../asm/asm --externs-list lib$name.list > lib$name.hex.tmp
     ../util/hex2bin lib$name.hex.tmp > lib$name.o.tmp
     mv lib$name.o.tmp lib$name.o
     cat lib/libhead.s lib$name.s.build | ../asm/asm -v > lib$name.anhex

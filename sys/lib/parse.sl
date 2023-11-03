@@ -10,7 +10,7 @@ var parse_line;
 var parse_getchar;
 var parse_filename;
 
-var parse_ringbufsz = 256; # check the "too much backtrack" test, and peekchar(), before changing this
+const parse_ringbufsz = 256; # check the "too much backtrack" test, and peekchar(), before changing this
 var parse_ringbuf = malloc(parse_ringbufsz);
 
 var die = func(fmt, args) {

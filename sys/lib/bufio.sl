@@ -14,7 +14,7 @@ include "stdio.sl";
 include "xprintf.sl";
 include "xscanf.sl";
 
-var BIO_BUFSZ = 254; # align with block size on disk
+const BIO_BUFSZ = 254; # align with block size on disk
 var buf_EOF = 0;
 
 # "mode" should be O_READ or O_WRITE
@@ -117,7 +117,8 @@ var bgetc = asm {
     test r2
     jnz bgetc_not_eof
     ld (_buf_EOF), 1
-    ld r0, (_EOF)
+    ld x, 0xffff # _EOF
+    ld r0, x
     ret
 
     bgetc_not_eof:
