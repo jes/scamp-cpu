@@ -509,9 +509,9 @@ AssignmentNode = func(addr, value) {
     return cons3(EvalAssignmentNode, addr, value);
 };
 EvalAssignmentNode = func(n) {
-    var addr = n[1];
-    var value = n[2];
-    *(eval(addr)) = eval(value);
+    #var addr = n[1];
+    #var value = n[2];
+    *(eval(n[1])) = eval(n[2]);
     return 0;
 };
 
@@ -519,9 +519,9 @@ PreOpNode = func(inc, name) {
     return cons3(EvalPreOpNode, inc, AddressOfNode(name));
 };
 EvalPreOpNode = func(n) {
-    var inc = n[1];
+    #var inc = n[1];
     var addr = eval(n[2]);
-    var val = *addr + inc;
+    var val = *addr + n[1];
     *addr = val;
     return val;
 };
@@ -530,10 +530,10 @@ PostOpNode = func(inc, name) {
     return cons3(EvalPostOpNode, inc, AddressOfNode(name));
 };
 EvalPostOpNode = func(n) {
-    var inc = n[1];
+    #var inc = n[1];
     var addr = eval(n[2]);
     var val = *addr;
-    *addr = val + inc;
+    *addr = val + n[1];
     return val;
 };
 
