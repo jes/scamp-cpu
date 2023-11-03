@@ -47,6 +47,7 @@ my %STRINGS;
 my %CONSTS;
 my @ARRAYS;
 my @GLOBALS_ORDER;
+my %GLOBALS;
 my %INCLUDED;
 my $globalscope = $scope;
 my $IDENTIFIER;
@@ -73,7 +74,7 @@ make_magnitude_functions();
 
 # allocate space for globals
 for my $global (@GLOBALS_ORDER) {
-    print "_$global: .word 0\n" if !$scope->{symbols}{$global}{extern};
+    print "_$global: .word $GLOBALS{$global}\n" if !$scope->{symbols}{$global}{extern};
 }
 
 # store string constants
@@ -223,26 +224,37 @@ sub Declaration {
         type => $scope->{global} ? 'global' : 'local',
         bp_rel => $scope->{bp_rel}--,
     };
-    push @GLOBALS_ORDER, $id if $scope->{global};
 
-    # for locals, if there's no initialiser, just decrement sp
-    if (!parse(\&CharSkip,'=')) {
-        if (!$scope->{global}) {
+    if ($scope->{global}) {
+        push @GLOBALS_ORDER, $id;
+        $GLOBALS{$id} = 0;
+
+        # for globals, we're done if there's no initialiser
+        return 1 if !parse(\&CharSkip,'=');
+
+        print "#sym:$id\n";
+        if (parse(\&NumericLiteral)) {
+            # optimise initialisation of globals from constants
+            $GLOBALS{$id} = $NUMBER;
+        } else {
+            die "initialisation needs expression\n" if !parse(\&Expression);
+            poptovar($id);
+        }
+        print "#nosym\n";
+    } else {
+        # for locals, if there's no initialiser, just decrement sp
+        if (!parse(\&CharSkip,'=')) {
             print "# allocate space for $id\n";
             print "dec sp\n";
             $SP_OFF--;
+            return 1;
         }
-        return 1;
+        # otherwise, we implicitly allocate space for $id by *not* popping
+        # the result of evaluating the expression:
+
+        print "# implicit space for $id\n";
+        die "initialisation needs expression\n" if !parse(\&Expression);
     }
-    # otherwise, we implicitly allocate space for $id by *not* popping
-    # the result of evaluating the expression:
-
-    print "#sym:$id\n" if $scope->{global};
-    print "# implicit space for $id\n" if !$scope->{global};
-    die "initialisation needs expression\n" if !parse(\&Expression);
-    print "#nosym\n" if $scope->{global};
-
-    poptovar($id) if $scope->{global};
 
     return 1;
 }
