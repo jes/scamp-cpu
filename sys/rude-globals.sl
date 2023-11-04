@@ -222,8 +222,6 @@ addglobal("strlen", &strlen);
 addglobal("strncmp", &strncmp);
 addglobal("strnstr", &strnstr);
 addglobal("strstr", &strstr);
-addglobal("strtok", &strtok);
-addglobal("strtok_gr", &strtok_gr);
 addglobal("swap", &swap);
 addglobal("sync", &sync);
 addglobal("system", &system);
