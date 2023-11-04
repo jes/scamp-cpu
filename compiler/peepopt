@@ -386,12 +386,27 @@ sub level18 {
         $l18state++;
     } elsif ($l18state == 1 && $line =~ /^ld y, (\d+)\+sp$/) {
         my $n = $1-1;
-        print "push x\n";
-        print "add y, $n #peepopt:y_is_sp+1_after_pushx\n";
+        level19("push x");
+        level19("add y, $n #peepopt:y_is_sp+1_after_pushx");
         $l18state = 0;
     } else {
-        print "push x\n" if $l18state >= 1;
+        level19("push x") if $l18state >= 1;
         $l18state = 0;
+        level19("$line");
+    }
+}
+
+# turn:
+#   ld rN, [01]
+# into:
+#   {zero,one} rN
+sub level19 {
+    my ($line) = @_;
+
+    if ($line =~ /^ld (r\d+), ([01])$/) {
+        my ($reg, $val) = ($1, $2);
+        print "" . ($val == 0) ? "zero $reg\n" : "one $reg\n";
+    } else {
         print "$line\n";
     }
 }

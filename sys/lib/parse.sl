@@ -263,10 +263,10 @@ var asm_String = asm {
         jmp String_loop
 
     String_ret0:
-    ld r0, 0
+    zero r0
     jmp (String_ret)
     String_ret1:
-    ld r0, 1
+    one r0
     jmp (String_ret)
 
     String_ret: .word 0
