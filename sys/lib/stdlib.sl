@@ -357,9 +357,9 @@ var islower = func(ch) return ch >= 'a' && ch <= 'z';
 var isupper = func(ch) return ch >= 'A' && ch <= 'Z';
 var isalpha = func(ch) return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
 var isdigit = asm {
+    zero r0
     pop x
     sub x, 0x30 # '0'
-    zero r0
     jlt r254
     sub x, 9
     jgt r254
