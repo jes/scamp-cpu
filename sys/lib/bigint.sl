@@ -521,8 +521,8 @@ bigbit = asm {
     add x, r0
     ld x, (x) # x = big[word]
 
-    and x, (r1)
     zero r0
+    and x, (r1)
     jz r3 # ret
     inc r0
     jmp r3 # ret
