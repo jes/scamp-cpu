@@ -19,7 +19,6 @@ var HALFROWS = div(ROWS, 2);
 const COLS = 80;
 var CTRL_KEY = func(k) return k&0x1f;
 var WELCOME = "~     Kilo editor -- SCAMP edition";
-const TABSTOP = 4; # must be a power of 2 !
 const QUIT_TIMES = 3;
 const INSERT_MODE = 0;
 const NAV_MODE = 1;
