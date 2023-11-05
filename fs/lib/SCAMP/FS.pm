@@ -223,6 +223,7 @@ sub lsblk {
 }
 
 sub getblk {
+    no warnings 'recursion';
     my ($self, $blknum) = @_;
 
     my @block = $self->readblock($blknum);
