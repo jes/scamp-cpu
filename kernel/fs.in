@@ -208,6 +208,3 @@ put -t ../doc/UCODE.md /doc/ucode
 mkdir proc
 mkdir tmp
 mkdir home
-
-put -t part1.sl /home/part1.sl
-put -t input /home/input
