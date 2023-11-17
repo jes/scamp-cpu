@@ -659,14 +659,15 @@ Statement = func(x) {
         else die("curly brace has to start block",0);
     } else if (ch == 'e') {
         r = parse(Extern,0); if (r) return r;
-    } else if (ch == 'v' || ch == 'c') {
+    } else if (ch == 'v') {
         r = parse(Declaration,0); if (r) return r;
+    } else if (ch == 'c') {
+        r = parse(Declaration,0); if (r) return r;
+        r = parse(Continue,0); if (r) return r;
     } else if (ch == 'w') {
         r = parse(Loop,0); if (r) return r;
     } else if (ch == 'b') {
         r = parse(Break,0); if (r) return r;
-    } else if (ch == 'c') {
-        r = parse(Continue,0); if (r) return r;
     } else if (ch == 'r') {
         r = parse(Return,0); if (r) return r;
     };

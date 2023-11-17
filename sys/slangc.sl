@@ -445,12 +445,11 @@ Statement = func(x) {
         if (parse(Declaration,0)) return 1;
     } else if (ch == 'c') {
         if (parse(ConstDeclaration,0)) return 1;
+        if (parse(Continue,0)) return 1;
     } else if (ch == 'w') {
         if (parse(Loop,0)) return 1;
     } else if (ch == 'b') {
         if (parse(Break,0)) return 1;
-    } else if (ch == 'c') {
-        if (parse(Continue,0)) return 1;
     } else if (ch == 'r') {
         if (parse(Return,0)) return 1;
     };
