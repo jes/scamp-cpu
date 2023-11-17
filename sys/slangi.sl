@@ -311,8 +311,16 @@ EvalSubNode = func(n) { return eval(n[1]) - eval(n[2]); };
 EvalAndNode = func(n) { return eval(n[1]) & eval(n[2]); };
 EvalOrNode = func(n) { return eval(n[1]) | eval(n[2]); };
 EvalXorNode = func(n) { return eval(n[1]) ^ eval(n[2]); };
-EvalLogicalAndNode = func(n) { return eval(n[1]) && eval(n[2]); };
-EvalLogicalOrNode = func(n) { return eval(n[1]) || eval(n[2]); };
+#EvalLogicalAndNode = func(n) { return eval(n[1]) && eval(n[2]); };
+#EvalLogicalOrNode = func(n) { return eval(n[1]) || eval(n[2]); };
+EvalLogicalAndNode = func(n) {
+    if (!eval(n[1])) return 0;
+    return eval(n[2]);
+};
+EvalLogicalOrNode = func(n) {
+    if (eval(n[1])) return 1;
+    return eval(n[2]);
+};
 EvalEqNode = func(n) { return eval(n[1]) == eval(n[2]); };
 EvalNeNode = func(n) { return eval(n[1]) != eval(n[2]); };
 EvalLtNode = func(n) { return eval(n[1]) < eval(n[2]); };
