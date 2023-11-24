@@ -1,0 +1,146 @@
+test_grarr:
+0: grshift=0, grpop=99
+1: grshift=1, grpop=98
+2: grshift=2, grpop=97
+3: grshift=3, grpop=96
+4: grshift=4, grpop=95
+5: grshift=5, grpop=94
+6: grshift=6, grpop=93
+7: grshift=7, grpop=92
+8: grshift=8, grpop=91
+9: grshift=9, grpop=90
+10: grshift=10, grpop=89
+11: grshift=11, grpop=88
+12: grshift=12, grpop=87
+13: grshift=13, grpop=86
+14: grshift=14, grpop=85
+15: grshift=15, grpop=84
+16: grshift=16, grpop=83
+17: grshift=17, grpop=82
+18: grshift=18, grpop=81
+19: grshift=19, grpop=80
+20: grshift=20, grpop=79
+21: grshift=21, grpop=78
+22: grshift=22, grpop=77
+23: grshift=23, grpop=76
+24: grshift=24, grpop=75
+25: grshift=25, grpop=74
+26: grshift=26, grpop=73
+27: grshift=27, grpop=72
+28: grshift=28, grpop=71
+29: grshift=29, grpop=70
+30: grshift=30, grpop=69
+31: grshift=31, grpop=68
+32: grshift=32, grpop=67
+33: grshift=33, grpop=66
+34: grshift=34, grpop=65
+35: grshift=35, grpop=64
+36: grshift=36, grpop=63
+37: grshift=37, grpop=62
+38: grshift=38, grpop=61
+39: grshift=39, grpop=60
+grlen=20
+grwalk: 509 508 507 506 505 504 503 502 501 500 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 1000 1001 1002 1003 1004 1005 1006 1007 1008 1009 
+END TEST OUTPUT
+----
+run test again under slc:
+slangc...
+.
+cat...
+asm...
+1st pass...
+......
+2nd pass...
+..........................................
+BEGIN TEST OUTPUT (under slc)
+test_grarr:
+0: grshift=0, grpop=99
+1: grshift=1, grpop=98
+2: grshift=2, grpop=97
+3: grshift=3, grpop=96
+4: grshift=4, grpop=95
+5: grshift=5, grpop=94
+6: grshift=6, grpop=93
+7: grshift=7, grpop=92
+8: grshift=8, grpop=91
+9: grshift=9, grpop=90
+10: grshift=10, grpop=89
+11: grshift=11, grpop=88
+12: grshift=12, grpop=87
+13: grshift=13, grpop=86
+14: grshift=14, grpop=85
+15: grshift=15, grpop=84
+16: grshift=16, grpop=83
+17: grshift=17, grpop=82
+18: grshift=18, grpop=81
+19: grshift=19, grpop=80
+20: grshift=20, grpop=79
+21: grshift=21, grpop=78
+22: grshift=22, grpop=77
+23: grshift=23, grpop=76
+24: grshift=24, grpop=75
+25: grshift=25, grpop=74
+26: grshift=26, grpop=73
+27: grshift=27, grpop=72
+28: grshift=28, grpop=71
+29: grshift=29, grpop=70
+30: grshift=30, grpop=69
+31: grshift=31, grpop=68
+32: grshift=32, grpop=67
+33: grshift=33, grpop=66
+34: grshift=34, grpop=65
+35: grshift=35, grpop=64
+36: grshift=36, grpop=63
+37: grshift=37, grpop=62
+38: grshift=38, grpop=61
+39: grshift=39, grpop=60
+grlen=20
+grwalk: 509 508 507 506 505 504 503 502 501 500 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 1000 1001 1002 1003 1004 1005 1006 1007 1008 1009 
+END TEST OUTPUT
+----
+run test again under slangi:
+BEGIN TEST OUTPUT (under slangi)
+test_grarr:
+0: grshift=0, grpop=99
+1: grshift=1, grpop=98
+2: grshift=2, grpop=97
+3: grshift=3, grpop=96
+4: grshift=4, grpop=95
+5: grshift=5, grpop=94
+6: grshift=6, grpop=93
+7: grshift=7, grpop=92
+8: grshift=8, grpop=91
+9: grshift=9, grpop=90
+10: grshift=10, grpop=89
+11: grshift=11, grpop=88
+12: grshift=12, grpop=87
+13: grshift=13, grpop=86
+14: grshift=14, grpop=85
+15: grshift=15, grpop=84
+16: grshift=16, grpop=83
+17: grshift=17, grpop=82
+18: grshift=18, grpop=81
+19: grshift=19, grpop=80
+20: grshift=20, grpop=79
+21: grshift=21, grpop=78
+22: grshift=22, grpop=77
+23: grshift=23, grpop=76
+24: grshift=24, grpop=75
+25: grshift=25, grpop=74
+26: grshift=26, grpop=73
+27: grshift=27, grpop=72
+28: grshift=28, grpop=71
+29: grshift=29, grpop=70
+30: grshift=30, grpop=69
+31: grshift=31, grpop=68
+32: grshift=32, grpop=67
+33: grshift=33, grpop=66
+34: grshift=34, grpop=65
+35: grshift=35, grpop=64
+36: grshift=36, grpop=63
+37: grshift=37, grpop=62
+38: grshift=38, grpop=61
+39: grshift=39, grpop=60
+grlen=20
+grwalk: 509 508 507 506 505 504 503 502 501 500 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 1000 1001 1002 1003 1004 1005 1006 1007 1008 1009 
+END TEST OUTPUT

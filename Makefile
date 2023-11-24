@@ -1,6 +1,6 @@
 SOURCES = verilog/fpga.v
 
-.PHONY: all test burn clean emulator kernel sys web
+.PHONY: all test-all test burn clean emulator kernel sys web
 
 all: doc/table.html emulator kernel sys bootrom.hex ucode.hex testrom.hex web
 
@@ -48,11 +48,15 @@ test8250-low.hex: test8250.hex
 test8250-high.hex: test8250.hex
 	sed 's/..$$//' test8250.hex > test8250-high.hex
 
-test: ucode-low.hex ucode-high.hex testrom-low.hex testrom-high.hex emulator
+test-all: ucode-low.hex ucode-high.hex testrom-low.hex testrom-high.hex emulator
 	make -C emulator/ test
 	cd fs/ && ./run-test.sh
 	cd verilog/ && ./run-tests.sh
 	cd compiler/test && ./run-test.sh
+	cd test/ && ./run-test.sh
+
+test:
+	cd test/ && ./run-test.sh
 
 asm/instructions.json: ucode/ucode.s
 	./ucode/mk-instructions-json < ucode/ucode.s > asm/instructions.json.tmp
