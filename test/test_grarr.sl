@@ -25,8 +25,12 @@ var test_grarr = func() {
         i++;
     };
     puts("grwalk: ");
-    grwalk(gr, func(v) {
-        printf("%d ", [v]);
-    });
+    grwalk(gr, func(v) { printf("%d ", [v]); });
+    putchar('\n');
+
+    grsort(gr, func(a, b) { return a - b });
+
+    puts("sorted grwalk:");
+    grwalk(gr, func(v) { printf("%d ", [v]); });
     putchar('\n');
 };

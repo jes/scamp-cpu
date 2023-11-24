@@ -1,3 +1,11 @@
+test_bigint:
+a=1234, b=5678, c=7006652
+div b: c=1234
+div a: c=1
+d=1234567890
+add 1: d=1234567891
+sub 1000: d=1234566891
+add a: d=1234568125
 test_grarr:
 0: grshift=0, grpop=99
 1: grshift=1, grpop=98
@@ -41,18 +49,32 @@ test_grarr:
 39: grshift=39, grpop=60
 grlen=20
 grwalk: 509 508 507 506 505 504 503 502 501 500 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 1000 1001 1002 1003 1004 1005 1006 1007 1008 1009 
+sorted grwalk:40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 500 501 502 503 504 505 506 507 508 509 1000 1001 1002 1003 1004 1005 1006 1007 1008 1009 
+test_hash:
+get onetwothree=123
+get fourfivesix=456
+get seveneightnine=0
+get key42=42
 END TEST OUTPUT
 ----
 run test again under slc:
 slangc...
-.
+..
 cat...
 asm...
 1st pass...
-......
+............
 2nd pass...
-..........................................
+....................................................
 BEGIN TEST OUTPUT (under slc)
+test_bigint:
+a=1234, b=5678, c=7006652
+div b: c=1234
+div a: c=1
+d=1234567890
+add 1: d=1234567891
+sub 1000: d=1234566891
+add a: d=1234568125
 test_grarr:
 0: grshift=0, grpop=99
 1: grshift=1, grpop=98
@@ -96,10 +118,24 @@ test_grarr:
 39: grshift=39, grpop=60
 grlen=20
 grwalk: 509 508 507 506 505 504 503 502 501 500 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 1000 1001 1002 1003 1004 1005 1006 1007 1008 1009 
+sorted grwalk:40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 500 501 502 503 504 505 506 507 508 509 1000 1001 1002 1003 1004 1005 1006 1007 1008 1009 
+test_hash:
+get onetwothree=123
+get fourfivesix=456
+get seveneightnine=0
+get key42=42
 END TEST OUTPUT
 ----
 run test again under slangi:
 BEGIN TEST OUTPUT (under slangi)
+test_bigint:
+a=1234, b=5678, c=7006652
+div b: c=1234
+div a: c=1
+d=1234567890
+add 1: d=1234567891
+sub 1000: d=1234566891
+add a: d=1234568125
 test_grarr:
 0: grshift=0, grpop=99
 1: grshift=1, grpop=98
@@ -143,4 +179,10 @@ test_grarr:
 39: grshift=39, grpop=60
 grlen=20
 grwalk: 509 508 507 506 505 504 503 502 501 500 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 1000 1001 1002 1003 1004 1005 1006 1007 1008 1009 
+sorted grwalk:40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 500 501 502 503 504 505 506 507 508 509 1000 1001 1002 1003 1004 1005 1006 1007 1008 1009 
+test_hash:
+get onetwothree=123
+get fourfivesix=456
+get seveneightnine=0
+get key42=42
 END TEST OUTPUT

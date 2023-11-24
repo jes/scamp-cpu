@@ -4,4 +4,6 @@ cd ..
 put test.bin /bin/init
 
 put -t test.sl /home/test.sl
+put -t test_bigint.sl /home/test_bigint.sl
 put -t test_grarr.sl /home/test_grarr.sl
+put -t test_hash.sl /home/test_hash.sl
