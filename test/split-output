@@ -1,0 +1,26 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+my $fh;
+my $run;
+
+while (<>) {
+    s/\r?\n?$//;
+    if (/END TEST OUTPUT/) {
+        die "'END TEST OUTPUT' but not begun" if !$fh;
+        close $fh;
+        undef $fh;
+    }
+    print $fh "$_\n" if $fh;
+    if (/BEGIN TEST OUTPUT \(([^)]+)\)/) {
+        die "'BEGIN TEST OUTPUT' but already begun ($run)" if $fh;
+        my $run = $1;
+        my $filename = "test-$run.out";
+        open($fh, '>', $filename)
+            or die "write $filename: $!\n";
+    }
+}
+
+die "ran out of text before 'END TEST OUTPUT' ($run)" if $fh;

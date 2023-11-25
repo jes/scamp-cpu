@@ -16,7 +16,10 @@ cp ../kernel/os.disk .
 ../fs/fs os.disk < fs.in
 
 # run the test
-../emulator/scamp -i os.disk | sed '1,/BEGIN TEST OUTPUT/d' > test.out
+../emulator/scamp -i os.disk > test.out
 
 # check the results
-diff --strip-trailing-cr -u test.expect test.out | less
+./split-output < test.out
+diff -u test.expect test-top.out | less
+diff -u test.expect test-slc.out | less
+diff -u test.expect test-slangi.out | less

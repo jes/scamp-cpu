@@ -7,12 +7,12 @@ include "test_hash.sl";
 chdir("/home");
 
 var recurse = 1;
-var running_under = "(top-level)";
+var running_under = "(top)";
 
 var args = cmdargs()+1;
 if (*args) {
     recurse = 0;
-    running_under = sprintf("(under %s)", [*args]);
+    running_under = sprintf("(%s)", [*args]);
 };
 
 printf("BEGIN TEST OUTPUT %s\n", [running_under]);
