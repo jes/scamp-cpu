@@ -20,6 +20,7 @@ cp ../kernel/os.disk .
 
 # check the results
 ./split-output < test.out
-diff -u test.expect test-top.out | less
-diff -u test.expect test-slc.out | less
-diff -u test.expect test-slangi.out | less
+cmp test.expect test-top.out || (diff -u test.expect test-top.out | less)
+cmp test.expect test-slc.out || (diff -u test.expect test-slc.out | less)
+cmp test.expect test-slangi.out || (diff -u test.expect test-slangi.out | less)
+cmp test.expect test-top.out && cmp test.expect test-slc.out && cmp test.expect test-slangi.out && echo "All tests PASSED."
