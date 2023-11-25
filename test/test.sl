@@ -4,6 +4,7 @@ include "test_bigint.sl";
 include "test_grarr.sl";
 include "test_grep.sl";
 include "test_hash.sl";
+include "test_sh.sl";
 
 chdir("/home");
 
@@ -20,8 +21,9 @@ printf("BEGIN TEST OUTPUT %s\n", [running_under]);
 
 puts("test_bigint:\n"); test_bigint();
 puts("test_grarr:\n"); test_grarr();
-puts("test_hash:\n"); test_hash();
 puts("test_grep:\n"); test_grep();
+puts("test_hash:\n"); test_hash();
+puts("test_sh:\n"); test_sh();
 
 puts("END TEST OUTPUT\n");
 

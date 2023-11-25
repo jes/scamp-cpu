@@ -50,10 +50,17 @@ test_grarr:
 grlen=20
 grwalk: 509 508 507 506 505 504 503 502 501 500 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 1000 1001 1002 1003 1004 1005 1006 1007 1008 1009 
 sorted grwalk:40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 500 501 502 503 504 505 506 507 508 509 1000 1001 1002 1003 1004 1005 1006 1007 1008 1009 
+test_grep:
+    system(["/bin/grep", "GREPGREPGREP", "test_grep.sl"]);
 test_hash:
 get onetwothree=123
 get fourfivesix=456
 get seveneightnine=0
 get key42=42
-test_grep:
-    system(["/bin/grep", "GREPGREPGREP", "test_grep.sl"]);
+test_sh:
+test.sl
+test_bigint.sl
+test_grarr.sl
+test_grep.sl
+test_hash.sl
+test_sh.sl
