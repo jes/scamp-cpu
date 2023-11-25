@@ -20,6 +20,11 @@ d=1234567890
 add 1: d=1234567891
 sub 1000: d=1234566891
 add a: d=1234568125
+test_bitmap:
+count=1
+count=2
+count=1
+bmwalk:42,42 100,100 
 test_grarr:
 0: grshift=0, grpop=99
 1: grshift=1, grpop=98
@@ -75,6 +80,7 @@ test_sh:
 test.sl
 test_basic.sl
 test_bigint.sl
+test_bitmap.sl
 test_grarr.sl
 test_grep.sl
 test_hash.sl
