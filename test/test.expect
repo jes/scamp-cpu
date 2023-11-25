@@ -55,3 +55,5 @@ get onetwothree=123
 get fourfivesix=456
 get seveneightnine=0
 get key42=42
+test_grep:
+    system(["/bin/grep", "GREPGREPGREP", "test_grep.sl"]);
