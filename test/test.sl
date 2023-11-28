@@ -1,5 +1,6 @@
 include "stdio.sl";
 
+include "test_basic.sl";
 include "test_bigint.sl";
 include "test_grarr.sl";
 include "test_grep.sl";
@@ -19,6 +20,7 @@ if (*args) {
 
 printf("BEGIN TEST OUTPUT %s\n", [running_under]);
 
+puts("test_basic:\n"); test_basic();
 puts("test_bigint:\n"); test_bigint();
 puts("test_grarr:\n"); test_grarr();
 puts("test_grep:\n"); test_grep();

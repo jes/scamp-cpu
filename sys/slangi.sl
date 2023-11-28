@@ -19,6 +19,7 @@ var SeqNode;
 var NopNode;
 var EvalNopNode;
 var ConstNode;
+var isConstNode;
 var EvalConstNode;
 var ArrayIndexNode;
 var EvalArrayIndexNode;
@@ -248,7 +249,7 @@ SeqNode = func(nodes) {
 
     # stash return address
     var p = code;
-    *(p++) = 0x5d00; # pop x (ignore our argument)
+    *(p++) = 0xa1ff; # inc sp (ignore our argument)
     *(p++) = 0x61fe; # ld x, r254
     *(p++) = 0x5a00; # push x
 
@@ -282,11 +283,20 @@ EvalNopNode = func(n) {
 };
 
 ConstNode = func(val) {
-    return cons(EvalConstNode, val);
+    var p = malloc(6);
+    p[0] = p+1; # pointer to evaluator
+    p[1] = 0xa1ff; # inc sp
+    p[2] = 0x8500; p[3] = val; # ld r0, val
+    p[4] = 0x9300; # ret
+    p[5] = isConstNode; # make it identifiable...
+    return p;
 };
-EvalConstNode = func(n) {
-    return n[1];
+isConstNode = func(n) {
+    return (n[0] == n+1) && (n[5] == isConstNode);
 };
+#EvalConstNode = func(n) {
+#    return n[1];
+#};
 
 ArrayIndexNode = func(ptr, index) {
     return cons3(EvalArrayIndexNode, ptr, index);
@@ -299,7 +309,7 @@ EvalArrayIndexNode = func(n) {
 
 OperatorNode = func(op, arg1, arg2) {
     var node = cons3(op, arg1, arg2);
-    if (arg1[0] == EvalConstNode && arg2[0] == EvalConstNode) {
+    if (isConstNode(arg1) && isConstNode(arg2)) {
         return ConstNode(eval(node))
     } else {
         return node;
@@ -334,7 +344,7 @@ EvalUnsignedGeNode = func(n) { return eval(n[1]) ge eval(n[2]); };
 
 UnaryOpNode = func(op, arg1) {
     var node = cons(op, arg1);
-    if (arg1[0] == EvalConstNode && op != EvalValueOfNode) {
+    if (isConstNode(arg1) && op != EvalValueOfNode) {
         return ConstNode(eval(node));
     } else {
         return node;
@@ -554,7 +564,7 @@ FunctionCallNode = func(name, args) {
 
     # stash return address
     var p = code;
-    *(p++) = 0x5d00; # pop x (ignore our argument)
+    *(p++) = 0xa1ff; # inc sp (ignore our argument)
     *(p++) = 0x61fe; # ld x, r254
     *(p++) = 0x5a00; # push x
 
@@ -563,10 +573,16 @@ FunctionCallNode = func(name, args) {
     var n;
     while (i != grlen(args)) {
         n = grget(args,i);
-        if (n[0] == EvalConstNode) {
-            # TODO: for small values, use "push i8h" or "push i8l"
-            *(p++) = 0x6200; *(p++) = eval(n); # ld x, val
-            *(p++) = 0x5a00; # push x
+        if (isConstNode(n)) {
+            n = eval(n);
+            if ((n & 0xff00) == 0) {
+                *(p++) = 0x5b00 | n; # push i8l
+            } else if ((n & 0xff00) == 0xff00) {
+                *(p++) = 0x5c00 | (n & 0x00ff); # push i8h
+            } else {
+                *(p++) = 0x6200; *(p++) = n; # ld x, val
+                *(p++) = 0x5a00; # push x
+            };
         } else {
             *(p++) = 0x6200; *(p++) = n; # ld x, node
             *(p++) = 0x5a00; # push x

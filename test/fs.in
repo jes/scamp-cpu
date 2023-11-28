@@ -4,6 +4,7 @@ cd ..
 put test.bin /bin/init
 
 put -t test.sl /home/test.sl
+put -t test_basic.sl /home/test_basic.sl
 put -t test_bigint.sl /home/test_bigint.sl
 put -t test_grarr.sl /home/test_grarr.sl
 put -t test_grep.sl /home/test_grep.sl

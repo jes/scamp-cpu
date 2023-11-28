@@ -1,3 +1,17 @@
+test_basic:
+foo(0)
+foo(-1)
+foo(-2)
+foo(-5)
+foo(1)
+foo(2)
+foo(5)
+foo(-200)
+foo(-300)
+foo(-1)
+foo(1)
+foo(200)
+foo(300)
 test_bigint:
 a=1234, b=5678, c=7006652
 div b: c=1234
@@ -59,6 +73,7 @@ get seveneightnine=0
 get key42=42
 test_sh:
 test.sl
+test_basic.sl
 test_bigint.sl
 test_grarr.sl
 test_grep.sl
