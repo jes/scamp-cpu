@@ -88,6 +88,8 @@ addglobal("chdir", &chdir);
 addglobal("close", &close);
 addglobal("cmdargs", &cmdargs);
 addglobal("cons", &cons);
+addglobal("cons3", &cons3);
+addglobal("cons4", &cons4);
 addglobal("copyfd", &copyfd);
 addglobal("die", &die);
 addglobal("div", &div);

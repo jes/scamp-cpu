@@ -13,8 +13,6 @@ include "strbuf.sl";
 include "string.sl";
 
 # AST
-var cons3;
-var cons4;
 var SeqNode;
 var NopNode;
 var EvalNopNode;
@@ -222,18 +220,6 @@ var endscope_parsetime = func() {
 };
 
 ### AST ###
-
-cons3 = func(a,b,c) {
-    var p = malloc(3);
-    p[0] = a; p[1] = b; p[2] = c;
-    return p;
-};
-
-cons4 = func(a,b,c,d) {
-    var p = malloc(4);
-    p[0] = a; p[1] = b; p[2] = c; p[3] = d;
-    return p;
-};
 
 SeqNode = func(nodes) {
     if (grlen(nodes) == 0) return NopNode()
