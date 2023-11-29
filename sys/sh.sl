@@ -142,6 +142,7 @@ var SingleQuotes = func(x) {
     if (!parse(StringExcept,"'")) return 0;
     if (!parse(Char,'\'')) return 0;
     grpush(parse_args, strdup(ARGUMENT));
+    skip();
     return 1;
 };
 var DoubleQuotes = func(x) {
@@ -149,6 +150,7 @@ var DoubleQuotes = func(x) {
     if (!parse(StringExcept,"\"")) return 0;
     if (!parse(Char,'"')) return 0;
     grpush(parse_args, strdup(ARGUMENT));
+    skip();
     return 1;
 };
 
@@ -291,12 +293,12 @@ var parse_input = func(str) {
     skip();
     if (!parse(CommandLine,0)) {
         grfree(parse_args);
-        sherr = "parse error";
+        sherr = "parse error (no command)";
         return 1;
     };
     if (nextchar() != EOF) {
         grfree(parse_args);
-        sherr = "parse error";
+        sherr = "parse error (trailing garbage)";
         return 1;
     };
 
