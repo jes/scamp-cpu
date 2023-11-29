@@ -52,16 +52,12 @@ var recap = func(i) {
     if (recap_mod) *recap_mod = recap_char;
     if (i == -1) return 0;
     
-    # grab out the captures
-    var start = recap_sub[i+i];
-    var end = recap_sub[i+i+1];
-
     # insert a trailing nul that we can undo later
-    recap_mod = end+1;
+    recap_mod = recap_sub[i+i+1];
     recap_char = *recap_mod;
     *recap_mod = 0;
 
-    return start;
+    return recap_sub[i+i];
 };
 
 ## PARSING
