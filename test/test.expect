@@ -76,6 +76,22 @@ get onetwothree=123
 get fourfivesix=456
 get seveneightnine=0
 get key42=42
+test_regex:
+a(b|c)*d should match:
+abcd: matched (captured bc)
+abbbbbbbd: matched (captured bbbbbbb)
+acccccccd: matched (captured ccccccc)
+ad: matched (captured )
+abcbcbbbbbcccbcbcbcccbcbcbcbcd: matched (captured bcbcbbbbbcccbcbcbcccbcbcbcbc)
+abd: matched (captured b)
+acd: matched (captured c)
+a(b|c)*d should not match:
+aadd: didn't match
+: didn't match
+abbbcc: didn't match
+bbccd: didn't match
+aad: didn't match
+ddddd: didn't match
 test_sh:
 test.sl
 test_basic.sl
@@ -85,3 +101,4 @@ test_grarr.sl
 test_grep.sl
 test_hash.sl
 test_sh.sl
+foo single quotes double quotes

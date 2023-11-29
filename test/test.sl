@@ -6,6 +6,7 @@ include "test_bitmap.sl";
 include "test_grarr.sl";
 include "test_grep.sl";
 include "test_hash.sl";
+include "test_regex.sl";
 include "test_sh.sl";
 
 chdir("/home");
@@ -27,6 +28,7 @@ puts("test_bitmap:\n"); test_bitmap();
 puts("test_grarr:\n"); test_grarr();
 puts("test_grep:\n"); test_grep();
 puts("test_hash:\n"); test_hash();
+puts("test_regex:\n"); test_regex();
 puts("test_sh:\n"); test_sh();
 
 puts("END TEST OUTPUT\n");
