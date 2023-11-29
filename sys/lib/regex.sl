@@ -76,7 +76,6 @@ const RE_ALT = 1;
 const RE_CAT = 2;
 const RE_STAR = 3;
 const RE_CAP = 4;
-var typname = ["lit", "alt", "cat", "star", "cap"];
 
 # turn the given regex into an AST
 var reparse_str;
