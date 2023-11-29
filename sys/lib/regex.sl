@@ -19,10 +19,8 @@ var _pikevm;
 
 # compile the given regex
 var renew = func(str) {
-    puts("parse...\n");
     var tree = _reparse(str);
     if (!tree) return 0;
-    puts("compile...\n");
     var vm = _recompile(tree);
     # TODO: free the tree
     # TODO: do we need any more data structures?
@@ -38,7 +36,6 @@ var refree = func(re) {
 # try to match the given regex against the string;
 # return 1 if it matched, 0 otherwise
 var rematch = func(re, str) {
-    puts("match...\n");
     return _pikevm(re, str);
 };
 
@@ -95,28 +92,23 @@ _reparse = func(str) {
 };
 
 var capture = func(a) {
-    printf("capture(%d)\n", [a]);
     return cons3(RE_CAP, a, reparse_caps++);
 };
 
 var literal = func(ch) {
-    printf("literal(%c)\n", [ch]);
     return cons3(RE_LIT, ch, 0);
 };
 
 var concat = func(a, b) {
-    printf("concat(%d,%d)\n", [a,b]);
     if (!a) return b;
     return cons3(RE_CAT, a, b);
 };
 
 var alternate = func(a, b) {
-    printf("alternate(%d,%d)\n", [a,b]);
     return cons3(RE_ALT, a, b);
 };
 
 var maybestar = func(a) {
-    printf("maybestar(%d)\n", [a]);
     if (*reparse_str == '*') {
         reparse_str++;
         return cons3(RE_STAR, a, 0);
@@ -166,7 +158,6 @@ var _recount = func(tree) {
     if (!tree) return 0;
 
     var typ = tree[RE_TYPE];
-    printf("recount(%s)\n", [typname[typ]]);
 
     if (typ == RE_LIT) return 1
     else if (typ == RE_ALT) return 2 + _recount(tree[RE_LEFT]) + _recount(tree[RE_RIGHT])
