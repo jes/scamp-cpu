@@ -155,6 +155,7 @@ put -t ../sys/lib/hash.sl /src/lib/hash.sl
 put -t ../sys/lib/heap.sl /src/lib/heap.sl
 put -t ../sys/lib/malloc.sl /src/lib/malloc.sl
 put -t ../sys/lib/parse.sl /src/lib/parse.sl
+put -t ../sys/lib/regex.sl /src/lib/regex.sl
 put -t ../sys/lib/serial.sl /src/lib/serial.sl
 put -t ../sys/lib/stdio.sl /src/lib/stdio.sl
 put -t ../sys/lib/stdlib.sl /src/lib/stdlib.sl
