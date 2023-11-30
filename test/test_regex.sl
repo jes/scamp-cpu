@@ -11,6 +11,7 @@ var test1 = func(str) {
 var test_regex = func() {
     var restr = "a(b|c)*d";
     re = renew("a(b|c)*d");
+
     printf("%s should match:\n", [restr]);
     test1("abcd");
     test1("abbbbbbbd");
@@ -19,6 +20,7 @@ var test_regex = func() {
     test1("abcbcbbbbbcccbcbcbcccbcbcbcbcd");
     test1("abd");
     test1("acd");
+
     printf("%s should not match:\n", [restr]);
     test1("aadd");
     test1("");
@@ -26,4 +28,6 @@ var test_regex = func() {
     test1("bbccd");
     test1("aad");
     test1("ddddd");
+
+    refree(re);
 };

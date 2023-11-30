@@ -1,7 +1,7 @@
 include "bitmap.sl";
 
 var test_bitmap = func() {
-    var bm = bmnew(200, 200);
+    var bm = bmnew(120, 120);
     bmset(bm, 42, 42, 1);
     printf("count=%d\n", [bmcount(bm)]);
     bmset(bm, 42, 50, 1);

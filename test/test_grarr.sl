@@ -30,7 +30,9 @@ var test_grarr = func() {
 
     grsort(gr, func(a, b) { return a - b });
 
-    puts("sorted grwalk:");
+    puts("sorted grwalk: ");
     grwalk(gr, func(v) { printf("%d ", [v]); });
     putchar('\n');
+
+    grfree(gr);
 };
