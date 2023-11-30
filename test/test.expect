@@ -100,5 +100,6 @@ test_bitmap.sl
 test_grarr.sl
 test_grep.sl
 test_hash.sl
+test_regex.sl
 test_sh.sl
 foo single quotes double quotes
