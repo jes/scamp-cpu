@@ -140,6 +140,45 @@ var CONTINUE_jmpbuf;
 var BLOCKLEVEL = 0;
 var LOOPLEVEL = 0;
 
+const arenasz = 512;
+const arenamax = 32;
+var arenaspace = arenasz;
+var arena = malloc(arenasz);
+
+var aalloc = func(sz) {
+    if (sz > arenamax) return malloc(sz);
+    arenaspace = arenaspace - sz;
+    if (arenaspace < 0) {
+        arena = malloc(arenasz);
+        arenaspace = arenasz - sz;
+    };
+    var p = arena;
+    arena = arena + sz;
+    return p;
+};
+
+var acons = func(a,b) {
+    var p = aalloc(2);
+    p[0] = a;
+    p[1] = b;
+    return p;
+};
+var acons3 = func(a,b,c) {
+    var p = aalloc(3);
+    p[0] = a;
+    p[1] = b;
+    p[2] = c;
+    return p;
+};
+var acons4 = func(a,b,c,d) {
+    var p = aalloc(4);
+    p[0] = a;
+    p[1] = b;
+    p[2] = c;
+    p[3] = d;
+    return p;
+};
+
 # TODO: [perf] should this use a hash table?
 var intern = func(str) {
     var v = grfind(STRINGS, str, func(find,s) { return strcmp(find,s)==0 });
@@ -215,6 +254,7 @@ var newscope_parsetime = func() {
 };
 var endscope_parsetime = func() {
     if (!LOCALS) die("can't end the global scope",0);
+    grwalk(LOCALS, free);
     grfree(LOCALS);
     LOCALS = grpop(OLDLOCALS);
 };
@@ -226,7 +266,7 @@ SeqNode = func(nodes) {
     else if (grlen(nodes) == 1) return grget(nodes, 0);
 
     var codesz = 3 + mul(4, grlen(nodes)) + 2;
-    var arr = malloc(codesz+1);
+    var arr = aalloc(codesz+1);
     var code = arr+1;
 
     # first element is a pointer to the evaluator function (the function we're
@@ -269,7 +309,7 @@ EvalNopNode = func(n) {
 };
 
 ConstNode = func(val) {
-    var p = malloc(6);
+    var p = aalloc(6);
     p[0] = p+1; # pointer to evaluator
     p[1] = 0xa1ff; # inc sp
     p[2] = 0x8500; p[3] = val; # ld r0, val
@@ -285,7 +325,7 @@ isConstNode = func(n) {
 #};
 
 ArrayIndexNode = func(ptr, index) {
-    return cons3(EvalArrayIndexNode, ptr, index);
+    return acons3(EvalArrayIndexNode, ptr, index);
 };
 EvalArrayIndexNode = func(n) {
     #var ptr = eval(n[1]);
@@ -294,7 +334,7 @@ EvalArrayIndexNode = func(n) {
 };
 
 OperatorNode = func(op, arg1, arg2) {
-    var node = cons3(op, arg1, arg2);
+    var node = acons3(op, arg1, arg2);
     if (isConstNode(arg1) && isConstNode(arg2)) {
         return ConstNode(eval(node))
     } else {
@@ -329,7 +369,7 @@ EvalUnsignedLeNode = func(n) { return eval(n[1]) le eval(n[2]); };
 EvalUnsignedGeNode = func(n) { return eval(n[1]) ge eval(n[2]); };
 
 UnaryOpNode = func(op, arg1) {
-    var node = cons(op, arg1);
+    var node = acons(op, arg1);
     if (isConstNode(arg1) && op != EvalValueOfNode) {
         return ConstNode(eval(node));
     } else {
@@ -342,8 +382,8 @@ EvalValueOfNode = func(n) { return *(eval(n[1])); };
 EvalNegateNode = func(n) { return -eval(n[1]); };
 
 ConditionalNode = func(cond, thenexpr, elseexpr) {
-    if (elseexpr) return cons4(EvalConditionalNodeWithElse, cond, thenexpr, elseexpr)
-    else return cons3(EvalConditionalNode, cond, thenexpr);
+    if (elseexpr) return acons4(EvalConditionalNodeWithElse, cond, thenexpr, elseexpr)
+    else return acons3(EvalConditionalNode, cond, thenexpr);
 };
 EvalConditionalNode = asm {
     # stash return
@@ -410,7 +450,7 @@ EvalConditionalNodeWithElse = asm {
 };
 
 LoopNode = func(cond, body) {
-    return cons3(EvalLoopNode, cond, body);
+    return acons3(EvalLoopNode, cond, body);
 };
 EvalLoopNode = func(n) {
     var cond = n[1];
@@ -448,7 +488,7 @@ AddressOfNode = func(name) {
 
 LocalNode = func(name) {
     var v = findlocal(name);
-    if (v) return cons(EvalLocalNode, cdr(v));
+    if (v) return acons(EvalLocalNode, cdr(v));
     die("use of undefined local: %s\n", [name]);
 };
 #EvalLocalNode = func(n) {
@@ -464,7 +504,7 @@ EvalLocalNode = asm {
 };
 GlobalNode = func(name) {
     var addr = findglobal(name);
-    if (addr) return cons(EvalGlobalNode, addr);
+    if (addr) return acons(EvalGlobalNode, addr);
     die("use of undefined global: %s\n", [name]);
 };
 #EvalGlobalNode = func(n) {
@@ -478,7 +518,7 @@ EvalGlobalNode = asm {
 };
 AddressOfLocalNode = func(name) {
     var v = findlocal(name);
-    if (v) return cons(EvalAddressOfLocalNode, cdr(v));
+    if (v) return acons(EvalAddressOfLocalNode, cdr(v));
     die("use of undefined local: %s\n", [name]);
 };
 EvalAddressOfLocalNode = func(n) {
@@ -493,7 +533,7 @@ AddressOfGlobalNode = func(name) {
 
 IndexAddressOfNode = func(exprs) {
     if (grlen(exprs)<1) die("index address-of must have at least 1 expr\n",0);
-    return cons(EvalIndexAddressOfNode, exprs);
+    return acons(EvalIndexAddressOfNode, exprs);
 };
 EvalIndexAddressOfNode = func(n) {
     var exprs = grbase(n[1]);
@@ -508,7 +548,7 @@ EvalIndexAddressOfNode = func(n) {
 };
 
 AssignmentNode = func(addr, value) {
-    return cons3(EvalAssignmentNode, addr, value);
+    return acons3(EvalAssignmentNode, addr, value);
 };
 EvalAssignmentNode = func(n) {
     #var addr = n[1];
@@ -518,7 +558,7 @@ EvalAssignmentNode = func(n) {
 };
 
 PreOpNode = func(inc, name) {
-    return cons3(EvalPreOpNode, inc, AddressOfNode(name));
+    return acons3(EvalPreOpNode, inc, AddressOfNode(name));
 };
 EvalPreOpNode = func(n) {
     #var inc = n[1];
@@ -529,7 +569,7 @@ EvalPreOpNode = func(n) {
 };
 
 PostOpNode = func(inc, name) {
-    return cons3(EvalPostOpNode, inc, AddressOfNode(name));
+    return acons3(EvalPostOpNode, inc, AddressOfNode(name));
 };
 EvalPostOpNode = func(n) {
     #var inc = n[1];
@@ -541,7 +581,7 @@ EvalPostOpNode = func(n) {
 
 FunctionCallNode = func(name, args) {
     var codesz = 3 + mul(6, grlen(args)) + 8;
-    var arr = malloc(codesz+1);
+    var arr = aalloc(codesz+1);
     var code = arr+1;
 
     # first element is a pointer to the evaluator function (the function we're
@@ -599,7 +639,7 @@ FunctionCallNode = func(name, args) {
 };
 
 ReturnNode = func(expr) {
-    return cons(EvalReturnNode, expr);
+    return acons(EvalReturnNode, expr);
 };
 EvalReturnNode = func(n) {
     RETURN_val = eval(n[1]);
@@ -607,8 +647,8 @@ EvalReturnNode = func(n) {
 };
 
 ArrayLiteralNode = func(exprs) {
-    var base = malloc(grlen(exprs)+1);
-    return cons4(EvalArrayLiteralNode, grbase(exprs), base, grlen(exprs));
+    var base = aalloc(grlen(exprs)+1);
+    return acons4(EvalArrayLiteralNode, grbase(exprs), base, grlen(exprs));
 };
 EvalArrayLiteralNode = func(n) {
     var exprs = n[1];
@@ -776,7 +816,7 @@ Declaration = func(x) {
     if (LOCALS) {
         addlocal(name);
     } else {
-        addglobal(name, malloc(1));
+        addglobal(name, aalloc(1));
     };
 
     if (!parse(CharSkip,'=')) return NopNode();
@@ -1095,7 +1135,7 @@ FunctionDeclaration = func(x) {
     LOOPLEVEL = looplevel;
 
     var codesz = 15;
-    var code_addr = malloc(codesz);
+    var code_addr = aalloc(codesz);
 
     # now we create a stub to allow normal SLANG calling convention to
     # call into the interpreter; this way interpreted functions and
