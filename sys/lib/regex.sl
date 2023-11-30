@@ -2,6 +2,7 @@
 
 include "grarr.sl";
 include "parse.sl";
+include "malloc.sl";
 
 # Forward declarations:
 
@@ -11,6 +12,8 @@ var _reparse1;
 
 # Compiling
 var _recompile;
+
+const SUBSZ = 20;
 
 # NFA matching
 var _pikevm;
@@ -44,7 +47,7 @@ var rematch = func(re, str) {
 # note this can modify 1 character of the matched string in-place,
 # to insert a trailing nul;
 # call recap(-1) to explicitly undo the modifications
-var recap_sub = asm { .gap 20 }; # TODO: more than 10 capture groups? at least give an error instead of silently breaking
+var recap_sub = malloc(SUBSZ);
 var recap_mod;
 var recap_char;
 var recap = func(i) {
@@ -239,8 +242,8 @@ var addthread = func(list, pc, sub, strp) {
         addthread(list, pc[RE_X], sub, strp);
         addthread(list, pc[RE_Y], sub, strp);
     } else if (op == RE_SAVE) {
-        sub2 = malloc(20);
-        memcpy(sub2, sub, 20);
+        sub2 = malloc(SUBSZ);
+        memcpy(sub2, sub, SUBSZ);
         sub2[pc[RE_X]] = strp;
         addthread(list, pc+4, sub2, strp);
     } else {
@@ -273,8 +276,8 @@ _pikevm = func(re, str) {
     var sub;
     var op;
 
-    # TODO: malloc(20) needs some way to track subs allocations so we can free them later
-    addthread(clist, re, malloc(20), str);
+    # TODO: malloc(SUBSZ) needs some way to track subs allocations so we can free them later
+    addthread(clist, re, malloc(SUBSZ), str);
     while (1) {
         if (grlen(clist) == 0) break;
         _GEN++;
@@ -289,7 +292,7 @@ _pikevm = func(re, str) {
                 if (*str == pc[RE_X])
                     addthread(nlist, pc+4, sub, str+1);
             } else if (op == RE_MATCH) {
-                memcpy(recap_sub, sub, 20);
+                memcpy(recap_sub, sub, SUBSZ);
                 grfree(clist); grfree(nlist);
                 # TODO: free allocated subs
                 return 1;
@@ -303,7 +306,7 @@ _pikevm = func(re, str) {
         str++;
     };
 
-    memset(recap_sub, 0, 20);
+    memset(recap_sub, 0, SUBSZ);
     grfree(clist); grfree(nlist);
     # TODO: free allocated subs
     return 0;
