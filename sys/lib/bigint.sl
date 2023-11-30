@@ -13,8 +13,6 @@ var bigint_bits;
 var bigint_itoaspace = 0;
 var bigint_itoaspace_end;
 
-var bigminusone = 0; # constant -1
-var bigzero = 0; # constant 0
 var bigone = 0; # constant 1
 
 # forward declarations
@@ -48,6 +46,15 @@ var bigmodw;
 
 var bigaddwtmp = 0;
 var bigmulwtmp = 0;
+var bigdivwtmp = 0;
+
+var bigmulresult = 0;
+var bigmulresultn = 0;
+
+var bigdivmodnum = 0;
+var bigdivmoddenom = 0;
+var bigdivmoddiv = 0;
+var bigdivmodmod = 0;
 
 # if you use biginit, you must call it before creating
 # any bigints
@@ -61,14 +68,23 @@ biginit = func(prec) {
     bigint_itoaspace = malloc(len);
     bigint_itoaspace_end = bigint_itoaspace + len - 1;
 
-    bigfree(bigminusone); bigfree(bigzero); bigfree(bigone);
-    bigminusone = bignew(-1);
-    bigzero = bignew(0);
+    bigfree(bigone);
     bigone = bignew(1);
 
-    bigfree(bigaddwtmp); bigfree(bigmulwtmp);
+    bigfree(bigaddwtmp); bigfree(bigmulwtmp); bigfree(bigdivwtmp);
     bigaddwtmp = bignew(0);
     bigmulwtmp = bignew(0);
+    bigdivwtmp = bignew(0);
+
+    bigfree(bigmulresult); bigfree(bigmulresultn);
+    bigmulresult = bignew(0);
+    bigmulresultn = bignew(0);
+
+    bigfree(bigdivmodnum); bigfree(bigdivmoddenom); bigfree(bigdivmoddiv); bigfree(bigdivmodmod);
+    bigdivmodnum = bignew(0);
+    bigdivmoddenom = bignew(0);
+    bigdivmoddiv = bignew(0);
+    bigdivmodmod = bignew(0);
 };
 
 # create a new bigint with the given (word) value
@@ -285,7 +301,6 @@ bigitoabase = func(big, base) {
         bigdivmodw(b, base, &d, &m);
         *--s = itoa_alphabet[bigtow(m)];
         bigset(b, d);
-        bigfree(d); bigfree(m);
     };
 
     if (neg) {
@@ -422,16 +437,16 @@ bigaddw = func(big, w) {
 
 # big1 = big1 - big2
 bigsub = func(big1, big2) {
-    var minusbig2 = bigclone(big2);
+    # bigaddwtmp = -big2
+    bigset(bigaddwtmp, big2);
     var i = 0;
     while (i != bigint_prec) {
-        minusbig2[i] = ~big2[i];
+        bigaddwtmp[i] = ~big2[i];
         i++;
     };
-    bigadd(minusbig2, bigone);
+    bigadd(bigaddwtmp, bigone);
 
-    bigadd(big1, minusbig2);
-    bigfree(minusbig2);
+    bigadd(big1, bigaddwtmp);
 
     return big1;
 };
@@ -445,17 +460,15 @@ bigsubw = func(big, w) {
 
 # big1 = big1 * big2
 bigmul = func(big1, big2) {
-    var result = bignew(0);
-    var resultn = bigclone(big2);
+    bigsetw(bigmulresult, 0);
+    bigset(bigmulresultn, big2);
     var i = 0;
     while (i != bigint_bits) {
-        if (bigbit(big1, i)) bigadd(result, resultn);
-        bigadd(resultn, resultn);
+        if (bigbit(big1, i)) bigadd(bigmulresult, bigmulresultn);
+        bigadd(bigmulresultn, bigmulresultn);
         i++;
     };
-    bigset(big1, result);
-    bigfree(result);
-    bigfree(resultn);
+    bigset(big1, bigmulresult);
 
     return big1;
 };
@@ -542,69 +555,67 @@ bigsetbit = func(big, n, v) {
 
 # *divp = big1 / big2
 # *modp = big1 % big2
-# both *divp and *modp are new allocations; big1 and big2 are unchanged
+# both *divp and *modp are static allocations; big1 and big2 are unchanged
 # https://en.wikipedia.org/wiki/Division_algorithm#Integer_division_(unsigned)_with_remainder
 bigdivmod = func(big1, big2, divp, modp) {
-    var num = bigclone(big1);
-    var denom = bigclone(big2);
+    bigset(bigdivmodnum, big1);
+    bigset(bigdivmoddenom, big2);
 
     var negnum = 0;
     var negdenom = 0;
 
     # is numerator negative? set negnum and make it positive
-    if (bigcmpw(num,0) < 0) {
+    if (bigcmpw(bigdivmodnum,0) < 0) {
         negnum = 1;
-        bigsetw(num, 0);
-        bigsub(num, big1);
+        bigsetw(bigdivmodnum, 0);
+        bigsub(bigdivmodnum, big1);
     };
 
     # is denominator negative? set negdenom and make it positive
-    if (bigcmpw(denom,0) < 0) {
+    if (bigcmpw(bigdivmoddenom,0) < 0) {
         negdenom = 1;
-        bigsetw(denom, 0);
-        bigsub(denom, big2);
+        bigsetw(bigdivmoddenom, 0);
+        bigsub(bigdivmoddenom, big2);
     };
 
-    *divp = bignew(0);
-    *modp = bignew(0);
+    bigsetw(bigdivmoddiv, 0);
+    bigsetw(bigdivmodmod, 0);
     var i = bigint_bits-1;
     while (i != -1) {
-        bigadd(*modp, *modp); # R := R << 1
-        if (bigbit(num, i)) bigadd(*modp, bigone); # R(0) := N(i)
-        if (bigcmp(*modp, denom) >= 0) { # if R >= D then
-            bigsub(*modp, denom); # R := R - D
-            bigsetbit(*divp, i, 1); # Q(i) := 1
+        bigadd(bigdivmodmod, bigdivmodmod); # R := R << 1
+        if (bigbit(bigdivmodnum, i)) bigadd(bigdivmodmod, bigone); # R(0) := N(i)
+        if (bigcmp(bigdivmodmod, bigdivmoddenom) >= 0) { # if R >= D then
+            bigsub(bigdivmodmod, bigdivmoddenom); # R := R - D
+            bigsetbit(bigdivmoddiv, i, 1); # Q(i) := 1
         };
         i--;
     };
-
-    bigfree(num);
-    bigfree(denom);
 
     # if exactly one of numerator and denominator are negative, quotient is negative
     var tmp;
     if (negnum != negdenom) {
         tmp = bignew(0);
-        bigsub(tmp, *divp);
-        bigset(*divp, tmp);
+        bigsub(tmp, bigdivmoddiv);
+        bigset(bigdivmoddiv, tmp);
         bigfree(tmp);
     };
 
     # if numerator is negative, remainder is negative
     if (negnum) {
         tmp = bignew(0);
-        bigsub(tmp, *modp);
-        bigset(*modp, tmp);
+        bigsub(tmp, bigdivmodmod);
+        bigset(bigdivmodmod, tmp);
         bigfree(tmp);
     };
 
-    return *divp;
+    *divp = bigdivmoddiv;
+    *modp = bigdivmodmod;
+    return bigdivmoddiv;
 };
 
 bigdivmodw = func(big, w, divp, modp) {
-    var bigw = bignew(w);
-    bigdivmod(big, bigw, divp, modp);
-    bigfree(bigw);
+    bigsetw(bigdivwtmp, w);
+    bigdivmod(big, bigdivwtmp, divp, modp);
 
     return *divp;
 };
@@ -612,40 +623,32 @@ bigdivmodw = func(big, w, divp, modp) {
 # big1 = big1 / big2
 bigdiv = func(big1, big2) {
     var d;
-    var m;
-    bigdivmod(big1, big2, &d, &m);
+    bigdivmod(big1, big2, &d, 0);
     bigset(big1, d);
-    bigfree(d);
-    bigfree(m);
     return big1;
 };
 
 #big = big / w
 bigdivw = func(big, w) {
-    var bigw = bignew(w);
-    bigdiv(big, bigw);
-    bigfree(bigw);
+    bigsetw(bigdivwtmp, w);
+    bigdiv(big, bigdivwtmp);
 
     return big;
 };
 
 # big1 = big1 % big2
 bigmod = func(big1, big2) {
-    var d;
     var m;
-    bigdivmod(big1, big2, &d, &m);
+    bigdivmod(big1, big2, 0, &m);
     bigset(big1, m);
-    bigfree(d);
-    bigfree(m);
 
     return big1;
 };
 
 # big = big % w
 bigmodw = func(big, w) {
-    var bigw = bignew(w);
-    bigmod(big, bigw);
-    bigfree(bigw);
+    bigsetw(bigdivwtmp, w);
+    bigmod(big, bigdivwtmp);
 
     return big;
 };
