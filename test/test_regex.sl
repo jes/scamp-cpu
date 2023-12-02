@@ -4,15 +4,16 @@ var re;
 
 var test1 = func(str) {
     printf("%s: ", [str]);
+    var cap = 0;
     if (rematch(re, str)) {
-        *(recapend(0)) = 0;
-        printf("matched (captured %s)\n", [recap(0)])
+        if (recap(1)) cap = 1;
+        *(recapend(cap)) = 0;
+        printf("matched (captured %s)\n", [recap(cap)])
     }
     else puts("didn't match\n");
 };
 
 var checkre = func(restr, matchstr, nomatchstr) {
-    printf("renew: %s\n", [restr]);
     re = renew(restr);
     printf("%s should match:\n", [restr]);
     test1(matchstr);
@@ -22,8 +23,8 @@ var checkre = func(restr, matchstr, nomatchstr) {
 };
 
 var test_regex = func() {
-    var restr = "a(b|c)*d";
-    re = renew("a(b|c)*d");
+    var restr = "a((?:b|c)*)d";
+    re = renew(restr);
 
     printf("%s should match:\n", [restr]);
     test1("abcd");
@@ -45,11 +46,11 @@ var test_regex = func() {
     refree(re);
 
     checkre("...\\w+...foo", "..._1234f348_43...foo", "...1234-1234...foo");
-    checkre("\\d+", "12345", "abcde");
+    checkre("\\d+foo", "12345foo", "abcdefoo");
     checkre("\\s*foo", "      foo", "123foo");
     checkre("[abc]*-end", "abcbcbabcbabcbbabc-end", "abd-end");
     checkre("...\\W+...", "...-;[]'...", "...12345...");
-    checkre("\\D+", "abcde", "12345");
+    checkre("\\D+foo", "abcdefoo", "12345foo");
     checkre("\\S*foo", "1234fsdfsdfsd---foo", " foo");
     checkre("[^abc]*-end", "def-end", "abc-end");
 };

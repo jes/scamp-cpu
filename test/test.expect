@@ -77,7 +77,7 @@ get fourfivesix=456
 get seveneightnine=0
 get key42=42
 test_regex:
-a(b|c)*d should match:
+a((?:b|c)*)d should match:
 abcd: matched (captured bc)
 abbbbbbbd: matched (captured bbbbbbb)
 acccccccd: matched (captured ccccccc)
@@ -85,13 +85,45 @@ ad: matched (captured )
 abcbcbbbbbcccbcbcbcccbcbcbcbcd: matched (captured bcbcbbbbbcccbcbcbcccbcbcbcbc)
 abd: matched (captured b)
 acd: matched (captured c)
-a(b|c)*d should not match:
+a((?:b|c)*)d should not match:
 aadd: didn't match
 : didn't match
 abbbcc: didn't match
 bbccd: didn't match
 aad: didn't match
 ddddd: didn't match
+...\w+...foo should match:
+..._1234f348_43...foo: matched (captured ..._1234f348_43...foo)
+...\w+...foo shouldn't match:
+...1234-1234...foo: didn't match
+\d+foo should match:
+12345foo: matched (captured 12345foo)
+\d+foo shouldn't match:
+abcdefoo: didn't match
+\s*foo should match:
+      foo: matched (captured       foo)
+\s*foo shouldn't match:
+123foo: didn't match
+[abc]*-end should match:
+abcbcbabcbabcbbabc-end: matched (captured abcbcbabcbabcbbabc-end)
+[abc]*-end shouldn't match:
+abd-end: didn't match
+...\W+... should match:
+...-;[]'...: matched (captured ...-;[])
+...\W+... shouldn't match:
+...12345...: didn't match
+\D+foo should match:
+abcdefoo: matched (captured abcdefoo)
+\D+foo shouldn't match:
+12345foo: didn't match
+\S*foo should match:
+1234fsdfsdfsd---foo: matched (captured 1234fsdfsdfsd---foo)
+\S*foo shouldn't match:
+ foo: didn't match
+[^abc]*-end should match:
+def-end: matched (captured def-end)
+[^abc]*-end shouldn't match:
+abc-end: didn't match
 test_sh:
 test.sl
 test_basic.sl
