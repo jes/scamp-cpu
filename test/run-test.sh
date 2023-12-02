@@ -9,6 +9,7 @@ cat ../sys/lib/head.s test.s ../sys/lib/foot.s | ../asm/asm > test.hex
 ../util/hex2bin test.hex > test.bin
 
 # get a filesystem image
+rm ../kernel/os.disk
 make -C ../kernel/ os.disk
 cp ../kernel/os.disk .
 

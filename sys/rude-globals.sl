@@ -159,7 +159,6 @@ addglobal("itoa_space", &itoa_space);
 addglobal("itoabase", &itoabase);
 addglobal("longjmp", &longjmp);
 addglobal("malloc", &malloc);
-addglobal("mallocdbg", &mallocdbg);
 addglobal("memcpy", &memcpy);
 addglobal("memset", &memset);
 addglobal("mkdir", &mkdir);
