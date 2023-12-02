@@ -1049,6 +1049,9 @@ var escapedchar = func(ch) {
     if (ch == 't') return '\t';
     if (ch == '0') return '\0';
     if (ch == ']') return '\]';
+    if (ch == 'w' || ch == 's' || ch == 'd' || ch == 'W' || ch == 'S' || ch == 'D') {
+        warn("possible attempt to encode '\\%c' with too few slashes", [ch]);
+    };
     return ch;
 };
 

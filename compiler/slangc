@@ -121,6 +121,10 @@ sub parse {
         my ($err) = @_;
         die "error: $filename: line $line: col $col: $err";
     };
+    local $SIG{__WARN__} = sub {
+        my ($err) = @_;
+        warn "warning: $filename: line $line: col $col: $err";
+    };
     return 1 if $f->(@args);
 
     $pos = $pos0;
@@ -537,6 +541,8 @@ sub CharacterLiteral {
 
 sub escapedchar {
     my ($c) = @_;
+    my %warn = map { $_ => 1 } split //, 'wsdWSD';
+    warn "possible attempt to encode '\\$c' with too few slashes" if $warn{$c};
     my %map = (n => "\n", r => "\r", t => "\t", 0 => "\0", "]" => "\]");
     return $map{$c}||$c;
 }
