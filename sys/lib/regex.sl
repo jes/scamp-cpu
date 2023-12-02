@@ -164,8 +164,15 @@ _reparse1 = func() {
         ch = *(reparse_str++);
         if (!ch || ch == ')') return node
         else if (ch == '|') return alternate(node, _reparse1())
-        else if (ch == '(') next = capture(_reparse1())
-        else if (ch == '[') next = charset()
+        else if (ch == '(') {
+            if (reparse_str[0] == '?' && reparse_str[1] == ':') {
+                # (?:...) non-capturing grouping
+                reparse_str = reparse_str + 2;
+                next = _reparse1();
+            } else {
+                next = capture(_reparse1())
+            };
+        } else if (ch == '[') next = charset()
         else if (ch == '.') next = DOT
         else if (ch == '\\') {
             ch = *(reparse_str++);
