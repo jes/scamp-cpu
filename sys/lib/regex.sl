@@ -111,6 +111,9 @@ maybestar = func(a) {
     } else if (*reparse_str == '+') {
         reparse_str++;
         return cons(RE_PLUS, a);
+    } else if (*reparse_str == '?') {
+        reparse_str++;
+        return cons3(RE_ALT, a, 0);
     } else {
         return a;
     };
