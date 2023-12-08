@@ -300,6 +300,19 @@ _recompile = func(tree) {
 
 ## NFA MATCHING
 
+var subs2free = grnew();
+
+var subnew = func() {
+    var p = zmalloc(SUBSZ);
+    grpush(subs2free, p);
+    return p;
+};
+
+var freesubs = func() {
+    grwalk(subs2free, free);
+    grtrunc(subs2free, 0);
+};
+
 var addthread = func(list, pc, sub, strp) {
     # TODO: is 16-bit generation counter big enough?
     if (pc[RE_GEN] == _GEN) return 0;
@@ -312,7 +325,7 @@ var addthread = func(list, pc, sub, strp) {
         addthread(list, pc[RE_X], sub, strp);
         addthread(list, pc[RE_Y], sub, strp);
     } else if (op == RE_SAVE) {
-        sub2 = zmalloc(SUBSZ);
+        sub2 = subnew();
         memcpy(sub2, sub, SUBSZ);
         sub2[pc[RE_X]] = strp;
         addthread(list, pc+4, sub2, strp);
@@ -350,7 +363,7 @@ _pikevm = func(re, str) {
     var arg;
 
     # TODO: zmalloc(SUBSZ) needs some way to track subs allocations so we can free them later
-    addthread(clist, re, zmalloc(SUBSZ), str);
+    addthread(clist, re, subnew(), str);
     while (1) {
         if (grlen(clist) == 0) break;
         _GEN++;
@@ -372,7 +385,7 @@ _pikevm = func(re, str) {
             } else if (op == RE_MATCH) {
                 memcpy(recap_sub, sub, SUBSZ);
                 grfree(clist); grfree(nlist);
-                # TODO: free allocated subs
+                freesubs();
                 return 1;
             } else {
                 die("_pikevm: unimplemented opcode: %d at pc=%04x\n", [op, pc]);
@@ -386,6 +399,6 @@ _pikevm = func(re, str) {
 
     memset(recap_sub, 0, SUBSZ);
     grfree(clist); grfree(nlist);
-    # TODO: free allocated subs
+    freesubs();
     return 0;
 };
